@@ -49,6 +49,8 @@ export type TabDefinition = {
   shortLabelKey: string
   descriptionKey: string
   segments: LocalizedSlugMap
+  accentClass: string
+  accentSurfaceClass: string
 }
 
 export type MiniAppDefinition = {
@@ -72,6 +74,8 @@ export const TAB_ITEMS: TabDefinition[] = [
       vi: 'thien-thoi-gian',
       zh: '禅与时间',
     },
+    accentClass: 'text-teal-600',
+    accentSurfaceClass: 'from-teal-500/16 via-white to-cyan-500/10',
   },
   {
     id: 'measure-tools',
@@ -84,6 +88,8 @@ export const TAB_ITEMS: TabDefinition[] = [
       vi: 'do-luong-cong-cu',
       zh: '测量工具',
     },
+    accentClass: 'text-sky-600',
+    accentSurfaceClass: 'from-sky-500/16 via-white to-indigo-500/10',
   },
   {
     id: 'vision',
@@ -96,6 +102,8 @@ export const TAB_ITEMS: TabDefinition[] = [
       vi: 'thi-giac-camera',
       zh: '视觉相机',
     },
+    accentClass: 'text-violet-600',
+    accentSurfaceClass: 'from-violet-500/16 via-white to-fuchsia-500/10',
   },
   {
     id: 'security-audio',
@@ -108,6 +116,8 @@ export const TAB_ITEMS: TabDefinition[] = [
       vi: 'bao-mat-am-thanh',
       zh: '安全音频',
     },
+    accentClass: 'text-emerald-700',
+    accentSurfaceClass: 'from-emerald-500/16 via-white to-teal-500/10',
   },
   {
     id: 'finance-community',
@@ -120,6 +130,8 @@ export const TAB_ITEMS: TabDefinition[] = [
       vi: 'tai-chinh-cong-dong',
       zh: '财务社区',
     },
+    accentClass: 'text-amber-600',
+    accentSurfaceClass: 'from-amber-500/16 via-white to-orange-500/10',
   },
 ]
 

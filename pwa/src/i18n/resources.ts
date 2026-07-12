@@ -9,6 +9,8 @@ export const resources = {
         localeLabel: 'Language',
         openPlaceholder: 'Placeholder route ready for implementation in Phase 2.',
         routeLabel: 'Canonical route',
+        openMiniApp: 'Open mini-app',
+        browseTab: 'Browse tab',
       },
       tabs: {
         zenTime: {
@@ -38,84 +40,194 @@ export const resources = {
         },
       },
       miniApps: {
-        lunarCalendar: { title: 'Lunar Calendar', summary: 'Offline lunar date conversion and local month browsing.' },
-        zenHabit: { title: 'Zen Habit', summary: 'IndexedDB-backed habit streak tracking with offline persistence.' },
-        zenPomodoro: { title: 'Zen Pomodoro', summary: 'A focus timer with local white noise playback.' },
-        zenBreath: { title: 'Zen Breath', summary: 'A calming breathing guide driven by smooth motion.' },
-        compass: { title: 'Compass', summary: 'DeviceOrientation-based heading with native-like rotation.' },
-        bubbleLevel: { title: 'Bubble Level', summary: 'A sensor-based balance tool for quick alignment checks.' },
-        decibelMeter: { title: 'Decibel Meter', summary: 'Microphone-powered local waveform and loudness capture.' },
-        unitConverter: { title: 'Unit Converter', summary: 'Instant math conversions with no network dependency.' },
-        qrStudio: { title: 'QR Studio', summary: 'Offline QR scanning and generation shell.' },
-        docToPdf: { title: 'Doc to PDF', summary: 'Camera snapshots prepared for local PDF assembly.' },
-        ocrText: { title: 'OCR Text', summary: 'Offline text extraction foundation with browser-side processing.' },
-        colorGrabber: { title: 'Color Grabber', summary: 'Video-to-canvas color sampling and palette extraction shell.' },
-        speakerCleaner: { title: 'Speaker Cleaner', summary: 'Audio oscillator utility for speaker cleanup routines.' },
-        passwordVault: { title: 'Password Vault', summary: 'Private encrypted secrets stored only on-device.' },
-        billSplitter: { title: 'Bill Splitter', summary: 'Local split-calculation workflow for groups and trips.' },
-        expenseTracker: { title: 'Expense Tracker', summary: 'IndexedDB ledger for private expense logging.' },
-        decisionWheel: { title: 'Decision Wheel', summary: 'Canvas-based roulette picker for quick choices.' },
-        communityUnlock: { title: 'Community Pro Unlock', summary: 'Telegram unlock surface with local code persistence.' },
+        lunarCalendar: {
+          title: 'Lunar Calendar',
+          summary: 'Offline lunar date conversion and local month browsing.',
+        },
+        zenHabit: {
+          title: 'Zen Habit',
+          summary: 'IndexedDB-backed habit streak tracking with offline persistence.',
+        },
+        zenPomodoro: {
+          title: 'Zen Pomodoro',
+          summary: 'A focus timer with local white noise playback.',
+        },
+        zenBreath: {
+          title: 'Zen Breath',
+          summary: 'A calming breathing guide driven by smooth motion.',
+        },
+        compass: {
+          title: 'Compass',
+          summary: 'DeviceOrientation-based heading with native-like rotation.',
+        },
+        bubbleLevel: {
+          title: 'Bubble Level',
+          summary: 'A sensor-based balance tool for quick alignment checks.',
+        },
+        decibelMeter: {
+          title: 'Decibel Meter',
+          summary: 'Microphone-powered local waveform and loudness capture.',
+        },
+        unitConverter: {
+          title: 'Unit Converter',
+          summary: 'Instant math conversions with no network dependency.',
+        },
+        qrStudio: {
+          title: 'QR Studio',
+          summary: 'Offline QR scanning and generation shell.',
+        },
+        docToPdf: {
+          title: 'Doc to PDF',
+          summary: 'Camera snapshots prepared for local PDF assembly.',
+        },
+        ocrText: {
+          title: 'OCR Text',
+          summary: 'Offline text extraction foundation with browser-side processing.',
+        },
+        colorGrabber: {
+          title: 'Color Grabber',
+          summary: 'Video-to-canvas color sampling and palette extraction shell.',
+        },
+        speakerCleaner: {
+          title: 'Speaker Cleaner',
+          summary: 'Audio oscillator utility for speaker cleanup routines.',
+        },
+        passwordVault: {
+          title: 'Password Vault',
+          summary: 'Private encrypted secrets stored only on-device.',
+        },
+        billSplitter: {
+          title: 'Bill Splitter',
+          summary: 'Local split-calculation workflow for groups and trips.',
+        },
+        expenseTracker: {
+          title: 'Expense Tracker',
+          summary: 'IndexedDB ledger for private expense logging.',
+        },
+        decisionWheel: {
+          title: 'Decision Wheel',
+          summary: 'Canvas-based roulette picker for quick choices.',
+        },
+        communityUnlock: {
+          title: 'Community Pro Unlock',
+          summary: 'Telegram unlock surface with local code persistence.',
+        },
       },
     },
   },
   vi: {
     translation: {
       app: {
-        subtitle: 'Sieu ung dung tien ich hoat dong ngoai tuyen',
+        subtitle: 'Siêu ứng dụng tiện ích hoạt động ngoại tuyến',
         phaseShell: 'Khung Phase 1',
-        miniAppMap: 'Ban do mini-app',
-        phaseDeferred: 'Giao dien va logic offline cua tung mini-app se duoc trien khai o Phase 2.',
-        localeLabel: 'Ngon ngu',
-        openPlaceholder: 'Trang placeholder da san sang cho Phase 2.',
-        routeLabel: 'Duong dan chuan',
+        miniAppMap: 'Bản đồ mini-app',
+        phaseDeferred: 'Giao diện và logic offline của từng mini-app sẽ được triển khai ở Phase 2.',
+        localeLabel: 'Ngôn ngữ',
+        openPlaceholder: 'Trang chờ này đã sẵn sàng cho Phase 2.',
+        routeLabel: 'Đường dẫn chuẩn',
+        openMiniApp: 'Mở mini-app',
+        browseTab: 'Xem tab',
       },
       tabs: {
         zenTime: {
-          label: 'Thien & Thoi gian',
-          short: 'Thien',
-          description: 'Nhom cong cu lich, thoi quen, tap trung va tho hoan toan offline.',
+          label: 'Zen & Thời gian',
+          short: 'Zen',
+          description: 'Nhóm công cụ lịch, thói quen, tập trung và hít thở hoàn toàn offline.',
         },
         measureTools: {
-          label: 'Do luong & Cong cu',
-          short: 'Cong cu',
-          description: 'Cong cu nhanh dung cam bien va phep tinh cuc nhe ngay tren trinh duyet.',
+          label: 'Đo lường & Công cụ',
+          short: 'Công cụ',
+          description: 'Công cụ nhanh dùng cảm biến và phép tính cực nhẹ ngay trên trình duyệt.',
         },
         vision: {
-          label: 'Thi giac',
+          label: 'Thị giác',
           short: 'Camera',
-          description: 'Nhom cong cu camera offline cho quet, OCR, PDF va lay mau.',
+          description: 'Nhóm công cụ camera offline cho quét, OCR, PDF và lấy màu.',
         },
         securityAudio: {
-          label: 'Bao mat & Am thanh',
-          short: 'Bao mat',
-          description: 'Tien ich rieng tu cho am thanh va du lieu ma hoa luu tren may.',
+          label: 'Bảo mật & Âm thanh',
+          short: 'Bảo mật',
+          description: 'Tiện ích riêng tư cho âm thanh và dữ liệu mã hóa lưu trên máy.',
         },
         financeCommunity: {
-          label: 'Tai chinh & Cong dong',
-          short: 'Tai chinh',
-          description: 'Cong cu tien bac offline kem khu vuc mo khoa tinh nang bang cong dong.',
+          label: 'Tài chính & Cộng đồng',
+          short: 'Tài chính',
+          description: 'Công cụ tiền bạc offline kèm khu vực mở khóa tính năng bằng cộng đồng.',
         },
       },
       miniApps: {
-        lunarCalendar: { title: 'Lich Am', summary: 'Chuyen doi ngay am offline va xem thang noi bo.' },
-        zenHabit: { title: 'Thoi quen Zen', summary: 'Theo doi streak bang IndexedDB, luu hoan toan offline.' },
-        zenPomodoro: { title: 'Pomodoro Zen', summary: 'Hen gio tap trung kem am thanh nen noi bo.' },
-        zenBreath: { title: 'Tho Zen', summary: 'Huong dan hit tho mem mai bang chuyen dong muot.' },
-        compass: { title: 'La ban', summary: 'Huong xoay bang DeviceOrientation cho cam giac nhu native.' },
-        bubbleLevel: { title: 'Thuoc thuy', summary: 'Can bang nhanh bang cam bien tren trinh duyet.' },
-        decibelMeter: { title: 'Do on', summary: 'Do am luong va song am bang microphone cuc bo.' },
-        unitConverter: { title: 'Doi don vi', summary: 'Chuyen doi don vi tuc thi khong can mang.' },
-        qrStudio: { title: 'QR Studio', summary: 'Khung scan va tao QR offline.' },
-        docToPdf: { title: 'Tai lieu sang PDF', summary: 'Chup tai lieu bang camera de ghep PDF cuc bo.' },
-        ocrText: { title: 'OCR Van ban', summary: 'Nen tang trich xuat chu offline ngay trong trinh duyet.' },
-        colorGrabber: { title: 'Lay mau', summary: 'Lay mau RGB tu video va canvas ngay tren may.' },
-        speakerCleaner: { title: 'Lam sach loa', summary: 'Tien ich phat tan so de ho tro ve sinh loa.' },
-        passwordVault: { title: 'Kho mat khau', summary: 'Luu thong tin ma hoa rieng tu chi tren thiet bi.' },
-        billSplitter: { title: 'Chia hoa don', summary: 'Tinh toan chia tien cho nhom hoan toan cuc bo.' },
-        expenseTracker: { title: 'So chi tieu', summary: 'So thu chi offline luu bang IndexedDB.' },
-        decisionWheel: { title: 'Vong quay quyet dinh', summary: 'Vong quay canvas cho cac lua chon nhanh.' },
-        communityUnlock: { title: 'Mo khoa Pro cong dong', summary: 'Be mat nhan code Telegram va luu code cuc bo.' },
+        lunarCalendar: {
+          title: 'Lịch âm',
+          summary: 'Chuyển đổi ngày âm offline và xem tháng nội bộ.',
+        },
+        zenHabit: {
+          title: 'Thói quen Zen',
+          summary: 'Theo dõi streak bằng IndexedDB, lưu hoàn toàn offline.',
+        },
+        zenPomodoro: {
+          title: 'Pomodoro Zen',
+          summary: 'Hẹn giờ tập trung kèm âm thanh nền nội bộ.',
+        },
+        zenBreath: {
+          title: 'Thở Zen',
+          summary: 'Hướng dẫn hít thở mềm mại bằng chuyển động mượt.',
+        },
+        compass: {
+          title: 'La bàn',
+          summary: 'Hướng xoay bằng DeviceOrientation cho cảm giác như native.',
+        },
+        bubbleLevel: {
+          title: 'Thước thủy',
+          summary: 'Cân bằng nhanh bằng cảm biến trên trình duyệt.',
+        },
+        decibelMeter: {
+          title: 'Đo ồn',
+          summary: 'Đo âm lượng và sóng âm bằng microphone cục bộ.',
+        },
+        unitConverter: {
+          title: 'Đổi đơn vị',
+          summary: 'Chuyển đổi đơn vị tức thì không cần mạng.',
+        },
+        qrStudio: {
+          title: 'QR Studio',
+          summary: 'Khung scan và tạo QR offline.',
+        },
+        docToPdf: {
+          title: 'Tài liệu sang PDF',
+          summary: 'Chụp tài liệu bằng camera để ghép PDF cục bộ.',
+        },
+        ocrText: {
+          title: 'OCR văn bản',
+          summary: 'Nền tảng trích xuất chữ offline ngay trong trình duyệt.',
+        },
+        colorGrabber: {
+          title: 'Lấy màu',
+          summary: 'Lấy màu RGB từ video và canvas ngay trên máy.',
+        },
+        speakerCleaner: {
+          title: 'Làm sạch loa',
+          summary: 'Tiện ích phát tần số để hỗ trợ vệ sinh loa.',
+        },
+        passwordVault: {
+          title: 'Kho mật khẩu',
+          summary: 'Lưu thông tin mã hóa riêng tư chỉ trên thiết bị.',
+        },
+        billSplitter: {
+          title: 'Chia hóa đơn',
+          summary: 'Tính toán chia tiền cho nhóm hoàn toàn cục bộ.',
+        },
+        expenseTracker: {
+          title: 'Sổ chi tiêu',
+          summary: 'Sổ thu chi offline lưu bằng IndexedDB.',
+        },
+        decisionWheel: {
+          title: 'Vòng quay quyết định',
+          summary: 'Vòng quay canvas cho các lựa chọn nhanh.',
+        },
+        communityUnlock: {
+          title: 'Mở khóa Pro cộng đồng',
+          summary: 'Bề mặt nhận code Telegram và lưu code cục bộ.',
+        },
       },
     },
   },
@@ -129,6 +241,8 @@ export const resources = {
         localeLabel: '语言',
         openPlaceholder: '此占位页面已为第二阶段做好准备。',
         routeLabel: '规范路由',
+        openMiniApp: '打开迷你应用',
+        browseTab: '查看标签页',
       },
       tabs: {
         zenTime: {
@@ -158,24 +272,78 @@ export const resources = {
         },
       },
       miniApps: {
-        lunarCalendar: { title: '农历', summary: '离线农历换算与本地月视图浏览。' },
-        zenHabit: { title: '禅习惯', summary: '基于 IndexedDB 的离线习惯连击追踪。' },
-        zenPomodoro: { title: '禅番茄', summary: '带本地白噪音的专注计时器。' },
-        zenBreath: { title: '禅呼吸', summary: '用平滑动效驱动的呼吸引导。' },
-        compass: { title: '罗盘', summary: '基于 DeviceOrientation 的顺滑方向工具。' },
-        bubbleLevel: { title: '水平仪', summary: '利用设备传感器快速检测平衡。' },
-        decibelMeter: { title: '分贝仪', summary: '通过麦克风在本地采集波形与响度。' },
-        unitConverter: { title: '单位换算', summary: '无需联网的即时单位换算。' },
-        qrStudio: { title: '二维码工坊', summary: '离线二维码扫描与生成基础页。' },
-        docToPdf: { title: '文档转PDF', summary: '使用相机快照进行本地 PDF 组装。' },
-        ocrText: { title: 'OCR文字', summary: '基于浏览器侧处理的离线文字提取基础。' },
-        colorGrabber: { title: '取色器', summary: '从视频帧与 canvas 中提取颜色。' },
-        speakerCleaner: { title: '清理扬声器', summary: '用于扬声器清理的本地音频振荡工具。' },
-        passwordVault: { title: '密码保险库', summary: '仅保存在本机的私密加密存储。' },
-        billSplitter: { title: '分账器', summary: '用于聚餐与旅行的本地分账流程。' },
-        expenseTracker: { title: '记账本', summary: '基于 IndexedDB 的本地支出账本。' },
-        decisionWheel: { title: '决策转盘', summary: '用 Canvas 构建的快速选择转盘。' },
-        communityUnlock: { title: '社区解锁', summary: '用于 Telegram 获取代码并本地保存。' },
+        lunarCalendar: {
+          title: '农历',
+          summary: '离线农历换算与本地月视图浏览。',
+        },
+        zenHabit: {
+          title: '禅习惯',
+          summary: '基于 IndexedDB 的离线习惯连击追踪。',
+        },
+        zenPomodoro: {
+          title: '禅番茄',
+          summary: '带本地白噪音的专注计时器。',
+        },
+        zenBreath: {
+          title: '禅呼吸',
+          summary: '用平滑动效驱动的呼吸引导。',
+        },
+        compass: {
+          title: '罗盘',
+          summary: '基于 DeviceOrientation 的顺滑方向工具。',
+        },
+        bubbleLevel: {
+          title: '水平仪',
+          summary: '利用设备传感器快速检测平衡。',
+        },
+        decibelMeter: {
+          title: '分贝仪',
+          summary: '通过麦克风在本地采集波形与响度。',
+        },
+        unitConverter: {
+          title: '单位换算',
+          summary: '无需联网的即时单位换算。',
+        },
+        qrStudio: {
+          title: '二维码工坊',
+          summary: '离线二维码扫描与生成基础页。',
+        },
+        docToPdf: {
+          title: '文档转 PDF',
+          summary: '使用相机快照进行本地 PDF 组装。',
+        },
+        ocrText: {
+          title: 'OCR 文字',
+          summary: '基于浏览器侧处理的离线文字提取基础。',
+        },
+        colorGrabber: {
+          title: '取色器',
+          summary: '从视频帧与 canvas 中提取颜色。',
+        },
+        speakerCleaner: {
+          title: '清理扬声器',
+          summary: '用于扬声器清理的本地音频振荡工具。',
+        },
+        passwordVault: {
+          title: '密码保险库',
+          summary: '仅保存在本机的私密加密存储。',
+        },
+        billSplitter: {
+          title: '分账器',
+          summary: '用于聚餐与旅行的本地分账流程。',
+        },
+        expenseTracker: {
+          title: '记账本',
+          summary: '基于 IndexedDB 的本地支出账本。',
+        },
+        decisionWheel: {
+          title: '决策转盘',
+          summary: '用 Canvas 构建的快速选择转盘。',
+        },
+        communityUnlock: {
+          title: '社区解锁',
+          summary: '用于 Telegram 获取代码并本地保存。',
+        },
       },
     },
   },
