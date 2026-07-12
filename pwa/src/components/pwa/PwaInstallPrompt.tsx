@@ -22,10 +22,6 @@ export function PwaInstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   }, [])
 
-  if (!deferredPrompt) {
-    return null
-  }
-
   return (
     <div className="relative">
       <button
@@ -42,18 +38,24 @@ export function PwaInstallPrompt() {
           <p className="text-sm font-semibold text-white">{t('pwa.installTitle')}</p>
           <p className="mt-2 text-sm leading-6 text-slate-300">{t('pwa.installDescription')}</p>
           <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={async () => {
-                await deferredPrompt.prompt()
-                await deferredPrompt.userChoice
-                setDeferredPrompt(null)
-                setOpen(false)
-              }}
-              className="rounded-2xl bg-emerald-400/14 px-4 py-2.5 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/18 transition hover:bg-emerald-400/18"
-            >
-              {t('pwa.installNow')}
-            </button>
+            {deferredPrompt ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  await deferredPrompt.prompt()
+                  await deferredPrompt.userChoice
+                  setDeferredPrompt(null)
+                  setOpen(false)
+                }}
+                className="rounded-2xl bg-emerald-400/14 px-4 py-2.5 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/18 transition hover:bg-emerald-400/18"
+              >
+                {t('pwa.installNow')}
+              </button>
+            ) : (
+              <div className="rounded-2xl bg-white/5 px-4 py-2.5 text-sm text-slate-300">
+                {t('pwa.installHint')}
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setOpen(false)}

@@ -17,6 +17,7 @@ export const resources = {
         installTitle: 'Install PureHub',
         installDescription: 'Pin PureHub for faster launches and a more native offline experience.',
         installNow: 'Install now',
+        installHint: 'If install is unavailable, use your browser menu to add PureHub to the home screen.',
         later: 'Later',
       },
       dashboard: {
@@ -101,6 +102,7 @@ export const resources = {
         installTitle: 'Cài đặt PureHub',
         installDescription: 'Ghim PureHub lên thiết bị để mở nhanh hơn và dùng offline giống app native hơn.',
         installNow: 'Cài ngay',
+        installHint: 'Nếu chưa cài trực tiếp được, hãy dùng menu trình duyệt để thêm PureHub ra màn hình chính.',
         later: 'Để sau',
       },
       dashboard: {
@@ -185,6 +187,7 @@ export const resources = {
         installTitle: '安装 PureHub',
         installDescription: '将 PureHub 固定到设备上，以获得更快启动和更像原生应用的离线体验。',
         installNow: '立即安装',
+        installHint: '如果当前不能直接安装，请使用浏览器菜单将 PureHub 添加到主屏幕。',
         later: '稍后',
       },
       dashboard: {

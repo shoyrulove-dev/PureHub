@@ -9,7 +9,7 @@ import {
 } from '../features/catalog/tabs'
 import { DEFAULT_LOCALE, normalizeLocale, type LocaleCode } from './locales'
 
-const PREFERRED_LOCALE_KEY = 'purehub-preferred-locale'
+const SELECTED_LOCALE_KEY = 'purehub-selected-locale'
 
 type ResolvedEntry =
   | { kind: 'tab'; item: TabDefinition }
@@ -17,7 +17,7 @@ type ResolvedEntry =
 
 export function detectPreferredLocale(): LocaleCode {
   if (typeof window !== 'undefined') {
-    const savedLocale = window.localStorage.getItem(PREFERRED_LOCALE_KEY)
+    const savedLocale = window.localStorage.getItem(SELECTED_LOCALE_KEY)
     if (savedLocale) {
       return normalizeLocale(savedLocale)
     }
@@ -28,12 +28,13 @@ export function detectPreferredLocale(): LocaleCode {
   const resolvedLocale = normalizeLocale(
     detectedValue ?? i18n.resolvedLanguage ?? i18n.language ?? DEFAULT_LOCALE,
   )
-
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(PREFERRED_LOCALE_KEY, resolvedLocale)
-  }
-
   return resolvedLocale
+}
+
+export function persistSelectedLocale(locale: LocaleCode) {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(SELECTED_LOCALE_KEY, locale)
+  }
 }
 
 export function buildTabPath(locale: LocaleCode, tabId: TabDefinition['id']) {

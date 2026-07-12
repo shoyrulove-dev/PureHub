@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
-import { buildMiniAppPath, buildTabPath, resolveEntryBySlug } from '../i18n/routing'
+import {
+  buildMiniAppPath,
+  buildTabPath,
+  persistSelectedLocale,
+  resolveEntryBySlug,
+} from '../i18n/routing'
 import { TAB_BY_ID } from '../features/catalog/tabs'
 
 export function AppShell() {
@@ -50,6 +55,7 @@ export function AppShell() {
                   <Link
                     key={item}
                     to={localizedTarget(item)}
+                    onClick={() => persistSelectedLocale(item)}
                     className={[
                       'rounded-2xl px-3 py-2 text-xs font-semibold uppercase transition',
                       item === normalizedLocale
@@ -92,6 +98,7 @@ export function AppShell() {
                     <Link
                       key={item}
                       to={localizedTarget(item)}
+                      onClick={() => persistSelectedLocale(item)}
                       className={[
                         'rounded-xl px-2.5 py-1 text-xs font-medium uppercase transition',
                         item === normalizedLocale

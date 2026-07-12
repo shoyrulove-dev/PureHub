@@ -11,7 +11,6 @@ export function LocaleLayout() {
 
   useEffect(() => {
     void i18n.changeLanguage(normalizedLocale)
-    window.localStorage.setItem('purehub-preferred-locale', normalizedLocale)
     document.documentElement.lang = normalizedLocale
   }, [normalizedLocale])
 
