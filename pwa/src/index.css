@@ -42,3 +42,19 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+.page-enter {
+  animation: page-enter 260ms ease-out;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

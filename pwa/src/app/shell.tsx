@@ -1,13 +1,15 @@
-import { Link, Outlet, useParams } from 'react-router-dom'
+import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { MonitorSmartphone, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/navigation/BottomNav'
+import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { buildMiniAppPath, buildTabPath, resolveEntryBySlug } from '../i18n/routing'
 import { TAB_BY_ID } from '../features/catalog/tabs'
 
 export function AppShell() {
   const { t } = useTranslation()
+  const location = useLocation()
   const { locale, slug } = useParams()
   const normalizedLocale = normalizeLocale(locale)
   const currentEntry = slug ? resolveEntryBySlug(slug) : null
@@ -103,7 +105,10 @@ export function AppShell() {
           </header>
 
           <main className="flex-1 overflow-y-auto px-4 pb-28 pt-4 sm:px-5">
-            <Outlet />
+            <PwaInstallPrompt />
+            <div key={location.pathname} className="page-enter">
+              <Outlet />
+            </div>
           </main>
 
           <BottomNav />

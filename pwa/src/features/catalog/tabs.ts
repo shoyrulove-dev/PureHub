@@ -158,7 +158,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Timer,
     titleKey: 'miniApps.zenPomodoro.title',
     summaryKey: 'miniApps.zenPomodoro.summary',
-    slugs: { en: 'zen-pomodoro', vi: 'pomodoro-zen', zh: '禅番茄' },
+    slugs: { en: 'zen-pomodoro', vi: 'pomodoro-zen', zh: '禅番茄钟' },
   },
   {
     id: 'zen-breath',
