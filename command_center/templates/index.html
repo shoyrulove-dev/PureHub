@@ -339,6 +339,9 @@
               <div class="text-right text-xs text-slate-400">
                 <p><span id="miniappsTabCount">{{ analytics.miniapps.tabs|length }}</span> tabs tracked</p>
                 <p id="analyticsRefreshLabel">Priority-aware view</p>
+                <button id="refreshAnalyticsButton" type="button" class="mt-2 rounded-xl border border-violet-300/20 bg-violet-400/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-100 transition hover:bg-violet-400/20">
+                  Refresh now
+                </button>
               </div>
             </div>
             <div class="mt-4 h-72">
@@ -652,6 +655,10 @@
         const miniappsEnabled = document.getElementById("miniappsEnabled");
         const miniappsTotal = document.getElementById("miniappsTotal");
         const miniappsTabCount = document.getElementById("miniappsTabCount");
+        const refreshAnalyticsButton = document.getElementById("refreshAnalyticsButton");
+        const refreshIntervalMs = 30000;
+        let refreshTimer = null;
+        let isRefreshing = false;
         const sharedOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -765,16 +772,46 @@
             second: "2-digit",
           }).format(date);
 
+        const animateNumber = (element, target, options = {}) => {
+          if (!element) return;
+          const { decimals = 0, suffix = "" } = options;
+          const current = Number.parseFloat(element.dataset.value || "0");
+          const next = Number.parseFloat(target);
+          if (Number.isNaN(next)) {
+            element.textContent = `${target}${suffix}`;
+            return;
+          }
+          const start = performance.now();
+          const duration = 420;
+          const delta = next - current;
+
+          const step = (timestamp) => {
+            const progress = Math.min((timestamp - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const value = current + delta * eased;
+            element.dataset.value = String(value);
+            element.textContent = `${value.toFixed(decimals)}${suffix}`;
+            if (progress < 1) {
+              requestAnimationFrame(step);
+            } else {
+              element.dataset.value = String(next);
+              element.textContent = `${next.toFixed(decimals)}${suffix}`;
+            }
+          };
+
+          requestAnimationFrame(step);
+        };
+
         const paintSummary = () => {
-          contentConversionRate.textContent = `${analytics.content.conversion_rate}%`;
-          contentTotalArticles.textContent = analytics.content.total_articles;
-          contentPublishedArticles.textContent = analytics.content.published_articles;
-          referralAverageInvites.textContent = analytics.referrals.avg_invites_per_user;
-          referralTotalUsers.textContent = analytics.referrals.total_users;
-          referralTotalInvites.textContent = analytics.referrals.total_invites;
-          miniappsEnabled.textContent = analytics.miniapps.enabled;
-          miniappsTotal.textContent = analytics.miniapps.total;
-          miniappsTabCount.textContent = analytics.miniapps.tabs.length;
+          animateNumber(contentConversionRate, analytics.content.conversion_rate, { decimals: 1, suffix: "%" });
+          animateNumber(contentTotalArticles, analytics.content.total_articles);
+          animateNumber(contentPublishedArticles, analytics.content.published_articles);
+          animateNumber(referralAverageInvites, analytics.referrals.avg_invites_per_user, { decimals: 2 });
+          animateNumber(referralTotalUsers, analytics.referrals.total_users);
+          animateNumber(referralTotalInvites, analytics.referrals.total_invites);
+          animateNumber(miniappsEnabled, analytics.miniapps.enabled);
+          animateNumber(miniappsTotal, analytics.miniapps.total);
+          animateNumber(miniappsTabCount, analytics.miniapps.tabs.length);
           refreshLabel.textContent = `Auto-refresh ${formatLocalTime(new Date())}`;
         };
 
@@ -800,7 +837,20 @@
           miniappChart.update();
         };
 
+        const setRefreshButtonState = (loading) => {
+          if (!refreshAnalyticsButton) return;
+          refreshAnalyticsButton.disabled = loading;
+          refreshAnalyticsButton.textContent = loading ? "Refreshing..." : "Refresh now";
+          refreshAnalyticsButton.classList.toggle("opacity-60", loading);
+          refreshAnalyticsButton.classList.toggle("cursor-wait", loading);
+        };
+
         const refreshAnalytics = async () => {
+          if (isRefreshing) {
+            return;
+          }
+          isRefreshing = true;
+          setRefreshButtonState(true);
           try {
             const response = await fetch(analyticsEndpoint, {
               method: "GET",
@@ -821,11 +871,47 @@
               refreshLabel.textContent = "Auto-refresh paused";
             }
             console.error(error);
+          } finally {
+            isRefreshing = false;
+            setRefreshButtonState(false);
           }
         };
 
+        const stopPolling = () => {
+          if (refreshTimer) {
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+          }
+        };
+
+        const startPolling = () => {
+          if (refreshTimer || document.hidden) {
+            return;
+          }
+          refreshTimer = window.setInterval(refreshAnalytics, refreshIntervalMs);
+        };
+
+        if (refreshAnalyticsButton) {
+          refreshAnalyticsButton.addEventListener("click", () => {
+            refreshAnalytics();
+          });
+        }
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            stopPolling();
+            if (refreshLabel) {
+              refreshLabel.textContent = "Auto-refresh sleeping";
+            }
+            return;
+          }
+          paintSummary();
+          refreshAnalytics();
+          startPolling();
+        });
+
         paintSummary();
-        window.setInterval(refreshAnalytics, 30000);
+        startPolling();
       })();
     </script>
   </body>
