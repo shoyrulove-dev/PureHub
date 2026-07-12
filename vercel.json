@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd pwa && npm install && cd .. && python3 -m pip install -r requirements.txt",
+  "installCommand": "cd pwa && npm install && cd .. && python3 -m pip install --break-system-packages -r requirements.txt",
   "buildCommand": "cd pwa && npm run build",
   "outputDirectory": "pwa/dist",
   "functions": {
