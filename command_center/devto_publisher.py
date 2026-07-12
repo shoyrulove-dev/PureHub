@@ -4,7 +4,10 @@ from pathlib import Path
 
 import requests
 
-from database import OUTPUT_DIR, get_config_value, list_article_jobs, update_article_job
+try:
+    from .database import OUTPUT_DIR, get_config_value, list_article_jobs, update_article_job
+except ImportError:
+    from database import OUTPUT_DIR, get_config_value, list_article_jobs, update_article_job
 
 DEVTO_ENDPOINT = "https://dev.to/api/articles"
 

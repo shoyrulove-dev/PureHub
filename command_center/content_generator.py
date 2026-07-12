@@ -6,7 +6,10 @@ from typing import Iterable
 
 from openai import OpenAI
 
-from database import OUTPUT_DIR, create_article_job, get_config_value
+try:
+    from .database import OUTPUT_DIR, create_article_job, get_config_value
+except ImportError:
+    from database import OUTPUT_DIR, create_article_job, get_config_value
 
 DEFAULT_KEYWORDS = [
     "offline compass app",

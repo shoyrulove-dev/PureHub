@@ -5,13 +5,22 @@ from dataclasses import dataclass
 
 import telebot
 
-from database import (
-    get_config_value,
-    get_user,
-    increment_invites,
-    mark_reward_sent,
-    upsert_user,
-)
+try:
+    from .database import (
+        get_config_value,
+        get_user,
+        increment_invites,
+        mark_reward_sent,
+        upsert_user,
+    )
+except ImportError:
+    from database import (
+        get_config_value,
+        get_user,
+        increment_invites,
+        mark_reward_sent,
+        upsert_user,
+    )
 
 INVITE_GOAL = 3
 

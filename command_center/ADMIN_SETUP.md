@@ -60,3 +60,21 @@ http://127.0.0.1:8000/admin
 - `/admin/api/referrers`
 - `/admin/api/miniapps`
 - `/admin/api/catalog`
+
+## Vercel deployment notes
+
+- `vercel.json` rewrites `/admin` and `/admin/*` to the Python function at `api/index.py`.
+- The PWA still serves from `pwa/dist`; `/admin` is reserved for FastAPI.
+- Set these environment variables in the Vercel project:
+  - `MONGO_URI`
+  - `MONGO_DB_NAME`
+  - `ADMIN_USERNAME`
+  - `ADMIN_PASSWORD`
+  - `SESSION_SECRET`
+- The first request to the backend will seed:
+  - `config`
+  - `admins`
+  - `miniapps`
+  - `api_catalog`
+  - `article_jobs`
+  - `users`
