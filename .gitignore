@@ -34,3 +34,5 @@ command_center/.env
 # Misc
 *.keystore
 *.jks
+
+.vercel

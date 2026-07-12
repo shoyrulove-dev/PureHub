@@ -31,6 +31,7 @@ CONFIG_DEFAULTS = {
 }
 
 CURRENT_SCHEMA_VERSION = 5
+DEFAULTS_BOOTSTRAP_VERSION = 1
 
 MINIAPP_DEFAULTS = [
     {
@@ -419,6 +420,7 @@ API_CATALOG_DEFAULTS = [
 PASSWORD_CONTEXT = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 _CLIENT: MongoClient[Any] | None = None
+_INITIALIZED = False
 
 
 def get_env_value(key: str, default: str = "") -> str:
@@ -431,7 +433,15 @@ def get_client() -> MongoClient[Any]:
         mongo_uri = get_env_value("MONGO_URI")
         if not mongo_uri:
             raise RuntimeError("Missing MONGO_URI in command_center/.env")
-        _CLIENT = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
+        _CLIENT = MongoClient(
+            mongo_uri,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=10000,
+            maxPoolSize=10,
+            maxIdleTimeMS=45000,
+            appname="purehub-command-center",
+        )
     return _CLIENT
 
 
@@ -449,6 +459,10 @@ def utcnow() -> datetime:
 
 
 def init_database() -> None:
+    global _INITIALIZED
+    if _INITIALIZED:
+        return
+
     OUTPUT_DIR.mkdir(exist_ok=True)
     db = get_database()
 
@@ -462,9 +476,22 @@ def init_database() -> None:
     db.audit_logs.create_index([("created_at", DESCENDING)])
     db.audit_logs.create_index([("actor", ASCENDING), ("created_at", DESCENDING)])
     db.schema_migrations.create_index([("version", ASCENDING)], unique=True)
+    db.system_meta.create_index([("key", ASCENDING)], unique=True)
+
+    run_schema_migrations()
+    seed_default_documents()
+    ensure_admin_account()
+    _INITIALIZED = True
+
+
+def seed_default_documents() -> None:
+    state = collection("system_meta").find_one({"key": "defaults_bootstrap"})
+    current_version = int(state.get("version", 0)) if state else 0
+    if current_version >= DEFAULTS_BOOTSTRAP_VERSION:
+        return
 
     for key, value in CONFIG_DEFAULTS.items():
-        db.config.update_one(
+        collection("config").update_one(
             {"key": key},
             {
                 "$setOnInsert": {
@@ -477,7 +504,7 @@ def init_database() -> None:
         )
 
     for item in MINIAPP_DEFAULTS:
-        db.miniapps.update_one(
+        collection("miniapps").update_one(
             {"miniapp_id": item["miniapp_id"]},
             {
                 "$setOnInsert": {
@@ -490,7 +517,7 @@ def init_database() -> None:
         )
 
     for item in API_CATALOG_DEFAULTS:
-        db.api_catalog.update_one(
+        collection("api_catalog").update_one(
             {"api_key": item["api_key"]},
             {
                 "$setOnInsert": {
@@ -502,8 +529,11 @@ def init_database() -> None:
             upsert=True,
         )
 
-    run_schema_migrations()
-    ensure_admin_account()
+    collection("system_meta").update_one(
+        {"key": "defaults_bootstrap"},
+        {"$set": {"version": DEFAULTS_BOOTSTRAP_VERSION, "updated_at": utcnow()}},
+        upsert=True,
+    )
 
 
 def ensure_admin_account() -> None:

@@ -105,7 +105,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=get_env_value("SESSION_SECRET", "change-me-in-command-center-env"),
     same_site="lax",
-    https_only=False,
+    https_only=get_env_value("VERCEL_ENV") in {"production", "preview"},
 )
 
 
