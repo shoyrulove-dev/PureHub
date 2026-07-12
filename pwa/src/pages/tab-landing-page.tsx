@@ -12,8 +12,8 @@ type TabLandingPageProps = {
 
 export function TabLandingPage({ tab }: TabLandingPageProps) {
   const { t } = useTranslation()
-  const { locale } = useParams()
-  const normalizedLocale = normalizeLocale(locale)
+  const { lang } = useParams()
+  const normalizedLocale = normalizeLocale(lang)
   const miniApps = MINI_APP_ITEMS.filter((item) => item.tabId === tab.id)
 
   if (tab.id === 'zen-time') {

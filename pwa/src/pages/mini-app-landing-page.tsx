@@ -11,8 +11,8 @@ type MiniAppLandingPageProps = {
 
 export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const { t } = useTranslation()
-  const { locale } = useParams()
-  const normalizedLocale = normalizeLocale(locale)
+  const { lang } = useParams()
+  const normalizedLocale = normalizeLocale(lang)
   const runes = buildRunes(miniApp.id, t)
   const phaseNotes = buildPhaseNotes(miniApp.id)
 

@@ -120,8 +120,8 @@ const dashboardFeatures: DashboardFeature[] = [
 
 export function Dashboard() {
   const { t } = useTranslation()
-  const { locale } = useParams()
-  const normalizedLocale = normalizeLocale(locale)
+  const { lang } = useParams()
+  const normalizedLocale = normalizeLocale(lang)
 
   return (
     <section className="space-y-5">

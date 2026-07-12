@@ -11,6 +11,7 @@ import {
   Waves,
   Wrench,
 } from 'lucide-react'
+import { seoMeta, type SeoLanguage } from '../../config/seoMeta'
 import type { LocaleCode } from '../../i18n/locales'
 
 type LocalizedSlugMap = Record<LocaleCode, string>
@@ -62,6 +63,14 @@ export type MiniAppDefinition = {
   slugs: LocalizedSlugMap
 }
 
+function seoSlugs(id: Exclude<MiniAppId, 'community-pro-unlock'>): Record<SeoLanguage, string> {
+  return {
+    en: seoMeta[id].en.slug,
+    vi: seoMeta[id].vi.slug,
+    zh: seoMeta[id].zh.slug,
+  }
+}
+
 export const TAB_ITEMS: TabDefinition[] = [
   {
     id: 'zen-time',
@@ -72,7 +81,7 @@ export const TAB_ITEMS: TabDefinition[] = [
     segments: {
       en: 'zen-time',
       vi: 'thien-thoi-gian',
-      zh: '禅与时间',
+      zh: 'chan-shi-jian',
     },
     accentClass: 'text-emerald-300',
     accentSurfaceClass: 'from-emerald-400/14 via-slate-950 to-cyan-400/8',
@@ -86,7 +95,7 @@ export const TAB_ITEMS: TabDefinition[] = [
     segments: {
       en: 'measure-tools',
       vi: 'do-luong-cong-cu',
-      zh: '测量工具',
+      zh: 'ce-liang-gong-ju',
     },
     accentClass: 'text-sky-300',
     accentSurfaceClass: 'from-sky-400/14 via-slate-950 to-indigo-400/8',
@@ -100,7 +109,7 @@ export const TAB_ITEMS: TabDefinition[] = [
     segments: {
       en: 'vision',
       vi: 'thi-giac-camera',
-      zh: '视觉相机',
+      zh: 'shi-jue-xiang-ji',
     },
     accentClass: 'text-violet-300',
     accentSurfaceClass: 'from-violet-400/14 via-slate-950 to-fuchsia-400/8',
@@ -114,7 +123,7 @@ export const TAB_ITEMS: TabDefinition[] = [
     segments: {
       en: 'security-audio',
       vi: 'bao-mat-am-thanh',
-      zh: '安全音频',
+      zh: 'an-quan-yin-pin',
     },
     accentClass: 'text-teal-300',
     accentSurfaceClass: 'from-teal-400/14 via-slate-950 to-emerald-400/8',
@@ -128,7 +137,7 @@ export const TAB_ITEMS: TabDefinition[] = [
     segments: {
       en: 'finance-community',
       vi: 'tai-chinh-cong-dong',
-      zh: '财务社区',
+      zh: 'cai-wu-she-qu',
     },
     accentClass: 'text-amber-300',
     accentSurfaceClass: 'from-amber-400/14 via-slate-950 to-orange-400/8',
@@ -142,7 +151,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Sparkles,
     titleKey: 'miniApps.lunarCalendar.title',
     summaryKey: 'miniApps.lunarCalendar.summary',
-    slugs: { en: 'lunar-calendar', vi: 'lich-am', zh: '农历' },
+    slugs: seoSlugs('lunar-calendar'),
   },
   {
     id: 'zen-habit',
@@ -150,7 +159,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Activity,
     titleKey: 'miniApps.zenHabit.title',
     summaryKey: 'miniApps.zenHabit.summary',
-    slugs: { en: 'zen-habit', vi: 'thoi-quen-zen', zh: '禅习惯' },
+    slugs: seoSlugs('zen-habit'),
   },
   {
     id: 'zen-pomodoro',
@@ -158,7 +167,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Timer,
     titleKey: 'miniApps.zenPomodoro.title',
     summaryKey: 'miniApps.zenPomodoro.summary',
-    slugs: { en: 'zen-pomodoro', vi: 'pomodoro-zen', zh: '禅番茄钟' },
+    slugs: seoSlugs('zen-pomodoro'),
   },
   {
     id: 'zen-breath',
@@ -166,7 +175,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Waves,
     titleKey: 'miniApps.zenBreath.title',
     summaryKey: 'miniApps.zenBreath.summary',
-    slugs: { en: 'zen-breath', vi: 'tho-zen', zh: '禅呼吸' },
+    slugs: seoSlugs('zen-breath'),
   },
   {
     id: 'compass',
@@ -174,7 +183,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Sparkles,
     titleKey: 'miniApps.compass.title',
     summaryKey: 'miniApps.compass.summary',
-    slugs: { en: 'compass', vi: 'la-ban', zh: '罗盘' },
+    slugs: seoSlugs('compass'),
   },
   {
     id: 'bubble-level',
@@ -182,7 +191,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Activity,
     titleKey: 'miniApps.bubbleLevel.title',
     summaryKey: 'miniApps.bubbleLevel.summary',
-    slugs: { en: 'bubble-level', vi: 'thuoc-thuy', zh: '水平仪' },
+    slugs: seoSlugs('bubble-level'),
   },
   {
     id: 'decibel-meter',
@@ -190,7 +199,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: AudioLines,
     titleKey: 'miniApps.decibelMeter.title',
     summaryKey: 'miniApps.decibelMeter.summary',
-    slugs: { en: 'decibel-meter', vi: 'do-on', zh: '分贝仪' },
+    slugs: seoSlugs('decibel-meter'),
   },
   {
     id: 'unit-converter',
@@ -198,7 +207,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Wrench,
     titleKey: 'miniApps.unitConverter.title',
     summaryKey: 'miniApps.unitConverter.summary',
-    slugs: { en: 'unit-converter', vi: 'doi-don-vi', zh: '单位换算' },
+    slugs: seoSlugs('unit-converter'),
   },
   {
     id: 'qr-studio',
@@ -206,7 +215,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Camera,
     titleKey: 'miniApps.qrStudio.title',
     summaryKey: 'miniApps.qrStudio.summary',
-    slugs: { en: 'qr-studio', vi: 'qr-studio', zh: '二维码工坊' },
+    slugs: seoSlugs('qr-studio'),
   },
   {
     id: 'doc-to-pdf',
@@ -214,7 +223,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Camera,
     titleKey: 'miniApps.docToPdf.title',
     summaryKey: 'miniApps.docToPdf.summary',
-    slugs: { en: 'doc-to-pdf', vi: 'tai-lieu-pdf', zh: '文档转pdf' },
+    slugs: seoSlugs('doc-to-pdf'),
   },
   {
     id: 'ocr-text',
@@ -222,7 +231,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Camera,
     titleKey: 'miniApps.ocrText.title',
     summaryKey: 'miniApps.ocrText.summary',
-    slugs: { en: 'ocr-text', vi: 'trich-xuat-van-ban', zh: 'ocr文字' },
+    slugs: seoSlugs('ocr-text'),
   },
   {
     id: 'color-grabber',
@@ -230,7 +239,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Camera,
     titleKey: 'miniApps.colorGrabber.title',
     summaryKey: 'miniApps.colorGrabber.summary',
-    slugs: { en: 'color-grabber', vi: 'lay-mau', zh: '取色器' },
+    slugs: seoSlugs('color-grabber'),
   },
   {
     id: 'speaker-cleaner',
@@ -238,7 +247,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: AudioLines,
     titleKey: 'miniApps.speakerCleaner.title',
     summaryKey: 'miniApps.speakerCleaner.summary',
-    slugs: { en: 'speaker-cleaner', vi: 'lam-sach-loa', zh: '清理扬声器' },
+    slugs: seoSlugs('speaker-cleaner'),
   },
   {
     id: 'password-vault',
@@ -246,7 +255,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: ShieldCheck,
     titleKey: 'miniApps.passwordVault.title',
     summaryKey: 'miniApps.passwordVault.summary',
-    slugs: { en: 'password-vault', vi: 'kho-mat-khau', zh: '密码保险库' },
+    slugs: seoSlugs('password-vault'),
   },
   {
     id: 'bill-splitter',
@@ -254,7 +263,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: CreditCard,
     titleKey: 'miniApps.billSplitter.title',
     summaryKey: 'miniApps.billSplitter.summary',
-    slugs: { en: 'bill-splitter', vi: 'chia-hoa-don', zh: '分账器' },
+    slugs: seoSlugs('bill-splitter'),
   },
   {
     id: 'expense-tracker',
@@ -262,7 +271,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Wallet,
     titleKey: 'miniApps.expenseTracker.title',
     summaryKey: 'miniApps.expenseTracker.summary',
-    slugs: { en: 'expense-tracker', vi: 'so-chi-tieu', zh: '记账本' },
+    slugs: seoSlugs('expense-tracker'),
   },
   {
     id: 'decision-wheel',
@@ -270,7 +279,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: Sparkles,
     titleKey: 'miniApps.decisionWheel.title',
     summaryKey: 'miniApps.decisionWheel.summary',
-    slugs: { en: 'decision-wheel', vi: 'vong-quay-quyet-dinh', zh: '决策转盘' },
+    slugs: seoSlugs('decision-wheel'),
   },
   {
     id: 'community-pro-unlock',
@@ -278,7 +287,11 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: CreditCard,
     titleKey: 'miniApps.communityUnlock.title',
     summaryKey: 'miniApps.communityUnlock.summary',
-    slugs: { en: 'community-pro-unlock', vi: 'mo-khoa-cong-dong', zh: '社区解锁' },
+    slugs: {
+      en: 'community-pro-unlock',
+      vi: 'mo-khoa-cong-dong',
+      zh: 'she-qu-jie-suo',
+    },
   },
 ]
 

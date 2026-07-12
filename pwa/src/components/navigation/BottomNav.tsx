@@ -22,9 +22,9 @@ const tabIcons: Record<TabId, IconType> = {
 
 export function BottomNav() {
   const { t } = useTranslation()
-  const { locale, slug } = useParams()
-  const normalizedLocale = normalizeLocale(locale)
-  const currentEntry = slug ? resolveEntryBySlug(slug) : null
+  const { lang, appSlug } = useParams()
+  const normalizedLocale = normalizeLocale(lang)
+  const currentEntry = appSlug ? resolveEntryBySlug(appSlug) : null
   const activeTabId =
     currentEntry?.kind === 'tab'
       ? currentEntry.item.id

@@ -10,7 +10,7 @@ export const appRouter = createBrowserRouter([
     element: <LocaleRedirectPage />,
   },
   {
-    path: '/:locale',
+    path: '/:lang',
     element: <LocaleLayout />,
     children: [
       {
@@ -18,7 +18,7 @@ export const appRouter = createBrowserRouter([
         element: <LocaleIndexPage />,
       },
       {
-        path: ':slug',
+        path: ':appSlug',
         element: <LocalizedEntryPage />,
       },
     ],

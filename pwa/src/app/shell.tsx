@@ -10,9 +10,9 @@ import { TAB_BY_ID } from '../features/catalog/tabs'
 export function AppShell() {
   const { t } = useTranslation()
   const location = useLocation()
-  const { locale, slug } = useParams()
-  const normalizedLocale = normalizeLocale(locale)
-  const currentEntry = slug ? resolveEntryBySlug(slug) : null
+  const { lang, appSlug } = useParams()
+  const normalizedLocale = normalizeLocale(lang)
+  const currentEntry = appSlug ? resolveEntryBySlug(appSlug) : null
   const activeTabId =
     currentEntry?.kind === 'tab'
       ? currentEntry.item.id
@@ -85,27 +85,29 @@ export function AppShell() {
                   <p className="text-sm text-slate-400">{t('app.subtitle')}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 rounded-2xl border border-white/8 bg-white/5 p-1 xl:hidden">
-                {SUPPORTED_LOCALES.map((item) => (
-                  <Link
-                    key={item}
-                    to={localizedTarget(item)}
-                    className={[
-                      'rounded-xl px-2.5 py-1 text-xs font-medium uppercase transition',
-                      item === normalizedLocale
-                        ? 'bg-white text-slate-950 shadow-sm'
-                        : 'text-slate-400 hover:bg-white/8 hover:text-white',
-                    ].join(' ')}
-                  >
-                    {item}
-                  </Link>
-                ))}
+              <div className="flex items-center gap-2">
+                <PwaInstallPrompt />
+                <div className="flex items-center gap-1 rounded-2xl border border-white/8 bg-white/5 p-1 xl:hidden">
+                  {SUPPORTED_LOCALES.map((item) => (
+                    <Link
+                      key={item}
+                      to={localizedTarget(item)}
+                      className={[
+                        'rounded-xl px-2.5 py-1 text-xs font-medium uppercase transition',
+                        item === normalizedLocale
+                          ? 'bg-white text-slate-950 shadow-sm'
+                          : 'text-slate-400 hover:bg-white/8 hover:text-white',
+                      ].join(' ')}
+                    >
+                      {item}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </header>
 
           <main className="flex-1 overflow-y-auto px-4 pb-28 pt-4 sm:px-5">
-            <PwaInstallPrompt />
             <div key={location.pathname} className="page-enter">
               <Outlet />
             </div>

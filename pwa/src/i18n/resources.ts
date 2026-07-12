@@ -5,7 +5,7 @@ export const resources = {
         subtitle: 'Offline utility super app',
         phaseShell: 'Phase 2 shell',
         miniAppMap: 'Mini-app map',
-        phaseDeferred: 'Core interaction is now shaped. Deep logic continues in the next build pass.',
+        phaseDeferred: 'Core interaction is shaped. Deep feature logic continues in the next build pass.',
         localeLabel: 'Language',
         openPlaceholder: 'This module now has a richer presentation shell and is ready for real feature logic.',
         routeLabel: 'Canonical route',
@@ -13,9 +13,9 @@ export const resources = {
         browseTab: 'Browse tab',
       },
       pwa: {
-        installBadge: 'Arcane Install',
-        installTitle: 'Install PureHub for a native-like offline flow',
-        installDescription: 'Pin the app to your device for a smoother launch, full-screen focus, and faster offline access.',
+        installIconLabel: 'Install app',
+        installTitle: 'Install PureHub',
+        installDescription: 'Pin PureHub for faster launches and a more native offline experience.',
         installNow: 'Install now',
         later: 'Later',
       },
@@ -97,9 +97,9 @@ export const resources = {
         browseTab: 'Xem tab',
       },
       pwa: {
-        installBadge: 'Cài đặt phép thuật',
-        installTitle: 'Cài PureHub để dùng như app native ngoại tuyến',
-        installDescription: 'Ghim ứng dụng lên thiết bị để mở nhanh hơn, chạy toàn màn hình và dùng offline mượt hơn.',
+        installIconLabel: 'Cài ứng dụng',
+        installTitle: 'Cài đặt PureHub',
+        installDescription: 'Ghim PureHub lên thiết bị để mở nhanh hơn và dùng offline giống app native hơn.',
         installNow: 'Cài ngay',
         later: 'Để sau',
       },
@@ -108,7 +108,7 @@ export const resources = {
         offline: 'Ngoại tuyến',
         quickAccess: 'Truy cập nhanh',
         privacy: 'Riêng tư',
-        spells: '11 phép tiện ích',
+        spells: '11 tiện ích',
         onDevice: 'Chỉ trên thiết bị',
       },
       miniAppDetails: {
@@ -171,7 +171,7 @@ export const resources = {
     translation: {
       app: {
         subtitle: '纯离线隐私工具超级应用',
-        phaseShell: '第二阶段壳层',
+        phaseShell: '第二阶段外壳',
         miniAppMap: '迷你应用地图',
         phaseDeferred: '核心交互已经成形，更深层的功能逻辑将在下一轮构建中继续实现。',
         localeLabel: '语言',
@@ -181,9 +181,9 @@ export const resources = {
         browseTab: '查看标签页',
       },
       pwa: {
-        installBadge: '魔法安装',
-        installTitle: '安装 PureHub 以获得接近原生应用的离线体验',
-        installDescription: '将应用固定到设备上，可获得更快启动、全屏专注和更稳定的离线访问。',
+        installIconLabel: '安装应用',
+        installTitle: '安装 PureHub',
+        installDescription: '将 PureHub 固定到设备上，以获得更快启动和更像原生应用的离线体验。',
         installNow: '立即安装',
         later: '稍后',
       },
@@ -192,7 +192,7 @@ export const resources = {
         offline: '离线',
         quickAccess: '快捷访问',
         privacy: '隐私',
-        spells: '11 个法术',
+        spells: '11 个工具',
         onDevice: '仅限本机',
       },
       miniAppDetails: {
@@ -232,7 +232,7 @@ export const resources = {
       miniApps: {
         lunarCalendar: { title: '农历', summary: '离线农历换算与本地月视图浏览。' },
         zenHabit: { title: '禅习惯', summary: '基于 IndexedDB 的离线习惯连击追踪。' },
-        zenPomodoro: { title: '禅番茄', summary: '带本地白噪音的专注计时器。' },
+        zenPomodoro: { title: '禅番茄钟', summary: '带本地白噪音的专注计时器。' },
         zenBreath: { title: '禅呼吸', summary: '用平滑动效驱动的呼吸引导。' },
         compass: { title: '罗盘', summary: '基于 DeviceOrientation 的顺滑方向工具。' },
         bubbleLevel: { title: '水平仪', summary: '利用设备传感器快速检测平衡。' },
