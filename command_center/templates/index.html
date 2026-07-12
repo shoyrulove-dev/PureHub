@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PureHub Command Center</title>
+    <title>PureHub Command Center Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100">
@@ -12,36 +12,46 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">PureHub Command Center</p>
-            <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Admin Dashboard</h1>
+            <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Admin Panel</h1>
             <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-              Manage your local automation keys, watch referral growth, and trigger growth systems from one private FastAPI dashboard.
+              Centralize content generation, publishing, and viral-loop operations under <span class="font-semibold text-white">{{ admin_prefix }}</span>.
             </p>
           </div>
-          <div class="grid gap-3 sm:grid-cols-2">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Tracked users</p>
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Users</p>
               <p class="mt-2 text-3xl font-semibold text-white">{{ stats.total_users }}</p>
             </div>
             <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Total invites</p>
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Invites</p>
               <p class="mt-2 text-3xl font-semibold text-emerald-300">{{ stats.total_invites }}</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Articles</p>
+              <p class="mt-2 text-3xl font-semibold text-white">{{ metrics.total_articles }}</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Bot</p>
+              <p class="mt-2 text-lg font-semibold {% if bot_state.running %}text-emerald-300{% else %}text-slate-300{% endif %}">
+                {% if bot_state.running %}Running{% else %}Stopped{% endif %}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {% if message %}
-      <section class="rounded-3xl border px-5 py-4 {% if message_type == 'success' %}border-emerald-300/20 bg-emerald-400/10 text-emerald-100{% else %}border-sky-300/20 bg-sky-400/10 text-sky-100{% endif %}">
+      <section class="rounded-3xl border px-5 py-4 {% if message_type == 'success' %}border-emerald-300/20 bg-emerald-400/10 text-emerald-100{% elif message_type == 'error' %}border-rose-300/20 bg-rose-400/10 text-rose-100{% else %}border-sky-300/20 bg-sky-400/10 text-sky-100{% endif %}">
         {{ message }}
       </section>
       {% endif %}
 
-      <section class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <form action="/config" method="post" class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+      <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <form action="{{ admin_prefix }}/config" method="post" class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Key Vault</p>
-              <h2 class="mt-2 text-2xl font-semibold text-white">API configuration</h2>
+              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Config</p>
+              <h2 class="mt-2 text-2xl font-semibold text-white">Credential vault</h2>
             </div>
             <button type="submit" class="rounded-2xl bg-emerald-400/15 px-4 py-2.5 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/20 transition hover:bg-emerald-400/20">
               Save keys
@@ -51,102 +61,192 @@
           <div class="mt-6 grid gap-5">
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Grok API key</span>
-              <input
-                type="password"
-                name="grok_api_key"
-                value="{{ config.get('grok_api_key', defaults.grok_api_key) }}"
-                placeholder="xai-..."
-                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7"
-              />
+              <input type="password" name="grok_api_key" value="{{ config.get('grok_api_key', defaults.grok_api_key) }}" placeholder="xai-..." class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
+
+            <div class="grid gap-5 sm:grid-cols-2">
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Grok model</span>
+                <input type="text" name="grok_model" value="{{ config.get('grok_model', defaults.grok_model) }}" placeholder="grok-2" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Site URL</span>
+                <input type="url" name="site_url" value="{{ config.get('site_url', defaults.site_url) }}" placeholder="https://hub.blissbiovn.com" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
+              </label>
+            </div>
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Dev.to API key</span>
-              <input
-                type="password"
-                name="devto_api_key"
-                value="{{ config.get('devto_api_key', defaults.devto_api_key) }}"
-                placeholder="devto-..."
-                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7"
-              />
+              <input type="password" name="devto_api_key" value="{{ config.get('devto_api_key', defaults.devto_api_key) }}" placeholder="devto-..." class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
+            </label>
+
+            <label class="block">
+              <span class="mb-2 block text-sm font-medium text-slate-200">Dev.to publish as draft</span>
+              <select name="devto_publish_as_draft" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7">
+                <option value="true" {% if config.get('devto_publish_as_draft', defaults.devto_publish_as_draft) == 'true' %}selected{% endif %}>true</option>
+                <option value="false" {% if config.get('devto_publish_as_draft', defaults.devto_publish_as_draft) == 'false' %}selected{% endif %}>false</option>
+              </select>
             </label>
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Telegram bot token</span>
-              <input
-                type="password"
-                name="telegram_bot_token"
-                value="{{ config.get('telegram_bot_token', defaults.telegram_bot_token) }}"
-                placeholder="1234567890:AA..."
-                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7"
-              />
+              <input type="password" name="telegram_bot_token" value="{{ config.get('telegram_bot_token', defaults.telegram_bot_token) }}" placeholder="1234567890:AA..." class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
 
-            <label class="block">
-              <span class="mb-2 block text-sm font-medium text-slate-200">Telegram bot username</span>
-              <input
-                type="text"
-                name="telegram_bot_username"
-                value="{{ config.get('telegram_bot_username', defaults.telegram_bot_username) }}"
-                placeholder="aaa_letan_vip_bot"
-                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7"
-              />
-            </label>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Telegram bot username</span>
+                <input type="text" name="telegram_bot_username" value="{{ config.get('telegram_bot_username', defaults.telegram_bot_username) }}" placeholder="aaa_letan_vip_bot" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Notify chat id</span>
+                <input type="text" name="telegram_notify_chat_id" value="{{ config.get('telegram_notify_chat_id', defaults.telegram_notify_chat_id) }}" placeholder="-1001234567890" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
+              </label>
+            </div>
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Pro unlock code</span>
-              <input
-                type="text"
-                name="pro_unlock_code"
-                value="{{ config.get('pro_unlock_code', defaults.pro_unlock_code) }}"
-                placeholder="PUREHUB-PRO-2026"
-                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7"
-              />
+              <input type="text" name="pro_unlock_code" value="{{ config.get('pro_unlock_code', defaults.pro_unlock_code) }}" placeholder="PUREHUB-PRO-2026" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
           </div>
         </form>
 
         <div class="space-y-6">
           <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-purple-300">Manual automation</p>
-            <h2 class="mt-2 text-2xl font-semibold text-white">Trigger systems</h2>
-            <p class="mt-3 text-sm leading-7 text-slate-300">
-              These buttons are wired now so you can keep the admin panel flow stable. Phase 2 will attach the real content, publishing, and Telegram jobs.
-            </p>
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-purple-300">Automation</p>
+            <h2 class="mt-2 text-2xl font-semibold text-white">Manual triggers</h2>
 
-            <div class="mt-6 grid gap-3">
-              <form action="/actions/generate" method="post">
-                <button type="submit" class="flex w-full items-center justify-between rounded-2xl border border-emerald-400/18 bg-emerald-400/10 px-4 py-3 text-left text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/15">
-                  <span>Run content generator</span>
-                  <span class="text-xs uppercase tracking-[0.24em] text-emerald-300">Phase 2</span>
+            <form action="{{ admin_prefix }}/actions/generate" method="post" class="mt-6 space-y-3">
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Keywords (one per line)</span>
+                <textarea name="keywords" rows="6" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7">{{ default_keywords }}</textarea>
+              </label>
+              <button type="submit" class="w-full rounded-2xl border border-emerald-400/18 bg-emerald-400/10 px-4 py-3 text-left text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/15">
+                Run content generator
+              </button>
+            </form>
+
+            <form action="{{ admin_prefix }}/actions/publish" method="post" class="mt-3">
+              <button type="submit" class="w-full rounded-2xl border border-sky-400/18 bg-sky-400/10 px-4 py-3 text-left text-sm font-semibold text-sky-100 transition hover:bg-sky-400/15">
+                Run Dev.to publisher
+              </button>
+            </form>
+
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+              <form action="{{ admin_prefix }}/actions/bot/start" method="post">
+                <button type="submit" class="w-full rounded-2xl border border-amber-400/18 bg-amber-400/10 px-4 py-3 text-left text-sm font-semibold text-amber-100 transition hover:bg-amber-400/15">
+                  Start Telegram bot
                 </button>
               </form>
-
-              <form action="/actions/publish" method="post">
-                <button type="submit" class="flex w-full items-center justify-between rounded-2xl border border-sky-400/18 bg-sky-400/10 px-4 py-3 text-left text-sm font-semibold text-sky-100 transition hover:bg-sky-400/15">
-                  <span>Run Dev.to publisher</span>
-                  <span class="text-xs uppercase tracking-[0.24em] text-sky-300">Phase 2</span>
-                </button>
-              </form>
-
-              <form action="/actions/bot" method="post">
-                <button type="submit" class="flex w-full items-center justify-between rounded-2xl border border-amber-400/18 bg-amber-400/10 px-4 py-3 text-left text-sm font-semibold text-amber-100 transition hover:bg-amber-400/15">
-                  <span>Start Telegram viral loop</span>
-                  <span class="text-xs uppercase tracking-[0.24em] text-amber-300">Phase 2</span>
+              <form action="{{ admin_prefix }}/actions/bot/stop" method="post">
+                <button type="submit" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-slate-100 transition hover:bg-white/8">
+                  Stop Telegram bot
                 </button>
               </form>
             </div>
-          </section>
 
-          <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Runtime notes</p>
-            <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-300">
-              <li class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">FastAPI dashboard runs on port <span class="font-semibold text-white">8000</span>.</li>
-              <li class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">Keys are stored in local SQLite for quick iteration during development.</li>
-              <li class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">Generated markdown articles will be written to <span class="font-semibold text-white">command_center/output_md/</span>.</li>
-            </ul>
+            <div class="mt-5 rounded-3xl border border-white/8 bg-white/5 p-4 text-sm text-slate-300">
+              <p><span class="font-semibold text-white">API base:</span> {{ api_prefix }}</p>
+              <p class="mt-2"><span class="font-semibold text-white">Bot thread:</span> {{ bot_state.thread_name or 'not started' }}</p>
+              {% if bot_state.last_error %}
+              <p class="mt-2 text-rose-200"><span class="font-semibold">Last error:</span> {{ bot_state.last_error }}</p>
+              {% endif %}
+            </div>
           </section>
         </div>
+      </section>
+
+      <section class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-300">Article pipeline</p>
+              <h2 class="mt-2 text-2xl font-semibold text-white">Generated & published jobs</h2>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-3">
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Generated</p>
+                <p class="mt-1 text-lg font-semibold text-white">{{ metrics.generated_articles }}</p>
+              </div>
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Published</p>
+                <p class="mt-1 text-lg font-semibold text-emerald-300">{{ metrics.published_articles }}</p>
+              </div>
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Failed</p>
+                <p class="mt-1 text-lg font-semibold text-rose-300">{{ metrics.failed_articles }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 overflow-hidden rounded-3xl border border-white/8">
+            <table class="min-w-full divide-y divide-white/8 text-sm">
+              <thead class="bg-white/5 text-left text-slate-400">
+                <tr>
+                  <th class="px-4 py-3 font-medium">Title</th>
+                  <th class="px-4 py-3 font-medium">Keyword</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/6 bg-slate-950/60">
+                {% for job in jobs %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-100">
+                    <div class="font-medium">{{ job.title }}</div>
+                    <div class="mt-1 text-xs text-slate-500">{{ job.source_filename }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-slate-300">{{ job.keyword }}</td>
+                  <td class="px-4 py-3">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold {% if job.status == 'published' %}bg-emerald-400/15 text-emerald-200{% elif job.status == 'failed' %}bg-rose-400/15 text-rose-200{% else %}bg-sky-400/15 text-sky-200{% endif %}">
+                      {{ job.status }}
+                    </span>
+                    {% if job.remote_url %}
+                    <div class="mt-2">
+                      <a href="{{ job.remote_url }}" target="_blank" rel="noreferrer" class="text-xs text-emerald-300 underline underline-offset-4">Open post</a>
+                    </div>
+                    {% endif %}
+                    {% if job.error_message %}
+                    <div class="mt-2 text-xs text-rose-200">{{ job.error_message }}</div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="3" class="px-4 py-6 text-center text-slate-500">No article jobs yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">Referral loop</p>
+          <h2 class="mt-2 text-2xl font-semibold text-white">Top referrers</h2>
+
+          <div class="mt-5 space-y-3">
+            {% for user in top_referrers %}
+            <div class="rounded-[24px] border border-white/8 bg-white/5 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-white">User {{ user.user_id }}</p>
+                  <p class="mt-1 text-sm text-slate-400">Referral code: {{ user.referral_code }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-semibold text-amber-200">{{ user.invites_count }} invites</p>
+                  <p class="mt-1 text-xs {% if user.reward_sent_at %}text-emerald-300{% else %}text-slate-500{% endif %}">
+                    {% if user.reward_sent_at %}Reward sent{% else %}Reward pending{% endif %}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="rounded-[24px] border border-dashed border-white/10 bg-white/4 p-6 text-sm text-slate-500">
+              Telegram referral activity will appear here after users start the bot.
+            </div>
+            {% endfor %}
+          </div>
+        </section>
       </section>
     </main>
   </body>
