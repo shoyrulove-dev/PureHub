@@ -21,6 +21,15 @@ captures/
 pwa/node_modules/
 pwa/dist/
 
+# Python backend
+command_center/.venv/
+command_center/__pycache__/
+command_center/*.db
+command_center/output_md/*.md
+command_center/output_md/*.mdx
+command_center/output_md/.generated/
+command_center/.env
+
 # Misc
 *.keystore
 *.jks
