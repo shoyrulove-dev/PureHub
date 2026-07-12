@@ -1,0 +1,17 @@
+.git
+.gradle
+.kotlin
+.idea
+.vscode
+app/build
+**/build
+captures
+pwa/node_modules
+pwa/dist
+command_center/.venv
+command_center/__pycache__
+api/__pycache__
+*.apk
+*.aab
+*.class
+*.log
