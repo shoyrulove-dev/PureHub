@@ -1,21 +1,26 @@
-import { Navigate, createBrowserRouter } from 'react-router-dom'
-import { AppShell } from './shell'
-import { TAB_ITEMS } from '../features/catalog/tabs'
-import { TabLandingPage } from '../pages/tab-landing-page'
+import { createBrowserRouter } from 'react-router-dom'
+import { LocaleLayout } from './locale-layout'
+import { LocalizedEntryPage } from '../pages/localized-entry-page'
+import { LocaleIndexPage } from '../pages/locale-index-page'
+import { LocaleRedirectPage } from '../pages/locale-redirect-page'
 
 export const appRouter = createBrowserRouter([
   {
     path: '/',
-    element: <AppShell />,
+    element: <LocaleRedirectPage />,
+  },
+  {
+    path: '/:locale',
+    element: <LocaleLayout />,
     children: [
       {
         index: true,
-        element: <Navigate to={TAB_ITEMS[0].path} replace />,
+        element: <LocaleIndexPage />,
       },
-      ...TAB_ITEMS.map((tab) => ({
-        path: tab.path,
-        element: <TabLandingPage tab={tab} />,
-      })),
+      {
+        path: ':slug',
+        element: <LocalizedEntryPage />,
+      },
     ],
   },
 ])
