@@ -196,6 +196,30 @@
               </button>
             </form>
           </section>
+
+          <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-300">Import / Export</p>
+            <h2 class="mt-2 text-2xl font-semibold text-white">Sync control bundle</h2>
+            <p class="mt-3 text-sm leading-7 text-slate-300">
+              Export config, mini-app catalog, and API catalog as JSON. Import supports `merge` or `replace`.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <a href="{{ admin_prefix }}/export/json" target="_blank" rel="noreferrer" class="rounded-2xl bg-indigo-400/15 px-4 py-3 text-sm font-semibold text-indigo-100 ring-1 ring-inset ring-indigo-400/20 transition hover:bg-indigo-400/20">
+                Open export JSON
+              </a>
+            </div>
+            <textarea readonly rows="10" class="mt-4 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-xs text-slate-300 outline-none">{{ export_bundle_json }}</textarea>
+            <form action="{{ admin_prefix }}/import/json" method="post" class="mt-4 space-y-3">
+              <select name="mode" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300/40 focus:bg-white/7">
+                <option value="merge">merge</option>
+                <option value="replace">replace</option>
+              </select>
+              <textarea name="bundle_json" rows="8" placeholder="Paste exported JSON here" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300/40 focus:bg-white/7"></textarea>
+              <button type="submit" class="w-full rounded-2xl border border-indigo-400/18 bg-indigo-400/10 px-4 py-3 text-left text-sm font-semibold text-indigo-100 transition hover:bg-indigo-400/15">
+                Import control bundle
+              </button>
+            </form>
+          </section>
         </div>
       </section>
 
@@ -259,6 +283,78 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section class="grid gap-6 xl:grid-cols-3">
+        <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Content funnel</p>
+          <h2 class="mt-2 text-2xl font-semibold text-white">Publishing conversion</h2>
+          <div class="mt-5 space-y-3">
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Conversion rate</p>
+              <p class="mt-1 text-2xl font-semibold text-emerald-200">{{ analytics.content.conversion_rate }}%</p>
+            </div>
+            <div class="h-3 overflow-hidden rounded-full bg-slate-800">
+              <div class="h-full rounded-full bg-emerald-400" style="width: {{ analytics.content.conversion_rate }}%"></div>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Generated</p>
+                <p class="mt-1 font-semibold text-white">{{ analytics.content.generated_articles }}</p>
+              </div>
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Published</p>
+                <p class="mt-1 font-semibold text-emerald-200">{{ analytics.content.published_articles }}</p>
+              </div>
+              <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-center">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Failed</p>
+                <p class="mt-1 font-semibold text-rose-200">{{ analytics.content.failed_articles }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">Referral funnel</p>
+          <h2 class="mt-2 text-2xl font-semibold text-white">Invite performance</h2>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Avg invites/user</p>
+              <p class="mt-1 text-xl font-semibold text-amber-200">{{ analytics.referrals.avg_invites_per_user }}</p>
+            </div>
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Goal hits</p>
+              <p class="mt-1 text-xl font-semibold text-white">{{ analytics.referrals.invite_goal_hits }}</p>
+            </div>
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Rewarded</p>
+              <p class="mt-1 text-xl font-semibold text-emerald-200">{{ analytics.referrals.rewarded_users }}</p>
+            </div>
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Users</p>
+              <p class="mt-1 text-xl font-semibold text-white">{{ analytics.referrals.total_users }}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-violet-300">Mini-app mix</p>
+          <h2 class="mt-2 text-2xl font-semibold text-white">Coverage by tab</h2>
+          <div class="mt-5 space-y-3">
+            {% for tab in analytics.miniapps.tabs %}
+            <div class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+              <div class="flex items-center justify-between gap-3">
+                <p class="font-semibold text-white">{{ tab.tab }}</p>
+                <p class="text-sm text-slate-400">{{ tab.enabled }}/{{ tab.total }} enabled</p>
+              </div>
+              <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+                <div class="h-full rounded-full bg-violet-400" style="width: {{ (tab.enabled / tab.total * 100) if tab.total else 0 }}%"></div>
+              </div>
+              <p class="mt-2 text-xs text-slate-500">Priority score: {{ tab.priority }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
       </section>
 
       <section class="grid gap-6 xl:grid-cols-2">
@@ -348,6 +444,64 @@
         </section>
 
         <section class="space-y-6">
+          <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-300">Admin accounts</p>
+            <h2 class="mt-2 text-2xl font-semibold text-white">Role-based access</h2>
+            <p class="mt-3 text-sm leading-7 text-slate-300">
+              `superadmin` can manage admins and imports. `editor` can update content/config. `viewer` can read dashboards and APIs only.
+            </p>
+            <form action="{{ admin_prefix }}/admins" method="post" class="mt-4 rounded-[26px] border border-dashed border-sky-300/20 bg-sky-400/5 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-white">Create admin account</p>
+                  <p class="mt-1 text-sm text-slate-400">Only superadmins should use this section.</p>
+                </div>
+                <button type="submit" class="rounded-2xl bg-sky-400/15 px-4 py-2 text-sm font-semibold text-sky-100 ring-1 ring-inset ring-sky-400/20 transition hover:bg-sky-400/20">Create</button>
+              </div>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <input type="text" name="username" placeholder="username" class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40" />
+                <input type="password" name="password" placeholder="password" class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40" />
+                <select name="role" class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40">
+                  {% for role in admin_roles %}
+                  <option value="{{ role }}">{{ role }}</option>
+                  {% endfor %}
+                </select>
+                <label class="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
+                  <input type="checkbox" name="active" value="true" checked class="size-4 rounded border-white/20 bg-slate-900" />
+                  Active
+                </label>
+              </div>
+            </form>
+            <div class="mt-4 space-y-4">
+              {% for item in admins %}
+              <form action="{{ admin_prefix }}/admins/{{ item.username }}" method="post" class="rounded-[26px] border border-white/8 bg-white/5 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p class="font-semibold text-white">{{ item.username }}</p>
+                    <p class="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">{{ item.role }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="submit" class="rounded-2xl bg-sky-400/15 px-4 py-2 text-sm font-semibold text-sky-100 ring-1 ring-inset ring-sky-400/20 transition hover:bg-sky-400/20">Save admin</button>
+                    <button formaction="{{ admin_prefix }}/admins/{{ item.username }}/delete" formmethod="post" onclick="return confirm('Delete this admin account?');" class="rounded-2xl bg-rose-400/15 px-4 py-2 text-sm font-semibold text-rose-200 ring-1 ring-inset ring-rose-400/20 transition hover:bg-rose-400/20">Delete</button>
+                  </div>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                  <select name="role" class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40">
+                    {% for role in admin_roles %}
+                    <option value="{{ role }}" {% if item.role == role %}selected{% endif %}>{{ role }}</option>
+                    {% endfor %}
+                  </select>
+                  <input type="password" name="next_password" placeholder="Rotate password (optional)" class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40" />
+                </div>
+                <label class="mt-3 inline-flex items-center gap-3 text-sm text-slate-300">
+                  <input type="checkbox" name="active" value="true" {% if item.active %}checked{% endif %} class="size-4 rounded border-white/20 bg-slate-900" />
+                  Active
+                </label>
+              </form>
+              {% endfor %}
+            </div>
+          </section>
+
           <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-300">Referral loop</p>
             <h2 class="mt-2 text-2xl font-semibold text-white">Top referrers</h2>

@@ -1,28 +1,36 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote_plus
 
 from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 try:
     from .content_generator import DEFAULT_KEYWORDS, generate_articles
     from .database import (
+        ADMIN_ROLES,
         CONFIG_DEFAULTS,
+        create_admin_account,
         create_api_catalog_entry,
         create_miniapp,
+        delete_admin_account,
         delete_api_catalog_entry,
         delete_miniapp,
+        export_control_bundle,
         get_admin_profile,
+        get_analytics_snapshot,
         get_dashboard_metrics,
         get_env_value,
         get_schema_status,
         get_user_stats,
+        import_control_bundle,
         init_database,
+        list_admin_accounts,
         list_audit_logs,
         list_api_catalog,
         list_article_jobs,
@@ -30,6 +38,7 @@ try:
         list_miniapps,
         list_top_referrers,
         record_audit_log,
+        update_admin_account,
         update_admin_credentials,
         update_api_catalog,
         update_config,
@@ -41,17 +50,24 @@ try:
 except ImportError:
     from content_generator import DEFAULT_KEYWORDS, generate_articles
     from database import (
+        ADMIN_ROLES,
         CONFIG_DEFAULTS,
+        create_admin_account,
         create_api_catalog_entry,
         create_miniapp,
+        delete_admin_account,
         delete_api_catalog_entry,
         delete_miniapp,
+        export_control_bundle,
         get_admin_profile,
+        get_analytics_snapshot,
         get_dashboard_metrics,
         get_env_value,
         get_schema_status,
         get_user_stats,
+        import_control_bundle,
         init_database,
+        list_admin_accounts,
         list_audit_logs,
         list_api_catalog,
         list_article_jobs,
@@ -59,6 +75,7 @@ except ImportError:
         list_miniapps,
         list_top_referrers,
         record_audit_log,
+        update_admin_account,
         update_admin_credentials,
         update_api_catalog,
         update_config,
@@ -81,7 +98,7 @@ admin_api_router = APIRouter(prefix="/api")
 app = FastAPI(
     title="PureHub Command Center",
     summary="Admin panel and automation control surface for PureHub growth systems.",
-    version="0.4.0",
+    version="0.5.0",
 )
 
 app.add_middleware(
@@ -180,6 +197,10 @@ def dashboard(
             "api_catalog": list_api_catalog(api_query, api_group),
             "audit_logs": list_audit_logs(),
             "schema_status": get_schema_status(),
+            "analytics": get_analytics_snapshot(),
+            "admins": list_admin_accounts(),
+            "admin_roles": ADMIN_ROLES,
+            "export_bundle_json": json.dumps(export_control_bundle(), indent=2, ensure_ascii=False),
             "message": message,
             "message_type": message_type,
             "admin_prefix": PUBLIC_ADMIN_PREFIX,
@@ -209,7 +230,7 @@ def save_config(
     pro_unlock_code: str = Form(default="PUREHUB-PRO-2026"),
     site_url: str = Form(default="https://hub.blissbiovn.com"),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     update_config(
         {
             "grok_api_key": grok_api_key.strip(),
@@ -241,7 +262,8 @@ def save_admin_security(
     next_username: str = Form(...),
     next_password: str = Form(default=""),
 ) -> RedirectResponse:
-    current_username = require_admin_session(request)
+    current_admin = require_admin_role(request, "superadmin")
+    current_username = current_admin["username"]
     updated, result = update_admin_credentials(
         current_username,
         next_username=next_username,
@@ -263,6 +285,117 @@ def save_admin_security(
     return _redirect_with_message("Admin security updated successfully.", "success")
 
 
+@admin_router.post("/admins")
+def create_admin_user(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...),
+    active: str | None = Form(default=None),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    try:
+        create_admin_account(username.strip(), password, role.strip(), active=active == "true")
+    except Exception as exc:
+        return _redirect_with_message(f"Create admin failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="create_admin_account",
+        target_type="admin",
+        target_id=username.strip(),
+        details={"role": role.strip(), "active": active == "true"},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Created admin account {username.strip()}.", "success")
+
+
+@admin_router.post("/admins/{username}")
+def update_admin_user(
+    request: Request,
+    username: str,
+    role: str = Form(...),
+    active: str | None = Form(default=None),
+    next_password: str = Form(default=""),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    try:
+        update_admin_account(
+            username,
+            role=role.strip(),
+            active=active == "true",
+            next_password=next_password.strip() or None,
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Update admin failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="update_admin_account",
+        target_type="admin",
+        target_id=username,
+        details={"role": role.strip(), "active": active == "true", "password_rotated": bool(next_password.strip())},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Updated admin account {username}.", "success")
+
+
+@admin_router.post("/admins/{username}/delete")
+def delete_admin_user(request: Request, username: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    try:
+        delete_admin_account(username)
+    except Exception as exc:
+        return _redirect_with_message(f"Delete admin failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="delete_admin_account",
+        target_type="admin",
+        target_id=username,
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Deleted admin account {username}.", "info")
+
+
+@admin_router.get("/export/json")
+def export_json_bundle(request: Request) -> JSONResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    bundle = export_control_bundle()
+    record_audit_log(
+        actor=actor,
+        action="export_control_bundle",
+        target_type="bundle",
+        target_id="control_bundle",
+        details={"miniapps": len(bundle.get("miniapps", [])), "api_catalog": len(bundle.get("api_catalog", []))},
+        request_meta=request_meta(request),
+    )
+    return JSONResponse(bundle)
+
+
+@admin_router.post("/import/json")
+def import_json_bundle(
+    request: Request,
+    bundle_json: str = Form(...),
+    mode: str = Form(default="merge"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    try:
+        bundle = json.loads(bundle_json)
+        result = import_control_bundle(bundle, mode=mode.strip().lower())
+    except Exception as exc:
+        return _redirect_with_message(f"Import bundle failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="import_control_bundle",
+        target_type="bundle",
+        target_id="control_bundle",
+        details={"mode": mode.strip().lower(), **result},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(
+        f"Imported bundle: {result['miniapps']} mini-apps, {result['api_catalog']} APIs.",
+        "success",
+    )
+
+
 @admin_router.post("/miniapps/{miniapp_id}")
 def save_miniapp(
     request: Request,
@@ -276,7 +409,7 @@ def save_miniapp(
     notes: str = Form(default=""),
     enabled: str | None = Form(default=None),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     update_miniapp(
         miniapp_id,
         {
@@ -314,7 +447,7 @@ def create_miniapp_entry(
     notes: str = Form(default=""),
     enabled: str | None = Form(default=None),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         create_miniapp(
             {
@@ -344,7 +477,7 @@ def create_miniapp_entry(
 
 @admin_router.post("/miniapps/{miniapp_id}/delete")
 def delete_miniapp_entry(request: Request, miniapp_id: str) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     delete_miniapp(miniapp_id)
     record_audit_log(
         actor=actor,
@@ -367,7 +500,7 @@ def save_api_catalog(
     enabled: str | None = Form(default=None),
     auth_required: str | None = Form(default=None),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     update_api_catalog(
         api_key,
         {
@@ -401,7 +534,7 @@ def create_api_catalog(
     enabled: str | None = Form(default=None),
     auth_required: str | None = Form(default=None),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         create_api_catalog_entry(
             {
@@ -429,7 +562,7 @@ def create_api_catalog(
 
 @admin_router.post("/apis/{api_key}/delete")
 def delete_api_catalog(request: Request, api_key: str) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     delete_api_catalog_entry(api_key)
     record_audit_log(
         actor=actor,
@@ -446,7 +579,7 @@ def trigger_generator(
     request: Request,
     keywords: str = Form(default=""),
 ) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         keyword_list = [item.strip() for item in keywords.splitlines() if item.strip()] or DEFAULT_KEYWORDS
         generated = generate_articles(keyword_list)
@@ -465,7 +598,7 @@ def trigger_generator(
 
 @admin_router.post("/actions/publish")
 def trigger_publisher(request: Request) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         published = publish_articles()
         record_audit_log(
@@ -483,7 +616,7 @@ def trigger_publisher(request: Request) -> RedirectResponse:
 
 @admin_router.post("/actions/bot/start")
 def start_bot(request: Request) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         state = telegram_bot_manager.start()
         record_audit_log(
@@ -501,7 +634,7 @@ def start_bot(request: Request) -> RedirectResponse:
 
 @admin_router.post("/actions/bot/stop")
 def stop_bot(request: Request) -> RedirectResponse:
-    actor = require_admin_session(request)
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
     telegram_bot_manager.stop()
     record_audit_log(
         actor=actor,
@@ -571,6 +704,12 @@ def api_catalog_api(request: Request) -> dict[str, object]:
     return {"items": list_api_catalog()}
 
 
+@admin_api_router.get("/admins")
+def admins_api(request: Request) -> dict[str, object]:
+    require_admin_role(request, "superadmin")
+    return {"items": list_admin_accounts()}
+
+
 @admin_api_router.get("/audit-logs")
 def audit_logs_api(request: Request) -> dict[str, object]:
     require_admin_session(request)
@@ -583,11 +722,36 @@ def schema_api(request: Request) -> dict[str, object]:
     return get_schema_status()
 
 
+@admin_api_router.get("/analytics")
+def analytics_api(request: Request) -> dict[str, object]:
+    require_admin_session(request)
+    return get_analytics_snapshot()
+
+
+@admin_api_router.get("/export")
+def export_api(request: Request) -> dict[str, object]:
+    require_admin_role(request, "superadmin", "editor")
+    return export_control_bundle()
+
+
 def require_admin_session(request: Request) -> str:
     admin_username = request.session.get("admin_username")
     if not admin_username:
         raise HTTPException(status_code=401, detail="Admin authentication required.")
     return str(admin_username)
+
+
+def require_admin_role(request: Request, *allowed_roles: str) -> dict[str, str]:
+    username = require_admin_session(request)
+    profile = get_admin_profile(username)
+    if not profile:
+        raise HTTPException(status_code=401, detail="Admin profile not found.")
+    if allowed_roles and str(profile.get("role", "")) not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Admin role is not allowed for this action.")
+    return {
+        "username": str(profile["username"]),
+        "role": str(profile.get("role", "viewer")),
+    }
 
 
 def request_meta(request: Request) -> dict[str, str]:

@@ -36,6 +36,8 @@ Add these in Vercel Project Settings -> Environment Variables:
 - `ADMIN_PASSWORD`
 - `SESSION_SECRET`
 
+Use the MongoDB Atlas connection string you already prepared as the value for `MONGO_URI`.
+
 ## Recommended values
 
 - `MONGO_DB_NAME`
@@ -65,3 +67,5 @@ On the first backend request, Mongo will auto-seed:
 3. Open `/admin/api/health`
 4. Open `/admin/api/schema`
 5. Save one config value and confirm it appears in audit logs
+6. Open `/admin/api/analytics`
+7. Open `/admin/export/json`

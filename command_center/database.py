@@ -16,6 +16,8 @@ OUTPUT_DIR = BASE_DIR / "output_md"
 
 load_dotenv(BASE_DIR / ".env")
 
+ADMIN_ROLES = ("superadmin", "editor", "viewer")
+
 CONFIG_DEFAULTS = {
     "grok_api_key": "",
     "grok_model": "grok-2",
@@ -28,7 +30,7 @@ CONFIG_DEFAULTS = {
     "site_url": "https://hub.blissbiovn.com",
 }
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 5
 
 MINIAPP_DEFAULTS = [
     {
@@ -520,6 +522,7 @@ def ensure_admin_account() -> None:
             "username": username,
             "password_hash": PASSWORD_CONTEXT.hash(password),
             "role": "superadmin",
+            "active": True,
             "created_at": utcnow(),
             "updated_at": utcnow(),
         }
@@ -531,6 +534,8 @@ def run_schema_migrations() -> None:
         (1, "seed-default-admin-and-config", _migration_seed_defaults),
         (2, "ensure-audit-log-indexes", _migration_audit_logs),
         (3, "ensure-schema-catalog-entries", _migration_schema_catalog),
+        (4, "ensure-admin-active-flag", _migration_admin_active_flag),
+        (5, "ensure-admin-role-values", _migration_admin_roles),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -571,9 +576,19 @@ def _migration_schema_catalog() -> None:
     return None
 
 
+def _migration_admin_active_flag() -> None:
+    collection("admins").update_many({"active": {"$exists": False}}, {"$set": {"active": True, "updated_at": utcnow()}})
+
+
+def _migration_admin_roles() -> None:
+    collection("admins").update_many({"role": {"$nin": list(ADMIN_ROLES)}}, {"$set": {"role": "editor", "updated_at": utcnow()}})
+
+
 def verify_admin_credentials(username: str, password: str) -> bool:
     admin = collection("admins").find_one({"username": username})
     if not admin:
+        return False
+    if not admin.get("active", True):
         return False
     return PASSWORD_CONTEXT.verify(password, admin["password_hash"])
 
@@ -581,6 +596,65 @@ def verify_admin_credentials(username: str, password: str) -> bool:
 def get_admin_profile(username: str) -> dict[str, Any] | None:
     admin = collection("admins").find_one({"username": username}, {"password_hash": 0})
     return _serialize(admin) if admin else None
+
+
+def list_admin_accounts() -> list[dict[str, Any]]:
+    rows = collection("admins").find({}, {"password_hash": 0}).sort([("role", ASCENDING), ("username", ASCENDING)])
+    return [_serialize(item) for item in rows]
+
+
+def create_admin_account(username: str, password: str, role: str, *, active: bool = True) -> None:
+    normalized_username = username.strip()
+    normalized_role = role.strip()
+    if not normalized_username:
+        raise ValueError("Admin username cannot be empty.")
+    if normalized_role not in ADMIN_ROLES:
+        raise ValueError(f"Role must be one of: {', '.join(ADMIN_ROLES)}.")
+    if collection("admins").find_one({"username": normalized_username}):
+        raise ValueError(f"Admin account {normalized_username} already exists.")
+
+    collection("admins").insert_one(
+        {
+            "username": normalized_username,
+            "password_hash": PASSWORD_CONTEXT.hash(password),
+            "role": normalized_role,
+            "active": active,
+            "created_at": utcnow(),
+            "updated_at": utcnow(),
+        }
+    )
+
+
+def update_admin_account(
+    username: str,
+    *,
+    role: str,
+    active: bool,
+    next_password: str | None = None,
+) -> None:
+    normalized_role = role.strip()
+    if normalized_role not in ADMIN_ROLES:
+        raise ValueError(f"Role must be one of: {', '.join(ADMIN_ROLES)}.")
+    update_payload: dict[str, Any] = {
+        "role": normalized_role,
+        "active": active,
+        "updated_at": utcnow(),
+    }
+    if next_password:
+        update_payload["password_hash"] = PASSWORD_CONTEXT.hash(next_password)
+    collection("admins").update_one({"username": username}, {"$set": update_payload})
+
+
+def delete_admin_account(username: str) -> None:
+    if count_superadmins() <= 1:
+        target = collection("admins").find_one({"username": username}, {"role": 1})
+        if target and target.get("role") == "superadmin":
+            raise ValueError("You cannot delete the last superadmin account.")
+    collection("admins").delete_one({"username": username})
+
+
+def count_superadmins() -> int:
+    return collection("admins").count_documents({"role": "superadmin", "active": True})
 
 
 def update_admin_credentials(
@@ -857,6 +931,139 @@ def record_audit_log(
 def list_audit_logs(limit: int = 50) -> list[dict[str, Any]]:
     rows = collection("audit_logs").find({}).sort("created_at", DESCENDING).limit(limit)
     return [_serialize(item) for item in rows]
+
+
+def get_analytics_snapshot() -> dict[str, Any]:
+    users = list(collection("users").find({}, {"invites_count": 1, "reward_sent_at": 1, "_id": 0}))
+    jobs = list(collection("article_jobs").find({}, {"status": 1, "_id": 0}))
+    miniapps = list(collection("miniapps").find({}, {"tab": 1, "enabled": 1, "traffic_priority": 1, "_id": 0}))
+
+    tab_counts: dict[str, dict[str, int]] = {}
+    for item in miniapps:
+        tab = str(item.get("tab", "Unknown"))
+        payload = tab_counts.setdefault(tab, {"total": 0, "enabled": 0, "priority": 0})
+        payload["total"] += 1
+        payload["priority"] += int(item.get("traffic_priority", 0))
+        if item.get("enabled", False):
+            payload["enabled"] += 1
+
+    total_articles = len(jobs)
+    published_articles = sum(1 for item in jobs if item.get("status") == "published")
+    generated_articles = sum(1 for item in jobs if item.get("status") == "generated")
+    failed_articles = sum(1 for item in jobs if item.get("status") == "failed")
+    conversion_rate = round((published_articles / total_articles) * 100, 1) if total_articles else 0.0
+
+    total_users = len(users)
+    total_invites = sum(int(item.get("invites_count", 0)) for item in users)
+    rewarded_users = sum(1 for item in users if item.get("reward_sent_at"))
+    invite_goal_hits = sum(1 for item in users if int(item.get("invites_count", 0)) >= 3)
+
+    return {
+        "content": {
+            "total_articles": total_articles,
+            "published_articles": published_articles,
+            "generated_articles": generated_articles,
+            "failed_articles": failed_articles,
+            "conversion_rate": conversion_rate,
+        },
+        "referrals": {
+            "total_users": total_users,
+            "total_invites": total_invites,
+            "rewarded_users": rewarded_users,
+            "invite_goal_hits": invite_goal_hits,
+            "avg_invites_per_user": round(total_invites / total_users, 2) if total_users else 0.0,
+        },
+        "miniapps": {
+            "total": len(miniapps),
+            "enabled": sum(1 for item in miniapps if item.get("enabled", False)),
+            "tabs": [
+                {
+                    "tab": tab,
+                    "total": values["total"],
+                    "enabled": values["enabled"],
+                    "priority": values["priority"],
+                }
+                for tab, values in sorted(tab_counts.items())
+            ],
+        },
+    }
+
+
+def export_control_bundle() -> dict[str, Any]:
+    return {
+        "exported_at": utcnow().isoformat(),
+        "schema": get_schema_status(),
+        "config": list_config(),
+        "miniapps": list_miniapps(),
+        "api_catalog": list_api_catalog(),
+    }
+
+
+def import_control_bundle(bundle: dict[str, Any], mode: str = "merge") -> dict[str, int]:
+    imported_config = int(bool(bundle.get("config")))
+    miniapps = bundle.get("miniapps", [])
+    api_catalog = bundle.get("api_catalog", [])
+
+    if mode == "replace":
+        collection("miniapps").delete_many({})
+        collection("api_catalog").delete_many({})
+
+    if isinstance(bundle.get("config"), dict):
+        update_config({str(key): str(value) for key, value in bundle["config"].items()})
+
+    miniapps_count = 0
+    for item in miniapps:
+        miniapp_id = str(item["miniapp_id"]).strip()
+        payload = {
+            "miniapp_id": miniapp_id,
+            "name": str(item.get("name", miniapp_id)).strip(),
+            "tab": str(item.get("tab", "")).strip(),
+            "route_en": str(item.get("route_en", "")).strip(),
+            "route_vi": str(item.get("route_vi", "")).strip(),
+            "route_zh": str(item.get("route_zh", "")).strip(),
+            "traffic_priority": int(item.get("traffic_priority", 0)),
+            "notes": str(item.get("notes", "")).strip(),
+            "enabled": bool(item.get("enabled", True)),
+            "updated_at": utcnow(),
+        }
+        collection("miniapps").update_one(
+            {"miniapp_id": miniapp_id},
+            {
+                "$set": payload,
+                "$setOnInsert": {"created_at": utcnow()},
+            },
+            upsert=True,
+        )
+        miniapps_count += 1
+
+    api_count = 0
+    for item in api_catalog:
+        api_key = str(item["api_key"]).strip()
+        payload = {
+            "api_key": api_key,
+            "method": str(item.get("method", "GET")).strip().upper(),
+            "path": str(item.get("path", "")).strip(),
+            "enabled": bool(item.get("enabled", True)),
+            "auth_required": bool(item.get("auth_required", True)),
+            "group": str(item.get("group", "")).strip(),
+            "description": str(item.get("description", "")).strip(),
+            "updated_at": utcnow(),
+        }
+        collection("api_catalog").update_one(
+            {"api_key": api_key},
+            {
+                "$set": payload,
+                "$setOnInsert": {"created_at": utcnow()},
+            },
+            upsert=True,
+        )
+        api_count += 1
+
+    return {
+        "config_blocks": imported_config,
+        "miniapps": miniapps_count,
+        "api_catalog": api_count,
+    }
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:

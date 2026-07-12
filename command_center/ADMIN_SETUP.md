@@ -52,6 +52,10 @@ http://127.0.0.1:8000/admin
   Monitor invite counts and reward state.
 - `Schema & audit`
   Review Mongo migration state and admin activity history.
+- `Admin accounts`
+  Create multiple admin users with `superadmin`, `editor`, and `viewer` roles.
+- `Import / Export`
+  Sync config, mini-apps, and API catalog by JSON bundle.
 
 ## JSON endpoints
 
@@ -62,6 +66,11 @@ http://127.0.0.1:8000/admin
 - `/admin/api/referrers`
 - `/admin/api/miniapps`
 - `/admin/api/catalog`
+- `/admin/api/admins`
+- `/admin/api/audit-logs`
+- `/admin/api/schema`
+- `/admin/api/analytics`
+- `/admin/export/json`
 
 ## Vercel deployment notes
 
