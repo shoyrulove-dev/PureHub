@@ -294,11 +294,11 @@
             <div class="flex items-end justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Conversion rate</p>
-                <p class="mt-1 text-2xl font-semibold text-emerald-200">{{ analytics.content.conversion_rate }}%</p>
+                <p id="contentConversionRate" class="mt-1 text-2xl font-semibold text-emerald-200">{{ analytics.content.conversion_rate }}%</p>
               </div>
               <div class="text-right text-xs text-slate-400">
-                <p>{{ analytics.content.total_articles }} total jobs</p>
-                <p>{{ analytics.content.published_articles }} published</p>
+                <p><span id="contentTotalArticles">{{ analytics.content.total_articles }}</span> total jobs</p>
+                <p><span id="contentPublishedArticles">{{ analytics.content.published_articles }}</span> published</p>
               </div>
             </div>
             <div class="mt-4 h-72">
@@ -314,11 +314,11 @@
             <div class="flex items-end justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Avg invites per user</p>
-                <p class="mt-1 text-2xl font-semibold text-amber-200">{{ analytics.referrals.avg_invites_per_user }}</p>
+                <p id="referralAverageInvites" class="mt-1 text-2xl font-semibold text-amber-200">{{ analytics.referrals.avg_invites_per_user }}</p>
               </div>
               <div class="text-right text-xs text-slate-400">
-                <p>{{ analytics.referrals.total_users }} users</p>
-                <p>{{ analytics.referrals.total_invites }} total invites</p>
+                <p><span id="referralTotalUsers">{{ analytics.referrals.total_users }}</span> users</p>
+                <p><span id="referralTotalInvites">{{ analytics.referrals.total_invites }}</span> total invites</p>
               </div>
             </div>
             <div class="mt-4 h-72">
@@ -334,11 +334,11 @@
             <div class="flex items-end justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Enabled coverage</p>
-                <p class="mt-1 text-2xl font-semibold text-violet-200">{{ analytics.miniapps.enabled }}/{{ analytics.miniapps.total }}</p>
+                <p class="mt-1 text-2xl font-semibold text-violet-200"><span id="miniappsEnabled">{{ analytics.miniapps.enabled }}</span>/<span id="miniappsTotal">{{ analytics.miniapps.total }}</span></p>
               </div>
               <div class="text-right text-xs text-slate-400">
-                <p>{{ analytics.miniapps.tabs|length }} tabs tracked</p>
-                <p>Priority-aware view</p>
+                <p><span id="miniappsTabCount">{{ analytics.miniapps.tabs|length }}</span> tabs tracked</p>
+                <p id="analyticsRefreshLabel">Priority-aware view</p>
               </div>
             </div>
             <div class="mt-4 h-72">
@@ -640,7 +640,18 @@
     </main>
     <script>
       (() => {
-        const analytics = {{ analytics_json | safe }};
+        let analytics = {{ analytics_json | safe }};
+        const analyticsEndpoint = "{{ api_prefix }}/analytics";
+        const refreshLabel = document.getElementById("analyticsRefreshLabel");
+        const contentConversionRate = document.getElementById("contentConversionRate");
+        const contentTotalArticles = document.getElementById("contentTotalArticles");
+        const contentPublishedArticles = document.getElementById("contentPublishedArticles");
+        const referralAverageInvites = document.getElementById("referralAverageInvites");
+        const referralTotalUsers = document.getElementById("referralTotalUsers");
+        const referralTotalInvites = document.getElementById("referralTotalInvites");
+        const miniappsEnabled = document.getElementById("miniappsEnabled");
+        const miniappsTotal = document.getElementById("miniappsTotal");
+        const miniappsTabCount = document.getElementById("miniappsTabCount");
         const sharedOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -671,7 +682,7 @@
           },
         };
 
-        new Chart(document.getElementById("contentChart"), {
+        const contentChart = new Chart(document.getElementById("contentChart"), {
           type: "doughnut",
           data: {
             labels: ["Published", "Generated", "Failed"],
@@ -695,7 +706,7 @@
           },
         });
 
-        new Chart(document.getElementById("referralChart"), {
+        const referralChart = new Chart(document.getElementById("referralChart"), {
           type: "bar",
           data: {
             labels: ["Users", "Invites", "Goal Hits", "Rewarded"],
@@ -722,7 +733,7 @@
           },
         });
 
-        new Chart(document.getElementById("miniappChart"), {
+        const miniappChart = new Chart(document.getElementById("miniappChart"), {
           type: "bar",
           data: {
             labels: analytics.miniapps.tabs.map((item) => item.tab),
@@ -746,6 +757,75 @@
             indexAxis: "y",
           },
         });
+
+        const formatLocalTime = (date) =>
+          new Intl.DateTimeFormat(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }).format(date);
+
+        const paintSummary = () => {
+          contentConversionRate.textContent = `${analytics.content.conversion_rate}%`;
+          contentTotalArticles.textContent = analytics.content.total_articles;
+          contentPublishedArticles.textContent = analytics.content.published_articles;
+          referralAverageInvites.textContent = analytics.referrals.avg_invites_per_user;
+          referralTotalUsers.textContent = analytics.referrals.total_users;
+          referralTotalInvites.textContent = analytics.referrals.total_invites;
+          miniappsEnabled.textContent = analytics.miniapps.enabled;
+          miniappsTotal.textContent = analytics.miniapps.total;
+          miniappsTabCount.textContent = analytics.miniapps.tabs.length;
+          refreshLabel.textContent = `Auto-refresh ${formatLocalTime(new Date())}`;
+        };
+
+        const paintCharts = () => {
+          contentChart.data.datasets[0].data = [
+            analytics.content.published_articles,
+            analytics.content.generated_articles,
+            analytics.content.failed_articles,
+          ];
+          contentChart.update();
+
+          referralChart.data.datasets[0].data = [
+            analytics.referrals.total_users,
+            analytics.referrals.total_invites,
+            analytics.referrals.invite_goal_hits,
+            analytics.referrals.rewarded_users,
+          ];
+          referralChart.update();
+
+          miniappChart.data.labels = analytics.miniapps.tabs.map((item) => item.tab);
+          miniappChart.data.datasets[0].data = analytics.miniapps.tabs.map((item) => item.enabled);
+          miniappChart.data.datasets[1].data = analytics.miniapps.tabs.map((item) => item.total);
+          miniappChart.update();
+        };
+
+        const refreshAnalytics = async () => {
+          try {
+            const response = await fetch(analyticsEndpoint, {
+              method: "GET",
+              credentials: "same-origin",
+              cache: "no-store",
+              headers: {
+                "Accept": "application/json",
+              },
+            });
+            if (!response.ok) {
+              throw new Error(`Analytics refresh failed with ${response.status}`);
+            }
+            analytics = await response.json();
+            paintSummary();
+            paintCharts();
+          } catch (error) {
+            if (refreshLabel) {
+              refreshLabel.textContent = "Auto-refresh paused";
+            }
+            console.error(error);
+          }
+        };
+
+        paintSummary();
+        window.setInterval(refreshAnalytics, 30000);
       })();
     </script>
   </body>
