@@ -38,7 +38,7 @@ def publish_articles() -> list[dict[str, str]]:
     for job in jobs:
         file_path = OUTPUT_DIR / str(job["source_filename"])
         if not file_path.exists():
-            update_article_job(int(job["id"]), status="failed", error_message="Source markdown file not found.")
+            update_article_job(str(job["id"]), status="failed", error_message="Source markdown file not found.")
             continue
 
         body_markdown = file_path.read_text(encoding="utf-8")
@@ -58,7 +58,7 @@ def publish_articles() -> list[dict[str, str]]:
 
         if response.ok:
             remote_url = response.json().get("url", "")
-            update_article_job(int(job["id"]), status="published", remote_url=remote_url, error_message=None)
+            update_article_job(str(job["id"]), status="published", remote_url=remote_url, error_message=None)
             results.append(
                 {
                     "filename": str(job["source_filename"]),
@@ -68,7 +68,7 @@ def publish_articles() -> list[dict[str, str]]:
             )
         else:
             update_article_job(
-                int(job["id"]),
+                str(job["id"]),
                 status="failed",
                 remote_url=None,
                 error_message=f"{response.status_code}: {response.text[:300]}",

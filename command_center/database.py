@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-import sqlite3
-from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterator
+from typing import Any
+
+from dotenv import load_dotenv
+from passlib.context import CryptContext
+from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo.collection import Collection
+from pymongo.database import Database
+import os
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "command_center.db"
 OUTPUT_DIR = BASE_DIR / "output_md"
+
+load_dotenv(BASE_DIR / ".env")
 
 CONFIG_DEFAULTS = {
     "grok_api_key": "",
@@ -21,270 +28,699 @@ CONFIG_DEFAULTS = {
     "site_url": "https://hub.blissbiovn.com",
 }
 
+MINIAPP_DEFAULTS = [
+    {
+        "miniapp_id": "lunar-calendar",
+        "name": "Lunar Calendar",
+        "tab": "Zen & Time",
+        "route_en": "/en/lunar-calendar",
+        "route_vi": "/vi/lich-am",
+        "route_zh": "/zh/nong-li",
+        "enabled": True,
+        "traffic_priority": 9,
+        "notes": "High-value SEO page for offline calendar intent.",
+    },
+    {
+        "miniapp_id": "zen-habit",
+        "name": "Zen Habit",
+        "tab": "Zen & Time",
+        "route_en": "/en/zen-habit",
+        "route_vi": "/vi/thoi-quen-zen",
+        "route_zh": "/zh/chan-xi-guan",
+        "enabled": True,
+        "traffic_priority": 6,
+        "notes": "Habit tracking and streak use case.",
+    },
+    {
+        "miniapp_id": "zen-pomodoro",
+        "name": "Zen Pomodoro",
+        "tab": "Zen & Time",
+        "route_en": "/en/zen-pomodoro",
+        "route_vi": "/vi/pomodoro-zen",
+        "route_zh": "/zh/chan-fan-qie-zhong",
+        "enabled": True,
+        "traffic_priority": 7,
+        "notes": "Focus timer with local white noise.",
+    },
+    {
+        "miniapp_id": "zen-breath",
+        "name": "Zen Breath",
+        "tab": "Zen & Time",
+        "route_en": "/en/zen-breath",
+        "route_vi": "/vi/tho-zen",
+        "route_zh": "/zh/chan-hu-xi",
+        "enabled": True,
+        "traffic_priority": 5,
+        "notes": "Breathing and calm UX surface.",
+    },
+    {
+        "miniapp_id": "compass",
+        "name": "Compass",
+        "tab": "Measure & Tools",
+        "route_en": "/en/compass",
+        "route_vi": "/vi/la-ban",
+        "route_zh": "/zh/zhinan-zhen",
+        "enabled": True,
+        "traffic_priority": 10,
+        "notes": "Strong organic intent target.",
+    },
+    {
+        "miniapp_id": "bubble-level",
+        "name": "Bubble Level",
+        "tab": "Measure & Tools",
+        "route_en": "/en/bubble-level",
+        "route_vi": "/vi/thuoc-thuy",
+        "route_zh": "/zh/shui-ping-yi",
+        "enabled": True,
+        "traffic_priority": 6,
+        "notes": "Sensor-based utility tool.",
+    },
+    {
+        "miniapp_id": "decibel-meter",
+        "name": "Decibel Meter",
+        "tab": "Measure & Tools",
+        "route_en": "/en/decibel-meter",
+        "route_vi": "/vi/do-on",
+        "route_zh": "/zh/fen-bei-yi",
+        "enabled": True,
+        "traffic_priority": 7,
+        "notes": "Microphone-powered measurement tool.",
+    },
+    {
+        "miniapp_id": "unit-converter",
+        "name": "Unit Converter",
+        "tab": "Measure & Tools",
+        "route_en": "/en/unit-converter",
+        "route_vi": "/vi/doi-don-vi",
+        "route_zh": "/zh/dan-wei-huan-suan",
+        "enabled": True,
+        "traffic_priority": 8,
+        "notes": "High-frequency utility search intent.",
+    },
+    {
+        "miniapp_id": "qr-studio",
+        "name": "QR Studio",
+        "tab": "Vision",
+        "route_en": "/en/qr-studio",
+        "route_vi": "/vi/qr-studio",
+        "route_zh": "/zh/er-wei-ma-gong-fang",
+        "enabled": True,
+        "traffic_priority": 9,
+        "notes": "Scan and generate QR offline.",
+    },
+    {
+        "miniapp_id": "doc-to-pdf",
+        "name": "Doc to PDF",
+        "tab": "Vision",
+        "route_en": "/en/doc-to-pdf",
+        "route_vi": "/vi/tai-lieu-pdf",
+        "route_zh": "/zh/wen-dang-zhuan-pdf",
+        "enabled": True,
+        "traffic_priority": 9,
+        "notes": "Document capture to PDF workflow.",
+    },
+    {
+        "miniapp_id": "ocr-text",
+        "name": "OCR Text",
+        "tab": "Vision",
+        "route_en": "/en/ocr-text",
+        "route_vi": "/vi/trich-xuat-van-ban",
+        "route_zh": "/zh/ocr-wen-ben",
+        "enabled": True,
+        "traffic_priority": 8,
+        "notes": "Image-to-text extractor.",
+    },
+    {
+        "miniapp_id": "color-grabber",
+        "name": "Color Grabber",
+        "tab": "Vision",
+        "route_en": "/en/color-grabber",
+        "route_vi": "/vi/lay-mau",
+        "route_zh": "/zh/qu-se-qi",
+        "enabled": True,
+        "traffic_priority": 5,
+        "notes": "Visual utility, more niche traffic.",
+    },
+    {
+        "miniapp_id": "speaker-cleaner",
+        "name": "Speaker Cleaner",
+        "tab": "Security & Audio",
+        "route_en": "/en/speaker-cleaner",
+        "route_vi": "/vi/lam-sach-loa",
+        "route_zh": "/zh/yang-sheng-qi-qing-jie",
+        "enabled": True,
+        "traffic_priority": 8,
+        "notes": "Strong device-fix search intent.",
+    },
+    {
+        "miniapp_id": "password-vault",
+        "name": "Password Vault",
+        "tab": "Security & Audio",
+        "route_en": "/en/password-vault",
+        "route_vi": "/vi/kho-mat-khau",
+        "route_zh": "/zh/mi-ma-bao-xian-ku",
+        "enabled": True,
+        "traffic_priority": 7,
+        "notes": "Privacy-first storage utility.",
+    },
+    {
+        "miniapp_id": "bill-splitter",
+        "name": "Bill Splitter",
+        "tab": "Finance & Community",
+        "route_en": "/en/bill-splitter",
+        "route_vi": "/vi/chia-hoa-don",
+        "route_zh": "/zh/fen-zhang-qi",
+        "enabled": True,
+        "traffic_priority": 8,
+        "notes": "Good travel/group expense intent.",
+    },
+    {
+        "miniapp_id": "expense-tracker",
+        "name": "Expense Tracker",
+        "tab": "Finance & Community",
+        "route_en": "/en/expense-tracker",
+        "route_vi": "/vi/so-chi-tieu",
+        "route_zh": "/zh/ji-zhang-ben",
+        "enabled": True,
+        "traffic_priority": 8,
+        "notes": "Budget and personal finance intent.",
+    },
+    {
+        "miniapp_id": "decision-wheel",
+        "name": "Decision Wheel",
+        "tab": "Finance & Community",
+        "route_en": "/en/decision-wheel",
+        "route_vi": "/vi/vong-quay-quyet-dinh",
+        "route_zh": "/zh/jue-ce-zhuan-pan",
+        "enabled": True,
+        "traffic_priority": 4,
+        "notes": "Fun utility, lower SEO priority.",
+    },
+    {
+        "miniapp_id": "community-pro-unlock",
+        "name": "Community Pro Unlock",
+        "tab": "Finance & Community",
+        "route_en": "/en/community-pro-unlock",
+        "route_vi": "/vi/mo-khoa-cong-dong",
+        "route_zh": "/zh/she-qu-jie-suo",
+        "enabled": True,
+        "traffic_priority": 3,
+        "notes": "Growth engine and referral bridge.",
+    },
+]
 
-def get_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
+API_CATALOG_DEFAULTS = [
+    {
+        "api_key": "admin_dashboard",
+        "method": "GET",
+        "path": "/admin",
+        "enabled": True,
+        "auth_required": True,
+        "group": "ui",
+        "description": "Primary admin dashboard HTML surface.",
+    },
+    {
+        "api_key": "admin_login",
+        "method": "POST",
+        "path": "/admin/login",
+        "enabled": True,
+        "auth_required": False,
+        "group": "auth",
+        "description": "Admin sign-in endpoint backed by Mongo-stored credentials.",
+    },
+    {
+        "api_key": "admin_logout",
+        "method": "POST",
+        "path": "/admin/logout",
+        "enabled": True,
+        "auth_required": True,
+        "group": "auth",
+        "description": "Clears the admin session cookie.",
+    },
+    {
+        "api_key": "admin_config_save",
+        "method": "POST",
+        "path": "/admin/config",
+        "enabled": True,
+        "auth_required": True,
+        "group": "config",
+        "description": "Updates Grok, Dev.to, Telegram, and site config values.",
+    },
+    {
+        "api_key": "admin_security_save",
+        "method": "POST",
+        "path": "/admin/security",
+        "enabled": True,
+        "auth_required": True,
+        "group": "auth",
+        "description": "Rotates the admin username and password.",
+    },
+    {
+        "api_key": "admin_miniapps_save",
+        "method": "POST",
+        "path": "/admin/miniapps/{miniapp_id}",
+        "enabled": True,
+        "auth_required": True,
+        "group": "miniapps",
+        "description": "Updates a mini-app route, status, and traffic priority.",
+    },
+    {
+        "api_key": "admin_catalog_save",
+        "method": "POST",
+        "path": "/admin/apis/{api_key}",
+        "enabled": True,
+        "auth_required": True,
+        "group": "catalog",
+        "description": "Updates API catalog metadata shown in the admin panel.",
+    },
+    {
+        "api_key": "admin_generate",
+        "method": "POST",
+        "path": "/admin/actions/generate",
+        "enabled": True,
+        "auth_required": True,
+        "group": "content",
+        "description": "Runs the Grok markdown content generator.",
+    },
+    {
+        "api_key": "admin_publish",
+        "method": "POST",
+        "path": "/admin/actions/publish",
+        "enabled": True,
+        "auth_required": True,
+        "group": "content",
+        "description": "Publishes generated articles to Dev.to.",
+    },
+    {
+        "api_key": "admin_bot_start",
+        "method": "POST",
+        "path": "/admin/actions/bot/start",
+        "enabled": True,
+        "auth_required": True,
+        "group": "telegram",
+        "description": "Starts the Telegram viral loop worker.",
+    },
+    {
+        "api_key": "admin_bot_stop",
+        "method": "POST",
+        "path": "/admin/actions/bot/stop",
+        "enabled": True,
+        "auth_required": True,
+        "group": "telegram",
+        "description": "Stops the Telegram viral loop worker.",
+    },
+    {
+        "api_key": "admin_health",
+        "method": "GET",
+        "path": "/admin/api/health",
+        "enabled": True,
+        "auth_required": True,
+        "group": "system",
+        "description": "Basic healthcheck for the admin backend.",
+    },
+    {
+        "api_key": "admin_stats",
+        "method": "GET",
+        "path": "/admin/api/stats",
+        "enabled": True,
+        "auth_required": True,
+        "group": "dashboard",
+        "description": "Aggregate bot, user, and article metrics.",
+    },
+    {
+        "api_key": "admin_articles",
+        "method": "GET",
+        "path": "/admin/api/articles",
+        "enabled": True,
+        "auth_required": True,
+        "group": "content",
+        "description": "List generated and published content jobs.",
+    },
+    {
+        "api_key": "admin_referrers",
+        "method": "GET",
+        "path": "/admin/api/referrers",
+        "enabled": True,
+        "auth_required": True,
+        "group": "telegram",
+        "description": "List referral leaders and reward state.",
+    },
+    {
+        "api_key": "admin_config",
+        "method": "GET",
+        "path": "/admin/api/config",
+        "enabled": True,
+        "auth_required": True,
+        "group": "config",
+        "description": "Return masked runtime config values.",
+    },
+    {
+        "api_key": "admin_miniapps_api",
+        "method": "GET",
+        "path": "/admin/api/miniapps",
+        "enabled": True,
+        "auth_required": True,
+        "group": "miniapps",
+        "description": "Returns the editable mini-app catalog.",
+    },
+    {
+        "api_key": "admin_catalog_api",
+        "method": "GET",
+        "path": "/admin/api/catalog",
+        "enabled": True,
+        "auth_required": True,
+        "group": "catalog",
+        "description": "Returns API catalog metadata for the UI.",
+    },
+]
+
+PASSWORD_CONTEXT = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
+
+_CLIENT: MongoClient[Any] | None = None
 
 
-@contextmanager
-def db_cursor() -> Iterator[sqlite3.Cursor]:
-    connection = get_connection()
-    try:
-        cursor = connection.cursor()
-        yield cursor
-        connection.commit()
-    finally:
-        connection.close()
+def get_env_value(key: str, default: str = "") -> str:
+    return os.getenv(key, default).strip()
 
 
-def ensure_column(cursor: sqlite3.Cursor, table_name: str, column_name: str, definition: str) -> None:
-    columns = cursor.execute(f"PRAGMA table_info({table_name})").fetchall()
-    if column_name not in {column["name"] for column in columns}:
-        cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
+def get_client() -> MongoClient[Any]:
+    global _CLIENT
+    if _CLIENT is None:
+        mongo_uri = get_env_value("MONGO_URI")
+        if not mongo_uri:
+            raise RuntimeError("Missing MONGO_URI in command_center/.env")
+        _CLIENT = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
+    return _CLIENT
+
+
+def get_database() -> Database[Any]:
+    db_name = get_env_value("MONGO_DB_NAME", "purehub_command_center")
+    return get_client()[db_name]
+
+
+def collection(name: str) -> Collection[Any]:
+    return get_database()[name]
+
+
+def utcnow() -> datetime:
+    return datetime.now(UTC)
 
 
 def init_database() -> None:
     OUTPUT_DIR.mkdir(exist_ok=True)
+    db = get_database()
 
-    with db_cursor() as cursor:
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS config (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL DEFAULT '',
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                invites_count INTEGER NOT NULL DEFAULT 0,
-                referral_code TEXT UNIQUE,
-                referred_by INTEGER,
-                reward_sent_at TEXT,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS article_jobs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                source_filename TEXT NOT NULL,
-                title TEXT NOT NULL,
-                keyword TEXT,
-                status TEXT NOT NULL DEFAULT 'generated',
-                remote_url TEXT,
-                error_message TEXT,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
+    db.config.create_index([("key", ASCENDING)], unique=True)
+    db.users.create_index([("user_id", ASCENDING)], unique=True)
+    db.users.create_index([("referral_code", ASCENDING)], unique=True)
+    db.article_jobs.create_index([("created_at", DESCENDING)])
+    db.admins.create_index([("username", ASCENDING)], unique=True)
+    db.miniapps.create_index([("miniapp_id", ASCENDING)], unique=True)
+    db.api_catalog.create_index([("api_key", ASCENDING)], unique=True)
+
+    for key, value in CONFIG_DEFAULTS.items():
+        db.config.update_one(
+            {"key": key},
+            {
+                "$setOnInsert": {
+                    "key": key,
+                    "value": value,
+                    "updated_at": utcnow(),
+                }
+            },
+            upsert=True,
         )
 
-        ensure_column(cursor, "users", "referred_by", "INTEGER")
-        ensure_column(cursor, "users", "reward_sent_at", "TEXT")
-        ensure_column(cursor, "article_jobs", "remote_url", "TEXT")
-        ensure_column(cursor, "article_jobs", "error_message", "TEXT")
+    for item in MINIAPP_DEFAULTS:
+        db.miniapps.update_one(
+            {"miniapp_id": item["miniapp_id"]},
+            {
+                "$setOnInsert": {
+                    **item,
+                    "created_at": utcnow(),
+                    "updated_at": utcnow(),
+                }
+            },
+            upsert=True,
+        )
 
-        for key, value in CONFIG_DEFAULTS.items():
-            cursor.execute(
-                """
-                INSERT INTO config(key, value)
-                VALUES(?, ?)
-                ON CONFLICT(key) DO NOTHING
-                """,
-                (key, value),
-            )
+    for item in API_CATALOG_DEFAULTS:
+        db.api_catalog.update_one(
+            {"api_key": item["api_key"]},
+            {
+                "$setOnInsert": {
+                    **item,
+                    "created_at": utcnow(),
+                    "updated_at": utcnow(),
+                }
+            },
+            upsert=True,
+        )
+
+    ensure_admin_account()
+
+
+def ensure_admin_account() -> None:
+    username = get_env_value("ADMIN_USERNAME", "admin")
+    password = get_env_value("ADMIN_PASSWORD")
+    if not password:
+        raise RuntimeError("Missing ADMIN_PASSWORD in command_center/.env")
+
+    admins = collection("admins")
+    existing = admins.find_one({"username": username})
+    if existing:
+        return
+
+    admins.insert_one(
+        {
+            "username": username,
+            "password_hash": PASSWORD_CONTEXT.hash(password),
+            "role": "superadmin",
+            "created_at": utcnow(),
+            "updated_at": utcnow(),
+        }
+    )
+
+
+def verify_admin_credentials(username: str, password: str) -> bool:
+    admin = collection("admins").find_one({"username": username})
+    if not admin:
+        return False
+    return PASSWORD_CONTEXT.verify(password, admin["password_hash"])
+
+
+def get_admin_profile(username: str) -> dict[str, Any] | None:
+    admin = collection("admins").find_one({"username": username}, {"password_hash": 0})
+    return _serialize(admin) if admin else None
+
+
+def update_admin_credentials(
+    current_username: str,
+    *,
+    next_username: str,
+    current_password: str,
+    next_password: str | None = None,
+) -> tuple[bool, str]:
+    admins = collection("admins")
+    admin = admins.find_one({"username": current_username})
+    if not admin:
+        return False, "Admin account was not found."
+    if not PASSWORD_CONTEXT.verify(current_password, admin["password_hash"]):
+        return False, "Current password is incorrect."
+
+    normalized_username = next_username.strip()
+    if not normalized_username:
+        return False, "Admin username cannot be empty."
+
+    conflict = admins.find_one({"username": normalized_username, "_id": {"$ne": admin["_id"]}})
+    if conflict:
+        return False, "That admin username is already in use."
+
+    update_payload: dict[str, Any] = {
+        "username": normalized_username,
+        "updated_at": utcnow(),
+    }
+    if next_password:
+        update_payload["password_hash"] = PASSWORD_CONTEXT.hash(next_password)
+
+    admins.update_one({"_id": admin["_id"]}, {"$set": update_payload})
+    return True, normalized_username
 
 
 def list_config() -> dict[str, str]:
-    with db_cursor() as cursor:
-        rows = cursor.execute("SELECT key, value FROM config ORDER BY key ASC").fetchall()
+    rows = collection("config").find({}, {"_id": 0, "key": 1, "value": 1}).sort("key", ASCENDING)
     return {row["key"]: row["value"] for row in rows}
 
 
 def get_config_value(key: str, default: str = "") -> str:
-    with db_cursor() as cursor:
-        row = cursor.execute("SELECT value FROM config WHERE key = ?", (key,)).fetchone()
-    return row["value"] if row else default
+    row = collection("config").find_one({"key": key}, {"value": 1, "_id": 0})
+    return str(row["value"]) if row else default
 
 
 def update_config(values: dict[str, str]) -> None:
-    with db_cursor() as cursor:
-        for key, value in values.items():
-            cursor.execute(
-                """
-                INSERT INTO config(key, value, updated_at)
-                VALUES(?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(key) DO UPDATE SET
-                    value = excluded.value,
-                    updated_at = CURRENT_TIMESTAMP
-                """,
-                (key, value),
-            )
+    now = utcnow()
+    for key, value in values.items():
+        collection("config").update_one(
+            {"key": key},
+            {
+                "$set": {
+                    "value": value,
+                    "updated_at": now,
+                }
+            },
+            upsert=True,
+        )
 
 
 def get_user_stats() -> dict[str, int]:
-    with db_cursor() as cursor:
-        row = cursor.execute(
-            """
-            SELECT
-                COUNT(*) AS total_users,
-                COALESCE(SUM(invites_count), 0) AS total_invites,
-                COUNT(CASE WHEN reward_sent_at IS NOT NULL THEN 1 END) AS rewarded_users
-            FROM users
-            """
-        ).fetchone()
-
+    users = list(collection("users").find({}, {"invites_count": 1, "reward_sent_at": 1}))
     return {
-        "total_users": int(row["total_users"]),
-        "total_invites": int(row["total_invites"]),
-        "rewarded_users": int(row["rewarded_users"]),
+        "total_users": len(users),
+        "total_invites": sum(int(item.get("invites_count", 0)) for item in users),
+        "rewarded_users": sum(1 for item in users if item.get("reward_sent_at")),
     }
 
 
 def get_dashboard_metrics() -> dict[str, int]:
-    with db_cursor() as cursor:
-        row = cursor.execute(
-            """
-            SELECT
-                COUNT(*) AS total_articles,
-                COUNT(CASE WHEN status = 'published' THEN 1 END) AS published_articles,
-                COUNT(CASE WHEN status = 'generated' THEN 1 END) AS generated_articles,
-                COUNT(CASE WHEN status = 'failed' THEN 1 END) AS failed_articles
-            FROM article_jobs
-            """
-        ).fetchone()
-
+    jobs = list(collection("article_jobs").find({}, {"status": 1}))
     return {
-        "total_articles": int(row["total_articles"]),
-        "published_articles": int(row["published_articles"]),
-        "generated_articles": int(row["generated_articles"]),
-        "failed_articles": int(row["failed_articles"]),
+        "total_articles": len(jobs),
+        "published_articles": sum(1 for item in jobs if item.get("status") == "published"),
+        "generated_articles": sum(1 for item in jobs if item.get("status") == "generated"),
+        "failed_articles": sum(1 for item in jobs if item.get("status") == "failed"),
     }
 
 
-def upsert_user(user_id: int, referral_code: str, referred_by: int | None = None) -> dict[str, object]:
-    with db_cursor() as cursor:
-        existing = cursor.execute(
-            "SELECT * FROM users WHERE user_id = ?",
-            (user_id,),
-        ).fetchone()
+def upsert_user(user_id: int, referral_code: str, referred_by: int | None = None) -> dict[str, Any]:
+    users = collection("users")
+    existing = users.find_one({"user_id": user_id})
+    if existing:
+        return _serialize(existing)
 
-        if existing:
-            return dict(existing)
-
-        cursor.execute(
-            """
-            INSERT INTO users(user_id, invites_count, referral_code, referred_by, created_at, updated_at)
-            VALUES(?, 0, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            """,
-            (user_id, referral_code, referred_by),
-        )
-
-        created = cursor.execute(
-            "SELECT * FROM users WHERE user_id = ?",
-            (user_id,),
-        ).fetchone()
-        return dict(created)
+    payload = {
+        "user_id": user_id,
+        "invites_count": 0,
+        "referral_code": referral_code,
+        "referred_by": referred_by,
+        "reward_sent_at": None,
+        "created_at": utcnow(),
+        "updated_at": utcnow(),
+    }
+    users.insert_one(payload)
+    return _serialize(payload)
 
 
-def get_user(user_id: int) -> dict[str, object] | None:
-    with db_cursor() as cursor:
-        row = cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
-    return dict(row) if row else None
+def get_user(user_id: int) -> dict[str, Any] | None:
+    row = collection("users").find_one({"user_id": user_id})
+    return _serialize(row) if row else None
 
 
-def increment_invites(referrer_id: int) -> dict[str, object] | None:
-    with db_cursor() as cursor:
-        cursor.execute(
-            """
-            UPDATE users
-            SET invites_count = invites_count + 1,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE user_id = ?
-            """,
-            (referrer_id,),
-        )
-        row = cursor.execute("SELECT * FROM users WHERE user_id = ?", (referrer_id,)).fetchone()
-    return dict(row) if row else None
+def increment_invites(referrer_id: int) -> dict[str, Any] | None:
+    row = collection("users").find_one_and_update(
+        {"user_id": referrer_id},
+        {
+            "$inc": {"invites_count": 1},
+            "$set": {"updated_at": utcnow()},
+        },
+        return_document=True,
+    )
+    return _serialize(row) if row else None
 
 
 def mark_reward_sent(user_id: int) -> None:
-    with db_cursor() as cursor:
-        cursor.execute(
-            """
-            UPDATE users
-            SET reward_sent_at = CURRENT_TIMESTAMP,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE user_id = ?
-            """,
-            (user_id,),
-        )
+    collection("users").update_one(
+        {"user_id": user_id},
+        {"$set": {"reward_sent_at": utcnow(), "updated_at": utcnow()}},
+    )
 
 
-def list_top_referrers(limit: int = 10) -> list[dict[str, object]]:
-    with db_cursor() as cursor:
-        rows = cursor.execute(
-            """
-            SELECT user_id, invites_count, referral_code, reward_sent_at, updated_at
-            FROM users
-            ORDER BY invites_count DESC, updated_at DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
-    return [dict(row) for row in rows]
+def list_top_referrers(limit: int = 10) -> list[dict[str, Any]]:
+    rows = (
+        collection("users")
+        .find({}, {"_id": 0})
+        .sort([("invites_count", DESCENDING), ("updated_at", DESCENDING)])
+        .limit(limit)
+    )
+    return [_serialize(item) for item in rows]
 
 
-def create_article_job(source_filename: str, title: str, keyword: str, status: str = "generated") -> int:
-    with db_cursor() as cursor:
-        cursor.execute(
-            """
-            INSERT INTO article_jobs(source_filename, title, keyword, status, created_at, updated_at)
-            VALUES(?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            """,
-            (source_filename, title, keyword, status),
-        )
-        return int(cursor.lastrowid)
+def create_article_job(source_filename: str, title: str, keyword: str, status: str = "generated") -> str:
+    payload = {
+        "source_filename": source_filename,
+        "title": title,
+        "keyword": keyword,
+        "status": status,
+        "remote_url": None,
+        "error_message": None,
+        "created_at": utcnow(),
+        "updated_at": utcnow(),
+    }
+    inserted = collection("article_jobs").insert_one(payload)
+    return str(inserted.inserted_id)
 
 
 def update_article_job(
-    job_id: int,
+    job_id: str,
     *,
     status: str,
     remote_url: str | None = None,
     error_message: str | None = None,
 ) -> None:
-    with db_cursor() as cursor:
-        cursor.execute(
-            """
-            UPDATE article_jobs
-            SET status = ?,
-                remote_url = ?,
-                error_message = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            """,
-            (status, remote_url, error_message, job_id),
-        )
+    from bson import ObjectId
+
+    collection("article_jobs").update_one(
+        {"_id": ObjectId(job_id)},
+        {
+            "$set": {
+                "status": status,
+                "remote_url": remote_url,
+                "error_message": error_message,
+                "updated_at": utcnow(),
+            }
+        },
+    )
 
 
-def list_article_jobs(limit: int = 20) -> list[dict[str, object]]:
-    with db_cursor() as cursor:
-        rows = cursor.execute(
-            """
-            SELECT *
-            FROM article_jobs
-            ORDER BY updated_at DESC, id DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
-    return [dict(row) for row in rows]
+def list_article_jobs(limit: int = 20) -> list[dict[str, Any]]:
+    rows = (
+        collection("article_jobs")
+        .find({})
+        .sort([("updated_at", DESCENDING), ("created_at", DESCENDING)])
+        .limit(limit)
+    )
+    return [_serialize(item) for item in rows]
+
+
+def list_miniapps() -> list[dict[str, Any]]:
+    rows = collection("miniapps").find({}, {"_id": 0}).sort([("tab", ASCENDING), ("traffic_priority", DESCENDING)])
+    return [_serialize(item) for item in rows]
+
+
+def update_miniapp(miniapp_id: str, values: dict[str, Any]) -> None:
+    values["updated_at"] = utcnow()
+    collection("miniapps").update_one({"miniapp_id": miniapp_id}, {"$set": values})
+
+
+def list_api_catalog() -> list[dict[str, Any]]:
+    rows = collection("api_catalog").find({}, {"_id": 0}).sort([("group", ASCENDING), ("path", ASCENDING)])
+    return [_serialize(item) for item in rows]
+
+
+def update_api_catalog(api_key: str, values: dict[str, Any]) -> None:
+    values["updated_at"] = utcnow()
+    collection("api_catalog").update_one({"api_key": api_key}, {"$set": values})
+
+
+def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:
+    if not document:
+        return {}
+
+    result: dict[str, Any] = {}
+    for key, value in document.items():
+        if key == "_id":
+            result["id"] = str(value)
+        elif isinstance(value, datetime):
+            result[key] = value.isoformat()
+        else:
+            result[key] = value
+    return result

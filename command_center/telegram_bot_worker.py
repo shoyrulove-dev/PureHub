@@ -71,7 +71,7 @@ class TelegramBotManager:
     def _polling_loop(self, bot: telebot.TeleBot) -> None:
         try:
             bot.infinity_polling(skip_pending=True, timeout=30, long_polling_timeout=30)
-        except Exception as exc:  # pragma: no cover - background loop
+        except Exception as exc:  # pragma: no cover - runtime integration
             self._state.last_error = str(exc)
             self._state.running = False
 
@@ -117,7 +117,7 @@ class TelegramBotManager:
             return
 
         notify_message = (
-            f"🎉 You got a new referral from <code>{invited_user_id}</code>.\n"
+            f"You got a new referral from <code>{invited_user_id}</code>.\n"
             f"Current invites: <b>{referrer['invites_count']}</b>"
         )
         try:
@@ -125,16 +125,13 @@ class TelegramBotManager:
         except Exception:
             pass
 
-        should_reward = (
-            int(referrer["invites_count"]) >= INVITE_GOAL
-            and not referrer.get("reward_sent_at")
-        )
+        should_reward = int(referrer["invites_count"]) >= INVITE_GOAL and not referrer.get("reward_sent_at")
         if should_reward:
             pro_code = get_config_value("pro_unlock_code", "PUREHUB-PRO-2026")
             try:
                 bot.send_message(
                     referrer_id,
-                    f"🏆 You reached {INVITE_GOAL} invites.\nYour Pro Unlock Code: <code>{pro_code}</code>",
+                    f"You reached {INVITE_GOAL} invites.\nYour Pro Unlock Code: <code>{pro_code}</code>",
                 )
                 mark_reward_sent(referrer_id)
             except Exception:
