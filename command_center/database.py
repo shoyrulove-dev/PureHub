@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
@@ -30,8 +30,11 @@ CONFIG_DEFAULTS = {
     "site_url": "https://hub.blissbiovn.com",
 }
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 6
 DEFAULTS_BOOTSTRAP_VERSION = 1
+LOGIN_ATTEMPT_WINDOW_MINUTES = 15
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_LOCKOUT_MINUTES = 20
 
 MINIAPP_DEFAULTS = [
     {
@@ -458,6 +461,14 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+def _normalize_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, datetime):
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
 def init_database() -> None:
     global _INITIALIZED
     if _INITIALIZED:
@@ -475,6 +486,8 @@ def init_database() -> None:
     db.api_catalog.create_index([("api_key", ASCENDING)], unique=True)
     db.audit_logs.create_index([("created_at", DESCENDING)])
     db.audit_logs.create_index([("actor", ASCENDING), ("created_at", DESCENDING)])
+    db.login_guards.create_index([("scope", ASCENDING)], unique=True)
+    db.login_guards.create_index([("locked_until", DESCENDING)])
     db.schema_migrations.create_index([("version", ASCENDING)], unique=True)
     db.system_meta.create_index([("key", ASCENDING)], unique=True)
 
@@ -566,6 +579,7 @@ def run_schema_migrations() -> None:
         (3, "ensure-schema-catalog-entries", _migration_schema_catalog),
         (4, "ensure-admin-active-flag", _migration_admin_active_flag),
         (5, "ensure-admin-role-values", _migration_admin_roles),
+        (6, "ensure-login-guard-collection", _migration_login_guards),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -612,6 +626,10 @@ def _migration_admin_active_flag() -> None:
 
 def _migration_admin_roles() -> None:
     collection("admins").update_many({"role": {"$nin": list(ADMIN_ROLES)}}, {"$set": {"role": "editor", "updated_at": utcnow()}})
+
+
+def _migration_login_guards() -> None:
+    return None
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -961,6 +979,117 @@ def record_audit_log(
 def list_audit_logs(limit: int = 50) -> list[dict[str, Any]]:
     rows = collection("audit_logs").find({}).sort("created_at", DESCENDING).limit(limit)
     return [_serialize(item) for item in rows]
+
+
+def _guard_scope(kind: str, value: str) -> str:
+    return f"{kind}:{value.strip().lower()}"
+
+
+def _load_guard(scope: str) -> dict[str, Any] | None:
+    return collection("login_guards").find_one({"scope": scope})
+
+
+def _is_lock_active(guard: dict[str, Any] | None) -> tuple[bool, int]:
+    if not guard:
+        return False, 0
+    locked_until = _normalize_datetime(guard.get("locked_until"))
+    if locked_until is None:
+        return False, 0
+    now = utcnow()
+    if locked_until <= now:
+        return False, 0
+    remaining_seconds = max(1, int((locked_until - now).total_seconds()))
+    return True, remaining_seconds
+
+
+def _format_lockout_message(remaining_seconds: int) -> str:
+    minutes, seconds = divmod(remaining_seconds, 60)
+    if minutes:
+        return f"Too many login attempts. Try again in {minutes}m {seconds:02d}s."
+    return f"Too many login attempts. Try again in {seconds}s."
+
+
+def get_login_guard_state(*, username: str, ip_address: str) -> dict[str, Any]:
+    scopes = [_guard_scope("username", username), _guard_scope("ip", ip_address)]
+    highest_remaining = 0
+    active_scope = ""
+    for scope in scopes:
+        locked, remaining = _is_lock_active(_load_guard(scope))
+        if locked and remaining > highest_remaining:
+            highest_remaining = remaining
+            active_scope = scope
+    if highest_remaining:
+        return {
+            "allowed": False,
+            "remaining_seconds": highest_remaining,
+            "message": _format_lockout_message(highest_remaining),
+            "scope": active_scope,
+        }
+    return {
+        "allowed": True,
+        "remaining_seconds": 0,
+        "message": "",
+        "scope": "",
+    }
+
+
+def register_failed_login(*, username: str, ip_address: str) -> dict[str, Any]:
+    now = utcnow()
+    window_start = now - timedelta(minutes=LOGIN_ATTEMPT_WINDOW_MINUTES)
+    scopes = [_guard_scope("username", username), _guard_scope("ip", ip_address)]
+    highest_remaining = 0
+    lowest_remaining_attempts = LOGIN_MAX_ATTEMPTS
+
+    for scope in scopes:
+        guards = collection("login_guards")
+        guard = guards.find_one({"scope": scope})
+        attempts = []
+        if guard:
+            attempts = []
+            for item in guard.get("attempts", []):
+                normalized_item = _normalize_datetime(item)
+                if normalized_item is not None and normalized_item >= window_start:
+                    attempts.append(normalized_item)
+        attempts.append(now)
+        lowest_remaining_attempts = min(lowest_remaining_attempts, max(0, LOGIN_MAX_ATTEMPTS - len(attempts)))
+        update_payload: dict[str, Any] = {
+            "attempts": attempts,
+            "updated_at": now,
+        }
+        locked_until = None
+        if len(attempts) >= LOGIN_MAX_ATTEMPTS:
+            locked_until = now + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
+            update_payload["locked_until"] = locked_until
+        else:
+            update_payload["locked_until"] = None
+
+        guards.update_one(
+            {"scope": scope},
+            {
+                "$set": update_payload,
+                "$setOnInsert": {"created_at": now},
+            },
+            upsert=True,
+        )
+        if locked_until is not None:
+            highest_remaining = max(highest_remaining, int((locked_until - now).total_seconds()))
+
+    if highest_remaining:
+        return {
+            "locked": True,
+            "remaining_seconds": highest_remaining,
+            "message": _format_lockout_message(highest_remaining),
+        }
+    return {
+        "locked": False,
+        "remaining_seconds": 0,
+        "message": f"Invalid admin credentials. {lowest_remaining_attempts} attempts remaining before lockout.",
+    }
+
+
+def clear_login_guards(*, username: str, ip_address: str) -> None:
+    scopes = [_guard_scope("username", username), _guard_scope("ip", ip_address)]
+    collection("login_guards").delete_many({"scope": {"$in": scopes}})
 
 
 def get_analytics_snapshot() -> dict[str, Any]:

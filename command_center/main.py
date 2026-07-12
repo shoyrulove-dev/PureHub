@@ -18,6 +18,7 @@ try:
         create_admin_account,
         create_api_catalog_entry,
         create_miniapp,
+        clear_login_guards,
         delete_admin_account,
         delete_api_catalog_entry,
         delete_miniapp,
@@ -26,6 +27,7 @@ try:
         get_analytics_snapshot,
         get_dashboard_metrics,
         get_env_value,
+        get_login_guard_state,
         get_schema_status,
         get_user_stats,
         import_control_bundle,
@@ -38,6 +40,7 @@ try:
         list_miniapps,
         list_top_referrers,
         record_audit_log,
+        register_failed_login,
         update_admin_account,
         update_admin_credentials,
         update_api_catalog,
@@ -55,6 +58,7 @@ except ImportError:
         create_admin_account,
         create_api_catalog_entry,
         create_miniapp,
+        clear_login_guards,
         delete_admin_account,
         delete_api_catalog_entry,
         delete_miniapp,
@@ -63,6 +67,7 @@ except ImportError:
         get_analytics_snapshot,
         get_dashboard_metrics,
         get_env_value,
+        get_login_guard_state,
         get_schema_status,
         get_user_stats,
         import_control_bundle,
@@ -75,6 +80,7 @@ except ImportError:
         list_miniapps,
         list_top_referrers,
         record_audit_log,
+        register_failed_login,
         update_admin_account,
         update_admin_credentials,
         update_api_catalog,
@@ -109,6 +115,13 @@ app.add_middleware(
 )
 
 
+def get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for", "")
+    if forwarded_for.strip():
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_database()
@@ -136,18 +149,51 @@ def login_action(
     username: str = Form(...),
     password: str = Form(...),
 ) -> RedirectResponse:
-    if not verify_admin_credentials(username.strip(), password):
+    normalized_username = username.strip()
+    client_ip = get_client_ip(request)
+    guard_state = get_login_guard_state(username=normalized_username, ip_address=client_ip)
+    if not guard_state["allowed"]:
+        record_audit_log(
+            actor=normalized_username or "unknown",
+            action="login_blocked",
+            target_type="admin_session",
+            target_id=normalized_username or "unknown",
+            details={
+                "scope": guard_state["scope"],
+                "remaining_seconds": guard_state["remaining_seconds"],
+            },
+            request_meta=request_meta(request),
+        )
         return RedirectResponse(
-            url=f"{PUBLIC_ADMIN_PREFIX}/login?message={quote_plus('Invalid admin credentials.')}",
+            url=f"{PUBLIC_ADMIN_PREFIX}/login?message={quote_plus(str(guard_state['message']))}",
             status_code=303,
         )
 
-    request.session["admin_username"] = username.strip()
+    if not verify_admin_credentials(normalized_username, password):
+        failed_state = register_failed_login(username=normalized_username, ip_address=client_ip)
+        record_audit_log(
+            actor=normalized_username or "unknown",
+            action="login_failed",
+            target_type="admin_session",
+            target_id=normalized_username or "unknown",
+            details={
+                "locked": failed_state["locked"],
+                "remaining_seconds": failed_state["remaining_seconds"],
+            },
+            request_meta=request_meta(request),
+        )
+        return RedirectResponse(
+            url=f"{PUBLIC_ADMIN_PREFIX}/login?message={quote_plus(str(failed_state['message']))}",
+            status_code=303,
+        )
+
+    clear_login_guards(username=normalized_username, ip_address=client_ip)
+    request.session["admin_username"] = normalized_username
     record_audit_log(
-        actor=username.strip(),
+        actor=normalized_username,
         action="login",
         target_type="admin_session",
-        target_id=username.strip(),
+        target_id=normalized_username,
         details={"status": "success"},
         request_meta=request_meta(request),
     )
@@ -198,6 +244,7 @@ def dashboard(
             "audit_logs": list_audit_logs(),
             "schema_status": get_schema_status(),
             "analytics": get_analytics_snapshot(),
+            "analytics_json": json.dumps(get_analytics_snapshot(), ensure_ascii=False),
             "admins": list_admin_accounts(),
             "admin_roles": ADMIN_ROLES,
             "export_bundle_json": json.dumps(export_control_bundle(), indent=2, ensure_ascii=False),
