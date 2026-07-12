@@ -12,6 +12,14 @@ export const resources = {
         openMiniApp: 'Open mini-app',
         browseTab: 'Browse tab',
       },
+      dashboard: {
+        collection: 'Featured utility spells',
+        offline: 'Offline',
+        quickAccess: 'Quick Access',
+        privacy: 'Privacy',
+        spells: '11 spells',
+        onDevice: 'On-device only',
+      },
       tabs: {
         zenTime: {
           label: 'Zen & Time',
@@ -128,6 +136,14 @@ export const resources = {
         openMiniApp: 'Mở mini-app',
         browseTab: 'Xem tab',
       },
+      dashboard: {
+        collection: 'Kho tiện ích nổi bật',
+        offline: 'Ngoại tuyến',
+        quickAccess: 'Truy cập nhanh',
+        privacy: 'Riêng tư',
+        spells: '11 phép tiện ích',
+        onDevice: 'Chỉ trên thiết bị',
+      },
       tabs: {
         zenTime: {
           label: 'Zen & Thời gian',
@@ -243,6 +259,14 @@ export const resources = {
         routeLabel: '规范路由',
         openMiniApp: '打开迷你应用',
         browseTab: '查看标签页',
+      },
+      dashboard: {
+        collection: '精选工具法术',
+        offline: '离线',
+        quickAccess: '快捷访问',
+        privacy: '隐私',
+        spells: '11 个法术',
+        onDevice: '仅限本机',
       },
       tabs: {
         zenTime: {
