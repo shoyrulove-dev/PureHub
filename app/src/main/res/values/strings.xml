@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PureHub</string>
+    <string name="privacy_promise">100% offline, zero ads, zero analytics.</string>
+</resources>

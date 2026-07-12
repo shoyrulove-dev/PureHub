@@ -1,0 +1,26 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Android / Gradle
+.gradle/
+.kotlin/
+local.properties
+**/build/
+captures/
+*.apk
+*.aab
+
+# Kotlin / Java
+*.class
+*.log
+
+# Web / Node
+pwa/node_modules/
+pwa/dist/
+
+# Misc
+*.keystore
+*.jks

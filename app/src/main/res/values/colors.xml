@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purehub_icon_bg">#0E1726</color>
+    <color name="purehub_icon_fg">#F5F7FB</color>
+    <color name="purehub_icon_accent">#5EEAD4</color>
+    <color name="purehub_icon_accent_soft">#7C3AED</color>
+</resources>

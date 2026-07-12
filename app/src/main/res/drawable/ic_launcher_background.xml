@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/purehub_icon_bg" />
+        </shape>
+    </item>
+    <item android:gravity="center">
+        <shape
+            android:height="92dp"
+            android:shape="oval"
+            android:width="92dp">
+            <gradient
+                android:angle="315"
+                android:endColor="@color/purehub_icon_accent_soft"
+                android:startColor="@color/purehub_icon_accent" />
+        </shape>
+    </item>
+</layer-list>
