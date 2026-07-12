@@ -50,6 +50,8 @@ http://127.0.0.1:8000/admin
   Manage exposed admin endpoints and auth metadata.
 - `Referral loop`
   Monitor invite counts and reward state.
+- `Schema & audit`
+  Review Mongo migration state and admin activity history.
 
 ## JSON endpoints
 

@@ -13,16 +13,23 @@ try:
     from .content_generator import DEFAULT_KEYWORDS, generate_articles
     from .database import (
         CONFIG_DEFAULTS,
+        create_api_catalog_entry,
+        create_miniapp,
+        delete_api_catalog_entry,
+        delete_miniapp,
         get_admin_profile,
         get_dashboard_metrics,
         get_env_value,
+        get_schema_status,
         get_user_stats,
         init_database,
+        list_audit_logs,
         list_api_catalog,
         list_article_jobs,
         list_config,
         list_miniapps,
         list_top_referrers,
+        record_audit_log,
         update_admin_credentials,
         update_api_catalog,
         update_config,
@@ -35,16 +42,23 @@ except ImportError:
     from content_generator import DEFAULT_KEYWORDS, generate_articles
     from database import (
         CONFIG_DEFAULTS,
+        create_api_catalog_entry,
+        create_miniapp,
+        delete_api_catalog_entry,
+        delete_miniapp,
         get_admin_profile,
         get_dashboard_metrics,
         get_env_value,
+        get_schema_status,
         get_user_stats,
         init_database,
+        list_audit_logs,
         list_api_catalog,
         list_article_jobs,
         list_config,
         list_miniapps,
         list_top_referrers,
+        record_audit_log,
         update_admin_credentials,
         update_api_catalog,
         update_config,
@@ -112,11 +126,27 @@ def login_action(
         )
 
     request.session["admin_username"] = username.strip()
+    record_audit_log(
+        actor=username.strip(),
+        action="login",
+        target_type="admin_session",
+        target_id=username.strip(),
+        details={"status": "success"},
+        request_meta=request_meta(request),
+    )
     return RedirectResponse(url=PUBLIC_ADMIN_PREFIX, status_code=303)
 
 
 @admin_router.post("/logout")
 def logout_action(request: Request) -> RedirectResponse:
+    actor = request.session.get("admin_username", "unknown")
+    record_audit_log(
+        actor=str(actor),
+        action="logout",
+        target_type="admin_session",
+        target_id=str(actor),
+        request_meta=request_meta(request),
+    )
     request.session.clear()
     return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
 
@@ -126,6 +156,10 @@ def dashboard(
     request: Request,
     message: str = "",
     message_type: Literal["success", "info", "error"] = "success",
+    miniapp_query: str = "",
+    miniapp_tab: str = "",
+    api_query: str = "",
+    api_group: str = "",
 ) -> HTMLResponse:
     admin_username = request.session.get("admin_username")
     if not admin_username:
@@ -142,8 +176,10 @@ def dashboard(
             "jobs": list_article_jobs(),
             "top_referrers": list_top_referrers(),
             "bot_state": telegram_bot_manager.state,
-            "miniapps": list_miniapps(),
-            "api_catalog": list_api_catalog(),
+            "miniapps": list_miniapps(miniapp_query, miniapp_tab),
+            "api_catalog": list_api_catalog(api_query, api_group),
+            "audit_logs": list_audit_logs(),
+            "schema_status": get_schema_status(),
             "message": message,
             "message_type": message_type,
             "admin_prefix": PUBLIC_ADMIN_PREFIX,
@@ -152,6 +188,10 @@ def dashboard(
             "admin_username": admin_username,
             "admin_profile": get_admin_profile(str(admin_username)),
             "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
+            "miniapp_query": miniapp_query,
+            "miniapp_tab": miniapp_tab,
+            "api_query": api_query,
+            "api_group": api_group,
         },
     )
 
@@ -169,7 +209,7 @@ def save_config(
     pro_unlock_code: str = Form(default="PUREHUB-PRO-2026"),
     site_url: str = Form(default="https://hub.blissbiovn.com"),
 ) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     update_config(
         {
             "grok_api_key": grok_api_key.strip(),
@@ -182,6 +222,14 @@ def save_config(
             "pro_unlock_code": pro_unlock_code.strip() or "PUREHUB-PRO-2026",
             "site_url": site_url.strip() or "https://hub.blissbiovn.com",
         }
+    )
+    record_audit_log(
+        actor=actor,
+        action="update_config",
+        target_type="config",
+        target_id="global",
+        details={"keys": sorted(CONFIG_DEFAULTS.keys())},
+        request_meta=request_meta(request),
     )
     return _redirect_with_message("Configuration saved successfully.", "success")
 
@@ -204,6 +252,14 @@ def save_admin_security(
         return _redirect_with_message(result, "error")
 
     request.session["admin_username"] = result
+    record_audit_log(
+        actor=result,
+        action="update_admin_security",
+        target_type="admin",
+        target_id=result,
+        details={"previous_username": current_username, "password_rotated": bool(next_password.strip())},
+        request_meta=request_meta(request),
+    )
     return _redirect_with_message("Admin security updated successfully.", "success")
 
 
@@ -220,7 +276,7 @@ def save_miniapp(
     notes: str = Form(default=""),
     enabled: str | None = Form(default=None),
 ) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     update_miniapp(
         miniapp_id,
         {
@@ -234,7 +290,70 @@ def save_miniapp(
             "enabled": enabled == "true",
         },
     )
+    record_audit_log(
+        actor=actor,
+        action="update_miniapp",
+        target_type="miniapp",
+        target_id=miniapp_id,
+        details={"name": name.strip(), "enabled": enabled == "true", "traffic_priority": int(traffic_priority)},
+        request_meta=request_meta(request),
+    )
     return _redirect_with_message(f"Saved mini-app {miniapp_id}.", "success")
+
+
+@admin_router.post("/miniapps")
+def create_miniapp_entry(
+    request: Request,
+    miniapp_id: str = Form(...),
+    name: str = Form(...),
+    tab: str = Form(...),
+    route_en: str = Form(...),
+    route_vi: str = Form(...),
+    route_zh: str = Form(...),
+    traffic_priority: int = Form(5),
+    notes: str = Form(default=""),
+    enabled: str | None = Form(default=None),
+) -> RedirectResponse:
+    actor = require_admin_session(request)
+    try:
+        create_miniapp(
+            {
+                "miniapp_id": miniapp_id.strip(),
+                "name": name.strip(),
+                "tab": tab.strip(),
+                "route_en": route_en.strip(),
+                "route_vi": route_vi.strip(),
+                "route_zh": route_zh.strip(),
+                "traffic_priority": int(traffic_priority),
+                "notes": notes.strip(),
+                "enabled": enabled == "true",
+            }
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Create mini-app failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="create_miniapp",
+        target_type="miniapp",
+        target_id=miniapp_id.strip(),
+        details={"name": name.strip(), "tab": tab.strip()},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Created mini-app {miniapp_id.strip()}.", "success")
+
+
+@admin_router.post("/miniapps/{miniapp_id}/delete")
+def delete_miniapp_entry(request: Request, miniapp_id: str) -> RedirectResponse:
+    actor = require_admin_session(request)
+    delete_miniapp(miniapp_id)
+    record_audit_log(
+        actor=actor,
+        action="delete_miniapp",
+        target_type="miniapp",
+        target_id=miniapp_id,
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Deleted mini-app {miniapp_id}.", "info")
 
 
 @admin_router.post("/apis/{api_key}")
@@ -248,7 +367,7 @@ def save_api_catalog(
     enabled: str | None = Form(default=None),
     auth_required: str | None = Form(default=None),
 ) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     update_api_catalog(
         api_key,
         {
@@ -260,7 +379,66 @@ def save_api_catalog(
             "auth_required": auth_required == "true",
         },
     )
+    record_audit_log(
+        actor=actor,
+        action="update_api_catalog",
+        target_type="api_catalog",
+        target_id=api_key,
+        details={"path": path.strip(), "enabled": enabled == "true", "auth_required": auth_required == "true"},
+        request_meta=request_meta(request),
+    )
     return _redirect_with_message(f"Saved API config {api_key}.", "success")
+
+
+@admin_router.post("/apis")
+def create_api_catalog(
+    request: Request,
+    api_key: str = Form(...),
+    method: str = Form(...),
+    path: str = Form(...),
+    group: str = Form(...),
+    description: str = Form(default=""),
+    enabled: str | None = Form(default=None),
+    auth_required: str | None = Form(default=None),
+) -> RedirectResponse:
+    actor = require_admin_session(request)
+    try:
+        create_api_catalog_entry(
+            {
+                "api_key": api_key.strip(),
+                "method": method.strip().upper(),
+                "path": path.strip(),
+                "group": group.strip(),
+                "description": description.strip(),
+                "enabled": enabled == "true",
+                "auth_required": auth_required == "true",
+            }
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Create API config failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="create_api_catalog",
+        target_type="api_catalog",
+        target_id=api_key.strip(),
+        details={"path": path.strip(), "group": group.strip()},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Created API config {api_key.strip()}.", "success")
+
+
+@admin_router.post("/apis/{api_key}/delete")
+def delete_api_catalog(request: Request, api_key: str) -> RedirectResponse:
+    actor = require_admin_session(request)
+    delete_api_catalog_entry(api_key)
+    record_audit_log(
+        actor=actor,
+        action="delete_api_catalog",
+        target_type="api_catalog",
+        target_id=api_key,
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(f"Deleted API config {api_key}.", "info")
 
 
 @admin_router.post("/actions/generate")
@@ -268,10 +446,18 @@ def trigger_generator(
     request: Request,
     keywords: str = Form(default=""),
 ) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     try:
         keyword_list = [item.strip() for item in keywords.splitlines() if item.strip()] or DEFAULT_KEYWORDS
         generated = generate_articles(keyword_list)
+        record_audit_log(
+            actor=actor,
+            action="generate_articles",
+            target_type="article_jobs",
+            target_id="batch",
+            details={"keywords_count": len(keyword_list), "generated_count": len(generated)},
+            request_meta=request_meta(request),
+        )
         return _redirect_with_message(f"Generated {len(generated)} markdown article(s).", "success")
     except Exception as exc:
         return _redirect_with_message(f"Generator failed: {exc}", "error")
@@ -279,9 +465,17 @@ def trigger_generator(
 
 @admin_router.post("/actions/publish")
 def trigger_publisher(request: Request) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     try:
         published = publish_articles()
+        record_audit_log(
+            actor=actor,
+            action="publish_articles",
+            target_type="article_jobs",
+            target_id="batch",
+            details={"published_count": len(published)},
+            request_meta=request_meta(request),
+        )
         return _redirect_with_message(f"Published {len(published)} article(s) to Dev.to.", "success")
     except Exception as exc:
         return _redirect_with_message(f"Publisher failed: {exc}", "error")
@@ -289,9 +483,17 @@ def trigger_publisher(request: Request) -> RedirectResponse:
 
 @admin_router.post("/actions/bot/start")
 def start_bot(request: Request) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     try:
         state = telegram_bot_manager.start()
+        record_audit_log(
+            actor=actor,
+            action="start_telegram_bot",
+            target_type="telegram_bot",
+            target_id=state.thread_name or "worker",
+            details={"running": state.running},
+            request_meta=request_meta(request),
+        )
         return _redirect_with_message(f"Telegram bot started ({state.thread_name or 'worker'}).", "success")
     except Exception as exc:
         return _redirect_with_message(f"Telegram bot failed to start: {exc}", "error")
@@ -299,8 +501,15 @@ def start_bot(request: Request) -> RedirectResponse:
 
 @admin_router.post("/actions/bot/stop")
 def stop_bot(request: Request) -> RedirectResponse:
-    require_admin_session(request)
+    actor = require_admin_session(request)
     telegram_bot_manager.stop()
+    record_audit_log(
+        actor=actor,
+        action="stop_telegram_bot",
+        target_type="telegram_bot",
+        target_id="worker",
+        request_meta=request_meta(request),
+    )
     return _redirect_with_message("Telegram bot stopped.", "info")
 
 
@@ -362,11 +571,31 @@ def api_catalog_api(request: Request) -> dict[str, object]:
     return {"items": list_api_catalog()}
 
 
+@admin_api_router.get("/audit-logs")
+def audit_logs_api(request: Request) -> dict[str, object]:
+    require_admin_session(request)
+    return {"items": list_audit_logs(100)}
+
+
+@admin_api_router.get("/schema")
+def schema_api(request: Request) -> dict[str, object]:
+    require_admin_session(request)
+    return get_schema_status()
+
+
 def require_admin_session(request: Request) -> str:
     admin_username = request.session.get("admin_username")
     if not admin_username:
         raise HTTPException(status_code=401, detail="Admin authentication required.")
     return str(admin_username)
+
+
+def request_meta(request: Request) -> dict[str, str]:
+    return {
+        "path": str(request.url.path),
+        "client_ip": request.client.host if request.client else "",
+        "user_agent": request.headers.get("user-agent", ""),
+    }
 
 
 def mask_secret(value: str) -> str:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from dotenv import load_dotenv
 from passlib.context import CryptContext
@@ -27,6 +27,8 @@ CONFIG_DEFAULTS = {
     "pro_unlock_code": "PUREHUB-PRO-2026",
     "site_url": "https://hub.blissbiovn.com",
 }
+
+CURRENT_SCHEMA_VERSION = 3
 
 MINIAPP_DEFAULTS = [
     {
@@ -392,6 +394,24 @@ API_CATALOG_DEFAULTS = [
         "group": "catalog",
         "description": "Returns API catalog metadata for the UI.",
     },
+    {
+        "api_key": "admin_audit_api",
+        "method": "GET",
+        "path": "/admin/api/audit-logs",
+        "enabled": True,
+        "auth_required": True,
+        "group": "security",
+        "description": "Returns recent audit events for admin actions.",
+    },
+    {
+        "api_key": "admin_schema_api",
+        "method": "GET",
+        "path": "/admin/api/schema",
+        "enabled": True,
+        "auth_required": True,
+        "group": "system",
+        "description": "Returns Mongo schema version and migration history.",
+    },
 ]
 
 PASSWORD_CONTEXT = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
@@ -437,6 +457,9 @@ def init_database() -> None:
     db.admins.create_index([("username", ASCENDING)], unique=True)
     db.miniapps.create_index([("miniapp_id", ASCENDING)], unique=True)
     db.api_catalog.create_index([("api_key", ASCENDING)], unique=True)
+    db.audit_logs.create_index([("created_at", DESCENDING)])
+    db.audit_logs.create_index([("actor", ASCENDING), ("created_at", DESCENDING)])
+    db.schema_migrations.create_index([("version", ASCENDING)], unique=True)
 
     for key, value in CONFIG_DEFAULTS.items():
         db.config.update_one(
@@ -477,6 +500,7 @@ def init_database() -> None:
             upsert=True,
         )
 
+    run_schema_migrations()
     ensure_admin_account()
 
 
@@ -500,6 +524,51 @@ def ensure_admin_account() -> None:
             "updated_at": utcnow(),
         }
     )
+
+
+def run_schema_migrations() -> None:
+    migrations: list[tuple[int, str, Callable[[], None]]] = [
+        (1, "seed-default-admin-and-config", _migration_seed_defaults),
+        (2, "ensure-audit-log-indexes", _migration_audit_logs),
+        (3, "ensure-schema-catalog-entries", _migration_schema_catalog),
+    ]
+    applied_versions = {
+        item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
+    }
+    for version, name, migration in migrations:
+        if version in applied_versions:
+            continue
+        migration()
+        collection("schema_migrations").insert_one(
+            {
+                "version": version,
+                "name": name,
+                "applied_at": utcnow(),
+            }
+        )
+
+
+def get_schema_status() -> dict[str, Any]:
+    rows = collection("schema_migrations").find({}, {"_id": 0}).sort("version", ASCENDING)
+    items = [_serialize(item) for item in rows]
+    latest = items[-1]["version"] if items else 0
+    return {
+        "current_version": CURRENT_SCHEMA_VERSION,
+        "applied_version": latest,
+        "migrations": items,
+    }
+
+
+def _migration_seed_defaults() -> None:
+    return None
+
+
+def _migration_audit_logs() -> None:
+    return None
+
+
+def _migration_schema_catalog() -> None:
+    return None
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -691,8 +760,20 @@ def list_article_jobs(limit: int = 20) -> list[dict[str, Any]]:
     return [_serialize(item) for item in rows]
 
 
-def list_miniapps() -> list[dict[str, Any]]:
-    rows = collection("miniapps").find({}, {"_id": 0}).sort([("tab", ASCENDING), ("traffic_priority", DESCENDING)])
+def list_miniapps(query: str = "", tab: str = "") -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {}
+    if query.strip():
+        filters["$or"] = [
+            {"miniapp_id": {"$regex": query.strip(), "$options": "i"}},
+            {"name": {"$regex": query.strip(), "$options": "i"}},
+            {"notes": {"$regex": query.strip(), "$options": "i"}},
+            {"route_en": {"$regex": query.strip(), "$options": "i"}},
+            {"route_vi": {"$regex": query.strip(), "$options": "i"}},
+            {"route_zh": {"$regex": query.strip(), "$options": "i"}},
+        ]
+    if tab.strip():
+        filters["tab"] = tab.strip()
+    rows = collection("miniapps").find(filters, {"_id": 0}).sort([("tab", ASCENDING), ("traffic_priority", DESCENDING)])
     return [_serialize(item) for item in rows]
 
 
@@ -701,14 +782,81 @@ def update_miniapp(miniapp_id: str, values: dict[str, Any]) -> None:
     collection("miniapps").update_one({"miniapp_id": miniapp_id}, {"$set": values})
 
 
-def list_api_catalog() -> list[dict[str, Any]]:
-    rows = collection("api_catalog").find({}, {"_id": 0}).sort([("group", ASCENDING), ("path", ASCENDING)])
+def create_miniapp(values: dict[str, Any]) -> None:
+    if collection("miniapps").find_one({"miniapp_id": values["miniapp_id"]}):
+        raise ValueError(f"Mini-app {values['miniapp_id']} already exists.")
+    payload = {
+        **values,
+        "created_at": utcnow(),
+        "updated_at": utcnow(),
+    }
+    collection("miniapps").insert_one(payload)
+
+
+def delete_miniapp(miniapp_id: str) -> None:
+    collection("miniapps").delete_one({"miniapp_id": miniapp_id})
+
+
+def list_api_catalog(query: str = "", group: str = "") -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {}
+    if query.strip():
+        filters["$or"] = [
+            {"api_key": {"$regex": query.strip(), "$options": "i"}},
+            {"path": {"$regex": query.strip(), "$options": "i"}},
+            {"description": {"$regex": query.strip(), "$options": "i"}},
+            {"method": {"$regex": query.strip(), "$options": "i"}},
+        ]
+    if group.strip():
+        filters["group"] = group.strip()
+    rows = collection("api_catalog").find(filters, {"_id": 0}).sort([("group", ASCENDING), ("path", ASCENDING)])
     return [_serialize(item) for item in rows]
 
 
 def update_api_catalog(api_key: str, values: dict[str, Any]) -> None:
     values["updated_at"] = utcnow()
     collection("api_catalog").update_one({"api_key": api_key}, {"$set": values})
+
+
+def create_api_catalog_entry(values: dict[str, Any]) -> None:
+    if collection("api_catalog").find_one({"api_key": values["api_key"]}):
+        raise ValueError(f"API catalog entry {values['api_key']} already exists.")
+    payload = {
+        **values,
+        "created_at": utcnow(),
+        "updated_at": utcnow(),
+    }
+    collection("api_catalog").insert_one(payload)
+
+
+def delete_api_catalog_entry(api_key: str) -> None:
+    collection("api_catalog").delete_one({"api_key": api_key})
+
+
+def record_audit_log(
+    *,
+    actor: str,
+    action: str,
+    target_type: str,
+    target_id: str,
+    details: dict[str, Any] | None = None,
+    request_meta: dict[str, Any] | None = None,
+) -> None:
+    collection("audit_logs").insert_one(
+        {
+            "actor": actor,
+            "action": action,
+            "target_type": target_type,
+            "target_id": target_id,
+            "details": details or {},
+            "request_meta": request_meta or {},
+            "created_at": utcnow(),
+        }
+    )
+
+
+def list_audit_logs(limit: int = 50) -> list[dict[str, Any]]:
+    rows = collection("audit_logs").find({}).sort("created_at", DESCENDING).limit(limit)
+    return [_serialize(item) for item in rows]
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:
