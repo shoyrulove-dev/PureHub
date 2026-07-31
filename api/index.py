@@ -19,7 +19,7 @@ async def app(scope, receive, send):
             (value for key, value in query_items if key == "__purehub_path"),
             "",
         )
-        if forwarded_path.startswith("/admin"):
+        if forwarded_path.startswith(("/admin", "/public-api")):
             normalized_path = forwarded_path.rstrip("/") or "/admin"
             scope = {
                 **scope,

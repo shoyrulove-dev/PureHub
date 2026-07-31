@@ -1,4 +1,6 @@
-import { Bot, Bug, Code2, HeartHandshake, Languages, Lightbulb, MessageCircle } from 'lucide-react'
+import { Bot, Bug, Code2, Download, HeartHandshake, Languages, Lightbulb, MessageCircle } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { normalizeLocale } from '../i18n/locales'
 
 const TELEGRAM_URL = 'https://t.me/aaa_letan_vip_bot'
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
@@ -35,6 +37,7 @@ const actions = [
 ]
 
 export function CommunityPage() {
+  const locale = normalizeLocale(useParams().lang)
   return (
     <section className="space-y-7">
       <div className="hero-panel">
@@ -57,6 +60,11 @@ export function CommunityPage() {
           </article>
         ))}
       </div>
+
+      <a href={`/${locale}/download`} className="app-surface flex items-center justify-between gap-4 rounded-[18px] p-5">
+        <span><strong className="block text-slate-950 dark:text-white">Get PureHub for Android</strong><small className="mt-1 block text-slate-500">Signed APK releases, checksums, and changelog</small></span>
+        <Download className="size-5 text-emerald-500" />
+      </a>
 
       <div className="app-surface rounded-[18px] p-5">
         <h2 className="font-bold text-slate-950 dark:text-white">Ways to contribute</h2>

@@ -97,6 +97,70 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Python command center/API syntax parse: 7 files passed.
 - `git diff --check`: passed.
 
+## Android release and community distribution
+
+### Signed Android delivery
+
+- Added environment-driven Android `versionCode` and `versionName`.
+- Added local release-signing support through an ignored `signing.properties` file or protected environment variables.
+- Added GitHub Actions CI for every relevant push and pull request.
+- Added separate PWA/Command Center CI for TypeScript lint/build, Python compilation, and admin template parsing.
+- Added a protected Android Release workflow for tags and manual runs.
+- The release workflow restores the signing keystore from GitHub Secrets, runs tests and release lint, creates signed APK/AAB assets, generates `SHA256SUMS.txt`, adds build provenance attestation, and creates the GitHub release.
+- Added `ANDROID_RELEASE_CHECKLIST.md` and `signing.properties.example`.
+- Keystores, signing properties, and release secrets are excluded from Git.
+
+### Release Hub
+
+- Mongo schema upgraded to version 7 with `releases` and `release_publications` collections and unique indexes.
+- Added release records for version, summary, changelog, GitHub/APK/AAB links, checksum, prerelease status, and publication time.
+- Added DeepSeek and Groq-compatible content generation. DeepSeek is configured as the active provider; no API key is stored in the repository.
+- Added English-first content bundles for Telegram, DEV Community, Bluesky, Mastodon, Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook.
+- Added a secret-protected GitHub release hook. A successful signed GitHub release automatically creates or updates its Release Hub record and generates the review drafts.
+- Telegram also receives optional Vietnamese and Chinese drafts, but only the reviewed English channel post is eligible for API publishing.
+- Added an approval queue with editable content and explicit `draft`, `approved`, and `ready_manual` states.
+- Regenerating content does not overwrite an already-published post.
+- API publishers are implemented for Telegram, DEV Community draft articles, Bluesky, and Mastodon.
+- Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook remain review-ready manual drafts to respect platform rules and avoid spam.
+- Missing credentials move an approved publication to `waiting_credentials` instead of losing it.
+- Added AI-assisted community reply drafts in the admin panel.
+- Added `/ask` to the Telegram bot. Optional private-chat auto reply can be enabled through `community_reply_mode`; group auto reply is intentionally disabled to prevent noisy or unsafe bot behavior.
+
+### Public release experience
+
+- Added localized `/download` and `/changelog` pages to the PWA.
+- The download page only displays records explicitly published through Release Hub.
+- Added signed APK, AAB/GitHub, SHA-256, prerelease, and safe “build pending” states.
+- Added public JSON at `/public-api/releases`.
+- Added escaped RSS XML at `/public-api/releases.xml`.
+- Added Android entry points from the desktop navigation and Community page.
+
+### Additional verification
+
+- Mongo migration: schema 7 applied successfully.
+- DeepSeek live completion: passed.
+- FastAPI public release JSON: HTTP 200.
+- FastAPI release RSS: HTTP 200.
+- Admin auth redirect and Jinja template parse: passed.
+- PWA lint and production build after Download/Changelog additions: passed.
+- Android debug unit tests, `lintDebug`, and `assembleDebug`: passed.
+- Android `lintRelease`, minified APK release build, and AAB build: passed (0 lint errors).
+- Debug APK generated at `app/build/outputs/apk/debug/app-debug.apk` (not for public distribution).
+
+## Owner action checklist before the first public APK
+
+These items require account ownership or a long-lived secret and therefore are not generated or committed automatically:
+
+1. Create the permanent PureHub Android signing keystore and keep at least two encrypted backups.
+2. Create the GitHub environment `android-release`, preferably with required reviewer approval.
+3. Add `PUREHUB_KEYSTORE_BASE64`, `PUREHUB_KEYSTORE_PASSWORD`, `PUREHUB_KEY_ALIAS`, and `PUREHUB_KEY_PASSWORD` as environment secrets.
+4. Generate one random release-hook secret. Add it to Vercel as `RELEASE_WEBHOOK_SECRET` and to the GitHub `android-release` environment as `PUREHUB_RELEASE_HOOK_SECRET`.
+5. Run the Android Release workflow for `1.0.0-beta.1`, install its signed APK on a physical phone, and confirm install/update behavior.
+6. Replace the current Groq key if Groq is desired; the discovered key returns HTTP 403. DeepSeek already works and is sufficient.
+7. Optional: create DEV Community, Bluesky, and/or Mastodon accounts, then add their API credentials in Command Center. Telegram is already the default channel.
+8. For Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook, review each generated draft and post manually according to each community's rules.
+9. After the APK is confirmed, review the automatically generated Release Hub drafts, approve only the desired English posts, and publish.
+
 ## Known follow-up opportunities
 
 - PWA OCR language packs should be downloadable per language to keep first load small.

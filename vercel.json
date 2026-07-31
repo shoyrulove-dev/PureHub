@@ -10,6 +10,10 @@
   },
   "rewrites": [
     {
+      "source": "/public-api/:path*",
+      "destination": "/api/index?__purehub_path=/public-api/:path*"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "/api/index?__purehub_path=/admin/:path*"
     },

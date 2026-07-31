@@ -118,6 +118,40 @@ select:focus-visible {
   color: #6ee7b7;
 }
 
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 14px;
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.primary-button {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 12px 28px -18px rgba(5, 150, 105, 0.75);
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: #334155;
+}
+
+.dark .secondary-button {
+  color: #e2e8f0;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+  transform: translateY(-1px);
+}
+
 .search-box {
   display: flex;
   min-height: 54px;

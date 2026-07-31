@@ -1,0 +1,5 @@
+# Copy to signing.properties for local release builds. Never commit the real file.
+storeFile=release-secrets/purehub-release.jks
+storePassword=CHANGE_ME
+keyAlias=purehub
+keyPassword=CHANGE_ME

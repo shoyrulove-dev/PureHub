@@ -34,5 +34,8 @@ command_center/.env
 # Misc
 *.keystore
 *.jks
+*.keystore
+signing.properties
+release-secrets/
 
 .vercel

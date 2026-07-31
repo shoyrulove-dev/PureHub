@@ -6,6 +6,8 @@ import { LocaleRedirectPage } from '../pages/locale-redirect-page'
 import { ToolsPage } from '../pages/tools-page'
 import { CommunityPage } from '../pages/community-page'
 import { SettingsPage } from '../pages/settings-page'
+import { DownloadPage } from '../pages/download-page'
+import { ChangelogPage } from '../pages/changelog-page'
 
 export const appRouter = createBrowserRouter([
   {
@@ -31,6 +33,14 @@ export const appRouter = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'download',
+        element: <DownloadPage />,
+      },
+      {
+        path: 'changelog',
+        element: <ChangelogPage />,
       },
       {
         path: ':appSlug',

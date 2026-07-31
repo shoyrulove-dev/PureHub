@@ -75,7 +75,7 @@
           <div class="mt-6 grid gap-5">
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Grok API key</span>
-              <input type="password" name="grok_api_key" value="{{ config.get('grok_api_key', defaults.grok_api_key) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
+              <input type="password" name="grok_api_key" value="" placeholder="{% if config.get('grok_api_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
 
             <div class="grid gap-5 sm:grid-cols-2">
@@ -91,7 +91,7 @@
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Dev.to API key</span>
-              <input type="password" name="devto_api_key" value="{{ config.get('devto_api_key', defaults.devto_api_key) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
+              <input type="password" name="devto_api_key" value="" placeholder="{% if config.get('devto_api_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
 
             <div class="grid gap-5 sm:grid-cols-2">
@@ -106,7 +106,7 @@
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium text-slate-200">Telegram bot token</span>
-              <input type="password" name="telegram_bot_token" value="{{ config.get('telegram_bot_token', defaults.telegram_bot_token) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
+              <input type="password" name="telegram_bot_token" value="" placeholder="{% if config.get('telegram_bot_token') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
             </label>
 
             <div class="grid gap-5 sm:grid-cols-2">
@@ -119,6 +119,40 @@
                 <input type="text" name="telegram_notify_chat_id" value="{{ config.get('telegram_notify_chat_id', defaults.telegram_notify_chat_id) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
                 <span class="mt-2 block text-xs text-slate-400">Publish to the channel once; its linked discussion group receives the post automatically.</span>
               </label>
+            </div>
+
+            <div class="border-t border-white/10 pt-5">
+              <p class="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-violet-300">Release AI</p>
+              <div class="grid gap-5 sm:grid-cols-2">
+                <label class="block">
+                  <span class="mb-2 block text-sm font-medium text-slate-200">AI provider</span>
+                  <select name="ai_provider" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
+                    <option value="deepseek" {% if config.get('ai_provider', defaults.ai_provider) == 'deepseek' %}selected{% endif %}>DeepSeek</option>
+                    <option value="groq" {% if config.get('ai_provider', defaults.ai_provider) == 'groq' %}selected{% endif %}>Groq</option>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-sm font-medium text-slate-200">Community reply mode</span>
+                  <select name="community_reply_mode" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
+                    <option value="draft" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'draft' %}selected{% endif %}>Draft for approval</option>
+                    <option value="auto" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'auto' %}selected{% endif %}>Auto (use carefully)</option>
+                  </select>
+                </label>
+              </div>
+              <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                <label><span class="mb-2 block text-sm">DeepSeek API key</span><input type="password" name="deepseek_api_key" value="" placeholder="{% if config.get('deepseek_api_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">DeepSeek model</span><input name="deepseek_model" value="{{ config.get('deepseek_model', defaults.deepseek_model) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Groq API key</span><input type="password" name="groq_api_key" value="" placeholder="{% if config.get('groq_api_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Groq model</span><input name="groq_model" value="{{ config.get('groq_model', defaults.groq_model) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+              </div>
+              <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                <label><span class="mb-2 block text-sm">GitHub repository</span><input name="github_repo" value="{{ config.get('github_repo', defaults.github_repo) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Auto channels</span><input name="release_auto_channels" value="{{ config.get('release_auto_channels', defaults.release_auto_channels) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Bluesky handle</span><input name="bluesky_handle" value="{{ config.get('bluesky_handle', defaults.bluesky_handle) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Bluesky app password</span><input type="password" name="bluesky_app_password" value="" placeholder="{% if config.get('bluesky_app_password') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Mastodon base URL</span><input name="mastodon_base_url" value="{{ config.get('mastodon_base_url', defaults.mastodon_base_url) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Mastodon access token</span><input type="password" name="mastodon_access_token" value="" placeholder="{% if config.get('mastodon_access_token') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+              </div>
             </div>
           </div>
         </form>
@@ -642,6 +676,87 @@
             </div>
           </section>
         </section>
+      </section>
+      <section class="rounded-[30px] border border-violet-400/15 bg-slate-900/85 p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-violet-300">Release Hub</p>
+        <h2 class="mt-2 text-2xl font-semibold text-white">Build once, publish with control</h2>
+        <form action="{{ admin_prefix }}/releases/create" method="post" class="mt-6 grid gap-4 md:grid-cols-2">
+          <input name="version" required placeholder="1.0.0-beta.1" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <input name="title" placeholder="PureHub 1.0.0 beta" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <input name="github_url" placeholder="GitHub release URL" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <input name="apk_url" placeholder="Signed APK URL" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <input name="aab_url" placeholder="AAB URL" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <input name="sha256" placeholder="APK SHA-256" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3" />
+          <textarea name="summary" rows="3" placeholder="Release summary" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 md:col-span-2"></textarea>
+          <textarea name="changelog" rows="6" placeholder="Changelog" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 md:col-span-2"></textarea>
+          <input type="hidden" name="prerelease" value="true" />
+          <button class="rounded-2xl bg-violet-400/15 px-4 py-3 font-semibold text-violet-100 md:col-span-2">Create draft release</button>
+        </form>
+
+        <div class="mt-8 space-y-4">
+          {% for release in releases %}
+          <article class="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div><strong class="text-white">{{ release.release_id }} · {{ release.title }}</strong><p class="mt-1 text-sm text-slate-400">{{ release.status }} · {{ release.summary }}</p></div>
+              <div class="flex gap-2">
+                <form action="{{ admin_prefix }}/releases/{{ release.release_id }}/generate" method="post"><button class="rounded-xl bg-sky-400/10 px-3 py-2 text-sm text-sky-200">Generate drafts</button></form>
+                <form action="{{ admin_prefix }}/releases/{{ release.release_id }}/publish" method="post"><button class="rounded-xl bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">Publish approved APIs</button></form>
+              </div>
+            </div>
+            <details class="mt-4">
+              <summary class="cursor-pointer text-sm font-semibold text-slate-300">Edit release metadata</summary>
+              <form action="{{ admin_prefix }}/releases/{{ release.release_id }}/update" method="post" class="mt-4 grid gap-3 md:grid-cols-2">
+                <input name="title" value="{{ release.title }}" placeholder="Release title" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2" />
+                <input name="github_url" value="{{ release.github_url }}" placeholder="GitHub release URL" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2" />
+                <input name="apk_url" value="{{ release.apk_url }}" placeholder="Signed APK URL" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2" />
+                <input name="aab_url" value="{{ release.aab_url }}" placeholder="AAB URL" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2" />
+                <input name="sha256" value="{{ release.sha256 }}" placeholder="APK SHA-256" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 md:col-span-2" />
+                <textarea name="summary" rows="3" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 md:col-span-2">{{ release.summary }}</textarea>
+                <textarea name="changelog" rows="6" class="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 md:col-span-2">{{ release.changelog }}</textarea>
+                <button class="rounded-xl bg-white/8 px-4 py-2 font-semibold md:col-span-2">Save release</button>
+              </form>
+            </details>
+          </article>
+          {% else %}
+          <p class="text-sm text-slate-400">No releases in Mongo yet.</p>
+          {% endfor %}
+        </div>
+
+        <form action="{{ admin_prefix }}/community/reply-draft" method="post" class="mt-8 grid gap-3">
+          <h3 class="font-semibold text-white">AI community reply draft</h3>
+          <textarea name="message" required rows="3" placeholder="Community message or issue" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"></textarea>
+          <textarea name="context" rows="2" placeholder="Known release/fix context" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"></textarea>
+          <button class="rounded-2xl bg-white/8 px-4 py-3 font-semibold">Generate review draft</button>
+        </form>
+
+        <div class="mt-8 overflow-x-auto">
+          <div class="space-y-3">
+            {% for item in release_publications %}
+            <details class="rounded-2xl border border-white/8 bg-slate-950/40 p-4">
+              <summary class="cursor-pointer text-sm text-slate-300">
+                <strong class="text-white">{{ item.release_id }}</strong>
+                &middot; {{ item.channel }}/{{ item.language }}
+                &middot; <span class="text-violet-300">{{ item.status }}</span>
+                {% if item.external_url %}&middot; <a class="text-sky-300" href="{{ item.external_url }}" target="_blank" rel="noreferrer">Open post</a>{% endif %}
+              </summary>
+              <form action="{{ admin_prefix }}/releases/{{ item.release_id }}/publications/{{ item.channel }}/{{ item.language }}" method="post" class="mt-4 grid gap-3">
+                <textarea name="content" rows="8" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">{{ item.content }}</textarea>
+                <div class="flex flex-wrap items-center gap-3">
+                  <select name="status" class="rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white">
+                    <option value="draft" {% if item.status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="approved" {% if item.status == 'approved' %}selected{% endif %}>Approved for API publishing</option>
+                    <option value="ready_manual" {% if item.status == 'ready_manual' %}selected{% endif %}>Ready for manual sharing</option>
+                  </select>
+                  <button class="rounded-xl bg-violet-400/15 px-4 py-2 text-sm font-semibold text-violet-100">Save review</button>
+                </div>
+                {% if item.error_message %}<p class="text-xs text-rose-300">{{ item.error_message }}</p>{% endif %}
+              </form>
+            </details>
+            {% else %}
+            <p class="text-sm text-slate-400">Generate release drafts to start the approval queue.</p>
+            {% endfor %}
+          </div>
+        </div>
       </section>
     </main>
     <script>

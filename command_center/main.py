@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import secrets
+from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote_plus
 
 from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -91,6 +94,29 @@ except ImportError:
     from devto_publisher import publish_articles
     from telegram_bot_worker import telegram_bot_manager
 
+try:
+    from .database import (
+        create_release,
+        get_release,
+        list_release_publications,
+        list_releases,
+        update_release,
+        update_release_publication,
+        upsert_release_publication,
+    )
+    from .release_hub import generate_release_bundle, generate_reply_draft, publish_release
+except ImportError:
+    from database import (
+        create_release,
+        get_release,
+        list_release_publications,
+        list_releases,
+        update_release,
+        update_release_publication,
+        upsert_release_publication,
+    )
+    from release_hub import generate_release_bundle, generate_reply_draft, publish_release
+
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -100,6 +126,7 @@ PUBLIC_API_PREFIX = f"{PUBLIC_ADMIN_PREFIX}/api"
 
 admin_router = APIRouter()
 admin_api_router = APIRouter(prefix="/api")
+public_api_router = APIRouter()
 
 app = FastAPI(
     title="PureHub Command Center",
@@ -255,6 +282,8 @@ def dashboard(
             "default_keywords": "\n".join(DEFAULT_KEYWORDS),
             "admin_username": admin_username,
             "admin_profile": get_admin_profile(str(admin_username)),
+            "releases": list_releases(),
+            "release_publications": list_release_publications(),
             "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
             "miniapp_query": miniapp_query,
             "miniapp_tab": miniapp_tab,
@@ -275,18 +304,43 @@ def save_config(
     telegram_bot_username: str = Form(default=""),
     telegram_notify_chat_id: str = Form(default=""),
     site_url: str = Form(default="https://hub.blissbiovn.com"),
+    ai_provider: str = Form(default="deepseek"),
+    groq_api_key: str = Form(default=""),
+    groq_model: str = Form(default="llama-3.3-70b-versatile"),
+    deepseek_api_key: str = Form(default=""),
+    deepseek_model: str = Form(default="deepseek-chat"),
+    github_repo: str = Form(default="shoyrulove-dev/PureHub"),
+    bluesky_handle: str = Form(default=""),
+    bluesky_app_password: str = Form(default=""),
+    mastodon_base_url: str = Form(default=""),
+    mastodon_access_token: str = Form(default=""),
+    release_auto_channels: str = Form(default="telegram,devto,bluesky,mastodon"),
+    community_reply_mode: str = Form(default="draft"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
+    current_config = list_config()
     update_config(
         {
-            "grok_api_key": grok_api_key.strip(),
+            "grok_api_key": grok_api_key.strip() or current_config.get("grok_api_key", ""),
             "grok_model": grok_model.strip() or "grok-2",
-            "devto_api_key": devto_api_key.strip(),
+            "devto_api_key": devto_api_key.strip() or current_config.get("devto_api_key", ""),
             "devto_publish_as_draft": "true" if devto_publish_as_draft.strip().lower() == "true" else "false",
-            "telegram_bot_token": telegram_bot_token.strip(),
+            "telegram_bot_token": telegram_bot_token.strip() or current_config.get("telegram_bot_token", ""),
             "telegram_bot_username": telegram_bot_username.strip().lstrip("@"),
             "telegram_notify_chat_id": telegram_notify_chat_id.strip(),
             "site_url": site_url.strip() or "https://hub.blissbiovn.com",
+            "ai_provider": ai_provider.strip().lower() or "deepseek",
+            "groq_api_key": groq_api_key.strip() or current_config.get("groq_api_key", ""),
+            "groq_model": groq_model.strip() or "llama-3.3-70b-versatile",
+            "deepseek_api_key": deepseek_api_key.strip() or current_config.get("deepseek_api_key", ""),
+            "deepseek_model": deepseek_model.strip() or "deepseek-chat",
+            "github_repo": github_repo.strip() or "shoyrulove-dev/PureHub",
+            "bluesky_handle": bluesky_handle.strip(),
+            "bluesky_app_password": bluesky_app_password.strip() or current_config.get("bluesky_app_password", ""),
+            "mastodon_base_url": mastodon_base_url.strip(),
+            "mastodon_access_token": mastodon_access_token.strip() or current_config.get("mastodon_access_token", ""),
+            "release_auto_channels": release_auto_channels.strip(),
+            "community_reply_mode": "auto" if community_reply_mode.strip().lower() == "auto" else "draft",
         }
     )
     record_audit_log(
@@ -712,6 +766,155 @@ def announce_bot_release(request: Request) -> RedirectResponse:
         return _redirect_with_message(f"Telegram release update failed: {exc}", "error")
 
 
+@admin_router.post("/releases/create")
+def create_release_action(
+    request: Request,
+    version: str = Form(...),
+    title: str = Form(default=""),
+    summary: str = Form(default=""),
+    changelog: str = Form(default=""),
+    github_url: str = Form(default=""),
+    apk_url: str = Form(default=""),
+    aab_url: str = Form(default=""),
+    sha256: str = Form(default=""),
+    prerelease: str = Form(default="true"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        release = create_release(
+            version=version,
+            title=title,
+            summary=summary,
+            changelog=changelog,
+            github_url=github_url,
+            apk_url=apk_url,
+            aab_url=aab_url,
+            sha256=sha256,
+            prerelease=prerelease.lower() == "true",
+        )
+        record_audit_log(actor=actor, action="create_release", target_type="release", target_id=release["release_id"])
+        return _redirect_with_message(f"Created release {release['release_id']}.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Create release failed: {exc}", "error")
+
+
+@admin_router.post("/releases/{release_id}/generate")
+def generate_release_action(request: Request, release_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        rows = generate_release_bundle(release_id)
+        record_audit_log(
+            actor=actor,
+            action="generate_release_content",
+            target_type="release",
+            target_id=release_id,
+            details={"draft_count": len(rows)},
+        )
+        return _redirect_with_message(f"Generated {len(rows)} release drafts.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Release content generation failed: {exc}", "error")
+
+
+@admin_router.post("/releases/{release_id}/update")
+def update_release_action(
+    request: Request,
+    release_id: str,
+    title: str = Form(default=""),
+    summary: str = Form(default=""),
+    changelog: str = Form(default=""),
+    github_url: str = Form(default=""),
+    apk_url: str = Form(default=""),
+    aab_url: str = Form(default=""),
+    sha256: str = Form(default=""),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    if not get_release(release_id):
+        return _redirect_with_message("Release not found.", "error")
+    update_release(
+        release_id,
+        {
+            "title": title.strip(),
+            "summary": summary.strip(),
+            "changelog": changelog.strip(),
+            "github_url": github_url.strip(),
+            "apk_url": apk_url.strip(),
+            "aab_url": aab_url.strip(),
+            "sha256": sha256.strip(),
+        },
+    )
+    record_audit_log(actor=actor, action="update_release", target_type="release", target_id=release_id)
+    return _redirect_with_message(f"Updated {release_id}.", "success")
+
+
+@admin_router.post("/releases/{release_id}/publish")
+def publish_release_action(request: Request, release_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        rows = publish_release(release_id)
+        record_audit_log(
+            actor=actor,
+            action="publish_release_channels",
+            target_type="release",
+            target_id=release_id,
+            details={"channel_count": len(rows)},
+        )
+        return _redirect_with_message(f"Release publish workflow processed {len(rows)} channel(s).", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Release publishing failed: {exc}", "error")
+
+
+@admin_router.post("/releases/{release_id}/publications/{channel}/{language}")
+def update_release_publication_action(
+    request: Request,
+    release_id: str,
+    channel: str,
+    language: str,
+    content: str = Form(...),
+    status: str = Form(default="draft"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    allowed_statuses = {"draft", "approved", "ready_manual"}
+    if status not in allowed_statuses:
+        return _redirect_with_message("Invalid publication status.", "error")
+    update_release_publication(
+        release_id,
+        channel,
+        language,
+        {"content": content.strip(), "status": status, "error_message": ""},
+    )
+    record_audit_log(
+        actor=actor,
+        action="review_release_publication",
+        target_type="release_publication",
+        target_id=f"{release_id}:{channel}:{language}",
+        details={"status": status},
+    )
+    return _redirect_with_message(f"Saved {channel}/{language} as {status}.", "success")
+
+
+@admin_router.post("/community/reply-draft")
+def community_reply_draft_action(
+    request: Request,
+    message: str = Form(...),
+    context: str = Form(default=""),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        draft = generate_reply_draft(message, context)
+        reply_id = datetime.now(timezone.utc).strftime("community-reply-%Y%m%d-%H%M%S-%f")
+        upsert_release_publication(
+            release_id=reply_id,
+            channel="reply",
+            language="en",
+            content=draft,
+            status="ready_manual",
+        )
+        record_audit_log(actor=actor, action="generate_reply_draft", target_type="community", target_id="reply")
+        return _redirect_with_message("AI community reply draft generated for review.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Reply draft generation failed: {exc}", "error")
+
+
 @admin_api_router.get("/health")
 def healthcheck(request: Request) -> dict[str, str]:
     require_admin_session(request)
@@ -724,7 +927,7 @@ def config_api(request: Request) -> dict[str, object]:
     config = list_config()
     masked = {}
     for key, value in config.items():
-        if "key" in key or "token" in key:
+        if "key" in key or "token" in key or "password" in key or "secret" in key:
             masked[key] = mask_secret(value)
         else:
             masked[key] = value
@@ -794,6 +997,79 @@ def analytics_api(request: Request) -> dict[str, object]:
     return get_analytics_snapshot()
 
 
+@admin_api_router.get("/releases")
+def releases_api(request: Request) -> dict[str, object]:
+    require_admin_session(request)
+    return {"items": list_releases(), "publications": list_release_publications()}
+
+
+@public_api_router.get("/releases")
+def public_releases_api() -> dict[str, object]:
+    return {"items": list_releases(30, published_only=True)}
+
+
+@public_api_router.get("/releases.xml")
+def public_releases_rss() -> Response:
+    site_url = get_env_value("PUBLIC_SITE_URL", "https://hub.blissbiovn.com").rstrip("/")
+    items = []
+    for release in list_releases(30, published_only=True):
+        link = release.get("github_url") or f"{site_url}/en/download"
+        items.append(
+            "<item>"
+            f"<title>{escape(str(release.get('title', '')))}</title>"
+            f"<link>{escape(str(link))}</link>"
+            f"<guid>{escape(str(release.get('release_id', '')))}</guid>"
+            f"<description>{escape(str(release.get('summary', '')))}</description>"
+            "</item>"
+        )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        "<rss version=\"2.0\"><channel><title>PureHub Releases</title>"
+        f"<link>{escape(site_url)}/en/download</link><description>Signed PureHub Android releases</description>"
+        + "".join(items)
+        + "</channel></rss>"
+    )
+    return Response(content=xml, media_type="application/rss+xml")
+
+
+@public_api_router.post("/release-hook")
+async def github_release_hook(request: Request) -> dict[str, object]:
+    expected_secret = get_env_value("RELEASE_WEBHOOK_SECRET")
+    supplied_secret = request.headers.get("x-purehub-release-secret", "")
+    if not expected_secret or not secrets.compare_digest(supplied_secret, expected_secret):
+        raise HTTPException(status_code=401, detail="Invalid release hook secret.")
+
+    payload = await request.json()
+    version = str(payload.get("version", "")).strip().lstrip("v")
+    if not version or len(version) > 64:
+        raise HTTPException(status_code=422, detail="A valid release version is required.")
+    release_id = f"v{version}"
+    values = {
+        "title": str(payload.get("title", "")).strip() or f"PureHub {version}",
+        "summary": str(payload.get("summary", "")).strip(),
+        "changelog": str(payload.get("changelog", "")).strip(),
+        "github_url": str(payload.get("github_url", "")).strip(),
+        "apk_url": str(payload.get("apk_url", "")).strip(),
+        "aab_url": str(payload.get("aab_url", "")).strip(),
+        "sha256": str(payload.get("sha256", "")).strip(),
+        "prerelease": bool(payload.get("prerelease", True)),
+    }
+    if get_release(release_id):
+        update_release(release_id, values)
+    else:
+        create_release(version=version, **values)
+    drafts = generate_release_bundle(release_id)
+    record_audit_log(
+        actor="github-actions",
+        action="ingest_github_release",
+        target_type="release",
+        target_id=release_id,
+        details={"draft_count": len(drafts)},
+        request_meta=request_meta(request),
+    )
+    return {"ok": True, "release_id": release_id, "draft_count": len(drafts)}
+
+
 @admin_api_router.get("/export")
 def export_api(request: Request) -> dict[str, object]:
     require_admin_role(request, "superadmin", "editor")
@@ -845,3 +1121,4 @@ app.include_router(admin_router, prefix=PUBLIC_ADMIN_PREFIX)
 app.include_router(admin_api_router, prefix=PUBLIC_ADMIN_PREFIX)
 app.include_router(admin_router, prefix=INTERNAL_ADMIN_PREFIX)
 app.include_router(admin_api_router, prefix=INTERNAL_ADMIN_PREFIX)
+app.include_router(public_api_router, prefix="/public-api")

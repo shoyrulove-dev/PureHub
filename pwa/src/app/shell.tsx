@@ -1,4 +1,4 @@
-import { Code2, Grid2X2, Home, Moon, Settings, Sparkles, Sun, Users } from 'lucide-react'
+import { Code2, Download, Grid2X2, Home, Moon, Settings, Sparkles, Sun, Users } from 'lucide-react'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/navigation/BottomNav'
@@ -26,6 +26,8 @@ export function AppShell() {
     if (location.pathname.endsWith('/tools')) return `/${nextLocale}/tools`
     if (location.pathname.endsWith('/community')) return `/${nextLocale}/community`
     if (location.pathname.endsWith('/settings')) return `/${nextLocale}/settings`
+    if (location.pathname.endsWith('/download')) return `/${nextLocale}/download`
+    if (location.pathname.endsWith('/changelog')) return `/${nextLocale}/changelog`
     if (!currentEntry) return `/${nextLocale}`
     return currentEntry.kind === 'tab'
       ? buildTabPath(nextLocale, currentEntry.item.id)
@@ -66,6 +68,7 @@ export function AppShell() {
               <p className="text-sm font-bold text-slate-900 dark:text-white">Free forever</p>
               <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">No ads. No mandatory account. Open source with the community.</p>
               <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-link mt-3"><Code2 className="size-4" /> GitHub</a>
+              <Link to={`/${locale}/download`} className="text-link mt-2"><Download className="size-4" /> Android</Link>
             </div>
           </div>
         </aside>

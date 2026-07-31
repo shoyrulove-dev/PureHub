@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -19,13 +20,41 @@ android {
         applicationId = "com.purehub.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 1
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    val signingProperties = Properties().apply {
+        val signingFile = rootProject.file("signing.properties")
+        if (signingFile.exists()) signingFile.inputStream().use(::load)
+    }
+    val releaseStoreFile = providers.environmentVariable("PUREHUB_KEYSTORE_PATH").orNull
+        ?: signingProperties.getProperty("storeFile")
+    val releaseStorePassword = providers.environmentVariable("PUREHUB_KEYSTORE_PASSWORD").orNull
+        ?: signingProperties.getProperty("storePassword")
+    val releaseKeyAlias = providers.environmentVariable("PUREHUB_KEY_ALIAS").orNull
+        ?: signingProperties.getProperty("keyAlias")
+    val releaseKeyPassword = providers.environmentVariable("PUREHUB_KEY_PASSWORD").orNull
+        ?: signingProperties.getProperty("keyPassword")
+
+    signingConfigs {
+        if (releaseStoreFile != null && releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            }
         }
     }
 
@@ -36,6 +65,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

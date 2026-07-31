@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 import threading
+import time
 from dataclasses import dataclass
+from html import escape
 
 import telebot
+
+try:
+    from .release_hub import generate_reply_draft
+except ImportError:
+    from release_hub import generate_reply_draft
 
 try:
     from .database import (
@@ -51,6 +58,7 @@ class TelegramBotManager:
         self._bot: telebot.TeleBot | None = None
         self._thread: threading.Thread | None = None
         self._state = BotRuntimeState()
+        self._ai_last_reply_at: dict[int, float] = {}
 
     @property
     def state(self) -> BotRuntimeState:
@@ -105,6 +113,7 @@ class TelegramBotManager:
                 telebot.types.BotCommand("start", "Join the PureHub community"),
                 telebot.types.BotCommand("about", "Learn about PureHub"),
                 telebot.types.BotCommand("github", "View source code and contribute"),
+                telebot.types.BotCommand("ask", "Ask the PureHub helper"),
             ]
         )
         bot.set_my_short_description("Free, no-ads, open-source everyday tools.")
@@ -171,6 +180,50 @@ class TelegramBotManager:
                 message.chat.id,
                 f"View the source, report an issue, or contribute to PureHub:\n{GITHUB_URL}",
                 disable_web_page_preview=True,
+            )
+
+        @bot.message_handler(commands=["ask"])
+        def handle_ask(message: telebot.types.Message) -> None:  # pragma: no cover - runtime integration
+            question = (message.text or "").partition(" ")[2].strip()
+            if not question:
+                bot.send_message(message.chat.id, "Try <code>/ask How do I export a PDF?</code>")
+                return
+            self._send_ai_reply(bot, message, question)
+
+        @bot.message_handler(
+            func=lambda message: (
+                get_config_value("community_reply_mode", "draft") == "auto"
+                and message.chat.type == "private"
+                and bool(message.text)
+                and not str(message.text).startswith("/")
+            ),
+            content_types=["text"],
+        )
+        def handle_private_auto_reply(message: telebot.types.Message) -> None:  # pragma: no cover - runtime integration
+            self._send_ai_reply(bot, message, str(message.text))
+
+    def _send_ai_reply(
+        self,
+        bot: telebot.TeleBot,
+        message: telebot.types.Message,
+        question: str,
+    ) -> None:
+        user_id = int(message.from_user.id)
+        now = time.monotonic()
+        if now - self._ai_last_reply_at.get(user_id, 0.0) < 15:
+            bot.send_message(message.chat.id, "Please wait a few seconds before asking again.")
+            return
+        self._ai_last_reply_at[user_id] = now
+        try:
+            reply = generate_reply_draft(
+                question[:4000],
+                "PureHub is free, no-ads, privacy-first, and open source. Give support guidance only; do not invent shipped fixes.",
+            )
+            bot.send_message(message.chat.id, escape(reply[:3800]))
+        except Exception:
+            bot.send_message(
+                message.chat.id,
+                "The AI helper is temporarily unavailable. Please report the issue on GitHub or try again later.",
             )
 
     def _reward_referrer_if_needed(

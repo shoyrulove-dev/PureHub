@@ -28,10 +28,22 @@ CONFIG_DEFAULTS = {
     "telegram_notify_chat_id": "",
     "pro_unlock_code": "PUREHUB-PRO-2026",
     "site_url": "https://hub.blissbiovn.com",
+    "ai_provider": "deepseek",
+    "groq_api_key": "",
+    "groq_model": "llama-3.3-70b-versatile",
+    "deepseek_api_key": "",
+    "deepseek_model": "deepseek-chat",
+    "github_repo": "shoyrulove-dev/PureHub",
+    "bluesky_handle": "",
+    "bluesky_app_password": "",
+    "mastodon_base_url": "",
+    "mastodon_access_token": "",
+    "release_auto_channels": "telegram,devto,bluesky,mastodon",
+    "community_reply_mode": "draft",
 }
 
-CURRENT_SCHEMA_VERSION = 6
-DEFAULTS_BOOTSTRAP_VERSION = 1
+CURRENT_SCHEMA_VERSION = 7
+DEFAULTS_BOOTSTRAP_VERSION = 2
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -490,6 +502,12 @@ def init_database() -> None:
     db.login_guards.create_index([("locked_until", DESCENDING)])
     db.schema_migrations.create_index([("version", ASCENDING)], unique=True)
     db.system_meta.create_index([("key", ASCENDING)], unique=True)
+    db.releases.create_index([("version", ASCENDING)], unique=True)
+    db.release_publications.create_index(
+        [("release_id", ASCENDING), ("channel", ASCENDING), ("language", ASCENDING)],
+        unique=True,
+    )
+    db.release_publications.create_index([("updated_at", DESCENDING)])
 
     run_schema_migrations()
     seed_default_documents()
@@ -580,6 +598,7 @@ def run_schema_migrations() -> None:
         (4, "ensure-admin-active-flag", _migration_admin_active_flag),
         (5, "ensure-admin-role-values", _migration_admin_roles),
         (6, "ensure-login-guard-collection", _migration_login_guards),
+        (7, "ensure-release-hub-collections", _migration_release_hub),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -630,6 +649,14 @@ def _migration_admin_roles() -> None:
 
 def _migration_login_guards() -> None:
     return None
+
+
+def _migration_release_hub() -> None:
+    collection("releases").create_index([("version", ASCENDING)], unique=True)
+    collection("release_publications").create_index(
+        [("release_id", ASCENDING), ("channel", ASCENDING), ("language", ASCENDING)],
+        unique=True,
+    )
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -1223,6 +1250,109 @@ def import_control_bundle(bundle: dict[str, Any], mode: str = "merge") -> dict[s
         "miniapps": miniapps_count,
         "api_catalog": api_count,
     }
+
+
+def create_release(
+    *,
+    version: str,
+    title: str,
+    summary: str,
+    changelog: str,
+    github_url: str = "",
+    apk_url: str = "",
+    aab_url: str = "",
+    sha256: str = "",
+    prerelease: bool = True,
+) -> dict[str, Any]:
+    normalized_version = version.strip().lstrip("v")
+    if not normalized_version:
+        raise ValueError("Release version is required.")
+    now = utcnow()
+    payload = {
+        "release_id": f"v{normalized_version}",
+        "version": normalized_version,
+        "title": title.strip() or f"PureHub {normalized_version}",
+        "summary": summary.strip(),
+        "changelog": changelog.strip(),
+        "github_url": github_url.strip(),
+        "apk_url": apk_url.strip(),
+        "aab_url": aab_url.strip(),
+        "sha256": sha256.strip(),
+        "prerelease": bool(prerelease),
+        "status": "draft",
+        "created_at": now,
+        "updated_at": now,
+        "published_at": None,
+    }
+    collection("releases").insert_one(payload)
+    return _serialize(payload)
+
+
+def update_release(release_id: str, values: dict[str, Any]) -> None:
+    payload = {**values, "updated_at": utcnow()}
+    if payload.get("status") == "published":
+        payload["published_at"] = utcnow()
+    collection("releases").update_one({"release_id": release_id}, {"$set": payload})
+
+
+def get_release(release_id: str) -> dict[str, Any] | None:
+    row = collection("releases").find_one({"release_id": release_id})
+    return _serialize(row) if row else None
+
+
+def list_releases(limit: int = 30, *, published_only: bool = False) -> list[dict[str, Any]]:
+    filters = {"status": "published"} if published_only else {}
+    rows = collection("releases").find(filters).sort("created_at", DESCENDING).limit(limit)
+    return [_serialize(item) for item in rows]
+
+
+def upsert_release_publication(
+    *,
+    release_id: str,
+    channel: str,
+    language: str,
+    content: str,
+    status: str = "draft",
+    external_id: str = "",
+    external_url: str = "",
+    error_message: str = "",
+) -> dict[str, Any]:
+    now = utcnow()
+    key = {"release_id": release_id, "channel": channel, "language": language}
+    collection("release_publications").update_one(
+        key,
+        {
+            "$set": {
+                **key,
+                "content": content,
+                "status": status,
+                "external_id": external_id,
+                "external_url": external_url,
+                "error_message": error_message,
+                "updated_at": now,
+            },
+            "$setOnInsert": {"created_at": now, "attempts": 0},
+        },
+        upsert=True,
+    )
+    return _serialize(collection("release_publications").find_one(key))
+
+
+def update_release_publication(release_id: str, channel: str, language: str, values: dict[str, Any]) -> None:
+    increments = {"attempts": 1} if values.pop("increment_attempts", False) else {}
+    update: dict[str, Any] = {"$set": {**values, "updated_at": utcnow()}}
+    if increments:
+        update["$inc"] = increments
+    collection("release_publications").update_one(
+        {"release_id": release_id, "channel": channel, "language": language},
+        update,
+    )
+
+
+def list_release_publications(release_id: str = "", limit: int = 100) -> list[dict[str, Any]]:
+    filters = {"release_id": release_id} if release_id else {}
+    rows = collection("release_publications").find(filters).sort("updated_at", DESCENDING).limit(limit)
+    return [_serialize(item) for item in rows]
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:

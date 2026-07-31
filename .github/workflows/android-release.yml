@@ -1,0 +1,118 @@
+name: Android Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: Version name, for example 1.0.0-beta.1
+        required: true
+      version_code:
+        description: Monotonic Android version code
+        required: true
+      prerelease:
+        description: Publish as a prerelease
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: android-release
+    env:
+      PUREHUB_VERSION_NAME: ${{ inputs.version_name }}
+      PUREHUB_VERSION_CODE: ${{ inputs.version_code || github.run_number }}
+      PUREHUB_KEYSTORE_PATH: release-secrets/purehub-release.jks
+      PUREHUB_KEYSTORE_PASSWORD: ${{ secrets.PUREHUB_KEYSTORE_PASSWORD }}
+      PUREHUB_KEY_ALIAS: ${{ secrets.PUREHUB_KEY_ALIAS }}
+      PUREHUB_KEY_PASSWORD: ${{ secrets.PUREHUB_KEY_PASSWORD }}
+      RELEASE_HOOK_SECRET: ${{ secrets.PUREHUB_RELEASE_HOOK_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - name: Resolve release version
+        shell: bash
+        run: |
+          if [[ -z "${PUREHUB_VERSION_NAME}" ]]; then
+            echo "PUREHUB_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "${GITHUB_ENV}"
+          fi
+      - name: Restore release keystore
+        shell: bash
+        run: |
+          test -n '${{ secrets.PUREHUB_KEYSTORE_BASE64 }}'
+          test -n "${PUREHUB_KEYSTORE_PASSWORD}"
+          test -n "${PUREHUB_KEY_ALIAS}"
+          test -n "${PUREHUB_KEY_PASSWORD}"
+          mkdir -p release-secrets
+          printf '%s' '${{ secrets.PUREHUB_KEYSTORE_BASE64 }}' | base64 --decode > release-secrets/purehub-release.jks
+      - name: Verify and build
+        run: ./gradlew testDebugUnitTest lintRelease assembleRelease bundleRelease --stacktrace
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp app/build/outputs/apk/release/app-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "release-assets/PureHub-${PUREHUB_VERSION_NAME}.aab"
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release-assets/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: purehub-${{ env.PUREHUB_VERSION_NAME }}
+          path: release-assets/*
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then TAG="v${PUREHUB_VERSION_NAME}"; fi
+          EXTRA=()
+          if [[ "${PRERELEASE}" == "true" || "${PUREHUB_VERSION_NAME}" == *"-"* ]]; then EXTRA+=(--prerelease); fi
+          gh release create "${TAG}" release-assets/* --generate-notes --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+      - name: Sync Release Hub drafts
+        if: ${{ env.RELEASE_HOOK_SECRET != '' }}
+        env:
+          RELEASE_HOOK_URL: https://hub.blissbiovn.com/public-api/release-hook
+          PRERELEASE: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then TAG="v${PUREHUB_VERSION_NAME}"; fi
+          APK_NAME="PureHub-${PUREHUB_VERSION_NAME}.apk"
+          AAB_NAME="PureHub-${PUREHUB_VERSION_NAME}.aab"
+          APK_SHA256="$(sha256sum "release-assets/${APK_NAME}" | cut -d ' ' -f1)"
+          CHANGELOG="$(gh release view "${TAG}" --json body --jq '.body')"
+          PRERELEASE_VALUE=false
+          if [[ "${PRERELEASE}" == "true" || "${PUREHUB_VERSION_NAME}" == *"-"* ]]; then PRERELEASE_VALUE=true; fi
+          jq -n \
+            --arg version "${PUREHUB_VERSION_NAME}" \
+            --arg title "PureHub ${PUREHUB_VERSION_NAME}" \
+            --arg summary "A new signed PureHub Android build is ready for community testing." \
+            --arg changelog "${CHANGELOG}" \
+            --arg github_url "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}" \
+            --arg apk_url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${APK_NAME}" \
+            --arg aab_url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${AAB_NAME}" \
+            --arg sha256 "${APK_SHA256}" \
+            --argjson prerelease "${PRERELEASE_VALUE}" \
+            '{version:$version,title:$title,summary:$summary,changelog:$changelog,github_url:$github_url,apk_url:$apk_url,aab_url:$aab_url,sha256:$sha256,prerelease:$prerelease}' \
+            > release-hook.json
+          curl --fail-with-body --retry 3 \
+            -H "Content-Type: application/json" \
+            -H "X-PureHub-Release-Secret: ${RELEASE_HOOK_SECRET}" \
+            --data-binary @release-hook.json \
+            "${RELEASE_HOOK_URL}"
