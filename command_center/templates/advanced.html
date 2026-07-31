@@ -6,6 +6,12 @@
     <title>PureHub Advanced Controls</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      [data-advanced-group] { scroll-margin-top: 6rem; }
+      [data-advanced-group][hidden] { display: none !important; }
+      .tool-tile-active { border-color: rgba(52, 211, 153, .38) !important; background: rgba(16, 185, 129, .12) !important; color: #d1fae5 !important; }
+      .tool-icon { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: .8rem; background: rgba(255,255,255,.06); font-size: 1rem; }
+    </style>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100">
     <main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -13,48 +19,15 @@
         <a href="{{ admin_prefix }}" class="rounded-xl bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/20">&larr; Operations dashboard</a>
         <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Advanced controls</span>
       </nav>
-      <section class="rounded-[32px] border border-emerald-400/15 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,#0f172a_0%,#020617_100%)] p-6 shadow-[0_40px_120px_-60px_rgba(16,185,129,0.45)]">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">PureHub Command Center</p>
-            <h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Advanced controls</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-              Control content automation, Telegram growth loops, API settings, and mini-app visibility from one secure admin surface.
-            </p>
-            <div class="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
-              <span class="rounded-full border border-white/10 bg-white/5 px-4 py-2">Admin: <span class="font-semibold text-white">{{ admin_username }}</span></span>
-              <span class="rounded-full border border-white/10 bg-white/5 px-4 py-2">Mongo DB: <span class="font-semibold text-white">{{ mongo_db_name }}</span></span>
-              <span class="rounded-full border border-white/10 bg-white/5 px-4 py-2">Admin path: <span class="font-semibold text-white">{{ admin_prefix }}</span></span>
-              <span class="rounded-full border border-white/10 bg-white/5 px-4 py-2">Schema: <span class="font-semibold text-white">v{{ schema_status.applied_version }}/{{ schema_status.current_version }}</span></span>
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-3">
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Users</p>
-                <p class="mt-2 text-3xl font-semibold text-white">{{ stats.total_users }}</p>
-              </div>
-              <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Invites</p>
-                <p class="mt-2 text-3xl font-semibold text-emerald-300">{{ stats.total_invites }}</p>
-              </div>
-              <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Articles</p>
-                <p class="mt-2 text-3xl font-semibold text-white">{{ metrics.total_articles }}</p>
-              </div>
-              <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Bot</p>
-                <p class="mt-2 text-lg font-semibold {% if bot_state.running %}text-emerald-300{% else %}text-slate-300{% endif %}">
-                  {% if bot_state.running %}Running{% else %}Stopped{% endif %}
-                </p>
-              </div>
-            </div>
-            <form action="{{ admin_prefix }}/logout" method="post">
-              <button type="submit" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/8">
-                Logout
-              </button>
-            </form>
-          </div>
+      <section class="flex flex-col gap-4 rounded-[28px] border border-emerald-400/15 bg-[linear-gradient(135deg,rgba(16,185,129,.09),rgba(15,23,42,.9))] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">PureHub · Power tools</p>
+          <h1 class="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Advanced controls</h1>
+          <p class="mt-2 text-sm text-slate-400">Rarely used settings stay closed until you choose a toolbox group.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-400">Schema <strong class="text-emerald-300">v{{ schema_status.applied_version }}</strong></span>
+          <form action="{{ admin_prefix }}/logout" method="post"><button type="submit" title="Sign out" class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10">&#8617;</button></form>
         </div>
       </section>
 
@@ -64,7 +37,21 @@
       </section>
       {% endif %}
 
-      <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section aria-label="Advanced tool groups" class="rounded-[28px] border border-white/8 bg-slate-900/75 p-4">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div><p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Toolbox</p><p class="mt-1 text-sm text-slate-300">Choose one group. Everything else stays hidden.</p></div>
+          <button type="button" id="hideAdvancedGroups" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">Hide all</button>
+        </div>
+        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          <button type="button" data-open-advanced="advanced-connections" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#9881;</span><span>Connections</span></button>
+          <button type="button" data-open-advanced="advanced-content" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#10022;</span><span>Content jobs</span></button>
+          <button type="button" data-open-advanced="advanced-insights" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#8961;</span><span>Insights</span></button>
+          <button type="button" data-open-advanced="advanced-governance" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#9671;</span><span>Catalog & access</span></button>
+          <button type="button" data-open-advanced="release-hub" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#8599;</span><span>Release Hub</span></button>
+        </div>
+      </section>
+
+      <section id="advanced-connections" data-advanced-group class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]" hidden>
         <form id="connections" action="{{ admin_prefix }}/config" method="post" class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -277,7 +264,7 @@
         </div>
       </section>
 
-      <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
+      <section id="advanced-content" data-advanced-group class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]" hidden>
         <div class="flex items-center justify-between gap-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-300">Article pipeline</p>
@@ -339,7 +326,7 @@
         </div>
       </section>
 
-      <section class="grid gap-6 xl:grid-cols-3">
+      <section id="advanced-insights" data-advanced-group class="grid gap-6 xl:grid-cols-3" hidden>
         <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
           <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Content funnel</p>
           <h2 class="mt-2 text-2xl font-semibold text-white">Publishing conversion</h2>
@@ -404,7 +391,7 @@
         </section>
       </section>
 
-      <section class="grid gap-6 xl:grid-cols-2">
+      <section id="advanced-governance" data-advanced-group class="grid gap-6 xl:grid-cols-2" hidden>
         <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
           <p class="text-xs font-semibold uppercase tracking-[0.28em] text-violet-300">Mini-app catalog</p>
           <h2 class="mt-2 text-2xl font-semibold text-white">Manage mini-app visibility & routes</h2>
@@ -693,7 +680,7 @@
           </section>
         </section>
       </section>
-      <section id="release-hub" class="rounded-[30px] border border-violet-400/15 bg-slate-900/85 p-6">
+      <section id="release-hub" data-advanced-group class="rounded-[30px] border border-violet-400/15 bg-slate-900/85 p-6" hidden>
         <p class="text-xs font-semibold uppercase tracking-[0.28em] text-violet-300">Release Hub</p>
         <h2 class="mt-2 text-2xl font-semibold text-white">Build once, publish with control</h2>
         <form action="{{ admin_prefix }}/releases/create" method="post" class="mt-6 grid gap-4 md:grid-cols-2">
@@ -777,6 +764,30 @@
     </main>
     <script>
       (() => {
+        const advancedGroups = [...document.querySelectorAll("[data-advanced-group]")];
+        const advancedTools = [...document.querySelectorAll("[data-open-advanced]")];
+        const hideAdvancedGroups = () => {
+          advancedGroups.forEach((group) => { group.hidden = true; });
+          advancedTools.forEach((tool) => { tool.classList.remove("tool-tile-active"); });
+        };
+        const openAdvancedGroup = (id, scroll = true) => {
+          const group = document.getElementById(id);
+          if (!group) return;
+          hideAdvancedGroups();
+          group.hidden = false;
+          const activeTool = document.querySelector(`[data-open-advanced="${id}"]`);
+          if (activeTool) activeTool.classList.add("tool-tile-active");
+          if (scroll) group.scrollIntoView({ behavior: "smooth", block: "start" });
+          window.setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+        };
+        advancedTools.forEach((tool) => {
+          tool.addEventListener("click", () => openAdvancedGroup(tool.dataset.openAdvanced));
+        });
+        document.getElementById("hideAdvancedGroups")?.addEventListener("click", hideAdvancedGroups);
+        const hashTarget = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+        const hashGroup = hashTarget?.matches("[data-advanced-group]") ? hashTarget : hashTarget?.closest("[data-advanced-group]");
+        if (hashGroup) openAdvancedGroup(hashGroup.id, false);
+
         let analytics = {{ analytics_json | safe }};
         const analyticsEndpoint = "{{ api_prefix }}/analytics";
         const refreshLabel = document.getElementById("analyticsRefreshLabel");

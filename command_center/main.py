@@ -293,6 +293,22 @@ def _dashboard_context(
     api_group: str,
 ) -> dict[str, Any]:
     admin_username = str(request.session["admin_username"])
+    support_messages = list_support_messages(limit=100)
+    active_support_statuses = {"new", "draft_ready", "approved", "failed", "manual_required"}
+    active_support_messages = [item for item in support_messages if item.get("status") in active_support_statuses][:24]
+    support_history = [item for item in support_messages if item.get("status") in {"replied", "ignored"}][:12]
+    releases = list_releases()
+    current_release_id = str(releases[0].get("release_id", "")) if releases else ""
+    release_publications = list_release_publications()
+    actionable_publications = [
+        item
+        for item in release_publications
+        if item.get("status") in {"draft", "approved", "waiting_credentials", "failed"}
+        and item.get("channel") != "reply"
+        and item.get("language") == "en"
+        and item.get("channel") in {"telegram", "devto", "bluesky", "mastodon"}
+        and item.get("release_id") == current_release_id
+    ]
     return {
         "config": list_config(),
         "defaults": CONFIG_DEFAULTS,
@@ -317,9 +333,11 @@ def _dashboard_context(
         "default_keywords": "\n".join(DEFAULT_KEYWORDS),
         "admin_username": admin_username,
         "admin_profile": get_admin_profile(admin_username),
-        "releases": list_releases(),
-        "release_publications": list_release_publications(),
-        "support_messages": list_support_messages(limit=60),
+        "releases": releases,
+        "release_publications": release_publications,
+        "actionable_publications": actionable_publications,
+        "active_support_messages": active_support_messages,
+        "support_history": support_history,
         "support_metrics": get_support_metrics(),
         "support_sync_states": list_support_sync_states(),
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),

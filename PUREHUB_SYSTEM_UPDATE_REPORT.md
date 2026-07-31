@@ -140,6 +140,16 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Added a live admin notification badge that refreshes support counts every minute while the dashboard is open.
 - Added a protected Vercel cron endpoint using `CRON_SECRET`; the production secret is stored as a sensitive Vercel environment variable.
 
+### Admin information architecture refresh
+
+- Reorganized the primary dashboard around work that needs attention instead of exposing every control at once.
+- Kept Support Inbox visible and moved channels, release/system operations, resolved support, and inactive queues into collapsed disclosure groups.
+- Limited the main approval queue to actionable English API channels; secondary-language and manual-community drafts remain available in Advanced Controls.
+- Added a shared inline SVG icon system for navigation, metrics, actions, and disclosure groups without adding another client dependency.
+- Rebuilt Advanced Controls as a toolbox: connections, content jobs, insights, catalog/access, and Release Hub stay hidden until explicitly selected.
+- Simplified the Advanced header and removed duplicated dashboard metrics from that power-user screen.
+- Verified the new layout in desktop and mobile Chromium viewports.
+
 ### Public release experience
 
 - Added localized `/download` and `/changelog` pages to the PWA.

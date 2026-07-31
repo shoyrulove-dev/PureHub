@@ -40,6 +40,8 @@
       button, input, textarea, select { font: inherit; }
       button, a { -webkit-tap-highlight-color: transparent; }
       a { color: inherit; text-decoration: none; }
+      .icon { width: 1rem; height: 1rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-lg { width: 1.2rem; height: 1.2rem; }
       h1, h2, h3, p { margin-top: 0; }
 
       .shell { display: grid; min-height: 100vh; grid-template-columns: 16.5rem minmax(0, 1fr); }
@@ -71,6 +73,9 @@
       .brand-meta { margin: 0.18rem 0 0; color: var(--muted); font-size: 0.7rem; }
       .nav { display: grid; gap: 0.35rem; margin-top: 2rem; }
       .nav a {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
         padding: 0.76rem 0.85rem;
         border: 1px solid transparent;
         border-radius: 0.85rem;
@@ -121,6 +126,8 @@
         backdrop-filter: blur(18px);
       }
       .metric { min-height: 7.4rem; padding: 1rem; border-radius: 1.15rem; }
+      .metric-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+      .metric-icon { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--line); border-radius: 0.7rem; background: rgba(255,255,255,.04); }
       .metric-label { margin-bottom: 0.65rem; color: var(--muted); font-size: 0.68rem; font-weight: 750; letter-spacing: 0.14em; text-transform: uppercase; }
       .metric-value { margin-bottom: 0.3rem; font-size: 1.75rem; font-weight: 820; letter-spacing: -0.04em; }
       .metric-note { margin: 0; color: #738197; font-size: 0.72rem; }
@@ -160,6 +167,21 @@
       .sync-state { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.66rem; }
       .sync-state::before { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--emerald); content: ""; }
       .sync-state.error::before { background: var(--rose); }
+      .disclosure { padding: 0; overflow: hidden; }
+      .disclosure > summary { list-style: none; cursor: pointer; }
+      .disclosure > summary::-webkit-details-marker { display: none; }
+      .disclosure-summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; }
+      .disclosure-title { display: flex; min-width: 0; align-items: center; gap: 0.75rem; }
+      .disclosure-icon { display: grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 0.8rem; color: #cbd5e1; background: rgba(255,255,255,.04); }
+      .disclosure-chevron { transition: transform 160ms ease; }
+      .disclosure[open] .disclosure-chevron { transform: rotate(180deg); }
+      .disclosure-content { padding: 0 1.2rem 1.2rem; border-top: 1px solid var(--line); }
+      .history-list { display: grid; gap: 0.55rem; padding-top: 1rem; }
+      .history-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 0.8rem; background: rgba(255,255,255,.025); }
+      .history-copy { min-width: 0; }
+      .history-copy strong, .history-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .history-copy strong { font-size: .76rem; }
+      .history-copy span { margin-top: .2rem; color: var(--muted); font-size: .68rem; }
       .release-card, details.queue-item { border: 1px solid var(--line); border-radius: 1rem; background: rgba(2, 6, 23, 0.42); }
       .release-card { padding: 1rem; }
       .release-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
@@ -253,6 +275,18 @@
     </style>
   </head>
   <body>
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 4h16v14H4z"/><path d="M4 14h4l2 3h4l2-3h4"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+      <symbol id="i-package" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 7 9 5 9-5"/><path d="M3 7v10l9 5 9-5V7"/><path d="M12 12v10"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+      <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="m10 14 11-11"/><path d="M18 13v7H4V6h7"/></symbol>
+    </svg>
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
@@ -263,15 +297,13 @@
           </div>
         </div>
         <nav class="nav" aria-label="Dashboard navigation">
-          <a class="active" href="#overview">Overview</a>
-          <a href="#channels">Channels</a>
-          <a href="#support">Support</a>
-          <a href="#releases">Releases</a>
-          <a href="#queue">Approval queue</a>
-          <a href="#system">System</a>
+          <a class="active" href="#overview"><svg class="icon"><use href="#i-home"/></svg>Overview</a>
+          <a href="#support"><svg class="icon"><use href="#i-inbox"/></svg>Support</a>
+          <a href="#operations"><svg class="icon"><use href="#i-package"/></svg>Operations</a>
+          <a href="#queue"><svg class="icon"><use href="#i-check"/></svg>Approvals</a>
         </nav>
         <div class="sidebar-bottom">
-          <a class="side-link" href="{{ admin_prefix }}/advanced">Advanced controls</a>
+          <a class="side-link" href="{{ admin_prefix }}/advanced"><svg class="icon" style="display:inline-block;vertical-align:-.15rem;margin-right:.45rem"><use href="#i-settings"/></svg>Advanced controls</a>
           <a class="side-link" href="{{ config.get('site_url', defaults.site_url) }}/en" target="_blank" rel="noreferrer">Open public app</a>
           <form action="{{ admin_prefix }}/logout" method="post">
             <button class="logout" type="submit">Sign out</button>
@@ -298,34 +330,35 @@
 
         <section class="metrics" aria-label="Key metrics">
           <article class="metric">
-            <p class="metric-label">Mini-apps</p>
+            <div class="metric-head"><p class="metric-label">Mini-apps</p><span class="metric-icon accent-violet"><svg class="icon"><use href="#i-package"/></svg></span></div>
             <div class="metric-value accent-violet">{{ analytics.miniapps.enabled }}</div>
             <p class="metric-note">of {{ analytics.miniapps.total }} enabled</p>
           </article>
           <article class="metric">
-            <p class="metric-label">Releases</p>
+            <div class="metric-head"><p class="metric-label">Releases</p><span class="metric-icon accent-cyan"><svg class="icon"><use href="#i-send"/></svg></span></div>
             <div class="metric-value accent-cyan">{{ releases|length }}</div>
             <p class="metric-note">signed records in Mongo</p>
           </article>
           <article class="metric">
-            <p class="metric-label">Community</p>
+            <div class="metric-head"><p class="metric-label">Community</p><span class="metric-icon accent-emerald"><svg class="icon"><use href="#i-users"/></svg></span></div>
             <div class="metric-value accent-emerald">{{ stats.total_users }}</div>
             <p class="metric-note">Telegram users tracked</p>
           </article>
           <article class="metric">
-            <p class="metric-label">Needs reply</p>
+            <div class="metric-head"><p class="metric-label">Needs reply</p><span class="metric-icon accent-amber"><svg class="icon"><use href="#i-inbox"/></svg></span></div>
             <div id="supportOpenMetric" class="metric-value accent-amber">{{ support_metrics.open }}</div>
             <p class="metric-note"><span id="supportDraftMetric">{{ support_metrics.draft_ready }}</span> AI drafts ready</p>
           </article>
         </section>
 
-        <section class="section panel" id="channels">
-          <div class="panel-head">
-            <div>
-              <p class="panel-kicker">Distribution network</p>
-              <h2>Community channels</h2>
-              <p class="panel-copy">Credential presence only. Publishing still requires explicit approval.</p>
-            </div>
+        <details class="section panel disclosure" id="channels">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon icon-lg"><use href="#i-send"/></svg></span><span><strong>Channels & connections</strong><span class="panel-copy" style="display:block;margin-top:.2rem">Hidden by default · open only to check credentials</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content">
+          <div class="panel-head" style="padding-top:1rem">
+            <div><p class="panel-copy">Credential presence only. Publishing still requires explicit approval.</p></div>
             <a class="button" href="{{ admin_prefix }}/advanced#connections">Manage credentials</a>
           </div>
           <div class="channels">
@@ -350,17 +383,18 @@
               <div class="status {% if config.get('deepseek_api_key') or config.get('groq_api_key') %}ready{% endif %}">{% if config.get('deepseek_api_key') or config.get('groq_api_key') %}{{ config.get('ai_provider', defaults.ai_provider)|title }} active{% else %}Needs setup{% endif %}</div>
             </article>
           </div>
-        </section>
+          </div>
+        </details>
 
         <section class="section panel" id="support">
           <div class="support-toolbar">
             <div>
               <p class="panel-kicker">Community operations</p>
-              <h2>Support Inbox</h2>
+              <h2 style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-emerald"><use href="#i-inbox"/></svg>Support Inbox</h2>
               <p class="panel-copy">Replies and mentions are drafted by AI, then held for human approval.</p>
             </div>
             <form action="{{ admin_prefix }}/support/sync" method="post">
-              <button class="button primary" type="submit">Sync all channels</button>
+              <button class="button primary" type="submit" title="Sync all support channels"><svg class="icon"><use href="#i-history"/></svg><span style="margin-left:.4rem">Sync</span></button>
             </form>
           </div>
           <div class="support-stats" style="margin-top: 0.9rem">
@@ -374,8 +408,7 @@
             {% endfor %}
           </div>
           <div class="support-list">
-            {% for item in support_messages %}
-              {% if item.status not in ['ignored'] %}
+            {% for item in active_support_messages %}
               <article class="support-card {{ item.priority }}">
                 <div class="support-meta">
                   <div>
@@ -407,14 +440,36 @@
                   {% if item.external_reply_url %}<a class="button primary" href="{{ item.external_reply_url }}" target="_blank" rel="noreferrer" style="margin-top: 0.8rem">Open reply</a>{% endif %}
                 {% endif %}
               </article>
-              {% endif %}
             {% else %}
-              <div class="release-card"><p class="release-summary">No support messages yet. Channel monitors are ready.</p></div>
+              <div class="release-card"><p class="release-title" style="display:flex;align-items:center;gap:.5rem"><svg class="icon accent-emerald"><use href="#i-check"/></svg>Inbox clear</p><p class="release-summary">Nothing needs your attention. Channel monitors are ready.</p></div>
             {% endfor %}
           </div>
         </section>
 
-        <div class="section grid-two">
+        {% if support_history %}
+        <details class="section panel disclosure">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-history"/></svg></span><span><strong>Resolved support</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{{ support_history|length }} recent items · hidden</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content history-list">
+            {% for item in support_history %}
+            <div class="history-row">
+              <div class="history-copy"><strong>{{ item.author_name or item.author_handle or 'Community member' }} · {{ item.platform|upper }}</strong><span>{{ item.content }}</span></div>
+              <span class="badge {{ item.status }}">{{ item.status }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </details>
+        {% endif %}
+
+        <details class="section panel disclosure" id="operations">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon icon-lg"><use href="#i-package"/></svg></span><span><strong>Release & system operations</strong><span class="panel-copy" style="display:block;margin-top:.2rem">Publishing, release files and runtime details · hidden</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content">
+        <div class="grid-two" style="padding-top:1rem">
           <section class="panel" id="releases">
             <div class="panel-head">
               <div>
@@ -476,18 +531,25 @@
             </div>
           </aside>
         </div>
+          </div>
+        </details>
 
-        <section class="section panel" id="queue">
-          <div class="panel-head">
+        <details class="section panel disclosure" id="queue" {% if actionable_publications %}open{% endif %}>
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon icon-lg"><use href="#i-check"/></svg></span><span><strong>Content approvals</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{{ actionable_publications|length }} items need review</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content">
+          <div class="panel-head" style="padding-top:1rem">
             <div>
               <p class="panel-kicker">Human-in-the-loop</p>
               <h2>Approval queue</h2>
               <p class="panel-copy">English API posts can be approved here. Manual communities remain review-only.</p>
             </div>
-            <span class="badge">{{ release_publications|length }} drafts</span>
+            <span class="badge">{{ actionable_publications|length }} actionable</span>
           </div>
           <div class="queue">
-            {% for item in release_publications %}
+            {% for item in actionable_publications %}
             <details class="queue-item">
               <summary>
                 <span class="queue-label">
@@ -512,10 +574,11 @@
               </div>
             </details>
             {% else %}
-            <div class="release-card"><p class="release-summary">Generate a release bundle to populate the approval queue.</p></div>
+            <div class="release-card"><p class="release-title" style="display:flex;align-items:center;gap:.5rem"><svg class="icon accent-emerald"><use href="#i-check"/></svg>Approval queue clear</p><p class="release-summary">Published and historical items stay hidden.</p></div>
             {% endfor %}
           </div>
-        </section>
+          </div>
+        </details>
       </main>
     </div>
     <script>
@@ -525,6 +588,12 @@
         const draftMetric = document.getElementById("supportDraftMetric");
         const alert = document.getElementById("supportAlert");
         const alertCount = document.getElementById("supportAlertCount");
+        document.querySelectorAll('a[href^="#"]').forEach((link) => {
+          link.addEventListener("click", () => {
+            const target = document.querySelector(link.getAttribute("href"));
+            if (target?.tagName === "DETAILS") target.open = true;
+          });
+        });
         let previousOpen = Number(openMetric?.textContent || 0);
         const refreshSupportStatus = async (sync = false) => {
           try {
