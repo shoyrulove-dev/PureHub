@@ -5,7 +5,7 @@ import secrets
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import quote_plus
 
 from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
@@ -142,6 +142,16 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def protect_admin_responses(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith((PUBLIC_ADMIN_PREFIX, INTERNAL_ADMIN_PREFIX)):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
 def get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for", "")
     if forwarded_for.strip():
@@ -241,6 +251,51 @@ def logout_action(request: Request) -> RedirectResponse:
     return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
 
 
+def _dashboard_context(
+    request: Request,
+    *,
+    message: str,
+    message_type: Literal["success", "info", "error"],
+    miniapp_query: str,
+    miniapp_tab: str,
+    api_query: str,
+    api_group: str,
+) -> dict[str, Any]:
+    admin_username = str(request.session["admin_username"])
+    return {
+        "config": list_config(),
+        "defaults": CONFIG_DEFAULTS,
+        "stats": get_user_stats(),
+        "metrics": get_dashboard_metrics(),
+        "jobs": list_article_jobs(),
+        "top_referrers": list_top_referrers(),
+        "bot_state": telegram_bot_manager.state,
+        "miniapps": list_miniapps(miniapp_query, miniapp_tab),
+        "api_catalog": list_api_catalog(api_query, api_group),
+        "audit_logs": list_audit_logs(),
+        "schema_status": get_schema_status(),
+        "analytics": get_analytics_snapshot(),
+        "analytics_json": json.dumps(get_analytics_snapshot(), ensure_ascii=False),
+        "admins": list_admin_accounts(),
+        "admin_roles": ADMIN_ROLES,
+        "export_bundle_json": json.dumps(export_control_bundle(), indent=2, ensure_ascii=False),
+        "message": message,
+        "message_type": message_type,
+        "admin_prefix": PUBLIC_ADMIN_PREFIX,
+        "api_prefix": PUBLIC_API_PREFIX,
+        "default_keywords": "\n".join(DEFAULT_KEYWORDS),
+        "admin_username": admin_username,
+        "admin_profile": get_admin_profile(admin_username),
+        "releases": list_releases(),
+        "release_publications": list_release_publications(),
+        "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
+        "miniapp_query": miniapp_query,
+        "miniapp_tab": miniapp_tab,
+        "api_query": api_query,
+        "api_group": api_group,
+    }
+
+
 @admin_router.get("", response_class=HTMLResponse)
 def dashboard(
     request: Request,
@@ -251,45 +306,49 @@ def dashboard(
     api_query: str = "",
     api_group: str = "",
 ) -> HTMLResponse:
-    admin_username = request.session.get("admin_username")
-    if not admin_username:
+    if not request.session.get("admin_username"):
         return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
 
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={
-            "config": list_config(),
-            "defaults": CONFIG_DEFAULTS,
-            "stats": get_user_stats(),
-            "metrics": get_dashboard_metrics(),
-            "jobs": list_article_jobs(),
-            "top_referrers": list_top_referrers(),
-            "bot_state": telegram_bot_manager.state,
-            "miniapps": list_miniapps(miniapp_query, miniapp_tab),
-            "api_catalog": list_api_catalog(api_query, api_group),
-            "audit_logs": list_audit_logs(),
-            "schema_status": get_schema_status(),
-            "analytics": get_analytics_snapshot(),
-            "analytics_json": json.dumps(get_analytics_snapshot(), ensure_ascii=False),
-            "admins": list_admin_accounts(),
-            "admin_roles": ADMIN_ROLES,
-            "export_bundle_json": json.dumps(export_control_bundle(), indent=2, ensure_ascii=False),
-            "message": message,
-            "message_type": message_type,
-            "admin_prefix": PUBLIC_ADMIN_PREFIX,
-            "api_prefix": PUBLIC_API_PREFIX,
-            "default_keywords": "\n".join(DEFAULT_KEYWORDS),
-            "admin_username": admin_username,
-            "admin_profile": get_admin_profile(str(admin_username)),
-            "releases": list_releases(),
-            "release_publications": list_release_publications(),
-            "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
-            "miniapp_query": miniapp_query,
-            "miniapp_tab": miniapp_tab,
-            "api_query": api_query,
-            "api_group": api_group,
-        },
+        context=_dashboard_context(
+            request,
+            message=message,
+            message_type=message_type,
+            miniapp_query=miniapp_query,
+            miniapp_tab=miniapp_tab,
+            api_query=api_query,
+            api_group=api_group,
+        ),
+    )
+
+
+@admin_router.get("/advanced", response_class=HTMLResponse)
+def advanced_dashboard(
+    request: Request,
+    message: str = "",
+    message_type: Literal["success", "info", "error"] = "success",
+    miniapp_query: str = "",
+    miniapp_tab: str = "",
+    api_query: str = "",
+    api_group: str = "",
+) -> HTMLResponse:
+    if not request.session.get("admin_username"):
+        return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="advanced.html",
+        context=_dashboard_context(
+            request,
+            message=message,
+            message_type=message_type,
+            miniapp_query=miniapp_query,
+            miniapp_tab=miniapp_tab,
+            api_query=api_query,
+            api_group=api_group,
+        ),
     )
 
 

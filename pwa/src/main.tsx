@@ -6,9 +6,13 @@ import './i18n/config'
 import './index.css'
 import App from './App.tsx'
 
-registerSW({
-  immediate: true,
-})
+const isBackendRoute = /^\/(?:admin|public-api|api)(?:\/|$)/.test(window.location.pathname)
+
+if (!isBackendRoute) {
+  registerSW({
+    immediate: true,
+  })
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

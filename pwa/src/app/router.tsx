@@ -8,8 +8,21 @@ import { CommunityPage } from '../pages/community-page'
 import { SettingsPage } from '../pages/settings-page'
 import { DownloadPage } from '../pages/download-page'
 import { ChangelogPage } from '../pages/changelog-page'
+import { BackendRouteRecovery } from '../pages/backend-route-recovery'
 
 export const appRouter = createBrowserRouter([
+  {
+    path: '/admin/*',
+    element: <BackendRouteRecovery />,
+  },
+  {
+    path: '/public-api/*',
+    element: <BackendRouteRecovery />,
+  },
+  {
+    path: '/api/*',
+    element: <BackendRouteRecovery />,
+  },
   {
     path: '/',
     element: <LocaleRedirectPage />,
