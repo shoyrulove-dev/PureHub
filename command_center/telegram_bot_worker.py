@@ -147,7 +147,8 @@ class TelegramBotManager:
     def _get_or_create_bot(self, token: str, username: str) -> telebot.TeleBot:
         with self._bot_lock:
             if self._bot is None:
-                self._bot = telebot.TeleBot(token, parse_mode="HTML")
+                # Webhook handlers must finish before a serverless invocation returns.
+                self._bot = telebot.TeleBot(token, parse_mode="HTML", threaded=False)
                 self._register_handlers(self._bot, username)
             return self._bot
 
