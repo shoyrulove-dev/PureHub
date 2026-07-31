@@ -41,3 +41,5 @@ signing.properties
 release-secrets/
 
 .vercel
+marketing/video/build/
+marketing/video/output/

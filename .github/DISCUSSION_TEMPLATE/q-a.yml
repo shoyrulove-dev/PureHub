@@ -1,0 +1,39 @@
+title: "[Question] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking the PureHub community. Please do not include passwords, API keys, or other private data.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Android app
+        - Web app / PWA
+        - Mini-app
+        - Installation or update
+        - Privacy or open source
+        - Community and contribution
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: What would you like help with?
+      placeholder: Describe what you are trying to do and where you got stuck.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: PureHub version
+      placeholder: For example, 1.0.0-beta.1
+  - type: input
+    id: device
+    attributes:
+      label: Device and operating system
+      placeholder: For example, Pixel 8 / Android 16 or Chrome / Windows 11
+

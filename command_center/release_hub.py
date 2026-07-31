@@ -30,6 +30,34 @@ CHANNELS = ("telegram", "devto", "bluesky", "mastodon", "reddit", "hackernews", 
 AUTO_CHANNELS = {"telegram", "devto", "bluesky", "mastodon"}
 
 
+def format_reddit_draft(title: str, body: str, suggested_communities: str = "") -> str:
+    parts = [f"Title: {title.strip()}"]
+    if suggested_communities.strip():
+        parts.append(f"Suggested communities: {suggested_communities.strip()}")
+    parts.append(body.strip())
+    return "\n\n".join(part for part in parts if part)
+
+
+def parse_reddit_draft(content: str) -> dict[str, str]:
+    title = ""
+    communities = ""
+    body_lines: list[str] = []
+    for line in (content or "").splitlines():
+        stripped = line.strip()
+        if not title and stripped.lower().startswith("title:"):
+            title = stripped.split(":", 1)[1].strip()
+        elif not communities and stripped.lower().startswith("suggested communities:"):
+            communities = stripped.split(":", 1)[1].strip()
+        else:
+            body_lines.append(line)
+    body = "\n".join(body_lines).strip()
+    if not title:
+        lines = [line.strip() for line in body.splitlines() if line.strip()]
+        title = lines[0] if lines else "PureHub: free, ad-free, open-source utility tools"
+        body = "\n".join(lines[1:]).strip() if len(lines) > 1 else body
+    return {"title": title, "communities": communities, "body": body}
+
+
 def _markdown_title(content: str, fallback: str) -> str:
     for line in content.splitlines():
         if line.startswith("# "):
@@ -165,6 +193,71 @@ def generate_release_bundle(release_id: str) -> list[dict[str, Any]]:
             )
     update_release(release_id, {"status": "content_ready"})
     return rows
+
+
+def generate_reddit_draft(release_id: str) -> dict[str, Any]:
+    release = get_release(release_id)
+    if not release:
+        raise ValueError("Release not found.")
+    fallback_title = f"I built PureHub {release['version']}: free, ad-free, open-source everyday tools"
+    fallback_body = (
+        f"Hi everyone — I’m building PureHub, a community-driven collection of 22 privacy-first utility tools.\n\n"
+        f"{release.get('summary') or 'The project is free to use, contains no ads, and is open source.'}\n\n"
+        "I’d value honest feedback on the mobile experience, which tools feel genuinely useful, and what should be simplified.\n\n"
+        f"Source and release: {release.get('github_url') or f'https://github.com/{get_config_value("github_repo")}'}"
+    )
+    result = {
+        "title": fallback_title,
+        "body": fallback_body,
+        "suggested_communities": "r/androidapps, r/opensource, r/fossdroid",
+    }
+    try:
+        client, model = _ai_client()
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You write transparent, non-spammy Reddit drafts for an open-source project. Return JSON only with "
+                        "title, body, and suggested_communities. Do not invent metrics, testimonials, audits, or shipped features. "
+                        "Write as the maker, disclose the project connection, ask for specific feedback, avoid marketing hype and "
+                        "emoji, and never claim a subreddit permits promotion."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "product": "PureHub — 22 free, no-ads, privacy-first, open-source utility tools",
+                            "release": release,
+                            "requirements": {
+                                "title_max_characters": 150,
+                                "body_max_words": 260,
+                                "suggest_communities": ["r/androidapps", "r/opensource", "r/fossdroid"],
+                                "include_links_only_when_present": True,
+                            },
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ],
+            temperature=0.45,
+        )
+        raw = (response.choices[0].message.content or "").strip().removeprefix("```json").removesuffix("```").strip()
+        generated = json.loads(raw)
+        for key in result:
+            if isinstance(generated.get(key), str) and generated[key].strip():
+                result[key] = generated[key].strip()
+    except Exception:
+        pass
+    return upsert_release_publication(
+        release_id=release_id,
+        channel="reddit",
+        language="en",
+        content=format_reddit_draft(result["title"], result["body"], result["suggested_communities"]),
+        status="ready_manual",
+    )
 
 
 def generate_reply_draft(message: str, context: str = "") -> str:

@@ -139,6 +139,14 @@
       .reach-value strong { display: block; overflow: hidden; color: #0f172a; font-size: 1.02rem; text-overflow: ellipsis; }
       .reach-value span { color: var(--muted); font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
       .reach-error { color: #be123c; font-size: .67rem; }
+      .reddit-layout { display: grid; grid-template-columns: minmax(0,1fr) 16rem; gap: 1rem; margin-top: .9rem; }
+      .reddit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+      .reddit-form .full { grid-column: 1 / -1; }
+      .reddit-form textarea { margin-top: 0; }
+      .field-label { display: block; margin-bottom: .3rem; color: var(--muted); font-size: .66rem; font-weight: 760; letter-spacing: .08em; text-transform: uppercase; }
+      .reddit-side { padding: .85rem; border: 1px solid var(--line); border-radius: .95rem; background: #f8fafc; }
+      .reddit-side h3 { margin-bottom: .45rem; font-size: .82rem; }
+      .reddit-side p { margin-bottom: .65rem; color: var(--muted); font-size: .7rem; line-height: 1.5; }
       .accent-emerald { color: var(--emerald); }
       .accent-cyan { color: var(--cyan); }
       .accent-violet { color: var(--violet); }
@@ -264,6 +272,7 @@
         .sidebar-bottom { display: none; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .support-list { grid-template-columns: 1fr; }
+        .reddit-layout { grid-template-columns: 1fr; }
       }
       @media (max-width: 580px) {
         .main { padding: 1.1rem 0.8rem 3rem; }
@@ -274,6 +283,8 @@
         .metric { min-height: 6.5rem; padding: 0.85rem; }
         .channels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .reach-grid { grid-template-columns: 1fr; }
+        .reddit-form { grid-template-columns: 1fr; }
+        .reddit-form .full { grid-column: auto; }
         .panel-head, .release-top { display: block; }
         .panel-head .button, .release-top .badge { margin-top: 0.7rem; }
         details.queue-item summary { align-items: flex-start; }
@@ -396,6 +407,41 @@
               {% if mastodon_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span>recent likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span>recent boosts</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span>recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
           </div>
+        </section>
+
+        <section class="section panel" id="reddit-review" aria-labelledby="reddit-review-title">
+          <div class="panel-head" style="margin-bottom:0">
+            <div>
+              <p class="panel-kicker">Manual community sharing</p>
+              <h2 id="reddit-review-title">Reddit review</h2>
+              <p class="panel-copy">AI prepares a Reddit-specific maker post. You review, copy, check each community’s rules, and post manually.</p>
+            </div>
+            {% if releases %}<form action="{{ admin_prefix }}/releases/{{ releases[0].release_id }}/reddit/generate" method="post"><button class="button violet" type="submit">Generate new draft</button></form>{% endif %}
+          </div>
+          {% if reddit_publication %}
+          <div class="reddit-layout">
+            <form class="reddit-form" action="{{ admin_prefix }}/releases/{{ reddit_publication.release_id }}/reddit/save" method="post">
+              <label class="full"><span class="field-label">Post title</span><input id="redditDraftTitle" name="title" value="{{ reddit_draft.title }}" required /></label>
+              <label class="full"><span class="field-label">Suggested communities</span><input name="communities" value="{{ reddit_draft.communities }}" /></label>
+              <label class="full"><span class="field-label">Post body</span><textarea id="redditDraftBody" name="body" rows="6" required>{{ reddit_draft.body }}</textarea></label>
+              <label><span class="field-label">Review status</span><select name="status"><option value="draft" {% if reddit_publication.status == 'draft' %}selected{% endif %}>Still editing</option><option value="ready_manual" {% if reddit_publication.status == 'ready_manual' %}selected{% endif %}>Ready to share manually</option></select></label>
+              <button class="button primary" type="submit">Save Reddit review</button>
+            </form>
+            <aside class="reddit-side">
+              <h3>Manual posting checklist</h3>
+              <p>Read the subreddit rules first. Disclose that you are the maker, avoid repeated cross-posting, and stay available to answer comments.</p>
+              <div class="quick-actions">
+                <button class="button" type="button" data-copy-target="redditDraftTitle">Copy title</button>
+                <button class="button" type="button" data-copy-target="redditDraftBody">Copy body</button>
+                <a class="button primary" href="https://www.reddit.com/submit" target="_blank" rel="noreferrer">Open Reddit submit</a>
+              </div>
+            </aside>
+          </div>
+          {% elif releases %}
+          <div class="reddit-side" style="margin-top:.9rem"><h3>No Reddit draft yet</h3><p>Generate the first draft from the latest release. Nothing will be posted automatically.</p></div>
+          {% else %}
+          <div class="reddit-side" style="margin-top:.9rem"><h3>Create a release first</h3><p>Reddit drafts use verified release information so AI does not invent features or download links.</p></div>
+          {% endif %}
         </section>
 
         <details class="section panel disclosure" id="channels">
@@ -639,6 +685,16 @@
           link.addEventListener("click", () => {
             const target = document.querySelector(link.getAttribute("href"));
             if (target?.tagName === "DETAILS") target.open = true;
+          });
+        });
+        document.querySelectorAll("[data-copy-target]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const field = document.getElementById(button.dataset.copyTarget);
+            if (!field) return;
+            await navigator.clipboard.writeText(field.value || field.textContent || "");
+            const original = button.textContent;
+            button.textContent = "Copied";
+            window.setTimeout(() => { button.textContent = original; }, 1400);
           });
         });
         let previousOpen = Number(openMetric?.textContent || 0);

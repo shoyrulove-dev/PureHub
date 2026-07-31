@@ -205,3 +205,13 @@ These items require account ownership or a long-lived secret and therefore are n
 - Added live Community Reach cards for Telegram members, DEV views/reactions/comments, Bluesky followers/likes/replies/reposts, and Mastodon followers/likes/boosts/replies.
 - Engagement refresh runs with the existing support sync and preserves the last successful snapshot when a platform API is temporarily unavailable.
 - Live verification passed for all four connected platforms.
+
+## Community expansion foundation
+
+- Enabled GitHub Discussions on the public repository and created the first pinned-style welcome announcement.
+- Added structured GitHub Discussion forms for Q&A and community ideas.
+- Linked the public Community page directly to Discussions and its Ideas category.
+- Added a dedicated Reddit Review panel to the Operations Dashboard. AI produces a Reddit-specific title, body, and suggested communities; posting remains manual and requires a rules check.
+- Generated and stored the first Reddit review draft for `v1.0.0-beta.2` without publishing it externally.
+- Added a reproducible vertical-video pipeline and generated the first 22.5-second English teaser at 1080×1920 using current production screens.
+- The video is encoded as H.264 `yuv420p` with AAC silent audio for broad YouTube Shorts and TikTok compatibility; platform-native music can be added during upload.

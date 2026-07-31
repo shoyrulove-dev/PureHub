@@ -15,16 +15,16 @@ const actions = [
   },
   {
     icon: Code2,
-    title: 'Open-source on GitHub',
-    description: 'Browse the source, report issues, join discussions, and submit pull requests.',
-    href: GITHUB_URL,
-    label: 'Open GitHub',
+    title: 'GitHub Discussions',
+    description: 'Ask questions, share feedback, follow announcements, and help shape the roadmap.',
+    href: `${GITHUB_URL}/discussions`,
+    label: 'Join discussions',
   },
   {
     icon: Bug,
     title: 'Report a bug',
     description: 'Share the device, tool, and steps needed for the community to reproduce an issue.',
-    href: `${GITHUB_URL}/issues/new`,
+    href: `${GITHUB_URL}/discussions/categories/ideas`,
     label: 'Create issue',
   },
   {

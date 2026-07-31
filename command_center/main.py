@@ -104,7 +104,14 @@ try:
         update_release_publication,
         upsert_release_publication,
     )
-    from .release_hub import generate_release_bundle, generate_reply_draft, publish_release
+    from .release_hub import (
+        format_reddit_draft,
+        generate_reddit_draft,
+        generate_release_bundle,
+        generate_reply_draft,
+        parse_reddit_draft,
+        publish_release,
+    )
 except ImportError:
     from database import (
         create_release,
@@ -115,7 +122,14 @@ except ImportError:
         update_release_publication,
         upsert_release_publication,
     )
-    from release_hub import generate_release_bundle, generate_reply_draft, publish_release
+    from release_hub import (
+        format_reddit_draft,
+        generate_reddit_draft,
+        generate_release_bundle,
+        generate_reply_draft,
+        parse_reddit_draft,
+        publish_release,
+    )
 
 try:
     from .community_support import (
@@ -311,6 +325,16 @@ def _dashboard_context(
         and item.get("channel") in {"telegram", "devto", "bluesky", "mastodon"}
         and item.get("release_id") == current_release_id
     ]
+    reddit_publication = next(
+        (
+            item
+            for item in release_publications
+            if item.get("channel") == "reddit"
+            and item.get("language") == "en"
+            and item.get("release_id") == current_release_id
+        ),
+        {},
+    )
     return {
         "config": list_config(),
         "defaults": CONFIG_DEFAULTS,
@@ -337,6 +361,8 @@ def _dashboard_context(
         "releases": releases,
         "release_publications": release_publications,
         "actionable_publications": actionable_publications,
+        "reddit_publication": reddit_publication,
+        "reddit_draft": parse_reddit_draft(str(reddit_publication.get("content", ""))),
         "active_support_messages": active_support_messages,
         "support_history": support_history,
         "support_metrics": get_support_metrics(),
@@ -1056,6 +1082,54 @@ def update_release_publication_action(
         details={"status": status},
     )
     return _redirect_with_message(f"Saved {channel}/{language} as {status}.", "success")
+
+
+@admin_router.post("/releases/{release_id}/reddit/generate")
+def generate_reddit_draft_action(request: Request, release_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        generate_reddit_draft(release_id)
+        record_audit_log(
+            actor=actor,
+            action="generate_reddit_draft",
+            target_type="release_publication",
+            target_id=f"{release_id}:reddit:en",
+        )
+        return _redirect_with_message("Reddit review draft generated.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Reddit draft generation failed: {exc}", "error")
+
+
+@admin_router.post("/releases/{release_id}/reddit/save")
+def save_reddit_draft_action(
+    request: Request,
+    release_id: str,
+    title: str = Form(...),
+    body: str = Form(...),
+    communities: str = Form(default=""),
+    status: str = Form(default="ready_manual"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    if status not in {"draft", "ready_manual"}:
+        return _redirect_with_message("Invalid Reddit draft status.", "error")
+    update_release_publication(
+        release_id,
+        "reddit",
+        "en",
+        {
+            "content": format_reddit_draft(title, body, communities),
+            "status": status,
+            "error_message": "",
+        },
+    )
+    record_audit_log(
+        actor=actor,
+        action="save_reddit_draft",
+        target_type="release_publication",
+        target_id=f"{release_id}:reddit:en",
+        details={"status": status},
+    )
+    return _redirect_with_message("Reddit draft saved for manual review.", "success")
 
 
 @admin_router.post("/community/reply-draft")

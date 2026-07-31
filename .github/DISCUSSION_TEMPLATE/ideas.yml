@@ -1,0 +1,38 @@
+title: "[Idea] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PureHub is community-built, free, open source, and ad-free. Clear use cases help us choose improvements that benefit everyone.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should PureHub solve?
+      placeholder: Explain the situation before describing the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your idea
+      placeholder: What would a simple and friendly solution look like?
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who would benefit?
+      multiple: true
+      options:
+        - Android users
+        - Web / PWA users
+        - Privacy-conscious users
+        - Open-source contributors
+        - Students and everyday users
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Existing apps or alternatives
+      description: Optional. Tell us what works well or feels frustrating in similar apps.
