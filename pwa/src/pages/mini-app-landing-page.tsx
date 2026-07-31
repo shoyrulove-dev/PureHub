@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Heart } from 'lucide-react'
+import { Heart, ShieldCheck, Sparkles, Wifi, WifiOff } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { lazy, Suspense, useEffect } from 'react'
 import type { MiniAppDefinition, TabDefinition } from '../features/catalog/tabs'
@@ -24,6 +24,12 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const normalizedLocale = normalizeLocale(lang)
   const { favorites, toggleFavorite } = useToolPreferences()
   const favorite = favorites.includes(miniApp.id)
+  const capabilityLabel = miniApp.id === 'community-pro-unlock'
+    ? 'Community online'
+    : miniApp.id === 'ocr-text'
+      ? 'Pack on demand'
+      : 'Offline ready'
+  const CapabilityIcon = miniApp.id === 'community-pro-unlock' || miniApp.id === 'ocr-text' ? Wifi : WifiOff
 
   useEffect(() => {
     rememberRecentTool(miniApp.id)
@@ -45,6 +51,19 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
         <button type="button" className="grid size-11 shrink-0 place-items-center rounded-[14px] border border-slate-500/15" onClick={() => toggleFavorite(miniApp.id)} aria-label="Favorite tool">
           <Heart className={`size-5 ${favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
         </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2" aria-label="PureHub promises">
+        {[
+          { label: 'No ads', icon: Sparkles },
+          { label: 'Private first', icon: ShieldCheck },
+          { label: capabilityLabel, icon: CapabilityIcon },
+        ].map(({ label, icon: Icon }) => (
+          <div key={label} className="flex min-h-11 items-center justify-center gap-1.5 rounded-[12px] border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <Icon className="size-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+            <span>{label}</span>
+          </div>
+        ))}
       </div>
 
       <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>

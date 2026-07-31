@@ -41,7 +41,7 @@ fun SettingsScreen(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = " Tools",
+                text = " Settings",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -53,6 +53,12 @@ fun SettingsScreen(
                 )
             }
         }
+        Text(
+            text = "Choose which tools appear in your catalog. Your preference stays on this device.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp),
+        )
         Column(modifier = Modifier.padding(top = 12.dp)) {
             ToolVisibilityManagerCard()
         }

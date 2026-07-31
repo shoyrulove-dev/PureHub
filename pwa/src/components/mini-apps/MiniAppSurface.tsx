@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import type { ChangeEvent, ReactNode } from 'react'
 import type { MiniAppId } from '../../features/catalog/tabs'
+import { ActionButton, FormInput, FormTextArea, Panel } from './MiniAppPrimitives'
 import {
   expenseRepository,
   habitCheckInRepository,
@@ -14,14 +15,8 @@ type MiniAppSurfaceProps = {
   miniAppId: MiniAppId
 }
 
-type PanelProps = {
-  title: string
-  subtitle?: string
-  children: React.ReactNode
-}
-
-type FormInputProps = React.InputHTMLAttributes<HTMLInputElement>
-type VaultItem = { id: string; label: string; payload: string; iv: string; salt?: string }
+const OcrTextSurface = lazy(() => import('./surfaces/OcrTextSurface'))
+const PasswordVaultSurface = lazy(() => import('./surfaces/PasswordVaultSurface'))
 
 const BREATH_PATTERNS = {
   calm: [
@@ -66,7 +61,7 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'doc-to-pdf':
       return <DocToPdfSurface />
     case 'ocr-text':
-      return <OcrTextSurface />
+      return <LazyTool><OcrTextSurface /></LazyTool>
     case 'color-grabber':
       return <ColorGrabberSurface />
     case 'speaker-cleaner':
@@ -76,7 +71,7 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'wifi-analyzer':
       return <WifiAnalyzerSurface />
     case 'password-vault':
-      return <PasswordVaultSurface />
+      return <LazyTool><PasswordVaultSurface /></LazyTool>
     case 'wallpaper-changer':
       return <WallpaperChangerSurface />
     case 'bill-splitter':
@@ -92,65 +87,11 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   }
 }
 
-function Panel({ title, subtitle, children }: PanelProps) {
+function LazyTool({ children }: { children: ReactNode }) {
   return (
-    <section className="app-surface rounded-[18px] p-4 sm:p-5">
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-slate-950 dark:text-slate-950 dark:text-white">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-500 dark:text-slate-400">{subtitle}</p> : null}
-      </div>
+    <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading secure tool" />}>
       {children}
-    </section>
-  )
-}
-
-function FormInput(props: FormInputProps) {
-  return (
-    <input
-      {...props}
-      className={[
-        'min-h-12 w-full rounded-[14px] border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 dark:text-slate-400 focus:border-emerald-500/40 focus:bg-emerald-500/5 dark:text-slate-950 dark:text-white',
-        props.className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    />
-  )
-}
-
-function FormTextArea(
-  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-) {
-  return (
-    <textarea
-      {...props}
-      className={[
-        'w-full rounded-[14px] border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 dark:text-slate-400 focus:border-emerald-500/40 focus:bg-emerald-500/5 dark:text-slate-950 dark:text-white',
-        props.className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    />
-  )
-}
-
-function ActionButton(
-  props: React.ButtonHTMLAttributes<HTMLButtonElement> & { tone?: 'primary' | 'muted' },
-) {
-  const tone = props.tone ?? 'primary'
-  return (
-    <button
-      {...props}
-      className={[
-        'min-h-11 rounded-[14px] px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
-        tone === 'primary'
-          ? 'bg-emerald-600 text-slate-950 dark:text-white shadow-sm hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400'
-          : 'bg-slate-500/8 text-slate-700 hover:bg-slate-500/14 dark:text-slate-200',
-        props.className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    />
+    </Suspense>
   )
 }
 
@@ -958,33 +899,6 @@ function DocToPdfSurface() {
   )
 }
 
-function OcrTextSurface() {
-  const [ocrText, setOcrText] = useState('')
-  const [running, setRunning] = useState(false)
-
-  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setRunning(true)
-    const { createWorker } = await import('tesseract.js')
-    const worker = await createWorker('eng')
-    const result = await worker.recognize(file)
-    setOcrText(result.data.text)
-    await worker.terminate()
-    setRunning(false)
-  }
-
-  return (
-    <Panel title="OCR Text" subtitle="Runs OCR in the browser so images never leave the device.">
-      <FormInput type="file" accept="image/*" onChange={handleFile} />
-      <div className="mt-4 rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{running ? 'Recognizing text...' : 'Extracted text appears here.'}</p>
-        {ocrText ? <pre className="mt-3 whitespace-pre-wrap text-sm text-slate-950 dark:text-white">{ocrText}</pre> : null}
-      </div>
-    </Panel>
-  )
-}
-
 function ColorGrabberSurface() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [image, setImage] = useState<string | null>(null)
@@ -1180,96 +1094,6 @@ function WallpaperChangerSurface() {
           <p className="mt-4 text-xs leading-5 text-slate-500">Download or use the Android app to apply the selected image to Home, Lock, or both screens.</p>
         </>
       ) : <div className="empty-state mt-4"><p>Choose local images to build a private wallpaper collection.</p></div>}
-    </Panel>
-  )
-}
-
-function PasswordVaultSurface() {
-  const storageKey = 'purehub-vault-items'
-  const [passphrase, setPassphrase] = useState('')
-  const [label, setLabel] = useState('')
-  const [secret, setSecret] = useState('')
-  const [items, setItems] = useState<VaultItem[]>([])
-  const [preview, setPreview] = useState<string>('')
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem(storageKey)
-    if (raw) {
-      setItems(JSON.parse(raw) as VaultItem[])
-    }
-  }, [])
-
-  const persist = (nextItems: VaultItem[]) => {
-    setItems(nextItems)
-    window.localStorage.setItem(storageKey, JSON.stringify(nextItems))
-  }
-
-  return (
-    <Panel title="Password Vault" subtitle="Secrets use a unique salt and AES-GCM encryption before local storage.">
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="space-y-3">
-          <FormInput type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} placeholder="Master passphrase" />
-          <FormInput value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Entry label" />
-          <FormInput type="password" value={secret} onChange={(event) => setSecret(event.target.value)} placeholder="Secret value" />
-          <ActionButton
-            disabled={!passphrase || !label || !secret}
-            onClick={async () => {
-              const encrypted = await encryptSecret(secret, passphrase)
-              persist([
-                {
-                  id: createId(),
-                  label: label.trim(),
-                  payload: encrypted.payload,
-                  iv: encrypted.iv,
-                  salt: encrypted.salt,
-                },
-                ...items,
-              ])
-              setLabel('')
-              setSecret('')
-            }}
-          >
-            Save encrypted entry
-          </ActionButton>
-        </div>
-
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="rounded-[22px] border border-slate-500/15 bg-slate-500/5 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-slate-950 dark:text-white">{item.label}</p>
-                <button
-                  type="button"
-                  className="text-xs text-slate-500 dark:text-slate-400 transition hover:text-slate-950 dark:text-white"
-                  onClick={async () => {
-                    if (!passphrase) return
-                    try {
-                      const decrypted = await decryptSecret(item.payload, item.iv, passphrase, item.salt)
-                      setPreview(`${item.label}: ${decrypted}`)
-                      window.setTimeout(() => setPreview(''), 30000)
-                    } catch {
-                      setPreview('Failed to decrypt. Check your passphrase.')
-                    }
-                  }}
-                >
-                  Decrypt
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-rose-500 transition hover:text-rose-600"
-                  onClick={() => persist(items.filter((entry) => entry.id !== item.id))}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-          {preview ? <div className="rounded-[22px] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">{preview}</div> : null}
-        </div>
-      </div>
-      <p className="mt-4 rounded-[14px] bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
-        Local experimental vault: keep an encrypted backup and do not use it as your only copy of critical credentials until PureHub completes an independent security review.
-      </p>
     </Panel>
   )
 }
@@ -1562,63 +1386,4 @@ async function readFileAsDataUrl(file: File) {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
-}
-
-async function deriveCryptoKey(passphrase: string, salt: ArrayBuffer) {
-  const encoder = new TextEncoder()
-  const baseKey = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey'])
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations: 310000,
-      hash: 'SHA-256',
-    },
-    baseKey,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt'],
-  )
-}
-
-async function encryptSecret(secret: string, passphrase: string) {
-  const salt = crypto.getRandomValues(new Uint8Array(16))
-  const key = await deriveCryptoKey(passphrase, salt.buffer as ArrayBuffer)
-  const iv = crypto.getRandomValues(new Uint8Array(12))
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    new TextEncoder().encode(secret),
-  )
-  return {
-    iv: arrayBufferToBase64(iv.buffer),
-    salt: arrayBufferToBase64(salt.buffer),
-    payload: arrayBufferToBase64(encrypted),
-  }
-}
-
-async function decryptSecret(payload: string, iv: string, passphrase: string, salt?: string) {
-  const saltBuffer = salt
-    ? base64ToArrayBuffer(salt)
-    : new TextEncoder().encode('purehub-vault-salt').buffer as ArrayBuffer
-  const key = await deriveCryptoKey(passphrase, saltBuffer)
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(base64ToArrayBuffer(iv)) },
-    key,
-    base64ToArrayBuffer(payload),
-  )
-  return new TextDecoder().decode(decrypted)
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
-}
-
-function base64ToArrayBuffer(base64: string) {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index)
-  }
-  return bytes.buffer
 }

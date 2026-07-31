@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -37,6 +41,7 @@ fun CompassScreen(
     viewModel: CompassViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var sensorActive by rememberSaveable { mutableStateOf(false) }
     val primaryColor = MaterialTheme.colorScheme.primary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val outlineColor = MaterialTheme.colorScheme.outline
@@ -49,8 +54,8 @@ fun CompassScreen(
         label = "compass_rotation",
     )
 
-    DisposableEffect(Unit) {
-        viewModel.startCompass()
+    DisposableEffect(sensorActive) {
+        if (sensorActive) viewModel.startCompass() else viewModel.stopCompass()
         onDispose {
             viewModel.stopCompass()
         }
@@ -109,6 +114,9 @@ fun CompassScreen(
                     )
                 }
             }
+        }
+        Button(onClick = { sensorActive = !sensorActive }) {
+            Text(if (sensorActive) "Pause compass" else "Enable compass")
         }
         Text(
             text = "Heading: ${((smoothRotation % 360f) + 360f).toInt() % 360} deg ${uiState.cardinalDirection}",

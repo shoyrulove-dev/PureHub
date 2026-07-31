@@ -25,15 +25,15 @@ class PasswordVaultViewModel(
     val uiState: StateFlow<PasswordVaultUiState> = _uiState.asStateFlow()
 
     fun updateDraftTitle(value: String) {
-        _uiState.update { it.copy(draftTitle = value) }
+        _uiState.update { it.copy(draftTitle = value.take(120)) }
     }
 
     fun updateDraftUsername(value: String) {
-        _uiState.update { it.copy(draftUsername = value) }
+        _uiState.update { it.copy(draftUsername = value.take(320)) }
     }
 
     fun updateDraftPassword(value: String) {
-        _uiState.update { it.copy(draftPassword = value) }
+        _uiState.update { it.copy(draftPassword = value.take(4096)) }
     }
 
     fun saveDraft() {

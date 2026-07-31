@@ -190,12 +190,10 @@ These items require account ownership or a long-lived secret and therefore are n
 
 ## Known follow-up opportunities
 
-- PWA OCR language packs should be downloadable per language to keep first load small.
-- Each PWA mini app can be split into its own route chunk; the current pass already removes the shared mini-app bundle from initial Home loading.
-- Password Vault should receive an independent security review before being recommended as the only store for critical credentials.
+- Password Vault has completed an internal hardening review but still requires an independent third-party security review before being recommended as the only store for critical credentials.
 - Android SDK is installed in duplicate locations (`D:\Dev\Android` and `D:\Dev\Android\Sdk`), which slows Gradle SDK discovery but does not block builds.
-- Instrumented camera/sensor tests require a device or emulator and were not run in this pass.
-- The 22 mini-app feature upgrades are intentionally deferred until Support Center operations are stable.
+- Expanded instrumentation now covers all 22 mini-app routes and security/permission contracts. The complete 4-test suite passes on the physical RMX3941 device.
+- Deeper market-parity feature work can continue per mini app after community feedback; the shared mobile UI/accessibility pass is complete.
 
 ## Light admin and community reach update
 
@@ -237,14 +235,48 @@ Completed:
 - GitHub Discussions, Reddit manual review workflow, and the first vertical YouTube/TikTok teaser.
 - MIT License at the repository root and package metadata.
 
-Remaining or intentionally deferred:
+Remaining owner/external actions:
 
 1. Upload the prepared YouTube Short as Unlisted, review it on a phone, then publish it. TikTok remains paused until an account can be created.
 2. Recover and establish the Reddit account before posting once to `r/droidappshowcase`; do not repost to `r/androidapps`. Ask `r/FOSSdroid` moderators before a later MIT-licensed development/release post.
-3. Run the planned product-quality pass across all 22 mini apps, prioritizing mobile interaction, visual polish, onboarding, accessibility, and feature parity with established apps.
-4. Commission an independent Password Vault security review before presenting it as suitable for critical credentials.
-5. Add physical-device instrumented coverage for camera, microphone, Wi-Fi, torch, sensors, file access, wallpaper, and background work.
-6. Optimize PWA OCR language-pack delivery and split larger mini apps into individual route chunks.
-7. Replace the first PWA-based teaser with polished Android screen recordings after the next mini-app UI pass.
-8. Defer Play Console production preparation, store listing assets, policy declarations, and staged rollout until the APK beta is stable.
-9. Resolve the remaining npm advisories in a dedicated dependency-compatibility pass. Safe updates reduced the count from 12 to 10; the remaining React Router and Workbox chains currently require potentially breaking version changes and must not be force-applied without regression testing.
+3. Commission an independent Password Vault review before presenting it as suitable as the only store for critical credentials; the internal review and hardening work are complete.
+4. Replace the first PWA-based teaser with polished Android screen recordings after community review of this UI pass.
+5. Defer Play Console production preparation, store listing assets, policy declarations, and staged rollout until the APK beta is stable.
+6. Track the remaining React Router RSC-only advisory until an upstream patched release exists. PureHub is a client-side SPA and does not enable React Server Components or server actions; downgrading would reintroduce broader historical router vulnerabilities.
+
+## Five-proposal engineering pass
+
+### Dependency security
+
+- Applied compatible `postcss` and `fast-uri` fixes and pinned patched `brace-expansion` through npm overrides.
+- Moved `vite-plugin-pwa` to build-only `devDependencies`.
+- Reduced npm audit findings from 12 high entries to two entries representing one React Router RSC/server-action advisory that is not reachable in PureHub's client-only architecture.
+- Rejected npm's forced downgrade to React Router 7.11 because that version carries multiple older redirect, XSS, SSR, and route-expansion advisories.
+
+### All-22 mini-app experience
+
+- Added one modern, high-contrast mini-app surface system with compact fields, strong focus states, tactile buttons, safety/no-ads cues, and one-handed mobile spacing across all 22 tools.
+- Added per-tool privacy/no-ads/capability chips and clearer Android catalog affordances.
+- Added consistent Android content margins so card-based tools no longer touch screen edges.
+- Added an instrumentation traversal that searches, opens, renders, and returns from every catalog item.
+
+### Hardware and Android security coverage
+
+- Added packaged-APK contracts for offline-only permission behavior, optional camera/microphone hardware, sensitive-data backup prohibition, camera, microphone, Wi-Fi, and wallpaper permissions.
+- Built both the debug APK and Android instrumentation APK successfully.
+- Added a separate `.debug` application ID so future instrumentation runs cannot overwrite or remove the installed release app.
+- Ran the complete suite on the physical RMX3941 device: all 4 tests passed, including all-22 navigation and packaged security contracts.
+- Reinstalled the signed `1.0.0-beta.2` release after testing and verified its published SHA-256 checksum, package version, and launcher startup.
+
+### Password Vault hardening
+
+- Added root `SECURITY.md` and `docs/PASSWORD_VAULT_SECURITY_REVIEW.md` with scope, threat model, controls, limitations, and responsible reporting guidance.
+- PWA: raised new-entry PBKDF2-HMAC-SHA-256 work factor to 600,000, versioned KDF metadata, retained legacy decryption, enforced field/entry bounds, added five-minute auto-lock, 30-second reveal timeout, validated encrypted backup import/export, and explicit plaintext-label disclosure.
+- Android: disabled cloud backup, blocked screenshots while Vault is visible, marked clipboard content sensitive, cancelled stale clipboard-clear jobs, committed encrypted writes synchronously, bounded records, and made malformed JSON fail closed.
+- Added Android Vault malformed-data and codec round-trip tests.
+
+### OCR and code delivery
+
+- OCR now offers English, Vietnamese, and Simplified Chinese and downloads only the selected Tesseract language pack on first use.
+- OCR and Password Vault now compile into independent lazy route chunks instead of living in the shared mini-app chunk.
+- The shared mini-app JavaScript chunk decreased from roughly 48.6 KB to 43.4 KB before gzip, while OCR and Vault load only on their own routes.
