@@ -209,7 +209,7 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
     result = {
         "title": fallback_title,
         "body": fallback_body,
-        "suggested_communities": "r/androidapps, r/opensource, r/fossdroid",
+        "suggested_communities": "r/droidappshowcase (moderator-designated Android showcase)",
     }
     try:
         client, model = _ai_client()
@@ -220,9 +220,9 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
                     "role": "system",
                     "content": (
                         "You write transparent, non-spammy Reddit drafts for an open-source project. Return JSON only with "
-                        "title, body, and suggested_communities. Do not invent metrics, testimonials, audits, or shipped features. "
+                        "title and body. Do not invent metrics, testimonials, audits, or shipped features. "
                         "Write as the maker, disclose the project connection, ask for specific feedback, avoid marketing hype and "
-                        "emoji, and never claim a subreddit permits promotion."
+                        "emoji. Do not recommend subreddits or destinations."
                     ),
                 },
                 {
@@ -234,7 +234,6 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
                             "requirements": {
                                 "title_max_characters": 150,
                                 "body_max_words": 260,
-                                "suggest_communities": ["r/androidapps", "r/opensource", "r/fossdroid"],
                                 "include_links_only_when_present": True,
                             },
                         },
@@ -246,7 +245,7 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
         )
         raw = (response.choices[0].message.content or "").strip().removeprefix("```json").removesuffix("```").strip()
         generated = json.loads(raw)
-        for key in result:
+        for key in ("title", "body"):
             if isinstance(generated.get(key), str) and generated[key].strip():
                 result[key] = generated[key].strip()
     except Exception:

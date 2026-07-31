@@ -434,7 +434,7 @@
             <div>
               <p class="panel-kicker">Manual community sharing</p>
               <h2 id="reddit-review-title">Reddit review</h2>
-              <p class="panel-copy">AI prepares a Reddit-specific maker post. You review, copy, check each community’s rules, and post manually.</p>
+              <p class="panel-copy">AI prepares the copy only. Reddit destinations are curated manually to reduce removals and account bans.</p>
             </div>
             {% if releases %}<form action="{{ admin_prefix }}/releases/{{ releases[0].release_id }}/reddit/generate" method="post"><button class="button violet icon-button" type="submit" title="Generate new Reddit draft" aria-label="Generate new Reddit draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>{% endif %}
           </div>
@@ -442,14 +442,14 @@
           <div class="reddit-layout">
             <form class="reddit-form" action="{{ admin_prefix }}/releases/{{ reddit_publication.release_id }}/reddit/save" method="post">
               <label class="full"><span class="field-label">Post title</span><input id="redditDraftTitle" name="title" value="{{ reddit_draft.title }}" required /></label>
-              <label class="full"><span class="field-label">Suggested communities</span><input name="communities" value="{{ reddit_draft.communities }}" /></label>
+              <label class="full"><span class="field-label">Approved destination</span><input name="communities" value="{{ reddit_draft.communities }}" /></label>
               <label class="full"><span class="field-label">Post body</span><textarea id="redditDraftBody" name="body" rows="6" required>{{ reddit_draft.body }}</textarea></label>
               <label><span class="field-label">Review status</span><select name="status"><option value="draft" {% if reddit_publication.status == 'draft' %}selected{% endif %}>Still editing</option><option value="ready_manual" {% if reddit_publication.status == 'ready_manual' %}selected{% endif %}>Ready to share manually</option></select></label>
               <button class="button primary" type="submit">Save Reddit review</button>
             </form>
             <aside class="reddit-side">
               <h3>Manual posting checklist</h3>
-              <p>Read the subreddit rules first. Disclose that you are the maker, avoid repeated cross-posting, and stay available to answer comments.</p>
+              <p>Current safe route: post only in r/droidappshowcase. Do not cross-post to r/androidapps. Use r/FOSSdroid only after adding an explicit open-source license and receiving moderator clearance.</p>
               <div class="quick-actions">
                 <div style="display:flex;gap:.5rem">
                   <button class="button icon-button" type="button" data-copy-target="redditDraftTitle" title="Copy title" aria-label="Copy Reddit title"><svg class="icon"><use href="#i-copy"/></svg></button>

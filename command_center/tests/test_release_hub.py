@@ -10,13 +10,13 @@ class ReleaseHubTests(unittest.TestCase):
         content = format_reddit_draft(
             "PureHub needs honest Android feedback",
             "I am the maker. What should be simpler?",
-            "r/androidapps, r/opensource",
+            "r/droidappshowcase",
         )
         self.assertEqual(
             parse_reddit_draft(content),
             {
                 "title": "PureHub needs honest Android feedback",
-                "communities": "r/androidapps, r/opensource",
+                "communities": "r/droidappshowcase",
                 "body": "I am the maker. What should be simpler?",
             },
         )
