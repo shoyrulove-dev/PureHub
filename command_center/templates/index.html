@@ -366,7 +366,7 @@
             <div>
               <p class="panel-kicker">Live platform signals</p>
               <h2 id="community-reach-title" style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-cyan"><use href="#i-users"/></svg>Community reach</h2>
-              <p class="panel-copy">Audience and engagement totals available from connected platforms.</p>
+              <p class="panel-copy">Audience totals plus engagement from the latest posts returned by each platform.</p>
             </div>
             <form action="{{ admin_prefix }}/support/sync" method="post"><button class="button" type="submit"><svg class="icon"><use href="#i-history"/></svg><span style="margin-left:.4rem">Refresh</span></button></form>
           </div>
@@ -387,13 +387,13 @@
             {% set bluesky_values = bluesky_reach.get('metrics', {}) %}
             <article class="reach-card">
               <div class="reach-title"><span>Bluesky</span><span class="channel-code">BS</span></div>
-              {% if bluesky_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('likes', 0)) }}</strong><span>likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('replies', 0)) }}</strong><span>replies</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('reposts', 0)) }}</strong><span>reposts</span></div></div>{% else %}<p class="reach-error">{{ bluesky_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              {% if bluesky_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('likes', 0)) }}</strong><span>recent likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('replies', 0)) }}</strong><span>recent replies</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('reposts', 0)) }}</strong><span>recent reposts</span></div></div>{% else %}<p class="reach-error">{{ bluesky_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
             {% set mastodon_reach = community_metrics.get('mastodon', {}) %}
             {% set mastodon_values = mastodon_reach.get('metrics', {}) %}
             <article class="reach-card">
               <div class="reach-title"><span>Mastodon</span><span class="channel-code">MA</span></div>
-              {% if mastodon_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span>likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span>boosts</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span>replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              {% if mastodon_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span>recent likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span>recent boosts</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span>recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
           </div>
         </section>
