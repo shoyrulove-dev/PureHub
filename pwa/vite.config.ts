@@ -29,6 +29,11 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: 'index.html',
+        navigateFallbackDenylist: [
+          /^\/admin(?:\/|$)/,
+          /^\/public-api(?:\/|$)/,
+          /^\/api(?:\/|$)/,
+        ],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2,json,txt}'],
       },
     }),
