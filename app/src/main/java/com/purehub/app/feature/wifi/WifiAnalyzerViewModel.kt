@@ -1,5 +1,6 @@
 package com.purehub.app.feature.wifi
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
@@ -67,6 +68,8 @@ class WifiAnalyzerViewModel(
         pollJob = null
     }
 
+    // The permission state is checked below and platform calls are guarded for permission races.
+    @SuppressLint("MissingPermission")
     private fun pollWifiState() {
         val hasScanPermission = hasWifiScanPermission()
         @Suppress("DEPRECATION")
