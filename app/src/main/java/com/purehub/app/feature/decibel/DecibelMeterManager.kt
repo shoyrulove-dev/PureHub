@@ -1,5 +1,6 @@
 package com.purehub.app.feature.decibel
 
+import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -12,6 +13,8 @@ import kotlin.math.log10
 import kotlin.math.sqrt
 
 class DecibelMeterManager {
+    // DecibelMeterCard checks and requests RECORD_AUDIO before starting this flow.
+    @SuppressLint("MissingPermission")
     fun levels(): Flow<Float> = flow {
         val sampleRate = 44_100
         val minBuffer = AudioRecord.getMinBufferSize(
