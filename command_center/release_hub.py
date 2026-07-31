@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import requests
@@ -27,6 +28,36 @@ except ImportError:
 
 CHANNELS = ("telegram", "devto", "bluesky", "mastodon", "reddit", "hackernews", "producthunt", "linkedin", "facebook")
 AUTO_CHANNELS = {"telegram", "devto", "bluesky", "mastodon"}
+
+
+def _markdown_title(content: str, fallback: str) -> str:
+    for line in content.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip() or fallback
+    return fallback
+
+
+def _bluesky_facets(content: str) -> list[dict[str, Any]]:
+    facets: list[dict[str, Any]] = []
+    matches = [
+        (match, {"$type": "app.bsky.richtext.facet#link", "uri": match.group(0)})
+        for match in re.finditer(r"https?://[^\s]+", content)
+    ]
+    matches.extend(
+        (match, {"$type": "app.bsky.richtext.facet#tag", "tag": match.group(1)})
+        for match in re.finditer(r"(?<!\w)#([\w]+)", content)
+    )
+    for match, feature in sorted(matches, key=lambda item: item[0].start()):
+        facets.append(
+            {
+                "index": {
+                    "byteStart": len(content[: match.start()].encode("utf-8")),
+                    "byteEnd": len(content[: match.end()].encode("utf-8")),
+                },
+                "features": [feature],
+            }
+        )
+    return facets
 
 
 def _ai_client() -> tuple[OpenAI, str]:
@@ -82,6 +113,12 @@ def generate_release_bundle(release_id: str) -> list[dict[str, Any]]:
                 "rules": [
                     "Do not invent metrics, testimonials, security audits, or features.",
                     "Telegram, Bluesky, and Mastodon must link to the GitHub release.",
+                    "Write genuinely different copy for each channel instead of shortening one shared post.",
+                    "Use a few relevant Unicode icons to improve scanning, but keep the tone professional and avoid emoji spam.",
+                    "For DEV, write a useful standalone Markdown launch article with a clear title, short sections, bullet points, and a call for community feedback.",
+                    "For Telegram, make the announcement warm, compact, and easy to scan on a phone.",
+                    "For Bluesky, use a conversational open-source community tone.",
+                    "For Mastodon, emphasize open source, privacy, and community participation without marketing hype.",
                     "Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook are review drafts, not spam.",
                     "Keep Bluesky under 300 characters and Mastodon under 500 characters.",
                 ],
@@ -173,9 +210,9 @@ def _publish_devto(content: str, release: dict[str, Any]) -> tuple[str, str]:
         },
         json={
             "article": {
-                "title": release["title"],
+                "title": _markdown_title(content, release["title"]),
                 "body_markdown": content,
-                "published": False,
+                "published": get_config_value("devto_publish_as_draft", "true").lower() != "true",
                 "tags": ["android", "opensource", "productivity", "privacy"],
                 "canonical_url": release.get("github_url") or get_config_value("site_url"),
             }
@@ -197,6 +234,7 @@ def _publish_bluesky(content: str) -> tuple[str, str]:
     )
     session.raise_for_status()
     auth = session.json()
+    text = content[:300]
     post = requests.post(
         "https://bsky.social/xrpc/com.atproto.repo.createRecord",
         headers={"Authorization": f"Bearer {auth['accessJwt']}"},
@@ -205,7 +243,8 @@ def _publish_bluesky(content: str) -> tuple[str, str]:
             "collection": "app.bsky.feed.post",
             "record": {
                 "$type": "app.bsky.feed.post",
-                "text": content[:300],
+                "text": text,
+                "facets": _bluesky_facets(text),
                 "langs": ["en"],
                 "createdAt": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat().replace("+00:00", "Z"),
             },
@@ -214,7 +253,8 @@ def _publish_bluesky(content: str) -> tuple[str, str]:
     )
     post.raise_for_status()
     payload = post.json()
-    return payload["uri"], f"https://bsky.app/profile/{handle}"
+    record_key = payload["uri"].rsplit("/", 1)[-1]
+    return payload["uri"], f"https://bsky.app/profile/{handle}/post/{record_key}"
 
 
 def _publish_mastodon(content: str) -> tuple[str, str]:
