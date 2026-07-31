@@ -11,18 +11,18 @@
         color-scheme: light;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-synthesis: none;
-        --page: #f4f7fb;
-        --panel: rgba(255, 255, 255, 0.94);
+        --page: #f1f5f9;
+        --panel: #ffffff;
         --panel-strong: #ffffff;
-        --line: #e2e8f0;
-        --line-strong: #cbd5e1;
+        --line: #cbd5e1;
+        --line-strong: #94a3b8;
         --text: #0f172a;
-        --muted: #64748b;
-        --emerald: #34d399;
-        --cyan: #22d3ee;
-        --violet: #a78bfa;
-        --amber: #fbbf24;
-        --rose: #fb7185;
+        --muted: #475569;
+        --emerald: #059669;
+        --cyan: #0284c7;
+        --violet: #7c3aed;
+        --amber: #d97706;
+        --rose: #e11d48;
       }
 
       * { box-sizing: border-box; }
@@ -42,6 +42,7 @@
       a { color: inherit; text-decoration: none; }
       .icon { width: 1rem; height: 1rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .icon-lg { width: 1.2rem; height: 1.2rem; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       h1, h2, h3, p { margin-top: 0; }
 
       .shell { display: grid; min-height: 100vh; grid-template-columns: 16.5rem minmax(0, 1fr); }
@@ -70,7 +71,7 @@
         font-weight: 850;
       }
       .brand-name { font-size: 0.96rem; font-weight: 800; letter-spacing: -0.02em; }
-      .brand-meta { margin: 0.18rem 0 0; color: var(--muted); font-size: 0.7rem; }
+      .brand-meta { margin: 0.18rem 0 0; color: var(--muted); font-size: 0.7rem; font-weight: 600; }
       .nav { display: grid; gap: 0.35rem; margin-top: 2rem; }
       .nav a {
         display: flex;
@@ -107,16 +108,16 @@
       .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
       .eyebrow { margin: 0 0 0.45rem; color: var(--cyan); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
       h1 { margin-bottom: 0.45rem; font-size: clamp(1.75rem, 4vw, 2.65rem); line-height: 1.1; letter-spacing: -0.045em; }
-      .subtitle { margin-bottom: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
-      .live-chip { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.58rem 0.8rem; border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 999px; color: #a7f3d0; background: rgba(16, 185, 129, 0.08); font-size: 0.75rem; font-weight: 750; white-space: nowrap; }
+      .subtitle { margin-bottom: 0; color: var(--muted); font-size: 0.9rem; font-weight: 520; line-height: 1.6; }
+      .live-chip { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.58rem 0.8rem; border: 1px solid #86efac; border-radius: 999px; color: #166534; background: #f0fdf4; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
       .live-dot { width: 0.48rem; height: 0.48rem; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 0 0.28rem rgba(52, 211, 153, 0.12); }
       .top-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.55rem; }
-      .support-alert { display: inline-flex; align-items: center; padding: 0.58rem 0.8rem; border: 1px solid rgba(251, 191, 36, 0.24); border-radius: 999px; color: #fde68a; background: rgba(245, 158, 11, 0.08); font-size: 0.72rem; font-weight: 780; }
+      .support-alert { display: inline-flex; align-items: center; padding: 0.58rem 0.8rem; border: 1px solid #fcd34d; border-radius: 999px; color: #92400e; background: #fffbeb; font-size: 0.72rem; font-weight: 800; }
       .support-alert[hidden] { display: none; }
 
       .flash { margin-bottom: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 0.95rem; background: var(--panel); font-size: 0.86rem; }
-      .flash.success { border-color: rgba(52, 211, 153, 0.22); color: #a7f3d0; }
-      .flash.error { border-color: rgba(251, 113, 133, 0.24); color: #fecdd3; }
+      .flash.success { border-color: #86efac; color: #166534; background: #f0fdf4; font-weight: 650; }
+      .flash.error { border-color: #fda4af; color: #9f1239; background: #fff1f2; font-weight: 650; }
 
       .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; }
       .metric, .panel {
@@ -128,16 +129,24 @@
       .metric { min-height: 7.4rem; padding: 1rem; border-radius: 1.15rem; }
       .metric-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
       .metric-icon { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--line); border-radius: 0.7rem; background: #f8fafc; }
-      .metric-label { margin-bottom: 0.65rem; color: var(--muted); font-size: 0.68rem; font-weight: 750; letter-spacing: 0.14em; text-transform: uppercase; }
+      .metric-label { margin-bottom: 0.65rem; color: #334155; font-size: 0.68rem; font-weight: 850; letter-spacing: 0.14em; text-transform: uppercase; }
       .metric-value { margin-bottom: 0.3rem; font-size: 1.75rem; font-weight: 820; letter-spacing: -0.04em; }
-      .metric-note { margin: 0; color: #64748b; font-size: 0.72rem; }
+      .metric-note { margin: 0; color: #475569; font-size: 0.72rem; font-weight: 550; }
       .reach-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: .9rem; }
       .reach-card { padding: .85rem; border: 1px solid var(--line); border-radius: .95rem; background: #f8fafc; }
       .reach-title { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .65rem; font-size: .78rem; font-weight: 800; }
-      .reach-values { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .45rem; }
-      .reach-value { min-width: 0; }
-      .reach-value strong { display: block; overflow: hidden; color: #0f172a; font-size: 1.02rem; text-overflow: ellipsis; }
-      .reach-value span { color: var(--muted); font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
+      .reach-values { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .5rem; }
+      .reach-value { display: flex; min-width: 0; align-items: center; gap: .48rem; padding: .45rem .5rem; border: 1px solid #e2e8f0; border-radius: .7rem; background: #fff; }
+      .reach-value strong { display: block; overflow: hidden; color: #0f172a; font-size: 1rem; font-weight: 850; text-overflow: ellipsis; }
+      .stat-icon, .platform-icon { display: grid; flex: 0 0 auto; place-items: center; color: #0369a1; background: #e0f2fe; }
+      .stat-icon { width: 1.55rem; height: 1.55rem; border-radius: .5rem; }
+      .stat-icon .icon { width: .82rem; height: .82rem; stroke-width: 2.2; }
+      .platform-icon { width: 1.9rem; height: 1.9rem; border-radius: .65rem; }
+      .platform-icon .icon { width: .95rem; height: .95rem; stroke-width: 2.15; }
+      .platform-icon.telegram { color: #0369a1; background: #e0f2fe; }
+      .platform-icon.devto { color: #0f172a; background: #e2e8f0; }
+      .platform-icon.bluesky { color: #1d4ed8; background: #dbeafe; }
+      .platform-icon.mastodon { color: #6d28d9; background: #ede9fe; }
       .reach-error { color: #be123c; font-size: .67rem; }
       .reddit-layout { display: grid; grid-template-columns: minmax(0,1fr) 16rem; gap: 1rem; margin-top: .9rem; }
       .reddit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
@@ -155,9 +164,9 @@
       .section { margin-top: 1.25rem; scroll-margin-top: 1rem; }
       .panel { padding: clamp(1rem, 2vw, 1.35rem); border-radius: 1.25rem; }
       .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
-      .panel-kicker { margin-bottom: 0.35rem; color: var(--muted); font-size: 0.66rem; font-weight: 780; letter-spacing: 0.17em; text-transform: uppercase; }
+      .panel-kicker { margin-bottom: 0.35rem; color: #334155; font-size: 0.66rem; font-weight: 850; letter-spacing: 0.17em; text-transform: uppercase; }
       h2 { margin-bottom: 0.35rem; font-size: 1.15rem; letter-spacing: -0.025em; }
-      .panel-copy { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.55; }
+      .panel-copy { margin: 0; color: var(--muted); font-size: 0.8rem; font-weight: 520; line-height: 1.55; }
       .grid-two { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr); gap: 1rem; }
 
       .channels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.7rem; }
@@ -223,6 +232,7 @@
         cursor: pointer;
         transition: 150ms ease;
       }
+      .icon-button { width: 2.45rem; padding: 0; }
       .button:hover { border-color: var(--line-strong); background: #f8fafc; transform: translateY(-1px); }
       .button.primary { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
       .button.violet { border-color: #ddd6fe; color: #6d28d9; background: #f5f3ff; }
@@ -243,7 +253,9 @@
         outline: none;
         color: #0f172a;
         background: #ffffff;
+        font-weight: 550;
       }
+      input::placeholder, textarea::placeholder { color: #64748b; opacity: 1; }
       textarea:focus, input:focus, select:focus { border-color: rgba(34, 211, 238, 0.45); box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08); }
       textarea { margin-top: 0.85rem; resize: vertical; line-height: 1.55; }
 
@@ -307,6 +319,14 @@
       <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
       <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
       <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="m10 14 11-11"/><path d="M18 13v7H4V6h7"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+      <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol>
+      <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></symbol>
+      <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.3 4.7L18 9l-4.7 1.3L12 15l-1.3-4.7L6 9l4.7-1.3Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7Z"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></symbol>
     </svg>
     <div class="shell">
       <aside class="sidebar">
@@ -379,32 +399,32 @@
               <h2 id="community-reach-title" style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-cyan"><use href="#i-users"/></svg>Community reach</h2>
               <p class="panel-copy">Audience totals plus engagement from the latest posts returned by each platform.</p>
             </div>
-            <form action="{{ admin_prefix }}/support/sync" method="post"><button class="button" type="submit"><svg class="icon"><use href="#i-history"/></svg><span style="margin-left:.4rem">Refresh</span></button></form>
+            <form action="{{ admin_prefix }}/support/sync" method="post"><button class="button icon-button" type="submit" title="Refresh community metrics" aria-label="Refresh community metrics"><svg class="icon"><use href="#i-history"/></svg></button></form>
           </div>
           <div class="reach-grid">
             {% set telegram_reach = community_metrics.get('telegram', {}) %}
             {% set telegram_values = telegram_reach.get('metrics', {}) %}
             <article class="reach-card">
-              <div class="reach-title"><span>Telegram</span><span class="channel-code">TG</span></div>
-              {% if telegram_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(telegram_values.get('members', 0)) }}</strong><span>members</span></div></div>{% else %}<p class="reach-error">{{ telegram_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              <div class="reach-title"><span>Telegram</span><span class="platform-icon telegram" title="Telegram"><svg class="icon"><use href="#i-send"/></svg></span></div>
+              {% if telegram_values %}<div class="reach-values"><div class="reach-value" title="Members"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><strong>{{ "{:,}".format(telegram_values.get('members', 0)) }}</strong><span class="sr-only">members</span></div></div>{% else %}<p class="reach-error">{{ telegram_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
             {% set devto_reach = community_metrics.get('devto', {}) %}
             {% set devto_values = devto_reach.get('metrics', {}) %}
             <article class="reach-card">
-              <div class="reach-title"><span>DEV Community</span><span class="channel-code">DV</span></div>
-              {% if devto_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(devto_values.get('views', 0)) }}</strong><span>views</span></div><div class="reach-value"><strong>{{ "{:,}".format(devto_values.get('reactions', 0)) }}</strong><span>reactions</span></div><div class="reach-value"><strong>{{ "{:,}".format(devto_values.get('comments', 0)) }}</strong><span>comments</span></div><div class="reach-value"><strong>{{ "{:,}".format(devto_values.get('articles', 0)) }}</strong><span>articles</span></div></div>{% else %}<p class="reach-error">{{ devto_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              <div class="reach-title"><span>DEV Community</span><span class="platform-icon devto" title="DEV Community"><svg class="icon"><use href="#i-code"/></svg></span></div>
+              {% if devto_values %}<div class="reach-values"><div class="reach-value" title="Views"><span class="stat-icon"><svg class="icon"><use href="#i-eye"/></svg></span><strong>{{ "{:,}".format(devto_values.get('views', 0)) }}</strong><span class="sr-only">views</span></div><div class="reach-value" title="Reactions"><span class="stat-icon"><svg class="icon"><use href="#i-heart"/></svg></span><strong>{{ "{:,}".format(devto_values.get('reactions', 0)) }}</strong><span class="sr-only">reactions</span></div><div class="reach-value" title="Comments"><span class="stat-icon"><svg class="icon"><use href="#i-message"/></svg></span><strong>{{ "{:,}".format(devto_values.get('comments', 0)) }}</strong><span class="sr-only">comments</span></div><div class="reach-value" title="Articles"><span class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></span><strong>{{ "{:,}".format(devto_values.get('articles', 0)) }}</strong><span class="sr-only">articles</span></div></div>{% else %}<p class="reach-error">{{ devto_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
             {% set bluesky_reach = community_metrics.get('bluesky', {}) %}
             {% set bluesky_values = bluesky_reach.get('metrics', {}) %}
             <article class="reach-card">
-              <div class="reach-title"><span>Bluesky</span><span class="channel-code">BS</span></div>
-              {% if bluesky_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('likes', 0)) }}</strong><span>recent likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('replies', 0)) }}</strong><span>recent replies</span></div><div class="reach-value"><strong>{{ "{:,}".format(bluesky_values.get('reposts', 0)) }}</strong><span>recent reposts</span></div></div>{% else %}<p class="reach-error">{{ bluesky_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              <div class="reach-title"><span>Bluesky</span><span class="platform-icon bluesky" title="Bluesky"><svg class="icon"><use href="#i-spark"/></svg></span></div>
+              {% if bluesky_values %}<div class="reach-values"><div class="reach-value" title="Followers"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><strong>{{ "{:,}".format(bluesky_values.get('followers', 0)) }}</strong><span class="sr-only">followers</span></div><div class="reach-value" title="Recent likes"><span class="stat-icon"><svg class="icon"><use href="#i-heart"/></svg></span><strong>{{ "{:,}".format(bluesky_values.get('likes', 0)) }}</strong><span class="sr-only">recent likes</span></div><div class="reach-value" title="Recent replies"><span class="stat-icon"><svg class="icon"><use href="#i-message"/></svg></span><strong>{{ "{:,}".format(bluesky_values.get('replies', 0)) }}</strong><span class="sr-only">recent replies</span></div><div class="reach-value" title="Recent reposts"><span class="stat-icon"><svg class="icon"><use href="#i-repeat"/></svg></span><strong>{{ "{:,}".format(bluesky_values.get('reposts', 0)) }}</strong><span class="sr-only">recent reposts</span></div></div>{% else %}<p class="reach-error">{{ bluesky_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
             {% set mastodon_reach = community_metrics.get('mastodon', {}) %}
             {% set mastodon_values = mastodon_reach.get('metrics', {}) %}
             <article class="reach-card">
-              <div class="reach-title"><span>Mastodon</span><span class="channel-code">MA</span></div>
-              {% if mastodon_values %}<div class="reach-values"><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span>followers</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span>recent likes</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span>recent boosts</span></div><div class="reach-value"><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span>recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+              <div class="reach-title"><span>Mastodon</span><span class="platform-icon mastodon" title="Mastodon"><svg class="icon"><use href="#i-message"/></svg></span></div>
+              {% if mastodon_values %}<div class="reach-values"><div class="reach-value" title="Followers"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span class="sr-only">followers</span></div><div class="reach-value" title="Recent likes"><span class="stat-icon"><svg class="icon"><use href="#i-heart"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span class="sr-only">recent likes</span></div><div class="reach-value" title="Recent boosts"><span class="stat-icon"><svg class="icon"><use href="#i-repeat"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span class="sr-only">recent boosts</span></div><div class="reach-value" title="Recent replies"><span class="stat-icon"><svg class="icon"><use href="#i-message"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span class="sr-only">recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
           </div>
         </section>
@@ -416,7 +436,7 @@
               <h2 id="reddit-review-title">Reddit review</h2>
               <p class="panel-copy">AI prepares a Reddit-specific maker post. You review, copy, check each community’s rules, and post manually.</p>
             </div>
-            {% if releases %}<form action="{{ admin_prefix }}/releases/{{ releases[0].release_id }}/reddit/generate" method="post"><button class="button violet" type="submit">Generate new draft</button></form>{% endif %}
+            {% if releases %}<form action="{{ admin_prefix }}/releases/{{ releases[0].release_id }}/reddit/generate" method="post"><button class="button violet icon-button" type="submit" title="Generate new Reddit draft" aria-label="Generate new Reddit draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>{% endif %}
           </div>
           {% if reddit_publication %}
           <div class="reddit-layout">
@@ -431,9 +451,11 @@
               <h3>Manual posting checklist</h3>
               <p>Read the subreddit rules first. Disclose that you are the maker, avoid repeated cross-posting, and stay available to answer comments.</p>
               <div class="quick-actions">
-                <button class="button" type="button" data-copy-target="redditDraftTitle">Copy title</button>
-                <button class="button" type="button" data-copy-target="redditDraftBody">Copy body</button>
-                <a class="button primary" href="https://www.reddit.com/submit" target="_blank" rel="noreferrer">Open Reddit submit</a>
+                <div style="display:flex;gap:.5rem">
+                  <button class="button icon-button" type="button" data-copy-target="redditDraftTitle" title="Copy title" aria-label="Copy Reddit title"><svg class="icon"><use href="#i-copy"/></svg></button>
+                  <button class="button icon-button" type="button" data-copy-target="redditDraftBody" title="Copy body" aria-label="Copy Reddit body"><svg class="icon"><use href="#i-file"/></svg></button>
+                  <a class="button primary icon-button" href="https://www.reddit.com/submit" target="_blank" rel="noreferrer" title="Open Reddit submit" aria-label="Open Reddit submit"><svg class="icon"><use href="#i-external"/></svg></a>
+                </div>
               </div>
             </aside>
           </div>
@@ -456,23 +478,23 @@
           </div>
           <div class="channels">
             <article class="channel">
-              <div class="channel-top"><span class="channel-name">Telegram</span><span class="channel-code">TG</span></div>
+              <div class="channel-top"><span class="channel-name">Telegram</span><span class="platform-icon telegram"><svg class="icon"><use href="#i-send"/></svg></span></div>
               <div class="status {% if config.get('telegram_bot_token') and config.get('telegram_notify_chat_id') %}ready{% endif %}">{% if config.get('telegram_bot_token') and config.get('telegram_notify_chat_id') %}Configured{% else %}Needs setup{% endif %}</div>
             </article>
             <article class="channel">
-              <div class="channel-top"><span class="channel-name">DEV</span><span class="channel-code">DV</span></div>
+              <div class="channel-top"><span class="channel-name">DEV</span><span class="platform-icon devto"><svg class="icon"><use href="#i-code"/></svg></span></div>
               <div class="status {% if config.get('devto_api_key') %}ready{% endif %}">{% if config.get('devto_api_key') %}Configured{% else %}Needs setup{% endif %}</div>
             </article>
             <article class="channel">
-              <div class="channel-top"><span class="channel-name">Bluesky</span><span class="channel-code">BS</span></div>
+              <div class="channel-top"><span class="channel-name">Bluesky</span><span class="platform-icon bluesky"><svg class="icon"><use href="#i-spark"/></svg></span></div>
               <div class="status {% if config.get('bluesky_handle') and config.get('bluesky_app_password') %}ready{% endif %}">{% if config.get('bluesky_handle') and config.get('bluesky_app_password') %}Configured{% else %}Needs setup{% endif %}</div>
             </article>
             <article class="channel">
-              <div class="channel-top"><span class="channel-name">Mastodon</span><span class="channel-code">MA</span></div>
+              <div class="channel-top"><span class="channel-name">Mastodon</span><span class="platform-icon mastodon"><svg class="icon"><use href="#i-message"/></svg></span></div>
               <div class="status {% if config.get('mastodon_base_url') and config.get('mastodon_access_token') %}ready{% endif %}">{% if config.get('mastodon_base_url') and config.get('mastodon_access_token') %}Configured{% else %}Needs setup{% endif %}</div>
             </article>
             <article class="channel">
-              <div class="channel-top"><span class="channel-name">Release AI</span><span class="channel-code">AI</span></div>
+              <div class="channel-top"><span class="channel-name">Release AI</span><span class="platform-icon"><svg class="icon"><use href="#i-spark"/></svg></span></div>
               <div class="status {% if config.get('deepseek_api_key') or config.get('groq_api_key') %}ready{% endif %}">{% if config.get('deepseek_api_key') or config.get('groq_api_key') %}{{ config.get('ai_provider', defaults.ai_provider)|title }} active{% else %}Needs setup{% endif %}</div>
             </article>
           </div>
@@ -487,15 +509,15 @@
               <p class="panel-copy">Replies and mentions are drafted by AI, then held for human approval.</p>
             </div>
             <form action="{{ admin_prefix }}/support/sync" method="post">
-              <button class="button primary" type="submit" title="Sync all support channels"><svg class="icon"><use href="#i-history"/></svg><span style="margin-left:.4rem">Sync</span></button>
+              <button class="button primary icon-button" type="submit" title="Sync all support channels" aria-label="Sync all support channels"><svg class="icon"><use href="#i-history"/></svg></button>
             </form>
           </div>
           <div class="support-stats" style="margin-top: 0.9rem">
-            <span class="badge">{{ support_metrics.new }} new</span>
-            <span class="badge draft">{{ support_metrics.draft_ready }} drafts</span>
-            <span class="badge approved">{{ support_metrics.approved }} approved</span>
-            <span class="badge published">{{ support_metrics.replied }} replied</span>
-            <span class="badge ready_manual">{{ support_metrics.manual_required }} manual</span>
+            <span class="badge" title="New messages"><svg class="icon"><use href="#i-inbox"/></svg>&nbsp;{{ support_metrics.new }}<span class="sr-only"> new</span></span>
+            <span class="badge draft" title="AI drafts"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ support_metrics.draft_ready }}<span class="sr-only"> drafts</span></span>
+            <span class="badge approved" title="Approved"><svg class="icon"><use href="#i-check"/></svg>&nbsp;{{ support_metrics.approved }}<span class="sr-only"> approved</span></span>
+            <span class="badge published" title="Replied"><svg class="icon"><use href="#i-send"/></svg>&nbsp;{{ support_metrics.replied }}<span class="sr-only"> replied</span></span>
+            <span class="badge ready_manual" title="Manual actions"><svg class="icon"><use href="#i-external"/></svg>&nbsp;{{ support_metrics.manual_required }}<span class="sr-only"> manual</span></span>
             {% for state in support_sync_states %}
               <span class="sync-state {% if state.error_message %}error{% endif %}">{{ state.platform|upper }}{% if state.error_message %} error{% else %} synced{% endif %}</span>
             {% endfor %}
@@ -692,9 +714,15 @@
             const field = document.getElementById(button.dataset.copyTarget);
             if (!field) return;
             await navigator.clipboard.writeText(field.value || field.textContent || "");
-            const original = button.textContent;
-            button.textContent = "Copied";
-            window.setTimeout(() => { button.textContent = original; }, 1400);
+            const originalTitle = button.title;
+            button.title = "Copied";
+            button.style.color = "#047857";
+            button.style.background = "#ecfdf5";
+            window.setTimeout(() => {
+              button.title = originalTitle;
+              button.style.color = "";
+              button.style.background = "";
+            }, 1400);
           });
         });
         let previousOpen = Number(openMetric?.textContent || 0);

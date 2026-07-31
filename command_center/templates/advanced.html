@@ -12,21 +12,27 @@
       [data-advanced-group][hidden] { display: none !important; }
       .tool-tile-active { border-color: #6ee7b7 !important; background: #ecfdf5 !important; color: #047857 !important; }
       .tool-icon { display: grid; width: 2.15rem; height: 2.15rem; place-items: center; border-radius: .7rem; background: #f1f5f9; font-size: .95rem; }
-      body { background: #f4f7fb !important; color: #0f172a !important; }
+      body { background: #f1f5f9 !important; color: #0f172a !important; font-weight: 450; }
       main { max-width: 92rem !important; gap: 1rem !important; }
       nav, main > section, [data-advanced-group] > section, #connections, #advanced-connections > div > section {
-        border-color: #e2e8f0 !important; background: rgba(255,255,255,.96) !important;
+        border-color: #cbd5e1 !important; background: #ffffff !important;
         box-shadow: 0 18px 50px -38px rgba(15,23,42,.35) !important;
       }
       [class*="bg-slate-9"], [class*="bg-white/"] { background-color: #f8fafc !important; }
-      [class*="border-white"] { border-color: #e2e8f0 !important; }
+      [class*="border-white"] { border-color: #cbd5e1 !important; }
       [class*="text-white"] { color: #0f172a !important; }
-      [class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"] { color: #334155 !important; }
-      [class*="text-slate-400"], [class*="text-slate-500"] { color: #64748b !important; }
+      [class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"] { color: #1e293b !important; }
+      [class*="text-slate-400"], [class*="text-slate-500"] { color: #475569 !important; }
+      [class*="text-emerald-"] { color: #047857 !important; }
+      [class*="text-sky-"], [class*="text-cyan-"] { color: #0369a1 !important; }
+      [class*="text-violet-"], [class*="text-purple-"], [class*="text-indigo-"] { color: #6d28d9 !important; }
+      [class*="text-amber-"] { color: #92400e !important; }
+      [class*="text-rose-"] { color: #9f1239 !important; }
       [class*="bg-indigo-600"][class*="text-white"] { color: #fff !important; }
-      input, select, textarea { min-height: 2.35rem !important; border-color: #dbe3ee !important; border-radius: .65rem !important; background: #f8fafc !important; color: #0f172a !important; padding: .5rem .7rem !important; }
+      input, select, textarea { min-height: 2.35rem !important; border-color: #cbd5e1 !important; border-radius: .65rem !important; background: #fff !important; color: #0f172a !important; padding: .5rem .7rem !important; font-weight: 550 !important; }
+      input::placeholder, textarea::placeholder { color: #64748b !important; opacity: 1; }
       input:focus, select:focus, textarea:focus { border-color: #34d399 !important; box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
-      label > span:first-child { margin-bottom: .35rem !important; color: #475569 !important; font-size: .75rem !important; }
+      label > span:first-child { margin-bottom: .35rem !important; color: #334155 !important; font-size: .75rem !important; font-weight: 700 !important; }
       #connections { padding: 1rem !important; }
       #connections > .mt-6 { margin-top: 1rem !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem !important; }
       #connections > .mt-6 > .grid { display: contents; }
@@ -39,6 +45,9 @@
       [data-advanced-group] .mt-5 { margin-top: .75rem !important; }
       [data-advanced-group] .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: .65rem !important; }
       button, a { border-radius: .65rem !important; }
+      button { font-weight: 700 !important; }
+      .a-icon { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .tool-icon .a-icon { width: 1.05rem; height: 1.05rem; }
       table thead { background: #f1f5f9 !important; }
       table tbody { background: #fff !important; }
       @media (max-width: 900px) { #connections > .mt-6, #connections .border-t .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
@@ -46,9 +55,21 @@
     </style>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100">
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+      <symbol id="a-arrow-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+      <symbol id="a-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.5 1a8 8 0 0 0-1.7-1L14.3 3h-4.6l-.4 3.1a8 8 0 0 0-1.7 1l-2.5-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.5-1a8 8 0 0 0 1.7 1l.4 3.1h4.6l.4-3.1a8 8 0 0 0 1.7-1l2.5 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/></symbol>
+      <symbol id="a-spark" viewBox="0 0 24 24"><path d="m12 3 1.4 4.6L18 9l-4.6 1.4L12 15l-1.4-4.6L6 9l4.6-1.4Z"/><path d="m19 16 .6 1.4L21 18l-1.4.6L19 20l-.6-1.4L17 18l1.4-.6Z"/></symbol>
+      <symbol id="a-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+      <symbol id="a-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+      <symbol id="a-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+      <symbol id="a-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="a-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/></symbol>
+      <symbol id="a-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+      <symbol id="a-upload" viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></symbol>
+    </svg>
     <main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <nav class="sticky top-3 z-20 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/90 px-4 py-3 shadow-xl shadow-black/20 backdrop-blur-xl">
-        <a href="{{ admin_prefix }}" class="rounded-xl bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/20">&larr; Operations dashboard</a>
+        <a href="{{ admin_prefix }}" class="flex items-center gap-2 rounded-xl bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/20"><svg class="a-icon"><use href="#a-arrow-left"/></svg><span>Operations dashboard</span></a>
         <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Advanced controls</span>
       </nav>
       <section class="flex flex-col gap-4 rounded-[28px] border border-emerald-400/15 bg-[linear-gradient(135deg,rgba(16,185,129,.09),rgba(15,23,42,.9))] p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -59,7 +80,7 @@
         </div>
         <div class="flex items-center gap-2">
           <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-400">Schema <strong class="text-emerald-300">v{{ schema_status.applied_version }}</strong></span>
-          <form action="{{ admin_prefix }}/logout" method="post"><button type="submit" title="Sign out" class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10">&#8617;</button></form>
+          <form action="{{ admin_prefix }}/logout" method="post"><button type="submit" title="Sign out" aria-label="Sign out" class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10"><svg class="a-icon"><use href="#a-logout"/></svg></button></form>
         </div>
       </section>
 
@@ -72,14 +93,14 @@
       <section aria-label="Advanced tool groups" class="rounded-[28px] border border-white/8 bg-slate-900/75 p-4">
         <div class="mb-3 flex items-center justify-between gap-3">
           <div><p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Toolbox</p><p class="mt-1 text-sm text-slate-300">Choose one group. Everything else stays hidden.</p></div>
-          <button type="button" id="hideAdvancedGroups" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">Hide all</button>
+          <button type="button" id="hideAdvancedGroups" title="Hide all groups" aria-label="Hide all groups" class="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-300"><svg class="a-icon"><use href="#a-x"/></svg></button>
         </div>
         <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          <button type="button" data-open-advanced="advanced-connections" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#9881;</span><span>Connections</span></button>
-          <button type="button" data-open-advanced="advanced-content" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#10022;</span><span>Content jobs</span></button>
-          <button type="button" data-open-advanced="advanced-insights" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#8961;</span><span>Insights</span></button>
-          <button type="button" data-open-advanced="advanced-governance" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#9671;</span><span>Catalog & access</span></button>
-          <button type="button" data-open-advanced="release-hub" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon">&#8599;</span><span>Release Hub</span></button>
+          <button type="button" data-open-advanced="advanced-connections" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon"><svg class="a-icon"><use href="#a-settings"/></svg></span><span>Connections</span></button>
+          <button type="button" data-open-advanced="advanced-content" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon"><svg class="a-icon"><use href="#a-spark"/></svg></span><span>Content jobs</span></button>
+          <button type="button" data-open-advanced="advanced-insights" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon"><svg class="a-icon"><use href="#a-chart"/></svg></span><span>Insights</span></button>
+          <button type="button" data-open-advanced="advanced-governance" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon"><svg class="a-icon"><use href="#a-grid"/></svg></span><span>Catalog & access</span></button>
+          <button type="button" data-open-advanced="release-hub" class="advanced-tool flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.03] p-3 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/[.06]"><span class="tool-icon"><svg class="a-icon"><use href="#a-send"/></svg></span><span>Release Hub</span></button>
         </div>
       </section>
 
@@ -274,11 +295,11 @@
             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Backup &amp; restore</p>
             <h2 class="mt-2 text-2xl font-semibold text-white">Control data backup</h2>
             <p class="mt-2 text-sm text-slate-400">Download settings and catalogs as one private backup file. No code editing is required.</p>
-            <a href="{{ admin_prefix }}/export/backup" class="mt-4 inline-flex items-center bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">&#8681;&nbsp; Download backup</a>
+            <a href="{{ admin_prefix }}/export/backup" class="mt-4 inline-flex items-center gap-2 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200"><svg class="a-icon"><use href="#a-download"/></svg><span>Download backup</span></a>
             <form action="{{ admin_prefix }}/import/backup" method="post" enctype="multipart/form-data" class="mt-4 grid gap-3 sm:grid-cols-2">
               <label class="block sm:col-span-2"><span class="block">Backup file</span><input type="file" name="backup_file" accept=".json,application/json" required /></label>
               <label class="block"><span class="block">Restore behavior</span><select name="mode"><option value="merge">Keep existing data and update matches</option><option value="replace">Replace catalogs from backup</option></select></label>
-              <button type="submit" class="self-end bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">&#8635;&nbsp; Restore backup</button>
+              <button type="submit" class="flex items-center justify-center gap-2 self-end bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"><svg class="a-icon"><use href="#a-upload"/></svg><span>Restore backup</span></button>
             </form>
             <p class="mt-3 text-xs text-slate-500">Maximum file size: 2 MB. API keys in the backup should be kept private.</p>
           </section>
@@ -831,7 +852,7 @@
           plugins: {
             legend: {
               labels: {
-                color: "#cbd5e1",
+                color: "#334155",
                 boxWidth: 12,
               },
             },
@@ -839,18 +860,18 @@
               backgroundColor: "rgba(15, 23, 42, 0.96)",
               titleColor: "#f8fafc",
               bodyColor: "#e2e8f0",
-              borderColor: "rgba(148, 163, 184, 0.15)",
+              borderColor: "rgba(100, 116, 139, 0.28)",
               borderWidth: 1,
             },
           },
           scales: {
             x: {
-              ticks: { color: "#94a3b8" },
-              grid: { color: "rgba(148, 163, 184, 0.08)" },
+              ticks: { color: "#475569" },
+              grid: { color: "rgba(100, 116, 139, 0.16)" },
             },
             y: {
-              ticks: { color: "#94a3b8" },
-              grid: { color: "rgba(148, 163, 184, 0.08)" },
+              ticks: { color: "#475569" },
+              grid: { color: "rgba(100, 116, 139, 0.16)" },
             },
           },
         };

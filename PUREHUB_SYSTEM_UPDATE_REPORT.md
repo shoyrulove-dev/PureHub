@@ -215,3 +215,10 @@ These items require account ownership or a long-lived secret and therefore are n
 - Generated and stored the first Reddit review draft for `v1.0.0-beta.2` without publishing it externally.
 - Added a reproducible vertical-video pipeline and generated the first 22.5-second English teaser at 1080×1920 using current production screens.
 - The video is encoded as H.264 `yuv420p` with AAC silent audio for broad YouTube Shorts and TikTok compatibility; platform-native music can be added during upload.
+
+## Admin contrast and icon refinement
+
+- Increased light-theme contrast across Login, Operations Dashboard, and Advanced Controls with darker secondary text, stronger borders, heavier labels, and readable status colors.
+- Replaced repeated engagement labels with accessible icon-and-number tiles for members, views, likes, comments, posts, replies, and reposts.
+- Replaced platform initials and legacy Unicode control symbols with a shared SVG icon language and retained tooltips/screen-reader labels.
+- Compacted metric refresh, support sync, Reddit generation/copy/open, toolbox, backup, restore, logout, and visibility controls into icon-led actions.
