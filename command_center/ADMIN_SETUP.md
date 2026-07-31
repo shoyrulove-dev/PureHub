@@ -41,7 +41,7 @@ http://127.0.0.1:8000/admin
 - `Credential vault`
   Grok, Dev.to, Telegram, and site URL config.
 - `Manual triggers`
-  Start generator, publisher, and Telegram worker from the browser.
+  Start generator/publisher, manage the Telegram worker, and publish a community release update from the browser.
 - `Admin security`
   Rotate admin username and password.
 - `Mini-app catalog`

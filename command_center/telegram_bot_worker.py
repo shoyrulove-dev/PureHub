@@ -23,6 +23,20 @@ except ImportError:
     )
 
 INVITE_GOAL = 3
+GITHUB_URL = "https://github.com/shoyrulove-dev/PureHub"
+PUREHUB_URL = "https://hub.blissbiovn.com"
+
+RELEASE_ANNOUNCEMENT = (
+    "<b>PureHub vừa được cập nhật toàn diện ✨</b>\n\n"
+    "• Giao diện mới hiện đại, nhẹ và thân thiện hơn\n"
+    "• Điều hướng Trang chủ · Công cụ · Cộng đồng · Cài đặt\n"
+    "• 22 mini app được đồng bộ và cải thiện trải nghiệm\n"
+    "• Thêm tìm kiếm, yêu thích, lịch sử dùng và theme sáng/tối\n"
+    "• Tiếp tục cam kết: miễn phí, không quảng cáo, mã nguồn mở\n\n"
+    f"Trải nghiệm PureHub: {PUREHUB_URL}\n"
+    f"Đóng góp trên GitHub: {GITHUB_URL}\n\n"
+    "Cảm ơn mọi người đã đồng hành và góp ý để PureHub ngày càng hữu ích hơn 💚"
+)
 
 
 @dataclass
@@ -77,6 +91,33 @@ class TelegramBotManager:
         self._state.running = False
         return self._state
 
+    def publish_release_update(self) -> dict[str, str]:
+        token = get_config_value("telegram_bot_token")
+        chat_id = get_config_value("telegram_notify_chat_id")
+        if not token:
+            raise RuntimeError("Missing Telegram bot token in config table.")
+        if not chat_id:
+            raise RuntimeError("Missing Telegram notify chat ID in config table.")
+
+        bot = telebot.TeleBot(token, parse_mode="HTML")
+        bot.set_my_commands(
+            [
+                telebot.types.BotCommand("start", "Tham gia cộng đồng PureHub"),
+                telebot.types.BotCommand("about", "Giới thiệu PureHub"),
+                telebot.types.BotCommand("github", "Xem mã nguồn và đóng góp"),
+            ]
+        )
+        bot.set_my_short_description("PureHub — công cụ miễn phí, không quảng cáo, mã nguồn mở.")
+        bot.set_my_description(
+            "Cộng đồng PureHub: 22 tiện ích thân thiện, miễn phí cho mọi người, "
+            "không quảng cáo và phát triển minh bạch trên GitHub."
+        )
+        message = bot.send_message(chat_id, RELEASE_ANNOUNCEMENT, disable_web_page_preview=True)
+        return {
+            "chat_id": str(message.chat.id),
+            "message_id": str(message.message_id),
+        }
+
     def _polling_loop(self, bot: telebot.TeleBot) -> None:
         try:
             bot.infinity_polling(skip_pending=True, timeout=30, long_polling_timeout=30)
@@ -113,6 +154,24 @@ class TelegramBotManager:
                 f"Invite <b>{INVITE_GOAL}</b> friends to earn a Community Supporter thank-you."
             )
             bot.send_message(message.chat.id, reply)
+
+        @bot.message_handler(commands=["about"])
+        def handle_about(message: telebot.types.Message) -> None:  # pragma: no cover - runtime integration
+            bot.send_message(
+                message.chat.id,
+                "<b>PureHub</b> là bộ công cụ miễn phí, không quảng cáo và mã nguồn mở.\n\n"
+                f"Trải nghiệm: {PUREHUB_URL}\n"
+                f"GitHub: {GITHUB_URL}",
+                disable_web_page_preview=True,
+            )
+
+        @bot.message_handler(commands=["github"])
+        def handle_github(message: telebot.types.Message) -> None:  # pragma: no cover - runtime integration
+            bot.send_message(
+                message.chat.id,
+                f"Xem mã nguồn, báo lỗi hoặc đóng góp cho PureHub tại:\n{GITHUB_URL}",
+                disable_web_page_preview=True,
+            )
 
     def _reward_referrer_if_needed(
         self,

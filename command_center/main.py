@@ -691,6 +691,27 @@ def stop_bot(request: Request) -> RedirectResponse:
     return _redirect_with_message("Telegram bot stopped.", "info")
 
 
+@admin_router.post("/actions/bot/announce")
+def announce_bot_release(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        result = telegram_bot_manager.publish_release_update()
+        record_audit_log(
+            actor=actor,
+            action="publish_telegram_release",
+            target_type="telegram_bot",
+            target_id=result["message_id"],
+            details={"chat_id": result["chat_id"]},
+            request_meta=request_meta(request),
+        )
+        return _redirect_with_message(
+            f"Telegram profile synced and release message #{result['message_id']} published.",
+            "success",
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Telegram release update failed: {exc}", "error")
+
+
 @admin_api_router.get("/health")
 def healthcheck(request: Request) -> dict[str, str]:
     require_admin_session(request)

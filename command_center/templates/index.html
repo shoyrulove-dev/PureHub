@@ -156,6 +156,12 @@
               </form>
             </div>
 
+            <form action="{{ admin_prefix }}/actions/bot/announce" method="post" class="mt-3">
+              <button type="submit" class="w-full rounded-2xl border border-emerald-400/18 bg-emerald-400/10 px-4 py-3 text-left text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/15">
+                Sync Telegram profile &amp; publish release update
+              </button>
+            </form>
+
             <div class="mt-5 rounded-3xl border border-white/8 bg-white/5 p-4 text-sm text-slate-300">
               <p><span class="font-semibold text-white">API base:</span> {{ api_prefix }}</p>
               <p class="mt-2"><span class="font-semibold text-white">Bot thread:</span> {{ bot_state.thread_name or 'not started' }}</p>
