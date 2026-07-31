@@ -173,12 +173,12 @@ app/
    - Bill Splitter
    - Expense Tracker
    - Decision Wheel
-   - Community Pro Unlock
+   - PureHub Community
 
 ## Storage Rules
 
 - `Room`: structured local data for Zen Habit and Expense Tracker.
-- `DataStore Preferences`: lightweight flags and Pro Unlock code.
+- `DataStore Preferences`: lightweight local preferences and tool visibility.
 - `EncryptedSharedPreferences`: future Password Vault secure secrets.
 - `WorkManager`: wallpaper rotation and later background-safe local jobs.
 - `MediaStore` and app-private files: document export, cleaner, scan assets.

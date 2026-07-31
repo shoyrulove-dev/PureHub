@@ -180,6 +180,7 @@ private fun bindQrCamera(
     )
 }
 
+@androidx.camera.core.ExperimentalGetImage
 private fun processQrFrame(
     imageProxy: ImageProxy,
     onCodeDetected: (String) -> Unit,

@@ -39,7 +39,7 @@ http://127.0.0.1:8000/admin
 ## Main admin areas
 
 - `Credential vault`
-  Grok, Dev.to, Telegram, Pro code, and site URL config.
+  Grok, Dev.to, Telegram, and site URL config.
 - `Manual triggers`
   Start generator, publisher, and Telegram worker from the browser.
 - `Admin security`

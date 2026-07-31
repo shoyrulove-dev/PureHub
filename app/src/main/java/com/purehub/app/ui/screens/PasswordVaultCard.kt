@@ -3,6 +3,7 @@ package com.purehub.app.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context.CLIPBOARD_SERVICE
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +28,7 @@ import com.purehub.app.feature.vault.PasswordVaultRepository
 import com.purehub.app.feature.vault.PasswordVaultViewModel
 import com.purehub.app.ui.LocalSnackbarHostState
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun PasswordVaultCard() {
@@ -74,6 +77,7 @@ fun PasswordVaultCard() {
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Password") },
                 singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
             )
             Button(
                 onClick = viewModel::saveDraft,
@@ -114,7 +118,15 @@ fun PasswordVaultCard() {
                                         onClick = {
                                             val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                                             clipboard.setPrimaryClip(ClipData.newPlainText(entry.title, entry.password))
-                                            scope.launch { snackbarHostState.showSnackbar("Password copied from encrypted vault.") }
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Password copied. Clipboard clears in 30 seconds.")
+                                                delay(30_000)
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                                    clipboard.clearPrimaryClip()
+                                                } else {
+                                                    clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                                                }
+                                            }
                                         },
                                     ) {
                                         Text("Copy Password")
@@ -128,6 +140,11 @@ fun PasswordVaultCard() {
                     }
                 }
             }
+            Text(
+                text = "Keep a secure backup. PureHub uses Android encrypted storage, but this local vault should not be your only copy of critical credentials.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

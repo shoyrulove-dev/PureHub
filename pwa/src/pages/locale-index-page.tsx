@@ -1,9 +1,5 @@
-import { Navigate, useParams } from 'react-router-dom'
-import { normalizeLocale } from '../i18n/locales'
-import { buildTabPath } from '../i18n/routing'
+import { Dashboard } from '../components/dashboard/Dashboard'
 
 export function LocaleIndexPage() {
-  const { lang } = useParams()
-  const normalizedLocale = normalizeLocale(lang)
-  return <Navigate to={buildTabPath(normalizedLocale, 'zen-time')} replace />
+  return <Dashboard />
 }

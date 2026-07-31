@@ -176,6 +176,7 @@ private fun bindOcrCamera(
     )
 }
 
+@androidx.camera.core.ExperimentalGetImage
 private fun processOcrFrame(
     imageProxy: ImageProxy,
     onTextDetected: (String) -> Unit,

@@ -38,7 +38,7 @@ enum class MiniAppTab(
     MEASURE_TOOLS("Measure & Tools", Color(0xFF3B82F6), Color(0xFFDFECFF)),
     VISION("Vision", Color(0xFF8B5CF6), Color(0xFFEEE6FF)),
     SYSTEM_SECURITY("System & Security", Color(0xFF0F766E), Color(0xFFD9F4F0)),
-    FINANCE_FUN("Finance & Fun", Color(0xFFF59E0B), Color(0xFFFFF0CC)),
+    FINANCE_FUN("Finance & Community", Color(0xFFF59E0B), Color(0xFFFFF0CC)),
 }
 
 enum class MiniAppId(
@@ -71,7 +71,7 @@ enum class MiniAppId(
     BILL_SPLITTER("Bill Splitter", MiniAppTab.FINANCE_FUN, Icons.Rounded.Payments),
     EXPENSE_TRACKER("Expense Tracker", MiniAppTab.FINANCE_FUN, Icons.Rounded.AccountBalanceWallet),
     DECISION_WHEEL("Decision Wheel", MiniAppTab.FINANCE_FUN, Icons.Rounded.Casino),
-    COMMUNITY_UNLOCK("Community Unlock", MiniAppTab.FINANCE_FUN, Icons.Rounded.Groups),
+    COMMUNITY_UNLOCK("PureHub Community", MiniAppTab.FINANCE_FUN, Icons.Rounded.Groups),
 }
 
 val miniAppsByTab: Map<MiniAppTab, List<MiniAppId>> = MiniAppId.entries.groupBy { it.tab }

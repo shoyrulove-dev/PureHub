@@ -1,9 +1,11 @@
 package com.purehub.app.ui.theme
 
 import android.app.Activity
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -12,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -42,14 +46,22 @@ private val DarkColors = darkColorScheme(
     secondaryContainer = Color(0xFF183A6C),
     onSecondaryContainer = Color(0xFFDFECFF),
     tertiary = Color(0xFFC4B5FD),
-    background = Color(0xFF0A1120),
-    surface = Color(0xFF0F172A),
-    surfaceContainerLow = Color(0xFF162033),
+    background = Color(0xFF0B1118),
+    surface = Color(0xFF131B26),
+    surfaceContainerLow = Color(0xFF1A2431),
     outline = Color(0xFF92A0B5),
+)
+
+private val PureHubShapes = Shapes(
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(26.dp),
 )
 
 @Composable
 @Suppress("DEPRECATION")
+@SuppressLint("NewApi")
 fun PureHubTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
@@ -78,6 +90,7 @@ fun PureHubTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = PureHubShapes,
         content = content,
     )
 }

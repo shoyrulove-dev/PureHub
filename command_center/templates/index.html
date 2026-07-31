@@ -102,10 +102,6 @@
                   <option value="false" {% if config.get('devto_publish_as_draft', defaults.devto_publish_as_draft) == 'false' %}selected{% endif %}>false</option>
                 </select>
               </label>
-              <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-200">Pro unlock code</span>
-                <input type="text" name="pro_unlock_code" value="{{ config.get('pro_unlock_code', defaults.pro_unlock_code) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
-              </label>
             </div>
 
             <label class="block">

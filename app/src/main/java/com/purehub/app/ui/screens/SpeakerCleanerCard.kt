@@ -36,7 +36,7 @@ fun SpeakerCleanerCard(
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                text = "A local AudioTrack loop sweeps near 165 Hz to help push light moisture and dust away from speaker grills.",
+                text = "A local AudioTrack tone may help move residual water from a phone speaker. It cannot repair damaged hardware.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -56,6 +56,11 @@ fun SpeakerCleanerCard(
             }
             Text(
                 text = uiState.note,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "Start at a comfortable volume, keep the speaker facing down, and stop if the sound distorts.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

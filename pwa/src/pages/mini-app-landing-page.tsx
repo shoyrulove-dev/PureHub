@@ -1,9 +1,17 @@
 import { useTranslation } from 'react-i18next'
+import { Heart } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { MiniAppSurface } from '../components/mini-apps/MiniAppSurface'
+import { lazy, Suspense, useEffect } from 'react'
 import type { MiniAppDefinition, TabDefinition } from '../features/catalog/tabs'
 import { normalizeLocale } from '../i18n/locales'
 import { buildTabPath } from '../i18n/routing'
+import { rememberRecentTool, useToolPreferences } from '../lib/preferences'
+
+const MiniAppSurface = lazy(() =>
+  import('../components/mini-apps/MiniAppSurface').then((module) => ({
+    default: module.MiniAppSurface,
+  })),
+)
 
 type MiniAppLandingPageProps = {
   miniApp: MiniAppDefinition
@@ -14,39 +22,46 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const { t } = useTranslation()
   const { lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
+  const { favorites, toggleFavorite } = useToolPreferences()
+  const favorite = favorites.includes(miniApp.id)
+
+  useEffect(() => {
+    rememberRecentTool(miniApp.id)
+  }, [miniApp.id])
 
   return (
-    <section className="space-y-4">
-      <div
-        className={`rounded-[30px] border border-white/8 bg-gradient-to-br ${tab.accentSurfaceClass} p-5 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.45)] sm:p-6`}
-      >
-        <div className={`flex size-14 items-center justify-center rounded-3xl border border-white/8 bg-white/5 ${tab.accentClass} shadow-sm`}>
+    <section className="space-y-5">
+      <div className="flex items-start gap-4">
+        <div className={`tool-card__icon size-13 ${tab.accentClass}`}>
           <miniApp.icon className="size-6" strokeWidth={2.1} />
         </div>
-        <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.28em] ${tab.accentClass}`}>
-          {t('app.phaseShell')}
-        </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          {t(miniApp.titleKey)}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:text-[15px]">
-          {t(miniApp.summaryKey)}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className={`eyebrow ${tab.accentClass}`}>{t(tab.labelKey)}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl dark:text-white">
+            {t(miniApp.titleKey)}
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">{t(miniApp.summaryKey)}</p>
+        </div>
+        <button type="button" className="grid size-11 shrink-0 place-items-center rounded-[14px] border border-slate-500/15" onClick={() => toggleFavorite(miniApp.id)} aria-label="Favorite tool">
+          <Heart className={`size-5 ${favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+        </button>
       </div>
 
-      <MiniAppSurface miniAppId={miniApp.id} />
+      <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>
+        <MiniAppSurface miniAppId={miniApp.id} />
+      </Suspense>
 
-      <div className="rounded-[30px] border border-white/8 bg-slate-950/86 p-5 shadow-[0_20px_60px_-52px_rgba(15,23,42,0.35)] sm:p-6">
+      <div className="app-surface rounded-[18px] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-200">{t('app.routeLabel')}</p>
-            <p className="mt-2 break-all rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('app.routeLabel')}</p>
+            <p className="mt-2 break-all rounded-[14px] bg-slate-500/8 px-4 py-3 text-sm text-slate-500 dark:text-slate-300">
               /{normalizedLocale}/{miniApp.slugs[normalizedLocale]}
             </p>
           </div>
           <Link
             to={buildTabPath(normalizedLocale, tab.id)}
-            className="inline-flex rounded-2xl bg-emerald-400/14 px-4 py-2.5 text-sm font-medium text-emerald-200 shadow-[0_20px_50px_-32px_rgba(16,185,129,0.25)] ring-1 ring-inset ring-emerald-400/15"
+            className="text-link"
           >
             {t('app.browseTab')}
           </Link>

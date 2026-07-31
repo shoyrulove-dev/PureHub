@@ -69,12 +69,12 @@ fun DecibelMeterCard(
                 color = colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "${uiState.currentDecibel.toInt()} dB",
+                text = "~${uiState.currentDecibel.toInt()} dB",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Peak ${uiState.peakDecibel.toInt()} dB",
+                text = "Estimated peak ~${uiState.peakDecibel.toInt()} dB",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant,
             )
@@ -120,6 +120,11 @@ fun DecibelMeterCard(
                     color = colorScheme.error,
                 )
             }
+            Text(
+                text = "Estimate only. Android microphones vary by device; do not use this result for legal or workplace safety decisions.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

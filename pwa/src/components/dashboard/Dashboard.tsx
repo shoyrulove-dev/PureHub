@@ -1,204 +1,241 @@
-import type { IconType } from 'react-icons'
-import {
-  GiAbacus,
-  GiCircleSparks,
-  GiMagnifyingGlass,
-  GiMoon,
-  GiOpenTreasureChest,
-  GiPadlock,
-  GiScrollQuill,
-  GiSoundWaves,
-  GiWaterDrop,
-  GiWaterSplash,
-  GiWhirlwind,
-} from 'react-icons/gi'
+import { ArrowRight, Heart, Search, ShieldCheck, Sparkles, WifiOff } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { buildMiniAppPath } from '../../i18n/routing'
+import {
+  MINI_APP_BY_ID,
+  MINI_APP_ITEMS,
+  TAB_BY_ID,
+  TAB_ITEMS,
+  type MiniAppDefinition,
+  type MiniAppId,
+  type TabId,
+} from '../../features/catalog/tabs'
+import { buildMiniAppPath, buildTabPath } from '../../i18n/routing'
 import { normalizeLocale } from '../../i18n/locales'
-import type { MiniAppId } from '../../features/catalog/tabs'
+import { useToolPreferences } from '../../lib/preferences'
 
-type DashboardFeature = {
-  id: MiniAppId
-  icon: IconType
-  titleKey: string
-  summaryKey: string
-  glowClass: string
-  panelClass: string
+const quickIds: MiniAppId[] = ['qr-studio', 'zen-pomodoro', 'bill-splitter', 'ocr-text']
+
+function ToolCard({
+  tool,
+  favorite,
+  onFavorite,
+}: {
+  tool: MiniAppDefinition
+  favorite: boolean
+  onFavorite: () => void
+}) {
+  const { t } = useTranslation()
+  const { lang } = useParams()
+  const locale = normalizeLocale(lang)
+  const tab = TAB_BY_ID.get(tool.tabId)
+  const Icon = tool.icon
+
+  return (
+    <article className="tool-card group">
+      <Link to={buildMiniAppPath(locale, tool.id)} className="tool-card__link">
+        <span className={`tool-card__icon ${tab?.accentClass ?? 'text-emerald-600'}`}>
+          <Icon className="size-5" strokeWidth={2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-slate-900 dark:text-white">{t(tool.titleKey)}</span>
+          <span className="mt-1 line-clamp-2 block text-sm leading-5 text-slate-500 dark:text-slate-400">
+            {t(tool.summaryKey)}
+          </span>
+        </span>
+        <ArrowRight className="mt-1 size-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-600 dark:text-slate-600" />
+      </Link>
+      <button
+        type="button"
+        className="tool-card__favorite"
+        aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        aria-pressed={favorite}
+        onClick={onFavorite}
+      >
+        <Heart className={`size-4 ${favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+      </button>
+    </article>
+  )
 }
-
-const dashboardFeatures: DashboardFeature[] = [
-  {
-    id: 'lunar-calendar',
-    icon: GiMoon,
-    titleKey: 'miniApps.lunarCalendar.title',
-    summaryKey: 'miniApps.lunarCalendar.summary',
-    glowClass: 'text-emerald-300',
-    panelClass: 'from-emerald-400/14 to-cyan-400/6',
-  },
-  {
-    id: 'zen-habit',
-    icon: GiScrollQuill,
-    titleKey: 'miniApps.zenHabit.title',
-    summaryKey: 'miniApps.zenHabit.summary',
-    glowClass: 'text-amber-300',
-    panelClass: 'from-amber-400/14 to-orange-400/6',
-  },
-  {
-    id: 'zen-breath',
-    icon: GiWhirlwind,
-    titleKey: 'miniApps.zenBreath.title',
-    summaryKey: 'miniApps.zenBreath.summary',
-    glowClass: 'text-violet-300',
-    panelClass: 'from-violet-400/14 to-fuchsia-400/6',
-  },
-  {
-    id: 'bubble-level',
-    icon: GiWaterDrop,
-    titleKey: 'miniApps.bubbleLevel.title',
-    summaryKey: 'miniApps.bubbleLevel.summary',
-    glowClass: 'text-sky-300',
-    panelClass: 'from-sky-400/14 to-cyan-400/6',
-  },
-  {
-    id: 'decibel-meter',
-    icon: GiSoundWaves,
-    titleKey: 'miniApps.decibelMeter.title',
-    summaryKey: 'miniApps.decibelMeter.summary',
-    glowClass: 'text-rose-300',
-    panelClass: 'from-rose-400/14 to-pink-400/6',
-  },
-  {
-    id: 'ocr-text',
-    icon: GiMagnifyingGlass,
-    titleKey: 'miniApps.ocrText.title',
-    summaryKey: 'miniApps.ocrText.summary',
-    glowClass: 'text-indigo-300',
-    panelClass: 'from-indigo-400/14 to-purple-400/6',
-  },
-  {
-    id: 'speaker-cleaner',
-    icon: GiWaterSplash,
-    titleKey: 'miniApps.speakerCleaner.title',
-    summaryKey: 'miniApps.speakerCleaner.summary',
-    glowClass: 'text-cyan-300',
-    panelClass: 'from-cyan-400/14 to-teal-400/6',
-  },
-  {
-    id: 'password-vault',
-    icon: GiPadlock,
-    titleKey: 'miniApps.passwordVault.title',
-    summaryKey: 'miniApps.passwordVault.summary',
-    glowClass: 'text-purple-300',
-    panelClass: 'from-purple-400/14 to-violet-400/6',
-  },
-  {
-    id: 'unit-converter',
-    icon: GiAbacus,
-    titleKey: 'miniApps.unitConverter.title',
-    summaryKey: 'miniApps.unitConverter.summary',
-    glowClass: 'text-emerald-200',
-    panelClass: 'from-lime-400/14 to-emerald-400/6',
-  },
-  {
-    id: 'expense-tracker',
-    icon: GiOpenTreasureChest,
-    titleKey: 'miniApps.expenseTracker.title',
-    summaryKey: 'miniApps.expenseTracker.summary',
-    glowClass: 'text-yellow-300',
-    panelClass: 'from-yellow-400/14 to-amber-400/6',
-  },
-  {
-    id: 'decision-wheel',
-    icon: GiCircleSparks,
-    titleKey: 'miniApps.decisionWheel.title',
-    summaryKey: 'miniApps.decisionWheel.summary',
-    glowClass: 'text-fuchsia-300',
-    panelClass: 'from-fuchsia-400/14 to-pink-400/6',
-  },
-]
 
 export function Dashboard() {
   const { t } = useTranslation()
   const { lang } = useParams()
-  const normalizedLocale = normalizeLocale(lang)
+  const locale = normalizeLocale(lang)
+  const { favorites, recents, toggleFavorite } = useToolPreferences()
+  const [query, setQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<TabId | 'all'>('all')
+
+  const filteredTools = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase()
+    return MINI_APP_ITEMS.filter((tool) => {
+      const matchesTab = activeTab === 'all' || tool.tabId === activeTab
+      const content = `${t(tool.titleKey)} ${t(tool.summaryKey)}`.toLocaleLowerCase()
+      return matchesTab && (!normalizedQuery || content.includes(normalizedQuery))
+    })
+  }, [activeTab, query, t])
+
+  const favoriteTools = favorites
+    .map((id) => MINI_APP_BY_ID.get(id))
+    .filter((tool): tool is MiniAppDefinition => Boolean(tool))
+  const recentTools = recents
+    .map((id) => MINI_APP_BY_ID.get(id))
+    .filter((tool): tool is MiniAppDefinition => Boolean(tool))
+  const quickTools = quickIds
+    .map((id) => MINI_APP_BY_ID.get(id))
+    .filter((tool): tool is MiniAppDefinition => Boolean(tool))
 
   return (
-    <section className="space-y-5">
-      <div className="overflow-hidden rounded-[32px] border border-emerald-400/16 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.22),transparent_38%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.98))] p-5 shadow-[0_32px_120px_-56px_rgba(52,211,153,0.42)] sm:p-7">
-        <div className="inline-flex rounded-full border border-emerald-400/18 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300">
-          {t('app.phaseShell')}
+    <section className="space-y-8">
+      <div className="hero-panel">
+        <div className="max-w-2xl">
+          <span className="eyebrow">
+            <Sparkles className="size-3.5" />
+            {t('app.phaseShell')}
+          </span>
+          <h1 className="mt-5 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-5xl dark:text-white">
+            PureHub
+          </h1>
+          <p className="mt-3 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+            {t('app.freePromise')}
+          </p>
+          <label className="search-box mt-6">
+            <Search className="size-5 text-slate-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t('app.searchPlaceholder')}
+              autoComplete="off"
+            />
+          </label>
         </div>
-        <h1 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          {t('tabs.zenTime.label')}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-          {t('tabs.zenTime.description')}
-        </p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[24px] border border-white/8 bg-white/6 p-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{t('dashboard.offline')}</p>
-            <p className="mt-2 text-lg font-semibold text-emerald-300">100%</p>
+
+        <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <div className="promise-card">
+            <WifiOff className="size-5 text-emerald-600 dark:text-emerald-400" />
+            <div><strong>Offline-first</strong><span>{t('dashboard.offline')}</span></div>
           </div>
-          <div className="rounded-[24px] border border-white/8 bg-white/6 p-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{t('dashboard.quickAccess')}</p>
-            <p className="mt-2 text-lg font-semibold text-purple-300">{t('dashboard.spells')}</p>
+          <div className="promise-card">
+            <ShieldCheck className="size-5 text-sky-600 dark:text-sky-400" />
+            <div><strong>No tracking</strong><span>{t('dashboard.onDevice')}</span></div>
           </div>
-          <div className="rounded-[24px] border border-white/8 bg-white/6 p-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{t('dashboard.privacy')}</p>
-            <p className="mt-2 text-lg font-semibold text-sky-300">{t('dashboard.onDevice')}</p>
+          <div className="promise-card">
+            <Heart className="size-5 text-rose-500" />
+            <div><strong>Community built</strong><span>Open source</span></div>
           </div>
         </div>
       </div>
 
-      <div className="rounded-[30px] border border-white/8 bg-slate-950/88 p-5 shadow-[0_30px_110px_-64px_rgba(168,85,247,0.45)] sm:p-6">
-        <div className="flex items-center justify-between gap-3">
+      {!query && favoriteTools.length > 0 ? (
+        <ToolSection
+          title={t('app.favorites')}
+          tools={favoriteTools}
+          favorites={favorites}
+          onFavorite={toggleFavorite}
+        />
+      ) : null}
+
+      {!query && recentTools.length > 0 ? (
+        <ToolSection
+          title={t('app.recent')}
+          tools={recentTools}
+          favorites={favorites}
+          onFavorite={toggleFavorite}
+        />
+      ) : null}
+
+      {!query && recentTools.length === 0 ? (
+        <ToolSection
+          title={t('dashboard.quickAccess')}
+          tools={quickTools}
+          favorites={favorites}
+          onFavorite={toggleFavorite}
+        />
+      ) : null}
+
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-purple-300/80">
-              {t('app.miniAppMap')}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
-              {t('dashboard.collection')}
+            <p className="eyebrow text-emerald-700 dark:text-emerald-300">{t('app.miniAppMap')}</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+              {query ? `${filteredTools.length} results` : t('app.allTools')}
             </h2>
+          </div>
+          <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              className={`filter-chip ${activeTab === 'all' ? 'filter-chip--active' : ''}`}
+              onClick={() => setActiveTab('all')}
+            >
+              All
+            </button>
+            {TAB_ITEMS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`filter-chip ${activeTab === tab.id ? 'filter-chip--active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {t(tab.shortLabelKey)}
+              </button>
+            ))}
           </div>
         </div>
 
-        <ul className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {dashboardFeatures.map((feature) => {
-            const Icon = feature.icon
+        {filteredTools.length ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {filteredTools.map((tool) => (
+              <ToolCard
+                key={tool.id}
+                tool={tool}
+                favorite={favorites.includes(tool.id)}
+                onFavorite={() => toggleFavorite(tool.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state mt-5">
+            <Search className="size-6" />
+            <p>No tool matched your search.</p>
+          </div>
+        )}
 
-            return (
-              <li key={feature.id}>
-                <Link
-                  to={buildMiniAppPath(normalizedLocale, feature.id)}
-                  className={`group block h-full rounded-[26px] border border-white/8 bg-gradient-to-br ${feature.panelClass} from-0% via-slate-900 to-slate-950 p-[1px] transition duration-200 hover:-translate-y-0.5 hover:border-white/16 hover:shadow-[0_24px_70px_-40px_rgba(168,85,247,0.45)] focus:outline-none focus:ring-2 focus:ring-emerald-300/50`}
-                >
-                  <div className="flex h-full flex-col rounded-[25px] bg-slate-950/92 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div
-                        className={`flex size-14 items-center justify-center rounded-[20px] border border-white/8 bg-white/5 ${feature.glowClass} shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]`}
-                      >
-                        <Icon className="text-[1.7rem] drop-shadow-[0_0_14px_rgba(167,139,250,0.32)]" />
-                      </div>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
-                        #{dashboardFeatures.indexOf(feature) + 1}
-                      </span>
-                    </div>
-                    <h3 className="mt-4 text-base font-semibold text-white">
-                      {t(feature.titleKey)}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
-                      {t(feature.summaryKey)}
-                    </p>
-                    <span className={`mt-4 inline-flex text-xs font-semibold ${feature.glowClass}`}>
-                      {t('app.openMiniApp')}
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {TAB_ITEMS.map((tab) => (
+            <Link key={tab.id} to={buildTabPath(locale, tab.id)} className="text-link">
+              {t(tab.labelKey)} <ArrowRight className="size-3.5" />
+            </Link>
+          ))}
+        </div>
+      </section>
+    </section>
+  )
+}
+
+function ToolSection({
+  title,
+  tools,
+  favorites,
+  onFavorite,
+}: {
+  title: string
+  tools: MiniAppDefinition[]
+  favorites: MiniAppId[]
+  onFavorite: (id: MiniAppId) => void
+}) {
+  return (
+    <section>
+      <h2 className="text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {tools.map((tool) => (
+          <ToolCard
+            key={tool.id}
+            tool={tool}
+            favorite={favorites.includes(tool.id)}
+            onFavorite={() => onFavorite(tool.id)}
+          />
+        ))}
       </div>
     </section>
   )

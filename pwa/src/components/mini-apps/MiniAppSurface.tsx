@@ -21,6 +21,25 @@ type PanelProps = {
 }
 
 type FormInputProps = React.InputHTMLAttributes<HTMLInputElement>
+type VaultItem = { id: string; label: string; payload: string; iv: string; salt?: string }
+
+const BREATH_PATTERNS = {
+  calm: [
+    { label: 'Inhale', duration: 4000, scale: 1.05 },
+    { label: 'Exhale', duration: 6000, scale: 0.72 },
+  ],
+  box: [
+    { label: 'Inhale', duration: 4000, scale: 1.05 },
+    { label: 'Hold', duration: 4000, scale: 1.05 },
+    { label: 'Exhale', duration: 4000, scale: 0.72 },
+    { label: 'Hold', duration: 4000, scale: 0.72 },
+  ],
+  '478': [
+    { label: 'Inhale', duration: 4000, scale: 1.05 },
+    { label: 'Hold', duration: 7000, scale: 1.05 },
+    { label: 'Exhale', duration: 8000, scale: 0.72 },
+  ],
+} as const
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -38,6 +57,8 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
       return <BubbleLevelSurface />
     case 'decibel-meter':
       return <DecibelMeterSurface />
+    case 'smart-flashlight':
+      return <SmartFlashlightSurface />
     case 'unit-converter':
       return <UnitConverterSurface />
     case 'qr-studio':
@@ -50,8 +71,14 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
       return <ColorGrabberSurface />
     case 'speaker-cleaner':
       return <SpeakerCleanerSurface />
+    case 'deep-cleaner':
+      return <DeepCleanerSurface />
+    case 'wifi-analyzer':
+      return <WifiAnalyzerSurface />
     case 'password-vault':
       return <PasswordVaultSurface />
+    case 'wallpaper-changer':
+      return <WallpaperChangerSurface />
     case 'bill-splitter':
       return <BillSplitterSurface />
     case 'expense-tracker':
@@ -67,10 +94,10 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
 
 function Panel({ title, subtitle, children }: PanelProps) {
   return (
-    <section className="rounded-[28px] border border-white/8 bg-slate-950/90 p-5 shadow-[0_20px_60px_-52px_rgba(15,23,42,0.45)]">
+    <section className="app-surface rounded-[18px] p-4 sm:p-5">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm leading-6 text-slate-400">{subtitle}</p> : null}
+        <h2 className="text-lg font-bold text-slate-950 dark:text-slate-950 dark:text-white">{title}</h2>
+        {subtitle ? <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-500 dark:text-slate-400">{subtitle}</p> : null}
       </div>
       {children}
     </section>
@@ -82,7 +109,7 @@ function FormInput(props: FormInputProps) {
     <input
       {...props}
       className={[
-        'w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7',
+        'min-h-12 w-full rounded-[14px] border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 dark:text-slate-400 focus:border-emerald-500/40 focus:bg-emerald-500/5 dark:text-slate-950 dark:text-white',
         props.className,
       ]
         .filter(Boolean)
@@ -98,7 +125,7 @@ function FormTextArea(
     <textarea
       {...props}
       className={[
-        'w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300/40 focus:bg-white/7',
+        'w-full rounded-[14px] border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 dark:text-slate-400 focus:border-emerald-500/40 focus:bg-emerald-500/5 dark:text-slate-950 dark:text-white',
         props.className,
       ]
         .filter(Boolean)
@@ -115,10 +142,10 @@ function ActionButton(
     <button
       {...props}
       className={[
-        'rounded-2xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
+        'min-h-11 rounded-[14px] px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
         tone === 'primary'
-          ? 'bg-emerald-400/14 text-emerald-200 ring-1 ring-inset ring-emerald-400/18 hover:bg-emerald-400/20'
-          : 'bg-white/5 text-slate-300 hover:bg-white/8',
+          ? 'bg-emerald-600 text-slate-950 dark:text-white shadow-sm hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400'
+          : 'bg-slate-500/8 text-slate-700 hover:bg-slate-500/14 dark:text-slate-200',
         props.className,
       ]
         .filter(Boolean)
@@ -128,11 +155,7 @@ function ActionButton(
 }
 
 function buildMoonDay(date: Date) {
-  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14)
-  const lunarCycle = 29.530588853
-  const diffDays = (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - knownNewMoon) / 86400000
-  const normalized = ((diffDays % lunarCycle) + lunarCycle) % lunarCycle
-  return Math.floor(normalized) + 1
+  return solarToVietnameseLunar(date.getDate(), date.getMonth() + 1, date.getFullYear())
 }
 
 function LunarCalendarSurface() {
@@ -159,13 +182,13 @@ function LunarCalendarSurface() {
     <div className="space-y-4">
       <Panel
         title={cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-        subtitle="Offline month board with a lightweight moon-cycle estimate for quick browsing."
+        subtitle="Vietnamese solar-to-lunar conversion calculated locally for UTC+7."
       >
         <div className="flex items-center justify-between gap-3">
           <ActionButton tone="muted" onClick={() => setCursor((value) => new Date(value.getFullYear(), value.getMonth() - 1, 1))}>
             Previous
           </ActionButton>
-          <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-2 text-sm text-slate-300">
+          <div className="rounded-2xl border border-slate-500/15 bg-slate-500/5 px-4 py-2 text-sm text-slate-700 dark:text-slate-300">
             Today: {today.toLocaleDateString()}
           </div>
           <ActionButton tone="muted" onClick={() => setCursor((value) => new Date(value.getFullYear(), value.getMonth() + 1, 1))}>
@@ -180,7 +203,7 @@ function LunarCalendarSurface() {
         </div>
         <div className="mt-3 grid grid-cols-7 gap-2">
           {monthDays.cells.map(({ date, inMonth }) => {
-            const moonDay = buildMoonDay(date)
+            const lunarDate = buildMoonDay(date)
             const isToday =
               date.getDate() === today.getDate() &&
               date.getMonth() === today.getMonth() &&
@@ -193,12 +216,14 @@ function LunarCalendarSurface() {
                   'rounded-2xl border p-3 text-left transition',
                   isToday
                     ? 'border-emerald-300/45 bg-emerald-400/12 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.45)]'
-                    : 'border-white/8 bg-white/5',
-                  inMonth ? 'text-white' : 'text-slate-500',
+                    : 'border-slate-500/15 bg-slate-500/5',
+                  inMonth ? 'text-slate-950 dark:text-white' : 'text-slate-500',
                 ].join(' ')}
               >
                 <p className="text-sm font-semibold">{date.getDate()}</p>
-                <p className="mt-2 text-xs text-slate-400">Moon {moonDay}</p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  {lunarDate.day}/{lunarDate.month}{lunarDate.leap ? '*' : ''}
+                </p>
               </div>
             )
           })}
@@ -251,15 +276,15 @@ function CompassSurface() {
   return (
     <Panel title="Compass" subtitle="Uses device orientation when your browser exposes motion sensors.">
       <div className="flex flex-col items-center gap-5">
-        <div className="relative flex size-72 items-center justify-center rounded-full border border-white/10 bg-[radial-gradient(circle,rgba(15,23,42,0.95),rgba(2,6,23,1))]">
-          <div className="absolute inset-6 rounded-full border border-dashed border-white/10" />
-          <div className="absolute inset-12 rounded-full border border-white/8" />
+        <div className="relative flex size-72 items-center justify-center rounded-full border border-slate-500/20 bg-[radial-gradient(circle,rgba(15,23,42,0.95),rgba(2,6,23,1))]">
+          <div className="absolute inset-6 rounded-full border border-dashed border-slate-500/20" />
+          <div className="absolute inset-12 rounded-full border border-slate-500/15" />
           <div
             className="absolute h-28 w-1 rounded-full bg-gradient-to-b from-rose-400 to-emerald-300 transition-transform duration-300"
             style={{ transform: `rotate(${heading}deg) translateY(-72px)` }}
           />
           <div className="text-center">
-            <p className="text-4xl font-semibold text-white">{Math.round(heading)}°</p>
+            <p className="text-4xl font-semibold text-slate-950 dark:text-white">{Math.round(heading)}°</p>
             <p className="mt-2 text-sm text-emerald-300">{cardinal}</p>
           </div>
         </div>
@@ -267,7 +292,7 @@ function CompassSurface() {
           <ActionButton onClick={requestPermission}>
             {permissionState === 'granted' ? 'Sensor active' : 'Enable compass'}
           </ActionButton>
-          <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
+          <div className="rounded-2xl border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
             {permissionState === 'denied'
               ? 'Sensor permission was denied.'
               : 'Works best in mobile browsers with motion sensor access.'}
@@ -321,7 +346,7 @@ function QrStudioSurface() {
     <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
       <Panel title="QR Forge" subtitle="Generate a shareable QR code entirely offline.">
         <FormTextArea rows={4} value={qrValue} onChange={(event) => setQrValue(event.target.value)} />
-        <div className="mt-4 flex flex-col items-center gap-4 rounded-[24px] border border-white/8 bg-slate-950/80 p-4">
+        <div className="mt-4 flex flex-col items-center gap-4 rounded-[24px] border border-slate-500/15 bg-white/80 dark:bg-slate-950/80 p-4">
           <canvas ref={canvasRef} className="rounded-2xl" />
           <ActionButton
             onClick={() => {
@@ -340,14 +365,20 @@ function QrStudioSurface() {
 
       <Panel title="QR Scan" subtitle="Uses the browser BarcodeDetector when available.">
         <label className="block">
-          <span className="mb-2 block text-sm text-slate-300">Scan from image</span>
+          <span className="mb-2 block text-sm text-slate-700 dark:text-slate-300">Scan from image</span>
           <FormInput type="file" accept="image/*" onChange={handleScanFile} />
         </label>
-        <div className="mt-4 rounded-[24px] border border-white/8 bg-white/5 p-4">
-          <p className="text-sm text-slate-400">{scanStatus}</p>
+        <div className="mt-4 rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">{scanStatus}</p>
           {scanResult ? (
-            <div className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">
-              {scanResult}
+            <div className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-900 dark:text-emerald-100">
+              <p className="break-all">{scanResult}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <ActionButton tone="muted" onClick={() => void navigator.clipboard.writeText(scanResult)}>Copy</ActionButton>
+                {/^https?:\/\//i.test(scanResult) ? (
+                  <ActionButton onClick={() => window.open(scanResult, '_blank', 'noopener,noreferrer')}>Open link</ActionButton>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -411,16 +442,16 @@ function ExpenseTrackerSurface() {
       <Panel title="Ledger" subtitle={`Total tracked locally: ${formatCurrency(total)}`}>
         <div className="space-y-3">
           {records.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-white/10 bg-white/4 p-6 text-sm text-slate-400">
+            <div className="rounded-[24px] border border-dashed border-slate-500/20 bg-slate-500/4 p-6 text-sm text-slate-500 dark:text-slate-400">
               No expenses yet. Add your first line item to start the offline ledger.
             </div>
           ) : (
             records.map((record) => (
-              <div key={record.id} className="rounded-[24px] border border-white/8 bg-white/5 p-4">
+              <div key={record.id} className="rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-white">{record.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="font-semibold text-slate-950 dark:text-white">{record.title}</p>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       {record.category} · {new Date(record.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -438,7 +469,7 @@ function ExpenseTrackerSurface() {
                     </button>
                   </div>
                 </div>
-                {record.note ? <p className="mt-3 text-sm text-slate-300">{record.note}</p> : null}
+                {record.note ? <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">{record.note}</p> : null}
               </div>
             ))
           )}
@@ -478,13 +509,13 @@ function BillSplitterSurface() {
       <Panel title="Split result" subtitle={`Grand total: ${formatCurrency(grandTotal)}`}>
         <div className="space-y-3">
           {people.map((person) => (
-            <div key={person} className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sm text-white">{person}</span>
+            <div key={person} className="flex items-center justify-between rounded-[22px] border border-slate-500/15 bg-slate-500/5 px-4 py-3">
+              <span className="text-sm text-slate-950 dark:text-white">{person}</span>
               <span className="font-semibold text-emerald-300">{formatCurrency(perPerson)}</span>
             </div>
           ))}
           {people.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-white/10 bg-white/4 p-6 text-sm text-slate-400">
+            <div className="rounded-[24px] border border-dashed border-slate-500/20 bg-slate-500/4 p-6 text-sm text-slate-500 dark:text-slate-400">
               Add at least one person to see the split.
             </div>
           ) : null}
@@ -543,11 +574,11 @@ function ZenHabitSurface() {
           const isDoneToday = habitCheckIns.some((item) => item.completedOn === today)
           const streak = calculateStreak(habitCheckIns.map((item) => item.completedOn))
           return (
-            <div key={habit.id} className="rounded-[24px] border border-white/8 bg-white/5 p-4">
+            <div key={habit.id} className="rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-white">{habit.name}</p>
-                  <p className="mt-1 text-sm text-slate-400">Current streak: {streak} days</p>
+                  <p className="font-semibold text-slate-950 dark:text-white">{habit.name}</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Current streak: {streak} days</p>
                 </div>
                 <ActionButton
                   tone={isDoneToday ? 'muted' : 'primary'}
@@ -581,6 +612,7 @@ function ZenPomodoroSurface() {
   const [minutes, setMinutes] = useState(25)
   const [remaining, setRemaining] = useState(minutes * 60)
   const [running, setRunning] = useState(false)
+  const progress = minutes > 0 ? 1 - remaining / (minutes * 60) : 0
 
   useEffect(() => {
     setRemaining(minutes * 60)
@@ -610,8 +642,15 @@ function ZenPomodoroSurface() {
           </ActionButton>
         ))}
       </div>
-      <div className="mt-6 text-center">
-        <p className="text-6xl font-semibold text-white">{formatDuration(remaining)}</p>
+      <div className="mt-6 flex flex-col items-center text-center">
+        <div className="grid size-64 place-items-center rounded-full p-3" style={{ background: `conic-gradient(#10b981 ${progress * 360}deg, rgba(148,163,184,.14) 0deg)` }}>
+          <div className="grid size-full place-items-center rounded-full bg-white dark:bg-[#131b26]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">{running ? 'Focus session' : remaining === 0 ? 'Session complete' : 'Ready'}</p>
+              <p className="mt-2 text-5xl font-bold tracking-tight text-slate-950 dark:text-white">{formatDuration(remaining)}</p>
+            </div>
+          </div>
+        </div>
         <div className="mt-5 flex justify-center gap-2">
           <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Pause' : 'Start'}</ActionButton>
           <ActionButton tone="muted" onClick={() => { setRunning(false); setRemaining(minutes * 60) }}>Reset</ActionButton>
@@ -623,35 +662,40 @@ function ZenPomodoroSurface() {
 
 function ZenBreathSurface() {
   const [phaseIndex, setPhaseIndex] = useState(0)
-  const phases = [
-    { label: 'Inhale', duration: 4000, scale: 1 },
-    { label: 'Hold', duration: 2500, scale: 1.15 },
-    { label: 'Exhale', duration: 4500, scale: 0.78 },
-    { label: 'Rest', duration: 2000, scale: 0.72 },
-  ]
+  const [running, setRunning] = useState(false)
+  const [pattern, setPattern] = useState<'calm' | 'box' | '478'>('calm')
+  const phases = BREATH_PATTERNS[pattern]
 
   useEffect(() => {
+    if (!running) return
     const timer = window.setTimeout(() => {
       setPhaseIndex((value) => (value + 1) % phases.length)
     }, phases[phaseIndex].duration)
     return () => window.clearTimeout(timer)
-  }, [phaseIndex, phases])
+  }, [phaseIndex, phases, running])
 
   const phase = phases[phaseIndex]
 
   return (
     <Panel title="Zen Breath" subtitle="A gentle breathing ritual with a large animated focus orb.">
+      <div className="flex flex-wrap gap-2">
+        {([['calm', 'Calm 4–6'], ['box', 'Box 4–4–4–4'], ['478', 'Relax 4–7–8']] as const).map(([id, label]) => (
+          <ActionButton key={id} tone={pattern === id ? 'primary' : 'muted'} onClick={() => { setPattern(id); setPhaseIndex(0) }}>{label}</ActionButton>
+        ))}
+      </div>
       <div className="flex flex-col items-center gap-6 py-4">
         <div className="relative flex size-64 items-center justify-center">
           <div
             className="absolute rounded-full bg-emerald-400/15 shadow-[0_0_80px_rgba(52,211,153,0.35)] transition-transform duration-[4000ms]"
             style={{ width: '12rem', height: '12rem', transform: `scale(${phase.scale})` }}
           />
-          <div className="relative rounded-full border border-white/10 bg-slate-950/80 px-8 py-6 text-center">
+          <div className="relative rounded-full border border-slate-500/20 bg-white/80 dark:bg-slate-950/80 px-8 py-6 text-center">
             <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">{phase.label}</p>
-            <p className="mt-2 text-sm text-slate-400">{Math.round(phase.duration / 1000)} sec</p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{Math.round(phase.duration / 1000)} sec</p>
           </div>
         </div>
+        <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Pause session' : 'Start breathing'}</ActionButton>
+        <p className="text-center text-xs leading-5 text-slate-500">Breathe comfortably and stop if you feel dizzy or unwell.</p>
       </div>
     </Panel>
   )
@@ -677,14 +721,14 @@ function BubbleLevelSurface() {
   return (
     <Panel title="Bubble Level" subtitle="Quick 2D balance feedback using device orientation.">
       <div className="mx-auto flex max-w-sm flex-col items-center gap-4">
-        <div className="relative aspect-square w-full rounded-[32px] border border-white/10 bg-white/5">
-          <div className="absolute inset-[10%] rounded-[26px] border border-dashed border-white/10" />
+        <div className="relative aspect-square w-full rounded-[32px] border border-slate-500/20 bg-slate-500/5">
+          <div className="absolute inset-[10%] rounded-[26px] border border-dashed border-slate-500/20" />
           <div
             className="absolute size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/20 bg-cyan-300/85 shadow-[0_0_35px_rgba(103,232,249,0.45)] transition-all duration-150"
             style={{ left: `${left}%`, top: `${top}%` }}
           />
         </div>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Beta {tilt.beta.toFixed(1)}° · Gamma {tilt.gamma.toFixed(1)}°
         </p>
       </div>
@@ -695,6 +739,8 @@ function BubbleLevelSurface() {
 function DecibelMeterSurface() {
   const [running, setRunning] = useState(false)
   const [level, setLevel] = useState(0)
+  const [peak, setPeak] = useState(0)
+  const [samples, setSamples] = useState<number[]>([])
   const analyserRef = useRef<AnalyserNode | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -726,6 +772,8 @@ function DecibelMeterSurface() {
         const rms = Math.sqrt(sum / data.length)
         const db = Math.max(0, Math.min(100, Math.round(20 * Math.log10(rms || 0.0001) + 100)))
         setLevel(db)
+        setPeak((value) => Math.max(value, db))
+        setSamples((values) => [...values.slice(-39), db])
         animationFrame = window.requestAnimationFrame(tick)
       }
 
@@ -746,14 +794,63 @@ function DecibelMeterSurface() {
   }, [running])
 
   return (
-    <Panel title="Decibel Meter" subtitle="Local microphone analysis with no uploads and no ads.">
+    <Panel title="Decibel Meter" subtitle="Private microphone analysis with no uploads and no ads.">
       <div className="space-y-4">
-        <div className="h-6 overflow-hidden rounded-full border border-white/10 bg-white/5">
+        <div className="flex h-28 items-end gap-1 rounded-[16px] bg-slate-500/5 p-3" aria-label="Recent loudness history">
+          {samples.length ? samples.map((sample, index) => (
+            <span key={`${index}-${sample}`} className="min-w-1 flex-1 rounded-t bg-emerald-500/70 transition-all" style={{ height: `${Math.max(4, sample)}%` }} />
+          )) : <span className="m-auto text-sm text-slate-500">Start the microphone to see a private local chart.</span>}
+        </div>
+        <div className="h-4 overflow-hidden rounded-full border border-slate-500/20 bg-slate-500/5">
           <div className="h-full rounded-full bg-gradient-to-r from-emerald-300 via-amber-300 to-rose-300 transition-all" style={{ width: `${level}%` }} />
         </div>
-        <div className="flex items-center justify-between">
-          <p className="text-3xl font-semibold text-white">{level} dB</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-3xl font-semibold text-slate-950 dark:text-white">~{level} dB</p>
+            <p className="mt-1 text-sm text-slate-500">Peak ~{peak} dB · {noiseLabel(level)}</p>
+          </div>
           <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Stop mic' : 'Start mic'}</ActionButton>
+        </div>
+        <p className="rounded-[14px] bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
+          Estimated reading only. Browser microphones are not calibrated sound meters and this result must not be used for legal or workplace safety decisions.
+        </p>
+      </div>
+    </Panel>
+  )
+}
+
+function SmartFlashlightSurface() {
+  const [active, setActive] = useState(false)
+  const [color, setColor] = useState('#ffffff')
+
+  useEffect(() => {
+    if (!active) return
+    const previous = document.body.style.background
+    document.body.style.background = color
+    return () => {
+      document.body.style.background = previous
+    }
+  }, [active, color])
+
+  return (
+    <Panel title="Smart Flashlight" subtitle="A browser-safe screen light. The native Android app can also control the hardware torch.">
+      <div className="grid gap-4 sm:grid-cols-[1fr_0.8fr]">
+        <button
+          type="button"
+          className="grid min-h-64 place-items-center rounded-[22px] border border-slate-500/15 text-lg font-bold shadow-inner transition"
+          style={{ backgroundColor: active ? color : undefined, color: active && color === '#ffffff' ? '#0f172a' : undefined }}
+          onClick={() => setActive((value) => !value)}
+        >
+          {active ? 'Tap to turn off' : 'Tap to turn on'}
+        </button>
+        <div>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Screen color</p>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {['#ffffff', '#fee2e2', '#dcfce7', '#dbeafe', '#fef3c7', '#e9d5ff'].map((item) => (
+              <button key={item} type="button" className={`aspect-square rounded-[14px] border ${color === item ? 'ring-2 ring-emerald-500' : 'border-slate-500/15'}`} style={{ backgroundColor: item }} onClick={() => setColor(item)} aria-label={`Use ${item}`} />
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-slate-500">Avoid flashing patterns around people who may be sensitive to light.</p>
         </div>
       </div>
     </Panel>
@@ -793,7 +890,7 @@ function UnitConverterSurface() {
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value as typeof category)}
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+            className="w-full rounded-2xl border border-slate-500/20 bg-slate-500/5 px-4 py-3 text-sm text-slate-950 dark:text-white outline-none"
           >
             <option value="length">Length</option>
             <option value="weight">Weight</option>
@@ -803,9 +900,9 @@ function UnitConverterSurface() {
         </div>
         <div className="space-y-3">
           {conversions.map(([label, converted]) => (
-            <div key={label} className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sm text-slate-300">{label}</span>
-              <span className="font-semibold text-white">{Number(converted).toFixed(3)}</span>
+            <div key={label} className="flex items-center justify-between rounded-[22px] border border-slate-500/15 bg-slate-500/5 px-4 py-3">
+              <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
+              <span className="font-semibold text-slate-950 dark:text-white">{Number(converted).toFixed(3)}</span>
             </div>
           ))}
         </div>
@@ -827,8 +924,18 @@ function DocToPdfSurface() {
     <Panel title="Doc to PDF" subtitle="Pick local images, then export them into one PDF without uploading anything.">
       <FormInput type="file" accept="image/*" multiple onChange={handleFiles} />
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {images.map((image) => (
-          <img key={image} src={image} alt="Document page" className="rounded-[24px] border border-white/8 bg-white/5 object-cover" />
+        {images.map((image, index) => (
+          <div key={`${image.slice(0, 32)}-${index}`} className="rounded-[18px] border border-slate-500/15 bg-slate-500/5 p-2">
+            <img src={image} alt={`Document page ${index + 1}`} className="aspect-[3/4] w-full rounded-[14px] object-cover" />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-500">Page {index + 1}</span>
+              <div className="flex gap-1">
+                <button type="button" className="filter-chip" disabled={index === 0} onClick={() => setImages((items) => moveItem(items, index, index - 1))}>←</button>
+                <button type="button" className="filter-chip" disabled={index === images.length - 1} onClick={() => setImages((items) => moveItem(items, index, index + 1))}>→</button>
+                <button type="button" className="filter-chip text-rose-500" onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
       <div className="mt-4">
@@ -870,9 +977,9 @@ function OcrTextSurface() {
   return (
     <Panel title="OCR Text" subtitle="Runs OCR in the browser so images never leave the device.">
       <FormInput type="file" accept="image/*" onChange={handleFile} />
-      <div className="mt-4 rounded-[24px] border border-white/8 bg-white/5 p-4">
-        <p className="text-sm text-slate-400">{running ? 'Recognizing text...' : 'Extracted text appears here.'}</p>
-        {ocrText ? <pre className="mt-3 whitespace-pre-wrap text-sm text-white">{ocrText}</pre> : null}
+      <div className="mt-4 rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400">{running ? 'Recognizing text...' : 'Extracted text appears here.'}</p>
+        {ocrText ? <pre className="mt-3 whitespace-pre-wrap text-sm text-slate-950 dark:text-white">{ocrText}</pre> : null}
       </div>
     </Panel>
   )
@@ -908,7 +1015,7 @@ function ColorGrabberSurface() {
         }}
       />
       <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_0.4fr]">
-        <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/5 p-3">
+        <div className="overflow-hidden rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-3">
           <canvas
             ref={canvasRef}
             className="max-h-[420px] w-full cursor-crosshair rounded-2xl object-contain"
@@ -924,10 +1031,10 @@ function ColorGrabberSurface() {
             }}
           />
         </div>
-        <div className="rounded-[24px] border border-white/8 bg-white/5 p-4">
-          <div className="h-24 rounded-2xl border border-white/10" style={{ backgroundColor: pickedColor }} />
-          <p className="mt-4 text-sm text-slate-400">HEX</p>
-          <p className="mt-1 text-lg font-semibold text-white">{pickedColor}</p>
+        <div className="rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
+          <div className="h-24 rounded-2xl border border-slate-500/20" style={{ backgroundColor: pickedColor }} />
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">HEX</p>
+          <p className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">{pickedColor}</p>
         </div>
       </div>
     </Panel>
@@ -936,6 +1043,7 @@ function ColorGrabberSurface() {
 
 function SpeakerCleanerSurface() {
   const [playing, setPlaying] = useState(false)
+  const [frequency, setFrequency] = useState(165)
   const audioContextRef = useRef<AudioContext | null>(null)
   const oscillatorRef = useRef<OscillatorNode | null>(null)
 
@@ -951,7 +1059,7 @@ function SpeakerCleanerSurface() {
     const context = new AudioContext()
     const oscillator = context.createOscillator()
     const gain = context.createGain()
-    oscillator.frequency.value = 165
+    oscillator.frequency.value = frequency
     oscillator.type = 'sine'
     gain.gain.value = 0.08
     oscillator.connect(gain)
@@ -964,17 +1072,114 @@ function SpeakerCleanerSurface() {
       oscillator.stop()
       void context.close()
     }
-  }, [playing])
+  }, [frequency, playing])
 
   return (
-    <Panel title="Speaker Cleaner" subtitle="Local 165Hz tone generator to help clear water and dust from speakers.">
-      <div className="flex items-center justify-between gap-3">
+    <Panel title="Speaker Cleaner" subtitle="Local tone generator designed to help move residual water from a phone speaker.">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-slate-300">Frequency</p>
-          <p className="mt-1 text-3xl font-semibold text-white">165 Hz</p>
+          <p className="text-sm text-slate-700 dark:text-slate-300">Frequency</p>
+          <p className="mt-1 text-3xl font-semibold text-slate-950 dark:text-white">{frequency} Hz</p>
         </div>
         <ActionButton onClick={() => setPlaying((value) => !value)}>{playing ? 'Stop tone' : 'Start tone'}</ActionButton>
       </div>
+      <input className="mt-5 w-full accent-emerald-500" type="range" min="120" max="240" step="5" value={frequency} onChange={(event) => setFrequency(Number(event.target.value))} aria-label="Tone frequency" />
+      <p className="mt-4 rounded-[14px] bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">Start at a comfortable volume, keep the speaker facing down, and stop if the sound distorts. This cannot repair damaged hardware.</p>
+    </Panel>
+  )
+}
+
+function DeepCleanerSurface() {
+  const [files, setFiles] = useState<File[]>([])
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0)
+  const duplicateNames = new Set(
+    files
+      .map((file) => file.name)
+      .filter((name, index, items) => items.indexOf(name) !== index),
+  )
+
+  return (
+    <Panel title="Device Cleaner" subtitle="Review files safely. PureHub never deletes browser-selected files automatically.">
+      <FormInput
+        type="file"
+        multiple
+        onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+      />
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Metric label="Files reviewed" value={String(files.length)} />
+        <Metric label="Total size" value={formatBytes(totalBytes)} />
+        <Metric label="Possible duplicates" value={String(duplicateNames.size)} />
+      </div>
+      <div className="mt-4 space-y-2">
+        {files.slice(0, 20).map((file, index) => (
+          <div key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center justify-between gap-3 rounded-[14px] bg-slate-500/5 px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">{file.name}</p>
+              <p className="text-xs text-slate-500">{formatBytes(file.size)}</p>
+            </div>
+            {duplicateNames.has(file.name) ? <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs text-amber-700 dark:text-amber-200">Review duplicate</span> : null}
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 rounded-[14px] bg-sky-500/8 p-3 text-xs leading-5 text-sky-800 dark:text-sky-200">
+        Browsers cannot clean your device silently—and that is safer. Use the native Android cleaner for preview, selection and recoverable deletion.
+      </p>
+    </Panel>
+  )
+}
+
+function WifiAnalyzerSurface() {
+  const connection = (navigator as Navigator & {
+    connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean }
+  }).connection
+  const online = navigator.onLine
+
+  return (
+    <Panel title="Wi-Fi Analyzer" subtitle="A privacy-safe browser overview. Nearby access-point scanning is available in the Android app.">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Metric label="Status" value={online ? 'Online' : 'Offline'} />
+        <Metric label="Connection" value={connection?.effectiveType?.toUpperCase() ?? 'Not exposed'} />
+        <Metric label="Estimated downlink" value={connection?.downlink ? `${connection.downlink} Mbps` : 'Not exposed'} />
+        <Metric label="Estimated latency" value={connection?.rtt ? `${connection.rtt} ms` : 'Not exposed'} />
+      </div>
+      <p className="mt-4 rounded-[14px] bg-emerald-500/8 p-3 text-xs leading-5 text-emerald-800 dark:text-emerald-200">
+        PureHub does not fingerprint nearby Wi-Fi networks from the web. The Android version asks for Nearby/Location permission only when you start a scan.
+      </p>
+    </Panel>
+  )
+}
+
+function WallpaperChangerSurface() {
+  const [images, setImages] = useState<string[]>([])
+  const [selected, setSelected] = useState(0)
+
+  return (
+    <Panel title="Wallpaper Studio" subtitle="Preview your own images locally without uploads, feeds, or tracking.">
+      <FormInput
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={async (event) => {
+          const selectedFiles = Array.from(event.target.files ?? [])
+          setImages(await Promise.all(selectedFiles.map(readFileAsDataUrl)))
+          setSelected(0)
+        }}
+      />
+      {images.length ? (
+        <>
+          <div className="mx-auto mt-4 aspect-[9/16] max-h-[520px] overflow-hidden rounded-[28px] border-[8px] border-slate-900 bg-slate-900 shadow-xl">
+            <img src={images[selected]} alt="Wallpaper preview" className="h-full w-full object-cover" />
+          </div>
+          <div className="mt-4 flex gap-2 overflow-x-auto">
+            {images.map((image, index) => (
+              <button key={`${image.slice(0, 32)}-${index}`} type="button" className={`h-20 w-14 shrink-0 overflow-hidden rounded-[10px] ${selected === index ? 'ring-2 ring-emerald-500' : ''}`} onClick={() => setSelected(index)}>
+                <img src={image} alt={`Wallpaper ${index + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-slate-500">Download or use the Android app to apply the selected image to Home, Lock, or both screens.</p>
+        </>
+      ) : <div className="empty-state mt-4"><p>Choose local images to build a private wallpaper collection.</p></div>}
     </Panel>
   )
 }
@@ -984,23 +1189,23 @@ function PasswordVaultSurface() {
   const [passphrase, setPassphrase] = useState('')
   const [label, setLabel] = useState('')
   const [secret, setSecret] = useState('')
-  const [items, setItems] = useState<Array<{ id: string; label: string; payload: string; iv: string }>>([])
+  const [items, setItems] = useState<VaultItem[]>([])
   const [preview, setPreview] = useState<string>('')
 
   useEffect(() => {
     const raw = window.localStorage.getItem(storageKey)
     if (raw) {
-      setItems(JSON.parse(raw) as Array<{ id: string; label: string; payload: string; iv: string }>)
+      setItems(JSON.parse(raw) as VaultItem[])
     }
   }, [])
 
-  const persist = (nextItems: Array<{ id: string; label: string; payload: string; iv: string }>) => {
+  const persist = (nextItems: VaultItem[]) => {
     setItems(nextItems)
     window.localStorage.setItem(storageKey, JSON.stringify(nextItems))
   }
 
   return (
-    <Panel title="Password Vault" subtitle="Secrets are encrypted with your passphrase before being stored locally.">
+    <Panel title="Password Vault" subtitle="Secrets use a unique salt and AES-GCM encryption before local storage.">
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-3">
           <FormInput type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} placeholder="Master passphrase" />
@@ -1016,6 +1221,7 @@ function PasswordVaultSurface() {
                   label: label.trim(),
                   payload: encrypted.payload,
                   iv: encrypted.iv,
+                  salt: encrypted.salt,
                 },
                 ...items,
               ])
@@ -1029,17 +1235,18 @@ function PasswordVaultSurface() {
 
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="rounded-[22px] border border-white/8 bg-white/5 p-4">
+            <div key={item.id} className="rounded-[22px] border border-slate-500/15 bg-slate-500/5 p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-white">{item.label}</p>
+                <p className="font-semibold text-slate-950 dark:text-white">{item.label}</p>
                 <button
                   type="button"
-                  className="text-xs text-slate-400 transition hover:text-white"
+                  className="text-xs text-slate-500 dark:text-slate-400 transition hover:text-slate-950 dark:text-white"
                   onClick={async () => {
                     if (!passphrase) return
                     try {
-                      const decrypted = await decryptSecret(item.payload, item.iv, passphrase)
+                      const decrypted = await decryptSecret(item.payload, item.iv, passphrase, item.salt)
                       setPreview(`${item.label}: ${decrypted}`)
+                      window.setTimeout(() => setPreview(''), 30000)
                     } catch {
                       setPreview('Failed to decrypt. Check your passphrase.')
                     }
@@ -1047,12 +1254,22 @@ function PasswordVaultSurface() {
                 >
                   Decrypt
                 </button>
+                <button
+                  type="button"
+                  className="text-xs text-rose-500 transition hover:text-rose-600"
+                  onClick={() => persist(items.filter((entry) => entry.id !== item.id))}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
           {preview ? <div className="rounded-[22px] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">{preview}</div> : null}
         </div>
       </div>
+      <p className="mt-4 rounded-[14px] bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
+        Local experimental vault: keep an encrypted backup and do not use it as your only copy of critical credentials until PureHub completes an independent security review.
+      </p>
     </Panel>
   )
 }
@@ -1070,6 +1287,14 @@ function DecisionWheelSurface() {
         .filter(Boolean),
     [optionsText],
   )
+  const wheelColors = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#f43f5e', '#14b8a6']
+  const wheelGradient = options.length
+    ? `conic-gradient(${options.map((_, index) => {
+        const start = (index / options.length) * 360
+        const end = ((index + 1) / options.length) * 360
+        return `${wheelColors[index % wheelColors.length]} ${start}deg ${end}deg`
+      }).join(',')})`
+    : 'conic-gradient(#94a3b8 0deg 360deg)'
 
   return (
     <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
@@ -1079,9 +1304,16 @@ function DecisionWheelSurface() {
           <ActionButton
             disabled={options.length === 0}
             onClick={() => {
-              const winnerIndex = Math.floor(Math.random() * options.length)
-              const spin = 1800 + Math.random() * 900
-              setRotation((value) => value + spin)
+              const random = new Uint32Array(1)
+              crypto.getRandomValues(random)
+              const winnerIndex = random[0] % options.length
+              const segment = 360 / options.length
+              setRotation((value) => {
+                const current = ((value % 360) + 360) % 360
+                const winnerCenter = winnerIndex * segment + segment / 2
+                const target = (360 - winnerCenter - current + 360) % 360
+                return value + 1800 + target
+              })
               setResult(options[winnerIndex])
             }}
           >
@@ -1096,17 +1328,17 @@ function DecisionWheelSurface() {
           <div className="relative">
             <div className="absolute left-1/2 top-[-10px] z-10 h-0 w-0 -translate-x-1/2 border-x-[12px] border-b-[18px] border-x-transparent border-b-rose-300" />
             <div
-              className="flex size-72 items-center justify-center rounded-full border border-white/10 bg-[conic-gradient(from_90deg,#34d399,#22d3ee,#a855f7,#f59e0b,#34d399)] transition-transform duration-[2200ms] ease-out"
-              style={{ transform: `rotate(${rotation}deg)` }}
+              className="flex size-72 items-center justify-center rounded-full border border-slate-500/20 bg-[conic-gradient(from_90deg,#34d399,#22d3ee,#a855f7,#f59e0b,#34d399)] transition-transform duration-[2200ms] ease-out"
+              style={{ transform: `rotate(${rotation}deg)`, background: wheelGradient }}
             >
-              <div className="flex size-24 items-center justify-center rounded-full border border-white/10 bg-slate-950/90 text-center text-sm text-white">
+              <div className="flex size-24 items-center justify-center rounded-full border border-slate-500/20 bg-white/90 dark:bg-slate-950/90 text-center text-sm text-slate-950 dark:text-white">
                 {result || 'Spin'}
               </div>
             </div>
           </div>
           <div className="grid w-full gap-2 sm:grid-cols-2">
             {options.map((option) => (
-              <div key={option} className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              <div key={option} className="rounded-[20px] border border-slate-500/15 bg-slate-500/5 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
                 {option}
               </div>
             ))}
@@ -1118,32 +1350,133 @@ function DecisionWheelSurface() {
 }
 
 function CommunityUnlockSurface() {
-  const storageKey = 'purehub-pro-code'
-  const [code, setCode] = useState(() => window.localStorage.getItem(storageKey) ?? '')
-  const active = code.trim().length > 0
-
   return (
-    <Panel title="Community Pro Unlock" subtitle="Keep the growth engine lightweight and local.">
-      <div className="space-y-4">
+    <Panel title="PureHub Community" subtitle="Every tool stays free. Join the people building and improving PureHub together.">
+      <div className="grid gap-3 sm:grid-cols-2">
         <ActionButton
-          onClick={() => window.open('https://t.me/aaa_letan_vip_bot?start=getcode', '_blank', 'noopener,noreferrer')}
+          onClick={() => window.open('https://t.me/aaa_letan_vip_bot', '_blank', 'noopener,noreferrer')}
         >
-          Join community to get Pro code
+          Join Telegram
         </ActionButton>
-        <FormInput
-          value={code}
-          onChange={(event) => {
-            setCode(event.target.value)
-            window.localStorage.setItem(storageKey, event.target.value)
-          }}
-          placeholder="Enter your Pro code"
-        />
-        <div className={`rounded-[22px] border px-4 py-3 text-sm ${active ? 'border-emerald-300/25 bg-emerald-400/10 text-emerald-100' : 'border-white/8 bg-white/5 text-slate-400'}`}>
-          {active ? 'Pro code saved on this device.' : 'No Pro code saved yet.'}
-        </div>
+        <ActionButton
+          tone="muted"
+          onClick={() => window.open('https://github.com/shoyrulove-dev/PureHub', '_blank', 'noopener,noreferrer')}
+        >
+          Contribute on GitHub
+        </ActionButton>
+      </div>
+      <div className="mt-4 rounded-[16px] bg-emerald-500/8 p-4 text-sm leading-6 text-emerald-900 dark:text-emerald-100">
+        No Pro code, no paywall and no ads. Report bugs, suggest useful mini apps, improve translations, or share PureHub with someone who needs it.
       </div>
     </Panel>
   )
+}
+
+function jdFromDate(day: number, month: number, year: number) {
+  const a = Math.floor((14 - month) / 12)
+  const y = year + 4800 - a
+  const m = month + 12 * a - 3
+  let jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045
+  if (jd < 2299161) {
+    jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - 32083
+  }
+  return jd
+}
+
+function newMoon(k: number) {
+  const t = k / 1236.85
+  const t2 = t * t
+  const t3 = t2 * t
+  const dr = Math.PI / 180
+  let jd1 = 2415020.75933 + 29.53058868 * k + 0.0001178 * t2 - 0.000000155 * t3
+  jd1 += 0.00033 * Math.sin((166.56 + 132.87 * t - 0.009173 * t2) * dr)
+  const m = 359.2242 + 29.10535608 * k - 0.0000333 * t2 - 0.00000347 * t3
+  const moon = 306.0253 + 385.81691806 * k + 0.0107306 * t2 + 0.00001236 * t3
+  const f = 21.2964 + 390.67050646 * k - 0.0016528 * t2 - 0.00000239 * t3
+  let c1 = (0.1734 - 0.000393 * t) * Math.sin(m * dr) + 0.0021 * Math.sin(2 * dr * m)
+  c1 -= 0.4068 * Math.sin(moon * dr) + 0.0161 * Math.sin(2 * dr * moon)
+  c1 -= 0.0004 * Math.sin(3 * dr * moon)
+  c1 += 0.0104 * Math.sin(2 * dr * f) - 0.0051 * Math.sin((m + moon) * dr)
+  c1 -= 0.0074 * Math.sin((m - moon) * dr) + 0.0004 * Math.sin((2 * f + m) * dr)
+  c1 -= 0.0004 * Math.sin((2 * f - m) * dr) - 0.0006 * Math.sin((2 * f + moon) * dr)
+  c1 += 0.001 * Math.sin((2 * f - moon) * dr) + 0.0005 * Math.sin((2 * moon + m) * dr)
+  const deltaT = t < -11
+    ? 0.001 + 0.000839 * t + 0.0002261 * t2 - 0.00000845 * t3 - 0.000000081 * t * t3
+    : -0.000278 + 0.000265 * t + 0.000262 * t2
+  return jd1 + c1 - deltaT
+}
+
+function sunLongitude(jdn: number) {
+  const t = (jdn - 2451545) / 36525
+  const t2 = t * t
+  const dr = Math.PI / 180
+  const m = 357.5291 + 35999.0503 * t - 0.0001559 * t2 - 0.00000048 * t * t2
+  const l0 = 280.46645 + 36000.76983 * t + 0.0003032 * t2
+  let dl = (1.9146 - 0.004817 * t - 0.000014 * t2) * Math.sin(dr * m)
+  dl += (0.019993 - 0.000101 * t) * Math.sin(dr * 2 * m) + 0.00029 * Math.sin(dr * 3 * m)
+  let longitude = (l0 + dl) * dr
+  longitude -= Math.PI * 2 * Math.floor(longitude / (Math.PI * 2))
+  return longitude
+}
+
+function getNewMoonDay(k: number, timeZone = 7) {
+  return Math.floor(newMoon(k) + 0.5 + timeZone / 24)
+}
+
+function getSunLongitude(dayNumber: number, timeZone = 7) {
+  return Math.floor((sunLongitude(dayNumber - 0.5 - timeZone / 24) / Math.PI) * 6)
+}
+
+function getLunarMonth11(year: number, timeZone = 7) {
+  const offset = jdFromDate(31, 12, year) - 2415021
+  const k = Math.floor(offset / 29.530588853)
+  let newMoonDay = getNewMoonDay(k, timeZone)
+  if (getSunLongitude(newMoonDay, timeZone) >= 9) newMoonDay = getNewMoonDay(k - 1, timeZone)
+  return newMoonDay
+}
+
+function getLeapMonthOffset(a11: number, timeZone = 7) {
+  const k = Math.floor(0.5 + (a11 - 2415021.076998695) / 29.530588853)
+  let last = 0
+  let index = 1
+  let arc = getSunLongitude(getNewMoonDay(k + index, timeZone), timeZone)
+  do {
+    last = arc
+    index += 1
+    arc = getSunLongitude(getNewMoonDay(k + index, timeZone), timeZone)
+  } while (arc !== last && index < 15)
+  return index - 1
+}
+
+function solarToVietnameseLunar(day: number, month: number, year: number) {
+  const dayNumber = jdFromDate(day, month, year)
+  const k = Math.floor((dayNumber - 2415021.076998695) / 29.530588853)
+  let monthStart = getNewMoonDay(k + 1)
+  if (monthStart > dayNumber) monthStart = getNewMoonDay(k)
+  let a11 = getLunarMonth11(year)
+  let b11 = a11
+  let lunarYear: number
+  if (a11 >= monthStart) {
+    lunarYear = year
+    a11 = getLunarMonth11(year - 1)
+  } else {
+    lunarYear = year + 1
+    b11 = getLunarMonth11(year + 1)
+  }
+  const lunarDay = dayNumber - monthStart + 1
+  const diff = Math.floor((monthStart - a11) / 29)
+  let lunarMonth = diff + 11
+  let leap = false
+  if (b11 - a11 > 365) {
+    const leapDiff = getLeapMonthOffset(a11)
+    if (diff >= leapDiff) {
+      lunarMonth = diff + 10
+      leap = diff === leapDiff
+    }
+  }
+  if (lunarMonth > 12) lunarMonth -= 12
+  if (lunarMonth >= 11 && diff < 4) lunarYear -= 1
+  return { day: lunarDay, month: lunarMonth, year: lunarYear, leap }
 }
 
 function createId() {
@@ -1151,11 +1484,43 @@ function createId() {
 }
 
 function formatCurrency(value: number) {
+  const locale = navigator.language || 'en-US'
+  const currency = locale.toLowerCase().startsWith('vi') ? 'VND' : 'USD'
   return new Intl.NumberFormat(undefined, {
     style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
+    currency,
+    maximumFractionDigits: currency === 'VND' ? 0 : 2,
   }).format(value || 0)
+}
+
+function formatBytes(value: number) {
+  if (!value) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1)
+  return `${(value / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+}
+
+function moveItem<T>(items: T[], from: number, to: number) {
+  const next = [...items]
+  const [item] = next.splice(from, 1)
+  next.splice(to, 0, item)
+  return next
+}
+
+function noiseLabel(value: number) {
+  if (value < 35) return 'Quiet'
+  if (value < 60) return 'Moderate'
+  if (value < 80) return 'Loud'
+  return 'Very loud'
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[15px] bg-slate-500/5 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">{value}</p>
+    </div>
+  )
 }
 
 function formatDuration(totalSeconds: number) {
@@ -1199,14 +1564,14 @@ async function readFileAsDataUrl(file: File) {
   })
 }
 
-async function deriveCryptoKey(passphrase: string) {
+async function deriveCryptoKey(passphrase: string, salt: ArrayBuffer) {
   const encoder = new TextEncoder()
   const baseKey = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey'])
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode('purehub-vault-salt'),
-      iterations: 120000,
+      salt,
+      iterations: 310000,
       hash: 'SHA-256',
     },
     baseKey,
@@ -1217,7 +1582,8 @@ async function deriveCryptoKey(passphrase: string) {
 }
 
 async function encryptSecret(secret: string, passphrase: string) {
-  const key = await deriveCryptoKey(passphrase)
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const key = await deriveCryptoKey(passphrase, salt.buffer as ArrayBuffer)
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const encrypted = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
@@ -1226,12 +1592,16 @@ async function encryptSecret(secret: string, passphrase: string) {
   )
   return {
     iv: arrayBufferToBase64(iv.buffer),
+    salt: arrayBufferToBase64(salt.buffer),
     payload: arrayBufferToBase64(encrypted),
   }
 }
 
-async function decryptSecret(payload: string, iv: string, passphrase: string) {
-  const key = await deriveCryptoKey(passphrase)
+async function decryptSecret(payload: string, iv: string, passphrase: string, salt?: string) {
+  const saltBuffer = salt
+    ? base64ToArrayBuffer(salt)
+    : new TextEncoder().encode('purehub-vault-salt').buffer as ArrayBuffer
+  const key = await deriveCryptoKey(passphrase, saltBuffer)
   const decrypted = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: new Uint8Array(base64ToArrayBuffer(iv)) },
     key,

@@ -41,6 +41,9 @@ import androidx.navigation.compose.rememberNavController
 import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.navigation.PureHubDestination.FinanceFun
 import com.purehub.app.navigation.PureHubDestination.Help
+import com.purehub.app.navigation.PureHubDestination.Home
+import com.purehub.app.navigation.PureHubDestination.AllTools
+import com.purehub.app.navigation.PureHubDestination.Community
 import com.purehub.app.navigation.PureHubDestination.MeasureTools
 import com.purehub.app.navigation.PureHubDestination.Settings
 import com.purehub.app.navigation.PureHubDestination.SystemSecurity
@@ -60,6 +63,7 @@ import com.purehub.app.ui.screens.DocToPdfCard
 import com.purehub.app.ui.screens.ExpenseTrackerCard
 import com.purehub.app.ui.screens.FinanceFunScreen
 import com.purehub.app.ui.screens.HelpScreen
+import com.purehub.app.ui.screens.HomeScreen
 import com.purehub.app.ui.screens.LunarCalendarScreen
 import com.purehub.app.ui.screens.OcrTextExtractorCard
 import com.purehub.app.ui.screens.PasswordVaultCard
@@ -121,8 +125,8 @@ fun PureHubApp() {
                                         contentDescription = destination.route,
                                     )
                                 },
-                                alwaysShowLabel = false,
-                                label = null,
+                                alwaysShowLabel = true,
+                                label = { Text(destination.label) },
                             )
                         }
                     }
@@ -148,8 +152,25 @@ private fun PureHubNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = ZenTime.route,
+        startDestination = Home.route,
     ) {
+        composable(Home.route) {
+            HomeScreen(
+                innerPadding = innerPadding,
+                onOpenSettings = { navController.navigate(Settings.route) },
+                onOpenMiniApp = onOpenMiniApp,
+            )
+        }
+        composable(AllTools.route) {
+            ToolsScreen(
+                innerPadding = innerPadding,
+                onOpenMiniApp = onOpenMiniApp,
+                showAllTools = true,
+            )
+        }
+        composable(Community.route) {
+            CommunityScreen(innerPadding = innerPadding, embedded = false)
+        }
         composable(ZenTime.route) {
             ZenTimeScreen(
                 innerPadding = innerPadding,

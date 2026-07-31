@@ -226,14 +226,14 @@ MINIAPP_DEFAULTS = [
     },
     {
         "miniapp_id": "community-pro-unlock",
-        "name": "Community Pro Unlock",
+        "name": "PureHub Community",
         "tab": "Finance & Community",
         "route_en": "/en/community-pro-unlock",
         "route_vi": "/vi/mo-khoa-cong-dong",
         "route_zh": "/zh/she-qu-jie-suo",
         "enabled": True,
         "traffic_priority": 3,
-        "notes": "Growth engine and referral bridge.",
+        "notes": "Telegram, GitHub, contribution and referral bridge. No feature gating.",
     },
 ]
 
@@ -326,7 +326,7 @@ API_CATALOG_DEFAULTS = [
         "enabled": True,
         "auth_required": True,
         "group": "telegram",
-        "description": "Starts the Telegram viral loop worker.",
+        "description": "Starts the Telegram community and referral worker.",
     },
     {
         "api_key": "admin_bot_stop",
@@ -335,7 +335,7 @@ API_CATALOG_DEFAULTS = [
         "enabled": True,
         "auth_required": True,
         "group": "telegram",
-        "description": "Stops the Telegram viral loop worker.",
+        "description": "Stops the Telegram community and referral worker.",
     },
     {
         "api_key": "admin_health",

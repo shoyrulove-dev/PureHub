@@ -106,12 +106,11 @@ class TelegramBotManager:
                     self._reward_referrer_if_needed(bot, referrer_id, user_id)
 
             deep_link = f"https://t.me/{username}?start=ref_{user_id}"
-            pro_code = get_config_value("pro_unlock_code", "PUREHUB-PRO-2026")
             reply = (
-                "Welcome to <b>PureHub Command Center</b>.\n\n"
+                "Welcome to the <b>PureHub Community</b>.\n\n"
+                "PureHub is free, open source, and has no ads. Every tool is available without a code.\n\n"
                 f"Your invite link:\n{deep_link}\n\n"
-                f"Invite <b>{INVITE_GOAL}</b> friends to unlock your Pro code automatically.\n"
-                f"Current reward code: <code>{pro_code}</code>"
+                f"Invite <b>{INVITE_GOAL}</b> friends to earn a Community Supporter thank-you."
             )
             bot.send_message(message.chat.id, reply)
 
@@ -136,11 +135,11 @@ class TelegramBotManager:
 
         should_reward = int(referrer["invites_count"]) >= INVITE_GOAL and not referrer.get("reward_sent_at")
         if should_reward:
-            pro_code = get_config_value("pro_unlock_code", "PUREHUB-PRO-2026")
             try:
                 bot.send_message(
                     referrer_id,
-                    f"You reached {INVITE_GOAL} invites.\nYour Pro Unlock Code: <code>{pro_code}</code>",
+                    f"You reached {INVITE_GOAL} invites. Thank you for helping a free, no-ads project grow.\n"
+                    "You are now recognized as a <b>PureHub Community Supporter</b>. No features are locked behind this badge.",
                 )
                 mark_reward_sent(referrer_id)
             except Exception:

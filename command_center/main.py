@@ -274,7 +274,6 @@ def save_config(
     telegram_bot_token: str = Form(default=""),
     telegram_bot_username: str = Form(default=""),
     telegram_notify_chat_id: str = Form(default=""),
-    pro_unlock_code: str = Form(default="PUREHUB-PRO-2026"),
     site_url: str = Form(default="https://hub.blissbiovn.com"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
@@ -287,7 +286,6 @@ def save_config(
             "telegram_bot_token": telegram_bot_token.strip(),
             "telegram_bot_username": telegram_bot_username.strip().lstrip("@"),
             "telegram_notify_chat_id": telegram_notify_chat_id.strip(),
-            "pro_unlock_code": pro_unlock_code.strip() or "PUREHUB-PRO-2026",
             "site_url": site_url.strip() or "https://hub.blissbiovn.com",
         }
     )

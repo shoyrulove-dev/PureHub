@@ -2,13 +2,26 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
   AudioLines,
+  BrushCleaning,
   Camera,
+  CircleDollarSign,
+  Compass,
   CreditCard,
+  FileText,
+  Flashlight,
+  Gauge,
+  KeyRound,
+  Palette,
+  QrCode,
   ShieldCheck,
   Sparkles,
+  Split,
+  SwatchBook,
   Timer,
   Wallet,
+  Wallpaper,
   Waves,
+  Wifi,
   Wrench,
 } from 'lucide-react'
 import { seoMeta, type SeoLanguage } from '../../config/seoMeta'
@@ -31,13 +44,17 @@ export type MiniAppId =
   | 'compass'
   | 'bubble-level'
   | 'decibel-meter'
+  | 'smart-flashlight'
   | 'unit-converter'
   | 'qr-studio'
   | 'doc-to-pdf'
   | 'ocr-text'
   | 'color-grabber'
   | 'speaker-cleaner'
+  | 'deep-cleaner'
+  | 'wifi-analyzer'
   | 'password-vault'
+  | 'wallpaper-changer'
   | 'bill-splitter'
   | 'expense-tracker'
   | 'decision-wheel'
@@ -63,7 +80,12 @@ export type MiniAppDefinition = {
   slugs: LocalizedSlugMap
 }
 
-function seoSlugs(id: Exclude<MiniAppId, 'community-pro-unlock'>): Record<SeoLanguage, string> {
+type SeoBackedMiniAppId = Exclude<
+  MiniAppId,
+  'community-pro-unlock' | 'smart-flashlight' | 'deep-cleaner' | 'wifi-analyzer' | 'wallpaper-changer'
+>
+
+function seoSlugs(id: SeoBackedMiniAppId): Record<SeoLanguage, string> {
   return {
     en: seoMeta[id].en.slug,
     vi: seoMeta[id].vi.slug,
@@ -74,7 +96,7 @@ function seoSlugs(id: Exclude<MiniAppId, 'community-pro-unlock'>): Record<SeoLan
 export const TAB_ITEMS: TabDefinition[] = [
   {
     id: 'zen-time',
-    icon: Sparkles,
+    icon: Compass,
     labelKey: 'tabs.zenTime.label',
     shortLabelKey: 'tabs.zenTime.short',
     descriptionKey: 'tabs.zenTime.description',
@@ -156,7 +178,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'zen-habit',
     tabId: 'zen-time',
-    icon: Activity,
+    icon: Gauge,
     titleKey: 'miniApps.zenHabit.title',
     summaryKey: 'miniApps.zenHabit.summary',
     slugs: seoSlugs('zen-habit'),
@@ -202,9 +224,21 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     slugs: seoSlugs('decibel-meter'),
   },
   {
+    id: 'smart-flashlight',
+    tabId: 'measure-tools',
+    icon: Flashlight,
+    titleKey: 'miniApps.smartFlashlight.title',
+    summaryKey: 'miniApps.smartFlashlight.summary',
+    slugs: {
+      en: 'smart-flashlight',
+      vi: 'den-pin-thong-minh',
+      zh: 'zhi-neng-shou-dian',
+    },
+  },
+  {
     id: 'unit-converter',
     tabId: 'measure-tools',
-    icon: Wrench,
+    icon: Split,
     titleKey: 'miniApps.unitConverter.title',
     summaryKey: 'miniApps.unitConverter.summary',
     slugs: seoSlugs('unit-converter'),
@@ -212,7 +246,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'qr-studio',
     tabId: 'vision',
-    icon: Camera,
+    icon: QrCode,
     titleKey: 'miniApps.qrStudio.title',
     summaryKey: 'miniApps.qrStudio.summary',
     slugs: seoSlugs('qr-studio'),
@@ -220,7 +254,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'doc-to-pdf',
     tabId: 'vision',
-    icon: Camera,
+    icon: FileText,
     titleKey: 'miniApps.docToPdf.title',
     summaryKey: 'miniApps.docToPdf.summary',
     slugs: seoSlugs('doc-to-pdf'),
@@ -228,7 +262,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'ocr-text',
     tabId: 'vision',
-    icon: Camera,
+    icon: SwatchBook,
     titleKey: 'miniApps.ocrText.title',
     summaryKey: 'miniApps.ocrText.summary',
     slugs: seoSlugs('ocr-text'),
@@ -236,7 +270,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'color-grabber',
     tabId: 'vision',
-    icon: Camera,
+    icon: Palette,
     titleKey: 'miniApps.colorGrabber.title',
     summaryKey: 'miniApps.colorGrabber.summary',
     slugs: seoSlugs('color-grabber'),
@@ -250,17 +284,53 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     slugs: seoSlugs('speaker-cleaner'),
   },
   {
+    id: 'deep-cleaner',
+    tabId: 'security-audio',
+    icon: BrushCleaning,
+    titleKey: 'miniApps.deepCleaner.title',
+    summaryKey: 'miniApps.deepCleaner.summary',
+    slugs: {
+      en: 'deep-cleaner',
+      vi: 'don-dep-thiet-bi',
+      zh: 'shen-du-qing-li',
+    },
+  },
+  {
+    id: 'wifi-analyzer',
+    tabId: 'security-audio',
+    icon: Wifi,
+    titleKey: 'miniApps.wifiAnalyzer.title',
+    summaryKey: 'miniApps.wifiAnalyzer.summary',
+    slugs: {
+      en: 'wifi-analyzer',
+      vi: 'phan-tich-wifi',
+      zh: 'wifi-fen-xi',
+    },
+  },
+  {
     id: 'password-vault',
     tabId: 'security-audio',
-    icon: ShieldCheck,
+    icon: KeyRound,
     titleKey: 'miniApps.passwordVault.title',
     summaryKey: 'miniApps.passwordVault.summary',
     slugs: seoSlugs('password-vault'),
   },
   {
+    id: 'wallpaper-changer',
+    tabId: 'security-audio',
+    icon: Wallpaper,
+    titleKey: 'miniApps.wallpaperChanger.title',
+    summaryKey: 'miniApps.wallpaperChanger.summary',
+    slugs: {
+      en: 'wallpaper-changer',
+      vi: 'doi-hinh-nen',
+      zh: 'bi-zhi-geng-huan',
+    },
+  },
+  {
     id: 'bill-splitter',
     tabId: 'finance-community',
-    icon: CreditCard,
+    icon: CircleDollarSign,
     titleKey: 'miniApps.billSplitter.title',
     summaryKey: 'miniApps.billSplitter.summary',
     slugs: seoSlugs('bill-splitter'),
@@ -284,7 +354,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
   {
     id: 'community-pro-unlock',
     tabId: 'finance-community',
-    icon: CreditCard,
+    icon: ShieldCheck,
     titleKey: 'miniApps.communityUnlock.title',
     summaryKey: 'miniApps.communityUnlock.summary',
     slugs: {

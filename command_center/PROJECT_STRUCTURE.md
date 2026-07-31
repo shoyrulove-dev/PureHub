@@ -28,7 +28,7 @@ command_center/
 - `devto_publisher.py`
   Dev.to publishing pipeline that reads generated files and updates article job status.
 - `telegram_bot_worker.py`
-  Background Telegram viral loop manager with invite tracking and Pro unlock reward logic.
+  Background Telegram community manager with invite tracking and supporter recognition.
 - `templates/index.html`
   Tailwind admin dashboard for credentials, mini-app controls, API exposure, referrals, and jobs.
 - `templates/login.html`

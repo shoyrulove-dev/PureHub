@@ -1,18 +1,29 @@
 package com.purehub.app.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.feature.lunar.LunarCalendarConverter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -22,152 +33,139 @@ import java.util.Locale
 fun HomeScreen(
     innerPadding: PaddingValues,
     onOpenSettings: () -> Unit,
+    onOpenMiniApp: (MiniAppId) -> Unit,
 ) {
     val today = LocalDate.now()
     val lunarInfo = LunarCalendarConverter.describeDate(today)
     val formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", Locale.getDefault())
+    val visibleTools = rememberVisibleTools()
+    val favoriteTools = rememberFavoriteTools()
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(innerPadding)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(innerPadding),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         item {
-            Column(
-                modifier = Modifier.padding(top = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "FREE · NO ADS · OPEN SOURCE",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
                 Text(
                     text = "PureHub",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Offline-first utility super app with calm motion, dynamic color, and local-only data.",
+                    text = "Useful, private tools for everyday life—built openly with the community.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                PromiseTile(Modifier.weight(1f), Icons.Rounded.WifiOff, "Offline-first")
+                PromiseTile(Modifier.weight(1f), Icons.Rounded.Security, "Private")
+                PromiseTile(Modifier.weight(1f), Icons.Rounded.Favorite, "Community")
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onOpenMiniApp(MiniAppId.LUNAR_CALENDAR) },
+            ) {
                 Column(
-                    modifier = Modifier.padding(22.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     Text(
-                        text = "Today",
+                        text = "TODAY",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = today.format(formatter),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = "Lunar ${lunarInfo.lunarDate.displayText}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        text = lunarInfo.canchiLabel,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Text(
-                        text = lunarInfo.holidayLabel ?: "No major traditional marker today.",
+                        text = lunarInfo.holidayLabel ?: lunarInfo.canchiLabel,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (favoriteTools.isEmpty()) "Quick access" else "Favorites",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                HomeQuickShortcuts(
+                    visibleTools = visibleTools,
+                    favoriteTools = favoriteTools,
+                    onOpenTool = onOpenMiniApp,
+                )
+            }
+        }
+
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onOpenSettings),
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onOpenSettings,
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
+                    Text("Privacy & preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        text = "Privacy Dashboard",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    Text(
-                        text = "Review offline promise, permissions, and local-only storage behavior in one place.",
+                        "Review permissions, visible tools and local-only storage behavior.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-        }
-        item {
-            Text(
-                text = "Quick Access",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                HomeQuickTile(
-                    modifier = Modifier.weight(1f),
-                    title = "Lunar Time",
-                    subtitle = "Calendar and can-chi",
-                )
-                HomeQuickTile(
-                    modifier = Modifier.weight(1f),
-                    title = "Deep Cleaner",
-                    subtitle = "Review reclaimable storage",
-                )
-            }
-        }
-        item {
-            LunarCalendarScreen(
-                innerPadding = PaddingValues(0.dp),
-                embedded = true,
-            )
         }
     }
 }
 
 @Composable
-private fun HomeQuickTile(
+private fun PromiseTile(
     modifier: Modifier,
-    title: String,
-    subtitle: String,
+    icon: ImageVector,
+    label: String,
 ) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .background(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(28.dp),
-            )
-            .padding(18.dp),
-        contentAlignment = Alignment.BottomStart,
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

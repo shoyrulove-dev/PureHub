@@ -317,21 +317,21 @@ export const seoMeta: SeoMetaDictionary = {
       slug: 'speaker-cleaner',
       title: 'Speaker Cleaner Online Offline Safe Tone Tool',
       description:
-        'Play a speaker cleaning tone locally with PureHub to help clear dust and water using private audio processing.',
+        'Play a local speaker tone with PureHub that may help move residual water, with clear safety guidance and no uploads.',
       keywords: ['speaker cleaner', 'tone generator', 'audio cleaning tool', 'offline speaker utility'],
     },
     vi: {
       slug: 'lam-sach-loa',
       title: 'Làm Sạch Loa Offline | Phát Tần Số Hỗ Trợ',
       description:
-        'Phát tần số hỗ trợ làm sạch loa ngay trên thiết bị, riêng tư và không cần kết nối mạng.',
+        'Phát tần số cục bộ có thể hỗ trợ đẩy nước còn lại khỏi loa, kèm hướng dẫn an toàn và không tải dữ liệu lên mạng.',
       keywords: ['lam sach loa', 'tan so loa offline', 'audio tool', 'khong quang cao'],
     },
     zh: {
       slug: 'yang-sheng-qi-qing-jie',
       title: '离线扬声器清理 | 安全音频工具',
       description:
-        '使用本地音频频率帮助清理扬声器积水或灰尘，过程私密且无需联网。',
+        '使用本地音频频率帮助移动扬声器中的残余水分，提供安全提示且无需上传数据。',
       keywords: ['扬声器清理', '离线音频工具', '频率发生器', '无广告'],
     },
   },

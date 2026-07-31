@@ -2,18 +2,18 @@ package com.purehub.app.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.catalog.MiniAppId
@@ -44,18 +44,25 @@ fun HomeQuickShortcuts(
     ) {
         quickTools.forEach { tool ->
             Surface(
-                modifier = Modifier.clickable { onOpenTool(tool) },
+                modifier = Modifier
+                    .widthIn(min = 132.dp)
+                    .clickable { onOpenTool(tool) },
                 shape = RoundedCornerShape(18.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
             ) {
-                Box(
+                Column(
                     modifier = Modifier.padding(14.dp),
-                    contentAlignment = Alignment.Center,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
                         imageVector = tool.icon,
                         contentDescription = tool.title,
                         modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = tool.title,
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
             }
