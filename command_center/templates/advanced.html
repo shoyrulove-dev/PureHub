@@ -7,10 +7,42 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       [data-advanced-group] { scroll-margin-top: 6rem; }
       [data-advanced-group][hidden] { display: none !important; }
-      .tool-tile-active { border-color: rgba(52, 211, 153, .38) !important; background: rgba(16, 185, 129, .12) !important; color: #d1fae5 !important; }
-      .tool-icon { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: .8rem; background: rgba(255,255,255,.06); font-size: 1rem; }
+      .tool-tile-active { border-color: #6ee7b7 !important; background: #ecfdf5 !important; color: #047857 !important; }
+      .tool-icon { display: grid; width: 2.15rem; height: 2.15rem; place-items: center; border-radius: .7rem; background: #f1f5f9; font-size: .95rem; }
+      body { background: #f4f7fb !important; color: #0f172a !important; }
+      main { max-width: 92rem !important; gap: 1rem !important; }
+      nav, main > section, [data-advanced-group] > section, #connections, #advanced-connections > div > section {
+        border-color: #e2e8f0 !important; background: rgba(255,255,255,.96) !important;
+        box-shadow: 0 18px 50px -38px rgba(15,23,42,.35) !important;
+      }
+      [class*="bg-slate-9"], [class*="bg-white/"] { background-color: #f8fafc !important; }
+      [class*="border-white"] { border-color: #e2e8f0 !important; }
+      [class*="text-white"] { color: #0f172a !important; }
+      [class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"] { color: #334155 !important; }
+      [class*="text-slate-400"], [class*="text-slate-500"] { color: #64748b !important; }
+      [class*="bg-indigo-600"][class*="text-white"] { color: #fff !important; }
+      input, select, textarea { min-height: 2.35rem !important; border-color: #dbe3ee !important; border-radius: .65rem !important; background: #f8fafc !important; color: #0f172a !important; padding: .5rem .7rem !important; }
+      input:focus, select:focus, textarea:focus { border-color: #34d399 !important; box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
+      label > span:first-child { margin-bottom: .35rem !important; color: #475569 !important; font-size: .75rem !important; }
+      #connections { padding: 1rem !important; }
+      #connections > .mt-6 { margin-top: 1rem !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem !important; }
+      #connections > .mt-6 > .grid { display: contents; }
+      #connections > .mt-6 > .border-t { grid-column: 1 / -1; padding-top: .8rem !important; }
+      #connections .border-t .grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem !important; }
+      [data-advanced-group] { gap: 1rem !important; }
+      [data-advanced-group] section, #advanced-connections > div { padding: 1rem !important; }
+      [data-advanced-group] h2 { font-size: 1.15rem !important; }
+      [data-advanced-group] .mt-6 { margin-top: 1rem !important; }
+      [data-advanced-group] .mt-5 { margin-top: .75rem !important; }
+      [data-advanced-group] .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: .65rem !important; }
+      button, a { border-radius: .65rem !important; }
+      table thead { background: #f1f5f9 !important; }
+      table tbody { background: #fff !important; }
+      @media (max-width: 900px) { #connections > .mt-6, #connections .border-t .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+      @media (max-width: 640px) { main { padding: .75rem !important; } #connections > .mt-6, #connections .border-t .grid { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100">
@@ -239,27 +271,16 @@
           </section>
 
           <section class="rounded-[30px] border border-white/8 bg-slate-900/85 p-6 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.8)]">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-300">Import / Export</p>
-            <h2 class="mt-2 text-2xl font-semibold text-white">Sync control bundle</h2>
-            <p class="mt-3 text-sm leading-7 text-slate-300">
-              Export config, mini-app catalog, and API catalog as JSON. Import supports `merge` or `replace`.
-            </p>
-            <div class="mt-4 flex flex-wrap gap-3">
-              <a href="{{ admin_prefix }}/export/json" target="_blank" rel="noreferrer" class="rounded-2xl bg-indigo-400/15 px-4 py-3 text-sm font-semibold text-indigo-100 ring-1 ring-inset ring-indigo-400/20 transition hover:bg-indigo-400/20">
-                Open export JSON
-              </a>
-            </div>
-            <textarea readonly rows="10" class="mt-4 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-xs text-slate-300 outline-none">{{ export_bundle_json }}</textarea>
-            <form action="{{ admin_prefix }}/import/json" method="post" class="mt-4 space-y-3">
-              <select name="mode" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300/40 focus:bg-white/7">
-                <option value="merge">merge</option>
-                <option value="replace">replace</option>
-              </select>
-              <textarea name="bundle_json" rows="8" placeholder="Paste exported JSON here" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300/40 focus:bg-white/7"></textarea>
-              <button type="submit" class="w-full rounded-2xl border border-indigo-400/18 bg-indigo-400/10 px-4 py-3 text-left text-sm font-semibold text-indigo-100 transition hover:bg-indigo-400/15">
-                Import control bundle
-              </button>
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Backup &amp; restore</p>
+            <h2 class="mt-2 text-2xl font-semibold text-white">Control data backup</h2>
+            <p class="mt-2 text-sm text-slate-400">Download settings and catalogs as one private backup file. No code editing is required.</p>
+            <a href="{{ admin_prefix }}/export/backup" class="mt-4 inline-flex items-center bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">&#8681;&nbsp; Download backup</a>
+            <form action="{{ admin_prefix }}/import/backup" method="post" enctype="multipart/form-data" class="mt-4 grid gap-3 sm:grid-cols-2">
+              <label class="block sm:col-span-2"><span class="block">Backup file</span><input type="file" name="backup_file" accept=".json,application/json" required /></label>
+              <label class="block"><span class="block">Restore behavior</span><select name="mode"><option value="merge">Keep existing data and update matches</option><option value="replace">Replace catalogs from backup</option></select></label>
+              <button type="submit" class="self-end bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">&#8635;&nbsp; Restore backup</button>
             </form>
+            <p class="mt-3 text-xs text-slate-500">Maximum file size: 2 MB. API keys in the backup should be kept private.</p>
           </section>
         </div>
       </section>

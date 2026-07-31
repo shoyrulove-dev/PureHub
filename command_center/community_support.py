@@ -15,6 +15,7 @@ try:
         list_support_messages,
         update_support_message,
         update_support_sync_state,
+        upsert_community_metrics,
         upsert_support_message,
     )
     from .release_hub import _ai_client, _bluesky_facets
@@ -25,6 +26,7 @@ except ImportError:
         list_support_messages,
         update_support_message,
         update_support_sync_state,
+        upsert_community_metrics,
         upsert_support_message,
     )
     from release_hub import _ai_client, _bluesky_facets
@@ -344,9 +346,111 @@ def _sync_mastodon() -> int:
     return created
 
 
+def _sync_telegram_metrics() -> dict[str, int]:
+    response = requests.get(
+        f"https://api.telegram.org/bot{get_config_value('telegram_bot_token')}/getChatMemberCount",
+        params={"chat_id": get_config_value("telegram_notify_chat_id")},
+        timeout=30,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if not payload.get("ok"):
+        raise ValueError(str(payload.get("description") or "Telegram metrics request failed."))
+    return {"members": int(payload.get("result") or 0)}
+
+
+def _sync_devto_metrics() -> dict[str, int]:
+    headers = {
+        "api-key": get_config_value("devto_api_key"),
+        "accept": "application/vnd.forem.api-v1+json",
+        "user-agent": "PureHub-Community-Metrics/1.0",
+    }
+    response = requests.get("https://dev.to/api/articles/me", headers=headers, params={"per_page": 100}, timeout=30)
+    response.raise_for_status()
+    articles = response.json()
+    return {
+        "articles": len(articles),
+        "views": sum(int(item.get("page_views_count") or 0) for item in articles),
+        "reactions": sum(int(item.get("public_reactions_count") or 0) for item in articles),
+        "comments": sum(int(item.get("comments_count") or 0) for item in articles),
+    }
+
+
+def _sync_bluesky_metrics() -> dict[str, int]:
+    handle = get_config_value("bluesky_handle")
+    profile = requests.get(
+        "https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile",
+        params={"actor": handle},
+        timeout=30,
+    )
+    profile.raise_for_status()
+    feed = requests.get(
+        "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed",
+        params={"actor": handle, "limit": 100, "filter": "posts_no_replies"},
+        timeout=30,
+    )
+    feed.raise_for_status()
+    posts = [item.get("post") or {} for item in feed.json().get("feed", [])]
+    return {
+        "followers": int(profile.json().get("followersCount") or 0),
+        "posts": int(profile.json().get("postsCount") or len(posts)),
+        "likes": sum(int(post.get("likeCount") or 0) for post in posts),
+        "replies": sum(int(post.get("replyCount") or 0) for post in posts),
+        "reposts": sum(int(post.get("repostCount") or 0) for post in posts),
+        "quotes": sum(int(post.get("quoteCount") or 0) for post in posts),
+    }
+
+
+def _sync_mastodon_metrics() -> dict[str, int]:
+    base = get_config_value("mastodon_base_url").rstrip("/")
+    headers = {
+        "Authorization": f"Bearer {get_config_value('mastodon_access_token')}",
+        "user-agent": "PureHub-Community-Metrics/1.0",
+    }
+    account_response = requests.get(f"{base}/api/v1/accounts/verify_credentials", headers=headers, timeout=30)
+    account_response.raise_for_status()
+    account = account_response.json()
+    statuses_response = requests.get(
+        f"{base}/api/v1/accounts/{account['id']}/statuses",
+        headers=headers,
+        params={"limit": 40, "exclude_replies": "true", "exclude_reblogs": "true"},
+        timeout=30,
+    )
+    statuses_response.raise_for_status()
+    statuses = statuses_response.json()
+    return {
+        "followers": int(account.get("followers_count") or 0),
+        "posts": int(account.get("statuses_count") or 0),
+        "favourites": sum(int(status.get("favourites_count") or 0) for status in statuses),
+        "boosts": sum(int(status.get("reblogs_count") or 0) for status in statuses),
+        "replies": sum(int(status.get("replies_count") or 0) for status in statuses),
+        "quotes": sum(int(status.get("quotes_count") or 0) for status in statuses),
+    }
+
+
+def sync_engagement_metrics() -> dict[str, Any]:
+    functions = {
+        "telegram": _sync_telegram_metrics,
+        "devto": _sync_devto_metrics,
+        "bluesky": _sync_bluesky_metrics,
+        "mastodon": _sync_mastodon_metrics,
+    }
+    result: dict[str, Any] = {}
+    for platform, sync in functions.items():
+        try:
+            metrics = sync()
+            upsert_community_metrics(platform, metrics, "")
+            result[platform] = {"ok": True, "metrics": metrics}
+        except Exception as exc:
+            error = str(exc)[:500]
+            upsert_community_metrics(platform, None, error)
+            result[platform] = {"ok": False, "error": error}
+    return result
+
+
 def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
     if get_config_value("support_monitor_enabled", "true").lower() != "true":
-        return {"enabled": False, "channels": {}, "drafts": {}}
+        return {"enabled": False, "channels": {}, "drafts": {}, "engagement": sync_engagement_metrics()}
     functions = {"devto": _sync_devto, "bluesky": _sync_bluesky, "mastodon": _sync_mastodon}
     result: dict[str, Any] = {"enabled": True, "channels": {}}
     for platform, sync in functions.items():
@@ -359,6 +463,7 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
             result["channels"][platform] = {"ok": False, "created": 0, "error": error}
             update_support_sync_state(platform, {"last_synced_at": datetime.now(timezone.utc), "error_message": error})
     result["drafts"] = generate_support_drafts(limit=5) if generate_drafts else {}
+    result["engagement"] = sync_engagement_metrics()
     return result
 
 

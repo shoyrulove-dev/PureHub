@@ -44,7 +44,7 @@ CONFIG_DEFAULTS = {
     "support_monitor_enabled": "true",
 }
 
-CURRENT_SCHEMA_VERSION = 8
+CURRENT_SCHEMA_VERSION = 9
 DEFAULTS_BOOTSTRAP_VERSION = 4
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -541,6 +541,7 @@ def init_database() -> None:
     db.support_messages.create_index([("status", ASCENDING), ("received_at", DESCENDING)])
     db.support_messages.create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
     db.support_sync_state.create_index([("platform", ASCENDING)], unique=True)
+    db.community_metrics.create_index([("platform", ASCENDING)], unique=True)
 
     run_schema_migrations()
     seed_default_documents()
@@ -633,6 +634,7 @@ def run_schema_migrations() -> None:
         (6, "ensure-login-guard-collection", _migration_login_guards),
         (7, "ensure-release-hub-collections", _migration_release_hub),
         (8, "ensure-community-support-inbox", _migration_community_support),
+        (9, "ensure-community-engagement-metrics", _migration_community_metrics),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -698,6 +700,10 @@ def _migration_community_support() -> None:
     collection("support_messages").create_index([("status", ASCENDING), ("received_at", DESCENDING)])
     collection("support_messages").create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
     collection("support_sync_state").create_index([("platform", ASCENDING)], unique=True)
+
+
+def _migration_community_metrics() -> None:
+    collection("community_metrics").create_index([("platform", ASCENDING)], unique=True)
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -1501,6 +1507,31 @@ def update_support_sync_state(platform: str, values: dict[str, Any]) -> None:
 
 def list_support_sync_states() -> list[dict[str, Any]]:
     return [_serialize(item) for item in collection("support_sync_state").find({}).sort("platform", ASCENDING)]
+
+
+def upsert_community_metrics(
+    platform: str,
+    metrics: dict[str, int] | None = None,
+    error_message: str = "",
+) -> None:
+    values: dict[str, Any] = {
+        "platform": platform,
+        "error_message": error_message,
+        "updated_at": utcnow(),
+    }
+    if metrics is not None:
+        values["metrics"] = {key: max(0, int(value or 0)) for key, value in metrics.items()}
+        values["fetched_at"] = utcnow()
+    collection("community_metrics").update_one(
+        {"platform": platform},
+        {"$set": values},
+        upsert=True,
+    )
+
+
+def list_community_metrics() -> list[dict[str, Any]]:
+    rows = collection("community_metrics").find({}).sort("platform", ASCENDING)
+    return [_serialize(item) for item in rows]
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:

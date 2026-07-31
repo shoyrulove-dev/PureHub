@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import quote_plus
 
-from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
+from fastapi import APIRouter, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -128,6 +128,7 @@ try:
     from .database import (
         get_support_message,
         get_support_metrics,
+        list_community_metrics,
         list_support_messages,
         list_support_sync_states,
         update_support_message,
@@ -143,6 +144,7 @@ except ImportError:
     from database import (
         get_support_message,
         get_support_metrics,
+        list_community_metrics,
         list_support_messages,
         list_support_sync_states,
         update_support_message,
@@ -325,7 +327,6 @@ def _dashboard_context(
         "analytics_json": json.dumps(get_analytics_snapshot(), ensure_ascii=False),
         "admins": list_admin_accounts(),
         "admin_roles": ADMIN_ROLES,
-        "export_bundle_json": json.dumps(export_control_bundle(), indent=2, ensure_ascii=False),
         "message": message,
         "message_type": message_type,
         "admin_prefix": PUBLIC_ADMIN_PREFIX,
@@ -340,6 +341,7 @@ def _dashboard_context(
         "support_history": support_history,
         "support_metrics": get_support_metrics(),
         "support_sync_states": list_support_sync_states(),
+        "community_metrics": {item["platform"]: item for item in list_community_metrics()},
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -584,6 +586,26 @@ def export_json_bundle(request: Request) -> JSONResponse:
     return JSONResponse(bundle)
 
 
+@admin_router.get("/export/backup")
+def download_control_backup(request: Request) -> Response:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    bundle = export_control_bundle()
+    record_audit_log(
+        actor=actor,
+        action="download_control_backup",
+        target_type="bundle",
+        target_id="control_bundle",
+        details={"miniapps": len(bundle.get("miniapps", [])), "api_catalog": len(bundle.get("api_catalog", []))},
+        request_meta=request_meta(request),
+    )
+    filename = f"purehub-backup-{datetime.now(timezone.utc):%Y%m%d}.json"
+    return Response(
+        content=json.dumps(bundle, ensure_ascii=False, indent=2).encode("utf-8"),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @admin_router.post("/import/json")
 def import_json_bundle(
     request: Request,
@@ -606,6 +628,35 @@ def import_json_bundle(
     )
     return _redirect_with_message(
         f"Imported bundle: {result['miniapps']} mini-apps, {result['api_catalog']} APIs.",
+        "success",
+    )
+
+
+@admin_router.post("/import/backup")
+async def restore_control_backup(
+    request: Request,
+    backup_file: UploadFile = File(...),
+    mode: str = Form(default="merge"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    try:
+        payload = await backup_file.read(2 * 1024 * 1024 + 1)
+        if len(payload) > 2 * 1024 * 1024:
+            raise ValueError("Backup file is larger than 2 MB.")
+        bundle = json.loads(payload.decode("utf-8-sig"))
+        result = import_control_bundle(bundle, mode=mode.strip().lower())
+    except Exception as exc:
+        return _redirect_with_message(f"Restore failed: {exc}", "error")
+    record_audit_log(
+        actor=actor,
+        action="restore_control_backup",
+        target_type="bundle",
+        target_id="control_bundle",
+        details={"mode": mode.strip().lower(), "filename": backup_file.filename or "backup", **result},
+        request_meta=request_meta(request),
+    )
+    return _redirect_with_message(
+        f"Backup restored: {result['miniapps']} mini-apps, {result['api_catalog']} APIs.",
         "success",
     )
 
@@ -1200,6 +1251,7 @@ def support_api(request: Request, status: str = "", platform: str = "") -> dict[
         "items": list_support_messages(status=status, platform=platform, limit=100),
         "metrics": get_support_metrics(),
         "sync_states": list_support_sync_states(),
+        "engagement": {item["platform"]: item for item in list_community_metrics()},
     }
 
 

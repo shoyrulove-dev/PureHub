@@ -194,3 +194,14 @@ These items require account ownership or a long-lived secret and therefore are n
 - Android SDK is installed in duplicate locations (`D:\Dev\Android` and `D:\Dev\Android\Sdk`), which slows Gradle SDK discovery but does not block builds.
 - Instrumented camera/sensor tests require a device or emulator and were not run in this pass.
 - The 22 mini-app feature upgrades are intentionally deferred until Support Center operations are stable.
+
+## Light admin and community reach update
+
+- Converted the login, Operations Dashboard, and Advanced Controls to a modern light visual system.
+- Reduced form height, spacing, corner radius, and unused whitespace; credential fields now use responsive two- and three-column settings grids.
+- Kept advanced tool groups closed by default so infrequent controls do not compete with daily operations.
+- Removed raw configuration text areas from the interface. Admins now download a private backup file and restore it with a file picker and plain-language merge/replace choices.
+- Added schema migration 9 and a `community_metrics` collection for platform engagement snapshots.
+- Added live Community Reach cards for Telegram members, DEV views/reactions/comments, Bluesky followers/likes/replies/reposts, and Mastodon followers/likes/boosts/replies.
+- Engagement refresh runs with the existing support sync and preserves the last successful snapshot when a platform API is temporarily unavailable.
+- Live verification passed for all four connected platforms.
