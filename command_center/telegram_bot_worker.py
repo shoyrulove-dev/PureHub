@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import threading
 from dataclasses import dataclass
 
@@ -93,10 +94,15 @@ class TelegramBotManager:
 
     def publish_release_update(self) -> dict[str, str]:
         token = get_config_value("telegram_bot_token")
-        chat_id = get_config_value("telegram_notify_chat_id")
+        configured_chat_ids = get_config_value("telegram_notify_chat_id")
         if not token:
             raise RuntimeError("Missing Telegram bot token in config table.")
-        if not chat_id:
+        chat_ids = [
+            item
+            for item in re.split(r"[\s,;]+", configured_chat_ids.strip())
+            if item
+        ]
+        if not chat_ids:
             raise RuntimeError("Missing Telegram notify chat ID in config table.")
 
         bot = telebot.TeleBot(token, parse_mode="HTML")
@@ -112,10 +118,13 @@ class TelegramBotManager:
             "Cộng đồng PureHub: 22 tiện ích thân thiện, miễn phí cho mọi người, "
             "không quảng cáo và phát triển minh bạch trên GitHub."
         )
-        message = bot.send_message(chat_id, RELEASE_ANNOUNCEMENT, disable_web_page_preview=True)
+        messages = [
+            bot.send_message(chat_id, RELEASE_ANNOUNCEMENT, disable_web_page_preview=True)
+            for chat_id in chat_ids
+        ]
         return {
-            "chat_id": str(message.chat.id),
-            "message_id": str(message.message_id),
+            "chat_ids": ",".join(str(message.chat.id) for message in messages),
+            "message_ids": ",".join(str(message.message_id) for message in messages),
         }
 
     def _polling_loop(self, bot: telebot.TeleBot) -> None:

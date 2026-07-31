@@ -115,8 +115,9 @@
                 <input type="text" name="telegram_bot_username" value="{{ config.get('telegram_bot_username', defaults.telegram_bot_username) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
               </label>
               <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-200">Notify chat id</span>
+                <span class="mb-2 block text-sm font-medium text-slate-200">Notify chat IDs</span>
                 <input type="text" name="telegram_notify_chat_id" value="{{ config.get('telegram_notify_chat_id', defaults.telegram_notify_chat_id) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
+                <span class="mt-2 block text-xs text-slate-400">Separate a channel and group with a comma to publish to both.</span>
               </label>
             </div>
           </div>

@@ -39,7 +39,7 @@ http://127.0.0.1:8000/admin
 ## Main admin areas
 
 - `Credential vault`
-  Grok, Dev.to, Telegram, and site URL config.
+  Grok, Dev.to, Telegram, and site URL config. Telegram notification targets accept comma-separated channel/group IDs.
 - `Manual triggers`
   Start generator/publisher, manage the Telegram worker, and publish a community release update from the browser.
 - `Admin security`

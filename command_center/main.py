@@ -700,12 +700,12 @@ def announce_bot_release(request: Request) -> RedirectResponse:
             actor=actor,
             action="publish_telegram_release",
             target_type="telegram_bot",
-            target_id=result["message_id"],
-            details={"chat_id": result["chat_id"]},
+            target_id=result["message_ids"],
+            details={"chat_ids": result["chat_ids"]},
             request_meta=request_meta(request),
         )
         return _redirect_with_message(
-            f"Telegram profile synced and release message #{result['message_id']} published.",
+            f"Telegram profile synced and release messages #{result['message_ids']} published.",
             "success",
         )
     except Exception as exc:
