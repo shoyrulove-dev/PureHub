@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 PureHub is now consistently positioned as a free, no-ads, local-first and open-source utility collection. Core tools are not gated by referral codes, accounts, subscriptions or community badges.
 
+The repository is explicitly licensed under the MIT License. Copyright is held by PureHub contributors.
+
 English is the primary/default product language. Vietnamese and Chinese remain available as secondary localized experiences.
 
 Community growth remains connected to:
@@ -211,7 +213,7 @@ These items require account ownership or a long-lived secret and therefore are n
 - Enabled GitHub Discussions on the public repository and created the first pinned-style welcome announcement.
 - Added structured GitHub Discussion forms for Q&A and community ideas.
 - Linked the public Community page directly to Discussions and its Ideas category.
-- Added a dedicated Reddit Review panel to the Operations Dashboard. AI produces a Reddit-specific title, body, and suggested communities; posting remains manual and requires a rules check.
+- Added a dedicated Reddit Review panel to the Operations Dashboard. AI produces Reddit-specific copy while the destination is manually curated; posting remains manual and requires a current rules check.
 - Generated and stored the first Reddit review draft for `v1.0.0-beta.2` without publishing it externally.
 - Added a reproducible vertical-video pipeline and generated the first 22.5-second English teaser at 1080×1920 using current production screens.
 - The video is encoded as H.264 `yuv420p` with AAC silent audio for broad YouTube Shorts and TikTok compatibility; platform-native music can be added during upload.
@@ -222,3 +224,27 @@ These items require account ownership or a long-lived secret and therefore are n
 - Replaced repeated engagement labels with accessible icon-and-number tiles for members, views, likes, comments, posts, replies, and reposts.
 - Replaced platform initials and legacy Unicode control symbols with a shared SVG icon language and retained tooltips/screen-reader labels.
 - Compacted metric refresh, support sync, Reddit generation/copy/open, toolbox, backup, restore, logout, and visibility controls into icon-led actions.
+
+## Current completion summary
+
+Completed:
+
+- Signed Android release pipeline, protected signing secrets, GitHub prereleases, checksum generation, and physical-device beta installation.
+- Production PWA, localized routes, Download/Changelog pages, all 22 tools in the catalog, and English-first language behavior.
+- Telegram channel publishing and bot support, plus DEV, Bluesky, and Mastodon publishing/monitoring credentials.
+- AI-assisted release content, approval workflow, Support Inbox, reply drafts, notifications, and community reach metrics.
+- Light, compact admin dashboard and UI-based Advanced Controls.
+- GitHub Discussions, Reddit manual review workflow, and the first vertical YouTube/TikTok teaser.
+- MIT License at the repository root and package metadata.
+
+Remaining or intentionally deferred:
+
+1. Upload the prepared YouTube Short as Unlisted, review it on a phone, then publish it. TikTok remains paused until an account can be created.
+2. Recover and establish the Reddit account before posting once to `r/droidappshowcase`; do not repost to `r/androidapps`. Ask `r/FOSSdroid` moderators before a later MIT-licensed development/release post.
+3. Run the planned product-quality pass across all 22 mini apps, prioritizing mobile interaction, visual polish, onboarding, accessibility, and feature parity with established apps.
+4. Commission an independent Password Vault security review before presenting it as suitable for critical credentials.
+5. Add physical-device instrumented coverage for camera, microphone, Wi-Fi, torch, sensors, file access, wallpaper, and background work.
+6. Optimize PWA OCR language-pack delivery and split larger mini apps into individual route chunks.
+7. Replace the first PWA-based teaser with polished Android screen recordings after the next mini-app UI pass.
+8. Defer Play Console production preparation, store listing assets, policy declarations, and staged rollout until the APK beta is stable.
+9. Resolve the remaining npm advisories in a dedicated dependency-compatibility pass. Safe updates reduced the count from 12 to 10; the remaining React Router and Workbox chains currently require potentially breaking version changes and must not be force-applied without regression testing.
