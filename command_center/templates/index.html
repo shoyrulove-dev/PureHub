@@ -526,8 +526,15 @@
         const alert = document.getElementById("supportAlert");
         const alertCount = document.getElementById("supportAlertCount");
         let previousOpen = Number(openMetric?.textContent || 0);
-        const refreshSupportStatus = async () => {
+        const refreshSupportStatus = async (sync = false) => {
           try {
+            if (sync) {
+              await fetch("{{ api_prefix }}/support/sync", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "X-PureHub-Dashboard": "support-monitor" },
+              });
+            }
             const response = await fetch(endpoint, { credentials: "same-origin", cache: "no-store" });
             if (!response.ok) return;
             const payload = await response.json();
@@ -543,7 +550,8 @@
             // Keep the dashboard usable during a transient network failure.
           }
         };
-        window.setInterval(refreshSupportStatus, 60000);
+        window.setTimeout(() => refreshSupportStatus(true), 2000);
+        window.setInterval(() => refreshSupportStatus(true), 300000);
       })();
     </script>
   </body>

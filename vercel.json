@@ -11,7 +11,7 @@
   "crons": [
     {
       "path": "/public-api/support-sync",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "rewrites": [

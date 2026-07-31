@@ -132,7 +132,7 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Upgraded Mongo to schema 8 with deduplicated `support_messages` and per-platform `support_sync_state` collections.
 - Added a responsive Support Inbox to the primary admin dashboard with open, draft, approved, replied, manual, and failed states.
 - Telegram group/private messages are captured through the existing webhook. Bot commands handled elsewhere are excluded from the inbox.
-- DEV comments, Bluesky replies/mentions/quotes, and Mastodon mentions are synchronized every 10 minutes and can also be refreshed manually.
+- DEV comments, Bluesky replies/mentions/quotes, and Mastodon mentions synchronize every five minutes while the admin dashboard is open, can be refreshed manually, and receive a daily unattended Vercel Hobby cron fallback.
 - Added AI triage for question, bug, feature request, privacy, installation, praise, spam, and other categories, including language and priority detection.
 - AI replies are drafts only. An editor must approve before Telegram, Bluesky, or Mastodon can publish a reply.
 - DEV comments receive an editable AI draft and a source link for manual reply because the official Forem API does not expose comment creation.
