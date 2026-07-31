@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 PureHub is now consistently positioned as a free, no-ads, local-first and open-source utility collection. Core tools are not gated by referral codes, accounts, subscriptions or community badges.
 
+English is the primary/default product language. Vietnamese and Chinese remain available as secondary localized experiences.
+
 Community growth remains connected to:
 
 - Telegram: `https://t.me/aaa_letan_vip_bot`
@@ -23,6 +25,7 @@ Referral milestones now recognize Community Supporters; they do not unlock produ
 - Added search across the full tool catalog.
 - Added favorite and recently used tools.
 - Added dedicated Tools, Community and Settings pages.
+- Set first-time visits to English while preserving an explicit saved language choice.
 - Preserved localized SEO routes for existing mini apps.
 - Lazy-loaded the mini-app interaction bundle to reduce the initial application bundle.
 
@@ -76,6 +79,8 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Kept existing legacy database keys untouched for backward-compatible deployments, but they are no longer used by the bot or UI.
 - Updated catalog wording from Community Pro Unlock to PureHub Community.
 - Updated Telegram onboarding to state that every tool is free.
+- Standardized Telegram commands, profile copy and release announcements in English.
+- Configured release announcements for the public channel only; its linked discussion group receives channel posts automatically.
 - Changed referral reward messaging to Community Supporter recognition.
 - Updated architecture/admin documentation to match the community-first model.
 

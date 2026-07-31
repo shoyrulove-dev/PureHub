@@ -7,30 +7,30 @@ const actions = [
   {
     icon: MessageCircle,
     title: 'Telegram community',
-    description: 'Trao đổi, nhận tin cập nhật và hỗ trợ người dùng PureHub.',
+    description: 'Discuss ideas, receive updates, and get help from the PureHub community.',
     href: TELEGRAM_URL,
-    label: 'Mở Telegram',
+    label: 'Open Telegram',
   },
   {
     icon: Code2,
     title: 'Open-source on GitHub',
-    description: 'Xem mã nguồn, báo lỗi, thảo luận và gửi pull request.',
+    description: 'Browse the source, report issues, join discussions, and submit pull requests.',
     href: GITHUB_URL,
-    label: 'Mở GitHub',
+    label: 'Open GitHub',
   },
   {
     icon: Bug,
-    title: 'Báo lỗi',
-    description: 'Mô tả thiết bị, công cụ và các bước để cộng đồng tái hiện lỗi.',
+    title: 'Report a bug',
+    description: 'Share the device, tool, and steps needed for the community to reproduce an issue.',
     href: `${GITHUB_URL}/issues/new`,
-    label: 'Tạo issue',
+    label: 'Create issue',
   },
   {
     icon: Lightbulb,
-    title: 'Đề xuất mini app',
-    description: 'Đề xuất công cụ nhỏ, hữu ích, có thể chạy local-first và không quảng cáo.',
+    title: 'Suggest a mini app',
+    description: 'Suggest a small, useful, local-first tool that can remain free and ad-free.',
     href: `${GITHUB_URL}/issues/new`,
-    label: 'Gửi ý tưởng',
+    label: 'Share idea',
   },
 ]
 
@@ -40,10 +40,10 @@ export function CommunityPage() {
       <div className="hero-panel">
         <span className="eyebrow"><HeartHandshake className="size-4" /> Community built</span>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-          PureHub thuộc về mọi người
+          PureHub belongs to everyone
         </h1>
         <p className="mt-3 max-w-2xl leading-7 text-slate-600 dark:text-slate-300">
-          Không mã Pro, không paywall và không quảng cáo. Telegram giúp mọi người kết nối; GitHub giữ cho sản phẩm minh bạch và mở.
+          No Pro codes, no paywalls, and no ads. Telegram keeps people connected while GitHub keeps the product transparent and open.
         </p>
       </div>
 
@@ -59,11 +59,11 @@ export function CommunityPage() {
       </div>
 
       <div className="app-surface rounded-[18px] p-5">
-        <h2 className="font-bold text-slate-950 dark:text-white">Cách đóng góp</h2>
+        <h2 className="font-bold text-slate-950 dark:text-white">Ways to contribute</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="promise-card"><Bot className="size-5 text-sky-500" /><span>Test bot và luồng community</span></div>
-          <div className="promise-card"><Languages className="size-5 text-violet-500" /><span>Đóng góp bản dịch tự nhiên</span></div>
-          <div className="promise-card"><HeartHandshake className="size-5 text-rose-500" /><span>Chia sẻ PureHub với người cần</span></div>
+          <div className="promise-card"><Bot className="size-5 text-sky-500" /><span>Test the bot and community flows</span></div>
+          <div className="promise-card"><Languages className="size-5 text-violet-500" /><span>Improve Vietnamese or Chinese translations</span></div>
+          <div className="promise-card"><HeartHandshake className="size-5 text-rose-500" /><span>Share PureHub with someone who needs it</span></div>
         </div>
       </div>
     </section>

@@ -15,7 +15,7 @@ void i18n
       escapeValue: false,
     },
     detection: {
-      order: ['path', 'navigator', 'htmlTag'],
+      order: ['path', 'localStorage'],
       caches: ['localStorage'],
       lookupFromPathIndex: 0,
     },

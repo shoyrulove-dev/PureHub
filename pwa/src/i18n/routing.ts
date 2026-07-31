@@ -1,4 +1,3 @@
-import i18n from 'i18next'
 import {
   MINI_APP_BY_ID,
   MINI_APP_ITEMS,
@@ -23,12 +22,7 @@ export function detectPreferredLocale(): LocaleCode {
     }
   }
 
-  const detected = i18n.services.languageDetector?.detect()
-  const detectedValue = Array.isArray(detected) ? detected[0] : detected
-  const resolvedLocale = normalizeLocale(
-    detectedValue ?? i18n.resolvedLanguage ?? i18n.language ?? DEFAULT_LOCALE,
-  )
-  return resolvedLocale
+  return DEFAULT_LOCALE
 }
 
 export function persistSelectedLocale(locale: LocaleCode) {
