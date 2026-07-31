@@ -1070,6 +1070,17 @@ async def github_release_hook(request: Request) -> dict[str, object]:
     return {"ok": True, "release_id": release_id, "draft_count": len(drafts)}
 
 
+@public_api_router.post("/telegram-webhook")
+async def telegram_webhook(request: Request) -> dict[str, bool]:
+    expected_secret = get_env_value("TELEGRAM_WEBHOOK_SECRET")
+    supplied_secret = request.headers.get("x-telegram-bot-api-secret-token", "")
+    if not expected_secret or not secrets.compare_digest(supplied_secret, expected_secret):
+        raise HTTPException(status_code=401, detail="Invalid Telegram webhook secret.")
+    payload = await request.json()
+    telegram_bot_manager.process_webhook(payload)
+    return {"ok": True}
+
+
 @admin_api_router.get("/export")
 def export_api(request: Request) -> dict[str, object]:
     require_admin_role(request, "superadmin", "editor")

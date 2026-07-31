@@ -125,6 +125,7 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Missing credentials move an approved publication to `waiting_credentials` instead of losing it.
 - Added AI-assisted community reply drafts in the admin panel.
 - Added `/ask` to the Telegram bot. Optional private-chat auto reply can be enabled through `community_reply_mode`; group auto reply is intentionally disabled to prevent noisy or unsafe bot behavior.
+- Added a secret-protected Telegram webhook endpoint for reliable bot replies on Vercel serverless while retaining the existing polling worker for local/long-running deployments.
 
 ### Public release experience
 
@@ -155,11 +156,12 @@ These items require account ownership or a long-lived secret and therefore are n
 2. Create the GitHub environment `android-release`, preferably with required reviewer approval.
 3. Add `PUREHUB_KEYSTORE_BASE64`, `PUREHUB_KEYSTORE_PASSWORD`, `PUREHUB_KEY_ALIAS`, and `PUREHUB_KEY_PASSWORD` as environment secrets.
 4. Generate one random release-hook secret. Add it to Vercel as `RELEASE_WEBHOOK_SECRET` and to the GitHub `android-release` environment as `PUREHUB_RELEASE_HOOK_SECRET`.
-5. Run the Android Release workflow for `1.0.0-beta.1`, install its signed APK on a physical phone, and confirm install/update behavior.
-6. Replace the current Groq key if Groq is desired; the discovered key returns HTTP 403. DeepSeek already works and is sufficient.
-7. Optional: create DEV Community, Bluesky, and/or Mastodon accounts, then add their API credentials in Command Center. Telegram is already the default channel.
-8. For Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook, review each generated draft and post manually according to each community's rules.
-9. After the APK is confirmed, review the automatically generated Release Hub drafts, approve only the desired English posts, and publish.
+5. Generate a Telegram webhook secret, add it to Vercel as `TELEGRAM_WEBHOOK_SECRET`, then call Telegram `setWebhook` with `https://hub.blissbiovn.com/public-api/telegram-webhook` and the same `secret_token`.
+6. Run the Android Release workflow for `1.0.0-beta.1`, install its signed APK on a physical phone, and confirm install/update behavior.
+7. Replace the current Groq key if Groq is desired; the discovered key returns HTTP 403. DeepSeek already works and is sufficient.
+8. Optional: create DEV Community, Bluesky, and/or Mastodon accounts, then add their API credentials in Command Center. Telegram is already the default channel.
+9. For Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook, review each generated draft and post manually according to each community's rules.
+10. After the APK is confirmed, review the automatically generated Release Hub drafts, approve only the desired English posts, and publish.
 
 ## Known follow-up opportunities
 

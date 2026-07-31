@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import threading
 import time
 from dataclasses import dataclass
@@ -59,6 +60,7 @@ class TelegramBotManager:
         self._thread: threading.Thread | None = None
         self._state = BotRuntimeState()
         self._ai_last_reply_at: dict[int, float] = {}
+        self._bot_lock = threading.Lock()
 
     @property
     def state(self) -> BotRuntimeState:
@@ -76,8 +78,7 @@ class TelegramBotManager:
             self._state.running = True
             return self._state
 
-        bot = telebot.TeleBot(token, parse_mode="HTML")
-        self._register_handlers(bot, username)
+        bot = self._get_or_create_bot(token, username)
         thread = threading.Thread(
             target=self._polling_loop,
             args=(bot,),
@@ -92,6 +93,15 @@ class TelegramBotManager:
         self._state.thread_name = thread.name
         self._state.last_error = ""
         return self._state
+
+    def process_webhook(self, payload: dict[str, object]) -> None:
+        token = get_config_value("telegram_bot_token")
+        username = get_config_value("telegram_bot_username")
+        if not token or not username:
+            raise RuntimeError("Telegram bot credentials are not configured.")
+        bot = self._get_or_create_bot(token, username)
+        update = telebot.types.Update.de_json(json.dumps(payload))
+        bot.process_new_updates([update])
 
     def stop(self) -> BotRuntimeState:
         if self._bot:
@@ -133,6 +143,13 @@ class TelegramBotManager:
         except Exception as exc:  # pragma: no cover - runtime integration
             self._state.last_error = str(exc)
             self._state.running = False
+
+    def _get_or_create_bot(self, token: str, username: str) -> telebot.TeleBot:
+        with self._bot_lock:
+            if self._bot is None:
+                self._bot = telebot.TeleBot(token, parse_mode="HTML")
+                self._register_handlers(self._bot, username)
+            return self._bot
 
     def _register_handlers(self, bot: telebot.TeleBot, username: str) -> None:
         @bot.message_handler(commands=["start"])
