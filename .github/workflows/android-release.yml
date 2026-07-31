@@ -83,10 +83,16 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then TAG="v${PUREHUB_VERSION_NAME}"; fi
           EXTRA=()
           if [[ "${PRERELEASE}" == "true" || "${PUREHUB_VERSION_NAME}" == *"-"* ]]; then EXTRA+=(--prerelease); fi
-          gh release create "${TAG}" release-assets/* --generate-notes --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" release-assets/* --clobber
+            gh release edit "${TAG}" --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+          else
+            gh release create "${TAG}" release-assets/* --generate-notes --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+          fi
       - name: Sync Release Hub drafts
         if: ${{ env.RELEASE_HOOK_SECRET != '' }}
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_HOOK_URL: https://hub.blissbiovn.com/public-api/release-hook
           PRERELEASE: ${{ inputs.prerelease }}
         shell: bash
