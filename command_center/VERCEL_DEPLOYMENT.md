@@ -42,6 +42,8 @@ Use the MongoDB Atlas connection string you already prepared as the value for `M
 
 - `MONGO_DB_NAME`
   `purehub_command_center`
+- `CRON_SECRET`
+  A random sensitive value used by Vercel Cron to authorize `/public-api/support-sync`.
 - `SESSION_SECRET`
   a long random string, at least 32 characters
 - `ADMIN_PASSWORD`

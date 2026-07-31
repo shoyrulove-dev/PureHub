@@ -105,6 +105,9 @@
       .subtitle { margin-bottom: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
       .live-chip { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.58rem 0.8rem; border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 999px; color: #a7f3d0; background: rgba(16, 185, 129, 0.08); font-size: 0.75rem; font-weight: 750; white-space: nowrap; }
       .live-dot { width: 0.48rem; height: 0.48rem; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 0 0.28rem rgba(52, 211, 153, 0.12); }
+      .top-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.55rem; }
+      .support-alert { display: inline-flex; align-items: center; padding: 0.58rem 0.8rem; border: 1px solid rgba(251, 191, 36, 0.24); border-radius: 999px; color: #fde68a; background: rgba(245, 158, 11, 0.08); font-size: 0.72rem; font-weight: 780; }
+      .support-alert[hidden] { display: none; }
 
       .flash { margin-bottom: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 0.95rem; background: var(--panel); font-size: 0.86rem; }
       .flash.success { border-color: rgba(52, 211, 153, 0.22); color: #a7f3d0; }
@@ -145,6 +148,18 @@
       .status.ready::before { background: var(--emerald); box-shadow: 0 0 0 0.2rem rgba(52, 211, 153, 0.1); }
 
       .release-list, .queue { display: grid; gap: 0.75rem; }
+      .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
+      .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .support-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+      .support-card { padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; background: rgba(2, 6, 23, 0.48); }
+      .support-card.urgent, .support-card.high { border-color: rgba(251, 113, 133, 0.28); }
+      .support-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
+      .support-author { margin: 0; font-size: 0.83rem; font-weight: 780; }
+      .support-message { margin: 0.8rem 0 0; color: #dbe5f3; font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; }
+      .support-submeta { margin: 0.28rem 0 0; color: var(--muted); font-size: 0.67rem; }
+      .sync-state { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.66rem; }
+      .sync-state::before { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--emerald); content: ""; }
+      .sync-state.error::before { background: var(--rose); }
       .release-card, details.queue-item { border: 1px solid var(--line); border-radius: 1rem; background: rgba(2, 6, 23, 0.42); }
       .release-card { padding: 1rem; }
       .release-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
@@ -217,6 +232,7 @@
         .nav a { flex: 0 0 auto; padding: 0.58rem 0.72rem; }
         .sidebar-bottom { display: none; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .support-list { grid-template-columns: 1fr; }
       }
       @media (max-width: 580px) {
         .main { padding: 1.1rem 0.8rem 3rem; }
@@ -249,6 +265,7 @@
         <nav class="nav" aria-label="Dashboard navigation">
           <a class="active" href="#overview">Overview</a>
           <a href="#channels">Channels</a>
+          <a href="#support">Support</a>
           <a href="#releases">Releases</a>
           <a href="#queue">Approval queue</a>
           <a href="#system">System</a>
@@ -269,7 +286,10 @@
             <h1>Operations dashboard</h1>
             <p class="subtitle">Release, review, and community health without the control-panel clutter.</p>
           </div>
-          <div class="live-chip"><span class="live-dot"></span>System online</div>
+          <div class="top-status">
+            <a id="supportAlert" class="support-alert" href="#support" {% if not support_metrics.open %}hidden{% endif %}><span id="supportAlertCount">{{ support_metrics.open }}</span>&nbsp;need reply</a>
+            <div class="live-chip"><span class="live-dot"></span>System online</div>
+          </div>
         </header>
 
         {% if message %}
@@ -293,9 +313,9 @@
             <p class="metric-note">Telegram users tracked</p>
           </article>
           <article class="metric">
-            <p class="metric-label">Schema</p>
-            <div class="metric-value accent-amber">v{{ schema_status.applied_version }}</div>
-            <p class="metric-note">target v{{ schema_status.current_version }}</p>
+            <p class="metric-label">Needs reply</p>
+            <div id="supportOpenMetric" class="metric-value accent-amber">{{ support_metrics.open }}</div>
+            <p class="metric-note"><span id="supportDraftMetric">{{ support_metrics.draft_ready }}</span> AI drafts ready</p>
           </article>
         </section>
 
@@ -329,6 +349,68 @@
               <div class="channel-top"><span class="channel-name">Release AI</span><span class="channel-code">AI</span></div>
               <div class="status {% if config.get('deepseek_api_key') or config.get('groq_api_key') %}ready{% endif %}">{% if config.get('deepseek_api_key') or config.get('groq_api_key') %}{{ config.get('ai_provider', defaults.ai_provider)|title }} active{% else %}Needs setup{% endif %}</div>
             </article>
+          </div>
+        </section>
+
+        <section class="section panel" id="support">
+          <div class="support-toolbar">
+            <div>
+              <p class="panel-kicker">Community operations</p>
+              <h2>Support Inbox</h2>
+              <p class="panel-copy">Replies and mentions are drafted by AI, then held for human approval.</p>
+            </div>
+            <form action="{{ admin_prefix }}/support/sync" method="post">
+              <button class="button primary" type="submit">Sync all channels</button>
+            </form>
+          </div>
+          <div class="support-stats" style="margin-top: 0.9rem">
+            <span class="badge">{{ support_metrics.new }} new</span>
+            <span class="badge draft">{{ support_metrics.draft_ready }} drafts</span>
+            <span class="badge approved">{{ support_metrics.approved }} approved</span>
+            <span class="badge published">{{ support_metrics.replied }} replied</span>
+            <span class="badge ready_manual">{{ support_metrics.manual_required }} manual</span>
+            {% for state in support_sync_states %}
+              <span class="sync-state {% if state.error_message %}error{% endif %}">{{ state.platform|upper }}{% if state.error_message %} error{% else %} synced{% endif %}</span>
+            {% endfor %}
+          </div>
+          <div class="support-list">
+            {% for item in support_messages %}
+              {% if item.status not in ['ignored'] %}
+              <article class="support-card {{ item.priority }}">
+                <div class="support-meta">
+                  <div>
+                    <p class="support-author">{{ item.author_name or item.author_handle or 'Community member' }}</p>
+                    <p class="support-submeta">{{ item.platform|upper }} · {{ item.category|replace('_', ' ') }} · {{ item.priority }} · {{ item.received_at[:16]|replace('T', ' ') }}</p>
+                  </div>
+                  <span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span>
+                </div>
+                <p class="support-message">{{ item.content }}</p>
+                {% if item.source_url %}<a class="link" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Open source message</a>{% endif %}
+                {% if item.status in ['new'] %}
+                  <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post" class="row-actions"><button class="button violet" type="submit">Generate AI draft</button></form>
+                {% elif item.status in ['draft_ready', 'approved', 'failed', 'manual_required'] %}
+                  <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
+                    <textarea name="reply_text" rows="5" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
+                    <div class="row-actions">
+                      <button class="button" type="submit" name="action" value="save">Save draft</button>
+                      <button class="button violet" type="submit" name="action" value="approve">Approve</button>
+                      <button class="button" type="submit" name="action" value="ignore">Ignore</button>
+                    </div>
+                  </form>
+                  {% if item.status == 'approved' %}
+                    <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" class="row-actions" onsubmit="return confirm('Send this approved reply on {{ item.platform }}?');">
+                      <button class="button primary" type="submit">{% if item.platform == 'devto' %}Prepare manual reply{% else %}Send approved reply{% endif %}</button>
+                    </form>
+                  {% endif %}
+                  {% if item.error_message %}<p class="support-submeta" style="color: var(--rose)">{{ item.error_message }}</p>{% endif %}
+                {% elif item.status == 'replied' %}
+                  {% if item.external_reply_url %}<a class="button primary" href="{{ item.external_reply_url }}" target="_blank" rel="noreferrer" style="margin-top: 0.8rem">Open reply</a>{% endif %}
+                {% endif %}
+              </article>
+              {% endif %}
+            {% else %}
+              <div class="release-card"><p class="release-summary">No support messages yet. Channel monitors are ready.</p></div>
+            {% endfor %}
           </div>
         </section>
 
@@ -436,5 +518,33 @@
         </section>
       </main>
     </div>
+    <script>
+      (() => {
+        const endpoint = "{{ api_prefix }}/support";
+        const openMetric = document.getElementById("supportOpenMetric");
+        const draftMetric = document.getElementById("supportDraftMetric");
+        const alert = document.getElementById("supportAlert");
+        const alertCount = document.getElementById("supportAlertCount");
+        let previousOpen = Number(openMetric?.textContent || 0);
+        const refreshSupportStatus = async () => {
+          try {
+            const response = await fetch(endpoint, { credentials: "same-origin", cache: "no-store" });
+            if (!response.ok) return;
+            const payload = await response.json();
+            const open = Number(payload.metrics?.open || 0);
+            const drafts = Number(payload.metrics?.draft_ready || 0);
+            if (openMetric) openMetric.textContent = String(open);
+            if (draftMetric) draftMetric.textContent = String(drafts);
+            if (alertCount) alertCount.textContent = String(open);
+            if (alert) alert.hidden = open === 0;
+            if (open > previousOpen) document.title = `(${open}) PureHub Support`;
+            previousOpen = open;
+          } catch (_) {
+            // Keep the dashboard usable during a transient network failure.
+          }
+        };
+        window.setInterval(refreshSupportStatus, 60000);
+      })();
+    </script>
   </body>
 </html>

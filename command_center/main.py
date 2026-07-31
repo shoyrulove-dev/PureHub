@@ -117,6 +117,37 @@ except ImportError:
     )
     from release_hub import generate_release_bundle, generate_reply_draft, publish_release
 
+try:
+    from .community_support import (
+        generate_support_draft,
+        generate_support_drafts,
+        ingest_telegram_update,
+        send_support_reply,
+        sync_support_channels,
+    )
+    from .database import (
+        get_support_message,
+        get_support_metrics,
+        list_support_messages,
+        list_support_sync_states,
+        update_support_message,
+    )
+except ImportError:
+    from community_support import (
+        generate_support_draft,
+        generate_support_drafts,
+        ingest_telegram_update,
+        send_support_reply,
+        sync_support_channels,
+    )
+    from database import (
+        get_support_message,
+        get_support_metrics,
+        list_support_messages,
+        list_support_sync_states,
+        update_support_message,
+    )
+
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -288,6 +319,9 @@ def _dashboard_context(
         "admin_profile": get_admin_profile(admin_username),
         "releases": list_releases(),
         "release_publications": list_release_publications(),
+        "support_messages": list_support_messages(limit=60),
+        "support_metrics": get_support_metrics(),
+        "support_sync_states": list_support_sync_states(),
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -362,6 +396,7 @@ def save_config(
     telegram_bot_token: str = Form(default=""),
     telegram_bot_username: str = Form(default=""),
     telegram_notify_chat_id: str = Form(default=""),
+    telegram_support_chat_id: str = Form(default="-1003762178712"),
     site_url: str = Form(default="https://hub.blissbiovn.com"),
     ai_provider: str = Form(default="deepseek"),
     groq_api_key: str = Form(default=""),
@@ -375,6 +410,7 @@ def save_config(
     mastodon_access_token: str = Form(default=""),
     release_auto_channels: str = Form(default="telegram,devto,bluesky,mastodon"),
     community_reply_mode: str = Form(default="draft"),
+    support_monitor_enabled: str = Form(default="true"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     current_config = list_config()
@@ -387,6 +423,7 @@ def save_config(
             "telegram_bot_token": telegram_bot_token.strip() or current_config.get("telegram_bot_token", ""),
             "telegram_bot_username": telegram_bot_username.strip().lstrip("@"),
             "telegram_notify_chat_id": telegram_notify_chat_id.strip(),
+            "telegram_support_chat_id": telegram_support_chat_id.strip() or "-1003762178712",
             "site_url": site_url.strip() or "https://hub.blissbiovn.com",
             "ai_provider": ai_provider.strip().lower() or "deepseek",
             "groq_api_key": groq_api_key.strip() or current_config.get("groq_api_key", ""),
@@ -400,6 +437,7 @@ def save_config(
             "mastodon_access_token": mastodon_access_token.strip() or current_config.get("mastodon_access_token", ""),
             "release_auto_channels": release_auto_channels.strip(),
             "community_reply_mode": "auto" if community_reply_mode.strip().lower() == "auto" else "draft",
+            "support_monitor_enabled": "true" if support_monitor_enabled.strip().lower() == "true" else "false",
         }
     )
     record_audit_log(
@@ -974,6 +1012,81 @@ def community_reply_draft_action(
         return _redirect_with_message(f"Reply draft generation failed: {exc}", "error")
 
 
+@admin_router.post("/support/sync")
+def support_sync_action(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    result = sync_support_channels(generate_drafts=True)
+    created = sum(int(item.get("created", 0)) for item in result.get("channels", {}).values())
+    failures = [name for name, item in result.get("channels", {}).items() if not item.get("ok")]
+    record_audit_log(
+        actor=actor,
+        action="sync_support_channels",
+        target_type="community_support",
+        target_id="all",
+        details={"created": created, "failures": failures, "drafts": result.get("drafts", {})},
+    )
+    if failures:
+        return _redirect_with_message(f"Support sync completed with errors: {', '.join(failures)}.", "error")
+    return _redirect_with_message(f"Support sync complete: {created} new messages.", "success")
+
+
+@admin_router.post("/support/{message_id}/draft")
+def support_draft_action(request: Request, message_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_support_message(message_id)
+    if not row:
+        return _redirect_with_message("Support message not found.", "error")
+    result = generate_support_draft(message_id)
+    record_audit_log(actor=actor, action="generate_support_draft", target_type="support_message", target_id=message_id)
+    return _redirect_with_message(f"AI draft generated as {result.get('category', 'support')}", "success")
+
+
+@admin_router.post("/support/{message_id}/review")
+def support_review_action(
+    request: Request,
+    message_id: str,
+    reply_text: str = Form(default=""),
+    action: str = Form(default="save"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_support_message(message_id)
+    if not row:
+        return _redirect_with_message("Support message not found.", "error")
+    if action not in {"save", "approve", "ignore"}:
+        return _redirect_with_message("Unsupported support action.", "error")
+    status = {"save": "draft_ready", "approve": "approved", "ignore": "ignored"}[action]
+    if action != "ignore" and not reply_text.strip():
+        return _redirect_with_message("Reply text cannot be empty.", "error")
+    update_support_message(message_id, {"reply_text": reply_text.strip(), "status": status, "error_message": ""})
+    record_audit_log(
+        actor=actor,
+        action=f"{action}_support_reply",
+        target_type="support_message",
+        target_id=message_id,
+        details={"platform": row.get("platform")},
+    )
+    return _redirect_with_message(f"Support reply {action} completed.", "success")
+
+
+@admin_router.post("/support/{message_id}/send")
+def support_send_action(request: Request, message_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        row = send_support_reply(message_id)
+        record_audit_log(
+            actor=actor,
+            action="send_support_reply",
+            target_type="support_message",
+            target_id=message_id,
+            details={"platform": row.get("platform"), "status": row.get("status")},
+        )
+        if row.get("status") == "manual_required":
+            return _redirect_with_message("DEV draft approved. Open the source comment and paste the prepared reply.", "info")
+        return _redirect_with_message("Support reply sent successfully.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Support reply failed: {exc}", "error")
+
+
 @admin_api_router.get("/health")
 def healthcheck(request: Request) -> dict[str, str]:
     require_admin_session(request)
@@ -1062,6 +1175,22 @@ def releases_api(request: Request) -> dict[str, object]:
     return {"items": list_releases(), "publications": list_release_publications()}
 
 
+@admin_api_router.get("/support")
+def support_api(request: Request, status: str = "", platform: str = "") -> dict[str, object]:
+    require_admin_session(request)
+    return {
+        "items": list_support_messages(status=status, platform=platform, limit=100),
+        "metrics": get_support_metrics(),
+        "sync_states": list_support_sync_states(),
+    }
+
+
+@admin_api_router.post("/support/sync")
+def support_sync_api(request: Request) -> dict[str, Any]:
+    require_admin_role(request, "superadmin", "editor")
+    return sync_support_channels(generate_drafts=True)
+
+
 @public_api_router.get("/releases")
 def public_releases_api() -> dict[str, object]:
     return {"items": list_releases(30, published_only=True)}
@@ -1136,8 +1265,23 @@ async def telegram_webhook(request: Request) -> dict[str, bool]:
     if not expected_secret or not secrets.compare_digest(supplied_secret, expected_secret):
         raise HTTPException(status_code=401, detail="Invalid Telegram webhook secret.")
     payload = await request.json()
+    support_row = ingest_telegram_update(payload)
     telegram_bot_manager.process_webhook(payload)
+    if support_row and support_row.get("status") == "new":
+        try:
+            generate_support_draft(str(support_row["id"]))
+        except Exception:
+            pass
     return {"ok": True}
+
+
+@public_api_router.get("/support-sync")
+def scheduled_support_sync(request: Request) -> dict[str, Any]:
+    expected_secret = get_env_value("CRON_SECRET")
+    supplied_secret = request.headers.get("authorization", "")
+    if not expected_secret or not secrets.compare_digest(supplied_secret, f"Bearer {expected_secret}"):
+        raise HTTPException(status_code=401, detail="Invalid cron authorization.")
+    return sync_support_channels(generate_drafts=True)
 
 
 @admin_api_router.get("/export")

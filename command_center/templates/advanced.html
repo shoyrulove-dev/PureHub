@@ -123,6 +123,11 @@
                 <input type="text" name="telegram_notify_chat_id" value="{{ config.get('telegram_notify_chat_id', defaults.telegram_notify_chat_id) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
                 <span class="mt-2 block text-xs text-slate-400">Publish to the channel once; its linked discussion group receives the post automatically.</span>
               </label>
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-200">Support discussion group ID</span>
+                <input type="text" name="telegram_support_chat_id" value="{{ config.get('telegram_support_chat_id', defaults.telegram_support_chat_id) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-300/40 focus:bg-white/7" />
+                <span class="mt-2 block text-xs text-slate-400">Incoming messages from this group are stored in Support Inbox.</span>
+              </label>
             </div>
 
             <div class="border-t border-white/10 pt-5">
@@ -140,6 +145,13 @@
                   <select name="community_reply_mode" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
                     <option value="draft" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'draft' %}selected{% endif %}>Draft for approval</option>
                     <option value="auto" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'auto' %}selected{% endif %}>Auto (use carefully)</option>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-sm font-medium text-slate-200">Support monitor</span>
+                  <select name="support_monitor_enabled" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
+                    <option value="true" {% if config.get('support_monitor_enabled', defaults.support_monitor_enabled) == 'true' %}selected{% endif %}>Enabled</option>
+                    <option value="false" {% if config.get('support_monitor_enabled', defaults.support_monitor_enabled) == 'false' %}selected{% endif %}>Paused</option>
                   </select>
                 </label>
               </div>

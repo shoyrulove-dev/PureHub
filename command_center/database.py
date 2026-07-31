@@ -26,6 +26,7 @@ CONFIG_DEFAULTS = {
     "telegram_bot_token": "",
     "telegram_bot_username": "",
     "telegram_notify_chat_id": "",
+    "telegram_support_chat_id": "-1003762178712",
     "pro_unlock_code": "PUREHUB-PRO-2026",
     "site_url": "https://hub.blissbiovn.com",
     "ai_provider": "deepseek",
@@ -40,10 +41,11 @@ CONFIG_DEFAULTS = {
     "mastodon_access_token": "",
     "release_auto_channels": "telegram,devto,bluesky,mastodon",
     "community_reply_mode": "draft",
+    "support_monitor_enabled": "true",
 }
 
-CURRENT_SCHEMA_VERSION = 7
-DEFAULTS_BOOTSTRAP_VERSION = 2
+CURRENT_SCHEMA_VERSION = 8
+DEFAULTS_BOOTSTRAP_VERSION = 4
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -430,6 +432,33 @@ API_CATALOG_DEFAULTS = [
         "group": "system",
         "description": "Returns Mongo schema version and migration history.",
     },
+    {
+        "api_key": "admin_support_api",
+        "method": "GET",
+        "path": "/admin/api/support",
+        "enabled": True,
+        "auth_required": True,
+        "group": "support",
+        "description": "Returns the unified support inbox, metrics, and channel sync state.",
+    },
+    {
+        "api_key": "admin_support_sync_api",
+        "method": "POST",
+        "path": "/admin/api/support/sync",
+        "enabled": True,
+        "auth_required": True,
+        "group": "support",
+        "description": "Synchronizes DEV, Bluesky, and Mastodon and generates pending AI drafts.",
+    },
+    {
+        "api_key": "support_cron_api",
+        "method": "GET",
+        "path": "/public-api/support-sync",
+        "enabled": True,
+        "auth_required": True,
+        "group": "support",
+        "description": "Runs the protected scheduled support monitor using CRON_SECRET.",
+    },
 ]
 
 PASSWORD_CONTEXT = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
@@ -508,6 +537,10 @@ def init_database() -> None:
         unique=True,
     )
     db.release_publications.create_index([("updated_at", DESCENDING)])
+    db.support_messages.create_index([("source_key", ASCENDING)], unique=True)
+    db.support_messages.create_index([("status", ASCENDING), ("received_at", DESCENDING)])
+    db.support_messages.create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
+    db.support_sync_state.create_index([("platform", ASCENDING)], unique=True)
 
     run_schema_migrations()
     seed_default_documents()
@@ -599,6 +632,7 @@ def run_schema_migrations() -> None:
         (5, "ensure-admin-role-values", _migration_admin_roles),
         (6, "ensure-login-guard-collection", _migration_login_guards),
         (7, "ensure-release-hub-collections", _migration_release_hub),
+        (8, "ensure-community-support-inbox", _migration_community_support),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -657,6 +691,13 @@ def _migration_release_hub() -> None:
         [("release_id", ASCENDING), ("channel", ASCENDING), ("language", ASCENDING)],
         unique=True,
     )
+
+
+def _migration_community_support() -> None:
+    collection("support_messages").create_index([("source_key", ASCENDING)], unique=True)
+    collection("support_messages").create_index([("status", ASCENDING), ("received_at", DESCENDING)])
+    collection("support_messages").create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
+    collection("support_sync_state").create_index([("platform", ASCENDING)], unique=True)
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -1353,6 +1394,113 @@ def list_release_publications(release_id: str = "", limit: int = 100) -> list[di
     filters = {"release_id": release_id} if release_id else {}
     rows = collection("release_publications").find(filters).sort("updated_at", DESCENDING).limit(limit)
     return [_serialize(item) for item in rows]
+
+
+def upsert_support_message(values: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    now = utcnow()
+    source_key = str(values["source_key"])
+    received_at = values.get("received_at") or now
+    payload = {
+        "source_key": source_key,
+        "platform": str(values.get("platform", "")),
+        "external_id": str(values.get("external_id", "")),
+        "thread_id": str(values.get("thread_id", "")),
+        "parent_external_id": str(values.get("parent_external_id", "")),
+        "author_id": str(values.get("author_id", "")),
+        "author_name": str(values.get("author_name", "")),
+        "author_handle": str(values.get("author_handle", "")),
+        "content": str(values.get("content", "")).strip(),
+        "source_url": str(values.get("source_url", "")),
+        "reply_context": values.get("reply_context", {}),
+        "received_at": received_at,
+        "created_at": now,
+        "updated_at": now,
+        "status": "new",
+        "category": "unclassified",
+        "priority": "normal",
+        "language": "en",
+        "requires_reply": True,
+        "ai_draft": "",
+        "reply_text": "",
+        "external_reply_id": "",
+        "external_reply_url": "",
+        "error_message": "",
+        "notified_at": None,
+    }
+    result = collection("support_messages").update_one(
+        {"source_key": source_key},
+        {
+            "$setOnInsert": payload,
+            "$set": {"last_seen_at": now, "source_url": payload["source_url"]},
+        },
+        upsert=True,
+    )
+    row = collection("support_messages").find_one({"source_key": source_key})
+    return _serialize(row), result.upserted_id is not None
+
+
+def get_support_message(message_id: str) -> dict[str, Any] | None:
+    from bson import ObjectId
+
+    try:
+        row = collection("support_messages").find_one({"_id": ObjectId(message_id)})
+    except Exception:
+        return None
+    return _serialize(row) if row else None
+
+
+def list_support_messages(status: str = "", platform: str = "", limit: int = 100) -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {}
+    if status:
+        filters["status"] = status
+    if platform:
+        filters["platform"] = platform
+    rows = collection("support_messages").find(filters).sort("received_at", DESCENDING).limit(limit)
+    return [_serialize(item) for item in rows]
+
+
+def update_support_message(message_id: str, values: dict[str, Any]) -> None:
+    from bson import ObjectId
+
+    collection("support_messages").update_one(
+        {"_id": ObjectId(message_id)},
+        {"$set": {**values, "updated_at": utcnow()}},
+    )
+
+
+def get_support_metrics() -> dict[str, Any]:
+    messages = collection("support_messages")
+    open_statuses = ["new", "draft_ready", "approved", "failed"]
+    by_platform = {
+        platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
+        for platform in ("telegram", "devto", "bluesky", "mastodon")
+    }
+    return {
+        "open": messages.count_documents({"status": {"$in": open_statuses}}),
+        "new": messages.count_documents({"status": "new"}),
+        "draft_ready": messages.count_documents({"status": "draft_ready"}),
+        "approved": messages.count_documents({"status": "approved"}),
+        "replied": messages.count_documents({"status": "replied"}),
+        "manual_required": messages.count_documents({"status": "manual_required"}),
+        "failed": messages.count_documents({"status": "failed"}),
+        "by_platform": by_platform,
+    }
+
+
+def get_support_sync_state(platform: str) -> dict[str, Any]:
+    return _serialize(collection("support_sync_state").find_one({"platform": platform}))
+
+
+def update_support_sync_state(platform: str, values: dict[str, Any]) -> None:
+    collection("support_sync_state").update_one(
+        {"platform": platform},
+        {"$set": {"platform": platform, **values, "updated_at": utcnow()}},
+        upsert=True,
+    )
+
+
+def list_support_sync_states() -> list[dict[str, Any]]:
+    return [_serialize(item) for item in collection("support_sync_state").find({}).sort("platform", ASCENDING)]
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:

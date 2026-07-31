@@ -120,12 +120,25 @@ Browser limitations are explained instead of being hidden. Hardware torch contro
 - Telegram also receives optional Vietnamese and Chinese drafts, but only the reviewed English channel post is eligible for API publishing.
 - Added an approval queue with editable content and explicit `draft`, `approved`, and `ready_manual` states.
 - Regenerating content does not overwrite an already-published post.
-- API publishers are implemented for Telegram, DEV Community draft articles, Bluesky, and Mastodon.
+- API publishers are implemented for Telegram, public or draft DEV Community articles, Bluesky, and Mastodon.
 - Reddit, Hacker News, Product Hunt, LinkedIn, and Facebook remain review-ready manual drafts to respect platform rules and avoid spam.
 - Missing credentials move an approved publication to `waiting_credentials` instead of losing it.
 - Added AI-assisted community reply drafts in the admin panel.
 - Added `/ask` to the Telegram bot. Optional private-chat auto reply can be enabled through `community_reply_mode`; group auto reply is intentionally disabled to prevent noisy or unsafe bot behavior.
 - Added a secret-protected Telegram webhook endpoint for reliable bot replies on Vercel serverless while retaining the existing polling worker for local/long-running deployments.
+
+### Community Support Center
+
+- Upgraded Mongo to schema 8 with deduplicated `support_messages` and per-platform `support_sync_state` collections.
+- Added a responsive Support Inbox to the primary admin dashboard with open, draft, approved, replied, manual, and failed states.
+- Telegram group/private messages are captured through the existing webhook. Bot commands handled elsewhere are excluded from the inbox.
+- DEV comments, Bluesky replies/mentions/quotes, and Mastodon mentions are synchronized every 10 minutes and can also be refreshed manually.
+- Added AI triage for question, bug, feature request, privacy, installation, praise, spam, and other categories, including language and priority detection.
+- AI replies are drafts only. An editor must approve before Telegram, Bluesky, or Mastodon can publish a reply.
+- DEV comments receive an editable AI draft and a source link for manual reply because the official Forem API does not expose comment creation.
+- Added duplicate protection, reply threading metadata, idempotent Mastodon publishing, failure states, audit events, and direct links to source messages/replies.
+- Added a live admin notification badge that refreshes support counts every minute while the dashboard is open.
+- Added a protected Vercel cron endpoint using `CRON_SECRET`; the production secret is stored as a sensitive Vercel environment variable.
 
 ### Public release experience
 
@@ -170,3 +183,4 @@ These items require account ownership or a long-lived secret and therefore are n
 - Password Vault should receive an independent security review before being recommended as the only store for critical credentials.
 - Android SDK is installed in duplicate locations (`D:\Dev\Android` and `D:\Dev\Android\Sdk`), which slows Gradle SDK discovery but does not block builds.
 - Instrumented camera/sensor tests require a device or emulator and were not run in this pass.
+- The 22 mini-app feature upgrades are intentionally deferred until Support Center operations are stable.
