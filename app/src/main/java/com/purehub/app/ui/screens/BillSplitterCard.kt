@@ -279,7 +279,7 @@ fun BillSplitterCard(
                 Button(
                     onClick = {
                         if (items.isNotEmpty()) {
-                            items.removeLast()
+                            items.removeAt(items.lastIndex)
                         }
                     },
                 ) {

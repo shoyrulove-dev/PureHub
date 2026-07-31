@@ -153,7 +153,7 @@ class SmartFlashlightViewModel(
                 pattern += if (symbolIndex == symbols.lastIndex) letterGap else gap
             }
             if (index == message.lastIndex && pattern.isNotEmpty()) {
-                pattern.removeLast()
+                pattern.removeAt(pattern.lastIndex)
             }
         }
         return pattern
