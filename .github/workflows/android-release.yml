@@ -66,6 +66,17 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab "release-assets/PureHub-${PUREHUB_VERSION_NAME}.aab"
           cd release-assets
           sha256sum * > SHA256SUMS.txt
+      - name: Enforce offline-only APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAPT="$(find "${ANDROID_HOME}/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          PERMISSIONS="$("${AAPT}" dump permissions "release-assets/PureHub-${PUREHUB_VERSION_NAME}.apk")"
+          printf '%s\n' "${PERMISSIONS}"
+          if grep -q 'android.permission.INTERNET' <<<"${PERMISSIONS}"; then
+            echo "::error::Offline-only privacy gate failed: APK requests android.permission.INTERNET"
+            exit 1
+          fi
       - uses: actions/attest-build-provenance@v2
         with:
           subject-path: release-assets/*
