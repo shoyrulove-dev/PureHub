@@ -22,6 +22,8 @@ pwa/node_modules/
 pwa/dist/
 
 # Python backend
+**/__pycache__/
+*.pyc
 api/__pycache__/
 command_center/.venv/
 command_center/__pycache__/
