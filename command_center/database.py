@@ -42,10 +42,20 @@ CONFIG_DEFAULTS = {
     "release_auto_channels": "telegram,devto,bluesky,mastodon",
     "community_reply_mode": "draft",
     "support_monitor_enabled": "true",
+    "growth_automation_enabled": "false",
+    "growth_auto_publish": "true",
+    "growth_campaign_start_date": "",
+    "growth_timezone": "Asia/Bangkok",
+    "youtube_client_id": "",
+    "youtube_client_secret": "",
+    "youtube_refresh_token": "",
+    "youtube_channel_id": "",
+    "youtube_channel_title": "",
+    "youtube_default_privacy": "unlisted",
 }
 
-CURRENT_SCHEMA_VERSION = 9
-DEFAULTS_BOOTSTRAP_VERSION = 4
+CURRENT_SCHEMA_VERSION = 10
+DEFAULTS_BOOTSTRAP_VERSION = 5
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -542,6 +552,12 @@ def init_database() -> None:
     db.support_messages.create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
     db.support_sync_state.create_index([("platform", ASCENDING)], unique=True)
     db.community_metrics.create_index([("platform", ASCENDING)], unique=True)
+    db.growth_posts.create_index(
+        [("campaign_id", ASCENDING), ("day_number", ASCENDING), ("channel", ASCENDING)],
+        unique=True,
+    )
+    db.growth_posts.create_index([("scheduled_at", DESCENDING)])
+    db.growth_posts.create_index([("status", ASCENDING), ("scheduled_at", DESCENDING)])
 
     run_schema_migrations()
     seed_default_documents()
@@ -635,6 +651,7 @@ def run_schema_migrations() -> None:
         (7, "ensure-release-hub-collections", _migration_release_hub),
         (8, "ensure-community-support-inbox", _migration_community_support),
         (9, "ensure-community-engagement-metrics", _migration_community_metrics),
+        (10, "ensure-growth-autopilot", _migration_growth_autopilot),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -704,6 +721,15 @@ def _migration_community_support() -> None:
 
 def _migration_community_metrics() -> None:
     collection("community_metrics").create_index([("platform", ASCENDING)], unique=True)
+
+
+def _migration_growth_autopilot() -> None:
+    collection("growth_posts").create_index(
+        [("campaign_id", ASCENDING), ("day_number", ASCENDING), ("channel", ASCENDING)],
+        unique=True,
+    )
+    collection("growth_posts").create_index([("scheduled_at", DESCENDING)])
+    collection("growth_posts").create_index([("status", ASCENDING), ("scheduled_at", DESCENDING)])
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
@@ -1532,6 +1558,99 @@ def upsert_community_metrics(
 def list_community_metrics() -> list[dict[str, Any]]:
     rows = collection("community_metrics").find({}).sort("platform", ASCENDING)
     return [_serialize(item) for item in rows]
+
+
+def upsert_growth_post(
+    *,
+    campaign_id: str,
+    day_number: int,
+    channel: str,
+    topic: str,
+    content: str,
+    status: str = "draft",
+    scheduled_at: datetime | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    now = utcnow()
+    key = {
+        "campaign_id": campaign_id.strip(),
+        "day_number": max(1, int(day_number)),
+        "channel": channel.strip().lower(),
+    }
+    collection("growth_posts").update_one(
+        key,
+        {
+            "$setOnInsert": {
+                **key,
+                "topic": topic.strip(),
+                "content": content.strip(),
+                "status": status,
+                "scheduled_at": scheduled_at or now,
+                "metadata": metadata or {},
+                "external_id": "",
+                "external_url": "",
+                "error_message": "",
+                "attempts": 0,
+                "created_at": now,
+                "updated_at": now,
+            }
+        },
+        upsert=True,
+    )
+    return _serialize(collection("growth_posts").find_one(key))
+
+
+def get_growth_post(post_id: str) -> dict[str, Any] | None:
+    from bson import ObjectId
+
+    try:
+        object_id = ObjectId(post_id)
+    except Exception:
+        return None
+    row = collection("growth_posts").find_one({"_id": object_id})
+    return _serialize(row) if row else None
+
+
+def list_growth_posts(limit: int = 100, *, status: str = "", channel: str = "") -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {}
+    if status:
+        filters["status"] = status
+    if channel:
+        filters["channel"] = channel
+    rows = collection("growth_posts").find(filters).sort("scheduled_at", DESCENDING).limit(limit)
+    return [_serialize(item) for item in rows]
+
+
+def update_growth_post(post_id: str, values: dict[str, Any]) -> None:
+    from bson import ObjectId
+
+    try:
+        object_id = ObjectId(post_id)
+    except Exception:
+        return
+    payload = {**values, "updated_at": utcnow()}
+    increments = {"attempts": 1} if payload.pop("increment_attempts", False) else {}
+    update: dict[str, Any] = {"$set": payload}
+    if increments:
+        update["$inc"] = increments
+    collection("growth_posts").update_one({"_id": object_id}, update)
+
+
+def get_growth_summary() -> dict[str, Any]:
+    rows = list(collection("growth_posts").find({}, {"status": 1, "channel": 1, "day_number": 1}))
+    statuses: dict[str, int] = {}
+    channels: dict[str, int] = {}
+    for row in rows:
+        status = str(row.get("status", "draft"))
+        channel = str(row.get("channel", "unknown"))
+        statuses[status] = statuses.get(status, 0) + 1
+        channels[channel] = channels.get(channel, 0) + 1
+    return {
+        "total": len(rows),
+        "statuses": statuses,
+        "channels": channels,
+        "latest_day": max((int(row.get("day_number", 0)) for row in rows), default=0),
+    }
 
 
 def _serialize(document: dict[str, Any] | None) -> dict[str, Any]:

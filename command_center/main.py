@@ -28,6 +28,7 @@ try:
         export_control_bundle,
         get_admin_profile,
         get_analytics_snapshot,
+        get_config_value,
         get_dashboard_metrics,
         get_env_value,
         get_login_guard_state,
@@ -68,6 +69,7 @@ except ImportError:
         export_control_bundle,
         get_admin_profile,
         get_analytics_snapshot,
+        get_config_value,
         get_dashboard_metrics,
         get_env_value,
         get_login_guard_state,
@@ -162,6 +164,31 @@ except ImportError:
         list_support_messages,
         list_support_sync_states,
         update_support_message,
+    )
+
+try:
+    from .database import get_growth_summary, list_growth_posts
+    from .growth_automation import retry_growth_post, run_growth_automation, sync_growth_post_metrics
+    from .youtube_connector import (
+        build_authorization_url,
+        complete_upload,
+        connect_youtube,
+        create_upload_session,
+        disconnect_youtube,
+        sync_youtube_metrics,
+        youtube_connection_state,
+    )
+except ImportError:
+    from database import get_growth_summary, list_growth_posts
+    from growth_automation import retry_growth_post, run_growth_automation, sync_growth_post_metrics
+    from youtube_connector import (
+        build_authorization_url,
+        complete_upload,
+        connect_youtube,
+        create_upload_session,
+        disconnect_youtube,
+        sync_youtube_metrics,
+        youtube_connection_state,
     )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -368,6 +395,9 @@ def _dashboard_context(
         "support_metrics": get_support_metrics(),
         "support_sync_states": list_support_sync_states(),
         "community_metrics": {item["platform"]: item for item in list_community_metrics()},
+        "growth_posts": list_growth_posts(40),
+        "growth_summary": get_growth_summary(),
+        "youtube_connection": youtube_connection_state(),
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -457,6 +487,13 @@ def save_config(
     release_auto_channels: str = Form(default="telegram,devto,bluesky,mastodon"),
     community_reply_mode: str = Form(default="draft"),
     support_monitor_enabled: str = Form(default="true"),
+    growth_automation_enabled: str = Form(default="false"),
+    growth_auto_publish: str = Form(default="true"),
+    growth_campaign_start_date: str = Form(default=""),
+    growth_timezone: str = Form(default="Asia/Bangkok"),
+    youtube_client_id: str = Form(default=""),
+    youtube_client_secret: str = Form(default=""),
+    youtube_default_privacy: str = Form(default="unlisted"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     current_config = list_config()
@@ -484,6 +521,13 @@ def save_config(
             "release_auto_channels": release_auto_channels.strip(),
             "community_reply_mode": "auto" if community_reply_mode.strip().lower() == "auto" else "draft",
             "support_monitor_enabled": "true" if support_monitor_enabled.strip().lower() == "true" else "false",
+            "growth_automation_enabled": "true" if growth_automation_enabled.strip().lower() == "true" else "false",
+            "growth_auto_publish": "true" if growth_auto_publish.strip().lower() == "true" else "false",
+            "growth_campaign_start_date": growth_campaign_start_date.strip(),
+            "growth_timezone": growth_timezone.strip() or "Asia/Bangkok",
+            "youtube_client_id": youtube_client_id.strip() or current_config.get("youtube_client_id", ""),
+            "youtube_client_secret": youtube_client_secret.strip() or current_config.get("youtube_client_secret", ""),
+            "youtube_default_privacy": youtube_default_privacy if youtube_default_privacy in {"private", "unlisted", "public"} else "unlisted",
         }
     )
     record_audit_log(
@@ -1230,6 +1274,122 @@ def support_send_action(request: Request, message_id: str) -> RedirectResponse:
         return _redirect_with_message(f"Support reply failed: {exc}", "error")
 
 
+@admin_router.post("/growth/run")
+def growth_run_action(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        result = run_growth_automation(force=True, actor=actor)
+        return _redirect_with_message(
+            f"Growth Autopilot day {result.get('cycle_day', 1)} processed: {result.get('published', 0)} published.",
+            "success",
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Growth Autopilot failed: {exc}", "error")
+
+
+@admin_router.post("/growth/metrics")
+def growth_metrics_action(request: Request) -> RedirectResponse:
+    require_admin_role(request, "superadmin", "editor")
+    social = sync_growth_post_metrics()
+    try:
+        youtube = sync_youtube_metrics()
+    except Exception:
+        youtube = {}
+    return _redirect_with_message(f"Growth metrics refreshed for {len(social) + len(youtube)} post(s).", "success")
+
+
+@admin_router.post("/growth/{post_id}/retry")
+def growth_retry_action(request: Request, post_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    try:
+        row = retry_growth_post(post_id)
+        record_audit_log(
+            actor=actor,
+            action="retry_growth_post",
+            target_type="growth_post",
+            target_id=post_id,
+            details={"status": row.get("status"), "channel": row.get("channel")},
+        )
+        return _redirect_with_message(f"{str(row.get('channel', 'Post')).title()} retry: {row.get('status', 'processed')}.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Growth retry failed: {exc}", "error")
+
+
+@admin_router.get("/youtube/connect")
+def youtube_connect_action(request: Request) -> RedirectResponse:
+    require_admin_role(request, "superadmin")
+    state = secrets.token_urlsafe(32)
+    request.session["youtube_oauth_state"] = state
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/youtube/callback"
+    try:
+        return RedirectResponse(url=build_authorization_url(state=state, redirect_uri=redirect_uri), status_code=302)
+    except Exception as exc:
+        return _redirect_with_message(f"YouTube connection failed: {exc}", "error")
+
+
+@admin_router.get("/youtube/callback")
+def youtube_callback_action(request: Request, code: str = "", state: str = "", error: str = "") -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    expected = str(request.session.pop("youtube_oauth_state", ""))
+    if error:
+        return _redirect_with_message(f"YouTube authorization was cancelled: {error}", "error")
+    if not expected or not secrets.compare_digest(expected, state) or not code:
+        return _redirect_with_message("Invalid YouTube OAuth response.", "error")
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/youtube/callback"
+    try:
+        connection = connect_youtube(code=code, redirect_uri=redirect_uri)
+        record_audit_log(
+            actor=actor,
+            action="connect_youtube",
+            target_type="social_connection",
+            target_id=str(connection.get("channel_id", "youtube")),
+            details={"channel_title": connection.get("channel_title", "")},
+        )
+        return _redirect_with_message(f"YouTube connected: {connection.get('channel_title') or 'channel ready'}.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"YouTube OAuth failed: {exc}", "error")
+
+
+@admin_router.post("/youtube/disconnect")
+def youtube_disconnect_action(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    disconnect_youtube()
+    record_audit_log(actor=actor, action="disconnect_youtube", target_type="social_connection", target_id="youtube")
+    return _redirect_with_message("YouTube disconnected.", "success")
+
+
+@admin_api_router.post("/youtube/upload-session")
+async def youtube_upload_session_api(request: Request) -> dict[str, str]:
+    require_admin_role(request, "superadmin", "editor")
+    payload = await request.json()
+    try:
+        return create_upload_session(
+            str(payload.get("post_id", "")),
+            content_type=str(payload.get("content_type", "")),
+            content_length=int(payload.get("content_length", 0)),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@admin_api_router.post("/youtube/complete")
+async def youtube_complete_api(request: Request) -> dict[str, Any]:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    payload = await request.json()
+    try:
+        row = complete_upload(str(payload.get("post_id", "")), dict(payload.get("youtube") or {}))
+        record_audit_log(
+            actor=actor,
+            action="upload_youtube_video",
+            target_type="growth_post",
+            target_id=str(row.get("id", "")),
+            details={"video_id": row.get("external_id", ""), "url": row.get("external_url", "")},
+        )
+        return {"ok": True, "item": row}
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @admin_api_router.get("/health")
 def healthcheck(request: Request) -> dict[str, str]:
     require_admin_session(request)
@@ -1426,6 +1586,21 @@ def scheduled_support_sync(request: Request) -> dict[str, Any]:
     if not expected_secret or not secrets.compare_digest(supplied_secret, f"Bearer {expected_secret}"):
         raise HTTPException(status_code=401, detail="Invalid cron authorization.")
     return sync_support_channels(generate_drafts=True)
+
+
+@public_api_router.get("/growth-automation")
+def scheduled_growth_automation(request: Request) -> dict[str, Any]:
+    expected_secret = get_env_value("CRON_SECRET")
+    supplied_secret = request.headers.get("authorization", "")
+    if not expected_secret or not secrets.compare_digest(supplied_secret, f"Bearer {expected_secret}"):
+        raise HTTPException(status_code=401, detail="Invalid cron authorization.")
+    result = run_growth_automation(actor="vercel-cron")
+    result["post_metrics"] = sync_growth_post_metrics()
+    try:
+        result["youtube_metrics"] = sync_youtube_metrics()
+    except Exception as exc:
+        result["youtube_metrics"] = {"error": str(exc)[:300]}
+    return result
 
 
 @admin_api_router.get("/export")

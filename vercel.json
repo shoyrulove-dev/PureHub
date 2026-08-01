@@ -12,6 +12,10 @@
     {
       "path": "/public-api/support-sync",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/public-api/growth-automation",
+      "schedule": "0 12 * * *"
     }
   ],
   "rewrites": [

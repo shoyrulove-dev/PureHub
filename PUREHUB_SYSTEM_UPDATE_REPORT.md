@@ -280,3 +280,15 @@ Remaining owner/external actions:
 - OCR now offers English, Vietnamese, and Simplified Chinese and downloads only the selected Tesseract language pack on first use.
 - OCR and Password Vault now compile into independent lazy route chunks instead of living in the shared mini-app chunk.
 - The shared mini-app JavaScript chunk decreased from roughly 48.6 KB to 43.4 KB before gzip, while OCR and Vault load only on their own routes.
+
+## Growth Autopilot
+
+- Added an idempotent 30-day community campaign covering the full PureHub tool and engineering story.
+- Added safe platform cadence: daily Bluesky/Mastodon, three Telegram channel posts per week, and one educational DEV article per week.
+- Added AI-generated, platform-specific copy with verified-fact constraints and deterministic fallback content.
+- Added automatic publishing, per-channel failure retention/retry, aggregate engagement refresh, per-post metrics, and audit logging.
+- Kept public replies in the existing human-approval workflow and Reddit in manual-review mode.
+- Added YouTube content packages three times per week with a title, link-free description, and short shot list.
+- Added Google OAuth connection and browser-to-YouTube resumable uploads. PureHub never accepts the owner's Google password, and videos default to Unlisted.
+- Added compact Growth Autopilot controls, history, status, metrics, YouTube queue, and upload actions to Admin.
+- Added a protected daily Vercel cron at 19:00 Asia/Bangkok and retained the independent daily support monitor.

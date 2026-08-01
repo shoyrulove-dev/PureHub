@@ -429,6 +429,49 @@
           </div>
         </section>
 
+        <section class="section panel" id="growth-autopilot" aria-labelledby="growth-autopilot-title">
+          <div class="panel-head" style="margin-bottom:0">
+            <div>
+              <p class="panel-kicker">30-day community engine</p>
+              <h2 id="growth-autopilot-title" style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-violet"><use href="#i-spark"/></svg>Growth Autopilot</h2>
+              <p class="panel-copy">AI writes platform-specific content, publishes at a safe cadence, monitors reactions, and leaves replies for approval.</p>
+            </div>
+            <div class="row-actions">
+              <span class="badge {% if config.get('growth_automation_enabled') == 'true' %}published{% else %}draft{% endif %}">{% if config.get('growth_automation_enabled') == 'true' %}Running{% else %}Paused{% endif %}</span>
+              <form action="{{ admin_prefix }}/growth/metrics" method="post"><button class="button icon-button" type="submit" title="Refresh post metrics" aria-label="Refresh post metrics"><svg class="icon"><use href="#i-history"/></svg></button></form>
+              <form action="{{ admin_prefix }}/growth/run" method="post" onsubmit="return confirm('Generate today’s campaign content and publish all scheduled automatic channels?');"><button class="button violet icon-button" type="submit" title="Run today now" aria-label="Run Growth Autopilot now"><svg class="icon"><use href="#i-send"/></svg></button></form>
+            </div>
+          </div>
+          <div class="support-stats" style="margin-top:.9rem">
+            <span class="badge" title="Total campaign items"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ growth_summary.total }}</span>
+            <span class="badge published" title="Published"><svg class="icon"><use href="#i-check"/></svg>&nbsp;{{ growth_summary.statuses.get('published', 0) }}</span>
+            <span class="badge draft" title="YouTube uploads ready"><svg class="icon"><use href="#i-eye"/></svg>&nbsp;{{ growth_summary.statuses.get('ready_upload', 0) }}</span>
+            <span class="badge {% if youtube_connection.connected %}published{% else %}draft{% endif %}" title="YouTube OAuth">YouTube {% if youtube_connection.connected %}connected{% else %}manual{% endif %}</span>
+          </div>
+          <div class="queue" style="margin-top:1rem">
+            {% for item in growth_posts[:14] %}
+            <details class="queue-item">
+              <summary>
+                <span class="queue-label"><span class="queue-title">Day {{ item.metadata.get('cycle_day', item.day_number) }} · {{ item.channel|upper }} · {{ item.topic }}</span><span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span></span>
+                {% if item.external_url %}<a class="link" href="{{ item.external_url }}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">Open post</a>{% endif %}
+              </summary>
+              <div class="queue-body">
+                <textarea rows="7" readonly>{{ item.content }}</textarea>
+                {% set post_metrics = item.metadata.get('metrics', {}) %}
+                {% if post_metrics %}<div class="support-stats" style="margin-top:.7rem">{% for name, value in post_metrics.items() %}<span class="badge">{{ name }} {{ value }}</span>{% endfor %}</div>{% endif %}
+                {% if item.error_message %}<p class="release-summary" style="color:var(--rose);margin-top:.7rem">{{ item.error_message }}</p>{% endif %}
+                <div class="row-actions" style="margin-top:.7rem">
+                  {% if item.status == 'failed' and item.channel in ['telegram','devto','bluesky','mastodon'] %}<form action="{{ admin_prefix }}/growth/{{ item.id }}/retry" method="post"><button class="button violet" type="submit">Retry</button></form>{% endif %}
+                  {% if item.channel == 'youtube' and item.status in ['ready_upload','uploading'] %}
+                    {% if youtube_connection.connected %}<label class="button primary" style="cursor:pointer">Choose video<input type="file" accept="video/mp4,video/quicktime,video/webm" hidden data-youtube-upload="{{ item.id }}" /></label><span class="panel-copy" data-upload-status="{{ item.id }}">Uploads as {{ youtube_connection.privacy }}</span>{% else %}<a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Configure YouTube OAuth</a>{% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            </details>
+            {% else %}<div class="release-card"><p class="release-title">Campaign has not started</p><p class="release-summary">Enable it in Advanced Controls or run day one manually.</p></div>{% endfor %}
+          </div>
+        </section>
+
         <section class="section panel" id="reddit-review" aria-labelledby="reddit-review-title">
           <div class="panel-head" style="margin-bottom:0">
             <div>
@@ -723,6 +766,46 @@
               button.style.color = "";
               button.style.background = "";
             }, 1400);
+          });
+        });
+        document.querySelectorAll("[data-youtube-upload]").forEach((input) => {
+          input.addEventListener("change", async () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            const postId = input.dataset.youtubeUpload;
+            const status = document.querySelector(`[data-upload-status="${postId}"]`);
+            try {
+              if (status) status.textContent = "Creating secure upload session…";
+              const sessionResponse = await fetch("{{ api_prefix }}/youtube/upload-session", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ post_id: postId, content_type: file.type || "video/mp4", content_length: file.size }),
+              });
+              const session = await sessionResponse.json();
+              if (!sessionResponse.ok) throw new Error(session.detail || "Could not start YouTube upload.");
+              if (status) status.textContent = `Uploading ${file.name}…`;
+              const uploadResponse = await fetch(session.upload_url, {
+                method: "PUT",
+                headers: { "Content-Type": file.type || "video/mp4" },
+                body: file,
+              });
+              const youtube = await uploadResponse.json();
+              if (!uploadResponse.ok) throw new Error(youtube?.error?.message || "YouTube rejected the video.");
+              const completeResponse = await fetch("{{ api_prefix }}/youtube/complete", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ post_id: postId, youtube }),
+              });
+              const completed = await completeResponse.json();
+              if (!completeResponse.ok) throw new Error(completed.detail || "Could not save YouTube result.");
+              if (status) status.textContent = "Uploaded successfully. Refreshing…";
+              window.setTimeout(() => window.location.reload(), 900);
+            } catch (error) {
+              if (status) status.textContent = error instanceof Error ? error.message : "Upload failed.";
+              input.value = "";
+            }
           });
         });
         let previousOpen = Number(openMetric?.textContent || 0);

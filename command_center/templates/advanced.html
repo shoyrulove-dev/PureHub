@@ -210,6 +210,28 @@
                 <label><span class="mb-2 block text-sm">Mastodon access token</span><input type="password" name="mastodon_access_token" value="" placeholder="{% if config.get('mastodon_access_token') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
               </div>
             </div>
+
+            <div class="border-t border-white/10 pt-5" id="growth-autopilot-settings">
+              <p class="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">Growth Autopilot</p>
+              <div class="grid gap-5 sm:grid-cols-2">
+                <label><span class="mb-2 block text-sm">Daily automation</span><select name="growth_automation_enabled" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3"><option value="true" {% if config.get('growth_automation_enabled', defaults.growth_automation_enabled) == 'true' %}selected{% endif %}>Enabled</option><option value="false" {% if config.get('growth_automation_enabled', defaults.growth_automation_enabled) == 'false' %}selected{% endif %}>Paused</option></select></label>
+                <label><span class="mb-2 block text-sm">Approved-channel publishing</span><select name="growth_auto_publish" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3"><option value="true" {% if config.get('growth_auto_publish', defaults.growth_auto_publish) == 'true' %}selected{% endif %}>Automatic</option><option value="false" {% if config.get('growth_auto_publish', defaults.growth_auto_publish) == 'false' %}selected{% endif %}>Generate drafts only</option></select></label>
+                <label><span class="mb-2 block text-sm">Campaign start date</span><input type="date" name="growth_campaign_start_date" value="{{ config.get('growth_campaign_start_date', defaults.growth_campaign_start_date) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Campaign timezone</span><input name="growth_timezone" value="{{ config.get('growth_timezone', defaults.growth_timezone) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+              </div>
+              <p class="mt-3 text-xs text-slate-400">Bluesky and Mastodon run daily; Telegram three times weekly; DEV weekly. Replies remain drafts for approval. Reddit is never auto-posted.</p>
+
+              <p class="mb-4 mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-red-300">YouTube OAuth</p>
+              <div class="grid gap-5 sm:grid-cols-2">
+                <label><span class="mb-2 block text-sm">Google OAuth client ID</span><input type="password" name="youtube_client_id" value="" placeholder="{% if config.get('youtube_client_id') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Google OAuth client secret</span><input type="password" name="youtube_client_secret" value="" placeholder="{% if config.get('youtube_client_secret') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Default visibility</span><select name="youtube_default_privacy" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3"><option value="unlisted" {% if config.get('youtube_default_privacy', defaults.youtube_default_privacy) == 'unlisted' %}selected{% endif %}>Unlisted (recommended)</option><option value="private" {% if config.get('youtube_default_privacy') == 'private' %}selected{% endif %}>Private</option><option value="public" {% if config.get('youtube_default_privacy') == 'public' %}selected{% endif %}>Public</option></select></label>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm"><span class="block text-slate-400">Connection</span><strong>{% if youtube_connection.connected %}{{ youtube_connection.channel_title or 'YouTube connected' }}{% elif youtube_connection.client_configured %}Ready to authorize{% else %}Add OAuth credentials first{% endif %}</strong></div>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-3">
+                {% if youtube_connection.connected %}<button class="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-2 text-sm" type="submit" formaction="{{ admin_prefix }}/youtube/disconnect" formmethod="post">Disconnect YouTube</button>{% elif youtube_connection.client_configured %}<a class="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm" href="{{ admin_prefix }}/youtube/connect">Connect YouTube securely</a>{% endif %}
+              </div>
+            </div>
           </div>
         </form>
 
