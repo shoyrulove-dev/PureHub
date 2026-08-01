@@ -1526,6 +1526,16 @@ def update_support_message(message_id: str, values: dict[str, Any]) -> None:
     )
 
 
+def delete_support_message(message_id: str) -> bool:
+    from bson import ObjectId
+
+    try:
+        object_id = ObjectId(message_id)
+    except Exception:
+        return False
+    return collection("support_messages").delete_one({"_id": object_id}).deleted_count == 1
+
+
 def get_support_metrics() -> dict[str, Any]:
     messages = collection("support_messages")
     open_statuses = ["new", "draft_ready", "approved", "failed"]

@@ -147,6 +147,7 @@ try:
     from .database import (
         get_support_message,
         get_support_metrics,
+        delete_support_message,
         list_community_metrics,
         list_support_messages,
         list_support_sync_states,
@@ -163,6 +164,7 @@ except ImportError:
     from database import (
         get_support_message,
         get_support_metrics,
+        delete_support_message,
         list_community_metrics,
         list_support_messages,
         list_support_sync_states,
@@ -1421,6 +1423,24 @@ def support_send_action(request: Request, message_id: str) -> RedirectResponse:
         return _redirect_with_message("Support reply sent successfully.", "success", anchor="support")
     except Exception as exc:
         return _redirect_with_message(f"Support reply failed: {exc}", "error", anchor="support")
+
+
+@admin_router.post("/support/{message_id}/delete")
+def support_delete_action(request: Request, message_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_support_message(message_id)
+    if not row:
+        return _redirect_with_message("Support message not found.", "error", anchor="support")
+    if not delete_support_message(message_id):
+        return _redirect_with_message("Support message could not be deleted.", "error", anchor="support")
+    record_audit_log(
+        actor=actor,
+        action="delete_support_message",
+        target_type="support_message",
+        target_id=message_id,
+        details={"platform": row.get("platform"), "status": row.get("status")},
+    )
+    return _redirect_with_message("Support message deleted permanently.", "success", anchor="support")
 
 
 @admin_router.post("/growth/run")

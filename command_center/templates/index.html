@@ -182,12 +182,23 @@
       .release-list, .queue { display: grid; gap: 0.75rem; }
       .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
       .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-      .support-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem; }
-      .support-card { padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; background: #f8fafc; }
-      .support-card.urgent, .support-card.high { border-color: rgba(251, 113, 133, 0.28); }
-      .support-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
+      .support-list { display: grid; gap: 0.4rem; margin-top: 1rem; }
+      .support-row { position: relative; border: 1px solid var(--line); border-radius: .78rem; background: #f8fafc; }
+      .support-row.urgent, .support-row.high { border-color: #fda4af; }
+      .support-row-head { display: grid; grid-template-columns: 7.5rem minmax(7rem, .8fr) minmax(12rem, 3fr) auto auto; min-height: 3.15rem; align-items: center; gap: .65rem; padding: .48rem .58rem .48rem .75rem; }
+      .support-platform { display: flex; min-width: 0; align-items: center; gap: .45rem; color: #334155; font-size: .67rem; font-weight: 820; }
+      .support-platform .platform-icon { width: 1.65rem; height: 1.65rem; border-radius: .52rem; }
       .support-author { margin: 0; font-size: 0.83rem; font-weight: 780; }
-      .support-message { margin: 0.8rem 0 0; color: #334155; font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; }
+      .support-preview { position: relative; min-width: 0; overflow: visible; color: #334155; font-size: .74rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+      .support-preview-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .support-preview:hover::after { position: absolute; z-index: 30; top: calc(100% + .7rem); left: 0; width: min(38rem, 72vw); max-height: 18rem; overflow: auto; padding: .8rem .9rem; border: 1px solid var(--line-strong); border-radius: .75rem; color: #f8fafc; background: #0f172a; box-shadow: 0 1rem 2.5rem rgba(15,23,42,.26); content: attr(data-full-text); font-size: .74rem; line-height: 1.55; white-space: pre-wrap; }
+      .support-actions { display: flex; align-items: center; justify-content: flex-end; gap: .28rem; }
+      .support-actions form { display: inline-flex; margin: 0; }
+      .support-actions .button { width: 2rem; min-height: 2rem; padding: 0; border-radius: .58rem; }
+      .support-actions .button.danger { border-color: #fecdd3; color: #be123c; background: #fff1f2; }
+      .support-edit-panel { padding: .25rem .65rem .7rem; border-top: 1px solid #e2e8f0; }
+      .support-edit-panel[hidden] { display: none; }
+      .support-edit-panel textarea { min-height: 6rem; margin-top: .55rem; }
       .support-submeta { margin: 0.28rem 0 0; color: var(--muted); font-size: 0.67rem; }
       .sync-state { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.66rem; }
       .sync-state::before { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--emerald); content: ""; }
@@ -283,7 +294,9 @@
         .nav a { flex: 0 0 auto; padding: 0.58rem 0.72rem; }
         .sidebar-bottom { display: none; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .support-list { grid-template-columns: 1fr; }
+        .support-row-head { grid-template-columns: 6.5rem minmax(0,1fr) auto; }
+        .support-row-head .support-author { display: none; }
+        .support-row-head .badge { display: none; }
         .reddit-layout { grid-template-columns: 1fr; }
       }
       @media (max-width: 580px) {
@@ -301,6 +314,8 @@
         .panel-head .button, .release-top .badge { margin-top: 0.7rem; }
         details.queue-item summary { align-items: flex-start; }
         .queue-label { align-items: flex-start; flex-direction: column; }
+        .support-row-head { grid-template-columns: minmax(0,1fr) auto; gap: .4rem; }
+        .support-platform { display: none; }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
@@ -327,6 +342,9 @@
       <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></symbol>
       <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.3 4.7L18 9l-4.7 1.3L12 15l-1.3-4.7L6 9l4.7-1.3Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7Z"/></symbol>
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
     </svg>
     <div class="shell">
       <aside class="sidebar">
@@ -573,52 +591,46 @@
           </div>
           <div class="support-list">
             {% for item in active_support_messages %}
-              <article class="support-card {{ item.priority }}">
-                <div class="support-meta">
-                  <div>
-                    <p class="support-author">{{ item.author_name or item.author_handle or 'Community member' }}</p>
-                    <p class="support-submeta">{{ item.platform|upper }} · {{ item.category|replace('_', ' ') }} · {{ item.priority }} · {{ item.received_at[:16]|replace('T', ' ') }}</p>
+              <article class="support-row {{ item.priority }}" id="supportRow{{ item.id }}">
+                <div class="support-row-head">
+                  <span class="support-platform" title="{{ item.platform|upper }}">
+                    <span class="platform-icon {{ item.platform }}"><svg class="icon"><use href="{% if item.platform == 'devto' %}#i-code{% elif item.platform == 'bluesky' %}#i-spark{% else %}#i-message{% endif %}"/></svg></span>
+                    {{ item.platform|upper }}
+                  </span>
+                  <span class="support-author" title="{{ item.author_handle or item.author_name or 'Community member' }}">{{ item.author_name or item.author_handle or 'Community member' }}</span>
+                  <span class="support-preview" data-full-text="{{ item.content }}"><span class="support-preview-text">{{ item.content }}</span></span>
+                  <span class="badge {{ item.status }}" title="{{ item.category|replace('_', ' ') }} · {{ item.priority }} · {{ item.received_at[:16]|replace('T', ' ') }}">{{ item.status|replace('_', ' ') }}</span>
+                  <div class="support-actions">
+                    {% if item.source_url %}<a class="button icon-button" href="{{ item.source_url }}" target="_blank" rel="noreferrer" title="{% if item.platform == 'devto' %}Open DEV post or comment{% else %}Open source message{% endif %}" aria-label="Open source message"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
+                    {% if item.status == 'new' %}
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post"><button class="button violet icon-button" type="submit" title="Generate AI draft" aria-label="Generate AI draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>
+                    {% endif %}
+                    {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}
+                      <button class="button icon-button" type="button" data-support-edit="supportEdit{{ item.id }}" title="Edit reply" aria-label="Edit reply" aria-expanded="false"><svg class="icon"><use href="#i-edit"/></svg></button>
+                    {% endif %}
+                    {% if item.status in ['draft_ready', 'failed'] %}
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="reply_text" value="{{ item.reply_text or item.ai_draft }}"/><button class="button violet icon-button" type="submit" name="action" value="approve" title="Approve reply" aria-label="Approve reply"><svg class="icon"><use href="#i-check"/></svg></button></form>
+                    {% elif item.status == 'approved' %}
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" onsubmit="return confirm('Send this approved reply on {{ item.platform }} now?');"><button class="button primary icon-button" type="submit" title="{% if item.platform == 'devto' %}Prepare DEV manual reply{% else %}Send approved reply{% endif %}" aria-label="Send approved reply"><svg class="icon"><use href="#i-send"/></svg></button></form>
+                    {% elif item.status == 'manual_required' %}
+                      <button class="button icon-button" type="button" data-copy-target="replyText{{ item.id }}" title="Copy reply" aria-label="Copy reply"><svg class="icon"><use href="#i-copy"/></svg></button>
+                    {% endif %}
+                    <form action="{{ admin_prefix }}/support/{{ item.id }}/delete" method="post" onsubmit="return confirm('Permanently delete this support message?');"><button class="button danger icon-button" type="submit" title="Delete message" aria-label="Delete message"><svg class="icon"><use href="#i-trash"/></svg></button></form>
                   </div>
-                  <span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span>
                 </div>
-                <p class="support-message">{{ item.content }}</p>
-                {% if item.source_url %}<a class="link" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Open source message</a>{% endif %}
-                {% if item.status in ['new'] %}
-                  <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post" class="row-actions"><button class="button violet" type="submit">Generate AI draft</button></form>
-                {% elif item.status == 'approved' %}
-                  <div style="margin-top:.8rem;padding:.85rem;border:1px solid #86efac;border-radius:.9rem;background:#f0fdf4">
-                    <p class="release-title" style="display:flex;align-items:center;gap:.45rem;color:#166534"><svg class="icon"><use href="#i-check"/></svg>Approved — ready to send</p>
-                    <p class="support-submeta" style="margin-top:.35rem;color:#166534">Approval is saved. Sending is the final action and will publish this reply on {{ item.platform|upper }}.</p>
-                    <textarea rows="4" readonly style="margin-top:.65rem">{{ item.reply_text or item.ai_draft }}</textarea>
-                    <div class="row-actions">
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" onsubmit="return confirm('Send this approved reply on {{ item.platform }} now?');">
-                        <button class="button primary" type="submit">{% if item.platform == 'devto' %}Prepare DEV manual reply{% else %}Send reply now{% endif %}</button>
-                      </form>
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
-                        <input type="hidden" name="reply_text" value="{{ item.reply_text or item.ai_draft }}" />
-                        <button class="button" type="submit" name="action" value="save">Back to editing</button>
-                      </form>
-                    </div>
-                  </div>
-                {% elif item.status in ['draft_ready', 'failed'] %}
+                {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}
+                <div class="support-edit-panel" id="supportEdit{{ item.id }}" hidden>
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
-                    <textarea name="reply_text" rows="5" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
+                    <textarea id="replyText{{ item.id }}" name="reply_text" rows="4" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
+                    {% if item.error_message %}<p class="support-submeta" style="color:var(--rose)">{{ item.error_message }}</p>{% endif %}
                     <div class="row-actions">
-                      <button class="button" type="submit" name="action" value="save">Save draft</button>
-                      <button class="button violet" type="submit" name="action" value="approve">Approve</button>
-                      <button class="button" type="submit" name="action" value="ignore">Ignore</button>
+                      <button class="button icon-button" type="submit" name="action" value="save" title="Save changes" aria-label="Save changes"><svg class="icon"><use href="#i-file"/></svg></button>
+                      {% if item.status not in ['approved', 'manual_required'] %}<button class="button violet icon-button" type="submit" name="action" value="approve" title="Approve reply" aria-label="Approve reply"><svg class="icon"><use href="#i-check"/></svg></button>{% endif %}
+                      <button class="button icon-button" type="submit" name="action" value="ignore" title="Ignore message" aria-label="Ignore message"><svg class="icon"><use href="#i-close"/></svg></button>
+                      {% if item.platform == 'devto' and item.source_url %}<a class="button primary icon-button" href="{{ item.source_url }}" target="_blank" rel="noreferrer" title="Open DEV post or comment" aria-label="Open DEV post or comment"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
                     </div>
                   </form>
-                  {% if item.error_message %}<p class="support-submeta" style="color: var(--rose)">{{ item.error_message }}</p>{% endif %}
-                {% elif item.status == 'manual_required' %}
-                  <div style="margin-top:.8rem;padding:.85rem;border:1px solid #fdba74;border-radius:.9rem;background:#fff7ed">
-                    <p class="release-title" style="color:#9a3412">Manual DEV reply required</p>
-                    <p class="support-submeta" style="margin-top:.35rem;color:#9a3412">DEV's public API cannot create comments. Copy this approved reply, open the source, and paste it there.</p>
-                    <textarea id="manualReply{{ item.id }}" rows="4" readonly style="margin-top:.65rem">{{ item.reply_text or item.ai_draft }}</textarea>
-                    <div class="row-actions"><button class="button" type="button" data-copy-target="manualReply{{ item.id }}">Copy reply</button>{% if item.source_url %}<a class="button primary" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Open DEV source</a>{% endif %}</div>
-                  </div>
-                {% elif item.status == 'replied' %}
-                  {% if item.external_reply_url %}<a class="button primary" href="{{ item.external_reply_url }}" target="_blank" rel="noreferrer" style="margin-top: 0.8rem">Open reply</a>{% endif %}
+                </div>
                 {% endif %}
               </article>
             {% else %}
@@ -638,6 +650,7 @@
             <div class="history-row">
               <div class="history-copy"><strong>{{ item.author_name or item.author_handle or 'Community member' }} · {{ item.platform|upper }}</strong><span>{{ item.content }}</span></div>
               <span class="badge {{ item.status }}">{{ item.status }}</span>
+              {% if item.external_reply_url or item.source_url %}<a class="button icon-button" href="{{ item.external_reply_url or item.source_url }}" target="_blank" rel="noreferrer" title="Open published reply" aria-label="Open published reply"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
             </div>
             {% endfor %}
           </div>
@@ -789,6 +802,15 @@
               button.style.color = "";
               button.style.background = "";
             }, 1400);
+          });
+        });
+        document.querySelectorAll("[data-support-edit]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const panel = document.getElementById(button.dataset.supportEdit);
+            if (!panel) return;
+            panel.hidden = !panel.hidden;
+            button.setAttribute("aria-expanded", String(!panel.hidden));
+            if (!panel.hidden) panel.querySelector("textarea")?.focus();
           });
         });
         document.querySelectorAll("[data-youtube-upload]").forEach((input) => {

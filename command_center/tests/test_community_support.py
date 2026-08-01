@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from command_center.community_support import _looks_like_question, _plain_text, ingest_telegram_update
-from command_center.database import upsert_support_message
+from command_center.database import delete_support_message, upsert_support_message
 
 
 class CommunitySupportTests(unittest.TestCase):
@@ -35,6 +35,21 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertNotIn("source_url", update["$setOnInsert"])
         self.assertEqual(update["$set"]["source_url"], "https://t.me/x/2")
         self.assertTrue(created)
+
+    @patch("command_center.database.collection")
+    def test_delete_support_message_uses_exact_object_id(self, collection) -> None:
+        support_messages = MagicMock()
+        support_messages.delete_one.return_value = SimpleNamespace(deleted_count=1)
+        collection.return_value = support_messages
+
+        self.assertTrue(delete_support_message("507f1f77bcf86cd799439011"))
+        query = support_messages.delete_one.call_args.args[0]
+        self.assertEqual(str(query["_id"]), "507f1f77bcf86cd799439011")
+
+    @patch("command_center.database.collection")
+    def test_delete_support_message_rejects_invalid_id(self, collection) -> None:
+        self.assertFalse(delete_support_message("not-an-object-id"))
+        collection.assert_not_called()
 
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")
