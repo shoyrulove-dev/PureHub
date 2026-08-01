@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from typing import Any
@@ -11,6 +12,7 @@ import requests
 try:
     from .database import (
         get_config_value,
+        get_support_sync_state,
         get_support_message,
         list_support_messages,
         update_support_message,
@@ -22,6 +24,7 @@ try:
 except ImportError:
     from database import (
         get_config_value,
+        get_support_sync_state,
         get_support_message,
         list_support_messages,
         update_support_message,
@@ -160,8 +163,10 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
 def generate_support_drafts(limit: int = 20) -> dict[str, int]:
     generated = 0
     ignored = 0
-    for row in list_support_messages(status="new", limit=limit):
-        analysis = _analyze_message(row)
+    rows = list_support_messages(status="new", limit=limit)
+    with ThreadPoolExecutor(max_workers=min(4, max(1, len(rows)))) as executor:
+        analyses = list(executor.map(_analyze_message, rows))
+    for row, analysis in zip(rows, analyses):
         requires_reply = analysis["requires_reply"] and analysis["category"] not in {"praise", "spam"}
         status = "draft_ready" if requires_reply else "ignored"
         update_support_message(
@@ -511,15 +516,25 @@ def _discover_devto(keywords: list[str], limit: int) -> int:
 def discover_opportunities() -> dict[str, Any]:
     if get_config_value("opportunity_monitor_enabled", "true").lower() != "true":
         return {"enabled": False, "channels": {}}
+    state = get_support_sync_state("opportunities")
+    if state.get("last_synced_at") and _iso_datetime(str(state["last_synced_at"])).date() == datetime.now(timezone.utc).date():
+        return {"enabled": True, "skipped": True, "reason": "Daily discovery already completed.", "channels": {}}
     keywords = _opportunity_keywords()
     total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "6") or 6), 12))
     per_platform = max(1, total_limit // 3)
     result: dict[str, Any] = {"enabled": True, "channels": {}}
-    for platform, discover in (("bluesky", _discover_bluesky), ("mastodon", _discover_mastodon), ("devto", _discover_devto)):
+    functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
+
+    def run(platform: str, discover: Any) -> tuple[str, dict[str, Any]]:
         try:
-            result["channels"][platform] = {"ok": True, "created": discover(keywords, per_platform)}
+            return platform, {"ok": True, "created": discover(keywords, per_platform)}
         except Exception as exc:
-            result["channels"][platform] = {"ok": False, "created": 0, "error": str(exc)[:500]}
+            return platform, {"ok": False, "created": 0, "error": str(exc)[:500]}
+
+    with ThreadPoolExecutor(max_workers=len(functions)) as executor:
+        for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
+            result["channels"][platform] = outcome
+    update_support_sync_state("opportunities", {"last_synced_at": datetime.now(timezone.utc), "error_message": ""})
     return result
 
 
@@ -613,15 +628,20 @@ def sync_engagement_metrics() -> dict[str, Any]:
         "mastodon": _sync_mastodon_metrics,
     }
     result: dict[str, Any] = {}
-    for platform, sync in functions.items():
+
+    def run(platform: str, sync: Any) -> tuple[str, dict[str, Any]]:
         try:
             metrics = sync()
             upsert_community_metrics(platform, metrics, "")
-            result[platform] = {"ok": True, "metrics": metrics}
+            return platform, {"ok": True, "metrics": metrics}
         except Exception as exc:
             error = str(exc)[:500]
             upsert_community_metrics(platform, None, error)
-            result[platform] = {"ok": False, "error": error}
+            return platform, {"ok": False, "error": error}
+
+    with ThreadPoolExecutor(max_workers=len(functions)) as executor:
+        for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
+            result[platform] = outcome
     return result
 
 
@@ -630,15 +650,20 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
         return {"enabled": False, "channels": {}, "drafts": {}, "engagement": sync_engagement_metrics()}
     functions = {"devto": _sync_devto, "bluesky": _sync_bluesky, "mastodon": _sync_mastodon}
     result: dict[str, Any] = {"enabled": True, "channels": {}}
-    for platform, sync in functions.items():
+
+    def run(platform: str, sync: Any) -> tuple[str, dict[str, Any]]:
         try:
             created = sync()
-            result["channels"][platform] = {"ok": True, "created": created}
             update_support_sync_state(platform, {"last_synced_at": datetime.now(timezone.utc), "error_message": ""})
+            return platform, {"ok": True, "created": created}
         except Exception as exc:
             error = str(exc)[:500]
-            result["channels"][platform] = {"ok": False, "created": 0, "error": error}
             update_support_sync_state(platform, {"last_synced_at": datetime.now(timezone.utc), "error_message": error})
+            return platform, {"ok": False, "created": 0, "error": error}
+
+    with ThreadPoolExecutor(max_workers=len(functions)) as executor:
+        for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
+            result["channels"][platform] = outcome
     result["opportunities"] = discover_opportunities()
     result["drafts"] = generate_support_drafts(limit=8) if generate_drafts else {}
     result["engagement"] = sync_engagement_metrics()
