@@ -220,10 +220,20 @@ def _publish_post(row: dict[str, Any]) -> dict[str, Any]:
     return get_growth_post(str(row["id"])) or row
 
 
-def run_growth_automation(*, force: bool = False, actor: str = "growth-cron") -> dict[str, Any]:
+def run_growth_automation(
+    *,
+    force: bool = False,
+    actor: str = "growth-cron",
+    sync_support: bool = True,
+) -> dict[str, Any]:
     enabled = get_config_value("growth_automation_enabled", "false").lower() == "true"
     if not enabled and not force:
-        return {"enabled": False, "created": 0, "published": 0, "support": sync_support_channels(generate_drafts=True)}
+        return {
+            "enabled": False,
+            "created": 0,
+            "published": 0,
+            "support": sync_support_channels(generate_drafts=True) if sync_support else {"skipped": True},
+        }
 
     timezone_name = get_config_value("growth_timezone", "Asia/Bangkok") or "Asia/Bangkok"
     try:
@@ -241,7 +251,7 @@ def run_growth_automation(*, force: bool = False, actor: str = "growth-cron") ->
             "starts_on": start_date.isoformat(),
             "created": 0,
             "published": 0,
-            "support": sync_support_channels(generate_drafts=True),
+            "support": sync_support_channels(generate_drafts=True) if sync_support else {"skipped": True},
         }
     day_number = max(1, (local_today - start_date).days + 1)
     cycle_day = ((day_number - 1) % 30) + 1
@@ -273,7 +283,7 @@ def run_growth_automation(*, force: bool = False, actor: str = "growth-cron") ->
     auto_publish = get_config_value("growth_auto_publish", "true").lower() == "true"
     if auto_publish:
         rows = [_publish_post(row) if row.get("channel") in AUTO_CHANNELS else row for row in rows]
-    support = sync_support_channels(generate_drafts=True)
+    support = sync_support_channels(generate_drafts=True) if sync_support else {"skipped": True}
     published = sum(1 for row in rows if row.get("status") == "published")
     record_audit_log(
         actor=actor,

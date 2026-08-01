@@ -16,6 +16,10 @@
     {
       "path": "/public-api/growth-automation",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/public-api/growth-metrics",
+      "schedule": "0 14 * * *"
     }
   ],
   "rewrites": [

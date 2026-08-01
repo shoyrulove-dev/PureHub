@@ -1459,10 +1459,14 @@ def upsert_support_message(values: dict[str, Any]) -> tuple[dict[str, Any], bool
         "error_message": "",
         "notified_at": None,
     }
+    insert_payload = dict(payload)
+    # MongoDB rejects an upsert when the same field appears in both $setOnInsert
+    # and $set, even if both values match. source_url is refreshed on every sighting.
+    insert_payload.pop("source_url")
     result = collection("support_messages").update_one(
         {"source_key": source_key},
         {
-            "$setOnInsert": payload,
+            "$setOnInsert": insert_payload,
             "$set": {"last_seen_at": now, "source_url": payload["source_url"]},
         },
         upsert=True,

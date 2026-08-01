@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
@@ -328,6 +329,7 @@ def logout_action(request: Request) -> RedirectResponse:
 def _dashboard_context(
     request: Request,
     *,
+    view: Literal["overview", "advanced"],
     message: str,
     message_type: Literal["success", "info", "error"],
     miniapp_query: str,
@@ -336,13 +338,47 @@ def _dashboard_context(
     api_group: str,
 ) -> dict[str, Any]:
     admin_username = str(request.session["admin_username"])
-    support_messages = list_support_messages(limit=100)
+    common_loaders = {
+        "config": list_config,
+        "metrics": get_dashboard_metrics,
+        "miniapps": lambda: list_miniapps(miniapp_query, miniapp_tab),
+        "schema_status": get_schema_status,
+        "analytics": get_analytics_snapshot,
+        "admins": list_admin_accounts,
+        "admin_profile": lambda: get_admin_profile(admin_username),
+        "releases": list_releases,
+    }
+    overview_loaders = {
+        "stats": get_user_stats,
+        "release_publications": list_release_publications,
+        "support_messages": lambda: list_support_messages(limit=100),
+        "support_metrics": get_support_metrics,
+        "support_sync_states": list_support_sync_states,
+        "community_metrics_list": list_community_metrics,
+        "growth_posts": lambda: list_growth_posts(40),
+        "growth_summary": get_growth_summary,
+    }
+    advanced_loaders = {
+        "jobs": list_article_jobs,
+        "top_referrers": list_top_referrers,
+        "api_catalog": lambda: list_api_catalog(api_query, api_group),
+        "audit_logs": list_audit_logs,
+        "release_publications": list_release_publications,
+    }
+    loaders = {**common_loaders, **(overview_loaders if view == "overview" else advanced_loaders)}
+    # Dashboard sections are independent Mongo reads. Running them concurrently avoids
+    # paying one network round trip after another on a serverless cold start.
+    with ThreadPoolExecutor(max_workers=min(8, len(loaders))) as executor:
+        futures = {key: executor.submit(loader) for key, loader in loaders.items()}
+        loaded = {key: future.result() for key, future in futures.items()}
+
+    support_messages = loaded.get("support_messages", [])
     active_support_statuses = {"new", "draft_ready", "approved", "failed", "manual_required"}
     active_support_messages = [item for item in support_messages if item.get("status") in active_support_statuses][:24]
     support_history = [item for item in support_messages if item.get("status") in {"replied", "ignored"}][:12]
-    releases = list_releases()
+    releases = loaded["releases"]
     current_release_id = str(releases[0].get("release_id", "")) if releases else ""
-    release_publications = list_release_publications()
+    release_publications = loaded.get("release_publications", [])
     actionable_publications = [
         item
         for item in release_publications
@@ -362,21 +398,30 @@ def _dashboard_context(
         ),
         {},
     )
+    config = loaded["config"]
+    analytics = loaded["analytics"]
+    youtube_connection = {
+        "client_configured": bool(config.get("youtube_client_id") and config.get("youtube_client_secret")),
+        "connected": bool(config.get("youtube_refresh_token")),
+        "channel_id": config.get("youtube_channel_id"),
+        "channel_title": config.get("youtube_channel_title"),
+        "privacy": config.get("youtube_default_privacy", "unlisted"),
+    }
     return {
-        "config": list_config(),
+        "config": config,
         "defaults": CONFIG_DEFAULTS,
-        "stats": get_user_stats(),
-        "metrics": get_dashboard_metrics(),
-        "jobs": list_article_jobs(),
-        "top_referrers": list_top_referrers(),
+        "stats": loaded.get("stats", {}),
+        "metrics": loaded["metrics"],
+        "jobs": loaded.get("jobs", []),
+        "top_referrers": loaded.get("top_referrers", []),
         "bot_state": telegram_bot_manager.state,
-        "miniapps": list_miniapps(miniapp_query, miniapp_tab),
-        "api_catalog": list_api_catalog(api_query, api_group),
-        "audit_logs": list_audit_logs(),
-        "schema_status": get_schema_status(),
-        "analytics": get_analytics_snapshot(),
-        "analytics_json": json.dumps(get_analytics_snapshot(), ensure_ascii=False),
-        "admins": list_admin_accounts(),
+        "miniapps": loaded["miniapps"],
+        "api_catalog": loaded.get("api_catalog", []),
+        "audit_logs": loaded.get("audit_logs", []),
+        "schema_status": loaded["schema_status"],
+        "analytics": analytics,
+        "analytics_json": json.dumps(analytics, ensure_ascii=False),
+        "admins": loaded["admins"],
         "admin_roles": ADMIN_ROLES,
         "message": message,
         "message_type": message_type,
@@ -384,7 +429,7 @@ def _dashboard_context(
         "api_prefix": PUBLIC_API_PREFIX,
         "default_keywords": "\n".join(DEFAULT_KEYWORDS),
         "admin_username": admin_username,
-        "admin_profile": get_admin_profile(admin_username),
+        "admin_profile": loaded["admin_profile"],
         "releases": releases,
         "release_publications": release_publications,
         "actionable_publications": actionable_publications,
@@ -392,12 +437,12 @@ def _dashboard_context(
         "reddit_draft": parse_reddit_draft(str(reddit_publication.get("content", ""))),
         "active_support_messages": active_support_messages,
         "support_history": support_history,
-        "support_metrics": get_support_metrics(),
-        "support_sync_states": list_support_sync_states(),
-        "community_metrics": {item["platform"]: item for item in list_community_metrics()},
-        "growth_posts": list_growth_posts(40),
-        "growth_summary": get_growth_summary(),
-        "youtube_connection": youtube_connection_state(),
+        "support_metrics": loaded.get("support_metrics", {}),
+        "support_sync_states": loaded.get("support_sync_states", []),
+        "community_metrics": {item["platform"]: item for item in loaded.get("community_metrics_list", [])},
+        "growth_posts": loaded.get("growth_posts", []),
+        "growth_summary": loaded.get("growth_summary", {}),
+        "youtube_connection": youtube_connection,
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -424,6 +469,7 @@ def dashboard(
         name="index.html",
         context=_dashboard_context(
             request,
+            view="overview",
             message=message,
             message_type=message_type,
             miniapp_query=miniapp_query,
@@ -452,6 +498,7 @@ def advanced_dashboard(
         name="advanced.html",
         context=_dashboard_context(
             request,
+            view="advanced",
             message=message,
             message_type=message_type,
             miniapp_query=miniapp_query,
@@ -1594,8 +1641,18 @@ def scheduled_growth_automation(request: Request) -> dict[str, Any]:
     supplied_secret = request.headers.get("authorization", "")
     if not expected_secret or not secrets.compare_digest(supplied_secret, f"Bearer {expected_secret}"):
         raise HTTPException(status_code=401, detail="Invalid cron authorization.")
-    result = run_growth_automation(actor="vercel-cron")
-    result["post_metrics"] = sync_growth_post_metrics()
+    # Keep publishing isolated from monitoring so one slow social API cannot make
+    # the entire daily posting job exceed the serverless execution window.
+    return run_growth_automation(actor="vercel-cron", sync_support=False)
+
+
+@public_api_router.get("/growth-metrics")
+def scheduled_growth_metrics(request: Request) -> dict[str, Any]:
+    expected_secret = get_env_value("CRON_SECRET")
+    supplied_secret = request.headers.get("authorization", "")
+    if not expected_secret or not secrets.compare_digest(supplied_secret, f"Bearer {expected_secret}"):
+        raise HTTPException(status_code=401, detail="Invalid cron authorization.")
+    result: dict[str, Any] = {"post_metrics": sync_growth_post_metrics()}
     try:
         result["youtube_metrics"] = sync_youtube_metrics()
     except Exception as exc:

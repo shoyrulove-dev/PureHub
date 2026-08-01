@@ -1,12 +1,36 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from command_center.community_support import _plain_text, ingest_telegram_update
+from command_center.database import upsert_support_message
 
 
 class CommunitySupportTests(unittest.TestCase):
+    @patch("command_center.database.collection")
+    def test_support_upsert_does_not_write_source_url_with_conflicting_operators(self, collection) -> None:
+        support_messages = MagicMock()
+        support_messages.update_one.return_value = SimpleNamespace(upserted_id="new-id")
+        support_messages.find_one.return_value = {"source_key": "telegram:1:2", "source_url": "https://t.me/x/2"}
+        collection.return_value = support_messages
+
+        _, created = upsert_support_message(
+            {
+                "source_key": "telegram:1:2",
+                "platform": "telegram",
+                "content": "Hello",
+                "source_url": "https://t.me/x/2",
+            }
+        )
+
+        update = support_messages.update_one.call_args.args[1]
+        self.assertNotIn("source_url", update["$setOnInsert"])
+        self.assertEqual(update["$set"]["source_url"], "https://t.me/x/2")
+        self.assertTrue(created)
+
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")
 
