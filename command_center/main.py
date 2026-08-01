@@ -99,6 +99,7 @@ except ImportError:
 
 try:
     from .database import (
+        claim_release_publication,
         create_release,
         get_release,
         list_release_publications,
@@ -117,6 +118,7 @@ try:
     )
 except ImportError:
     from database import (
+        claim_release_publication,
         create_release,
         get_release,
         list_release_publications,
@@ -168,7 +170,7 @@ except ImportError:
     )
 
 try:
-    from .database import get_growth_summary, list_growth_posts
+    from .database import claim_growth_post, get_growth_post, get_growth_summary, list_growth_posts, update_growth_post
     from .growth_automation import retry_growth_post, run_growth_automation, sync_growth_post_metrics
     from .youtube_connector import (
         build_authorization_url,
@@ -180,7 +182,7 @@ try:
         youtube_connection_state,
     )
 except ImportError:
-    from database import get_growth_summary, list_growth_posts
+    from database import claim_growth_post, get_growth_post, get_growth_summary, list_growth_posts, update_growth_post
     from growth_automation import retry_growth_post, run_growth_automation, sync_growth_post_metrics
     from youtube_connector import (
         build_authorization_url,
@@ -190,6 +192,23 @@ except ImportError:
         disconnect_youtube,
         sync_youtube_metrics,
         youtube_connection_state,
+    )
+
+try:
+    from .reddit_connector import (
+        build_authorization_url as build_reddit_authorization_url,
+        connect_reddit,
+        disconnect_reddit,
+        normalize_subreddit,
+        submit_reddit_post,
+    )
+except ImportError:
+    from reddit_connector import (
+        build_authorization_url as build_reddit_authorization_url,
+        connect_reddit,
+        disconnect_reddit,
+        normalize_subreddit,
+        submit_reddit_post,
     )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -407,6 +426,12 @@ def _dashboard_context(
         "channel_title": config.get("youtube_channel_title"),
         "privacy": config.get("youtube_default_privacy", "unlisted"),
     }
+    reddit_connection = {
+        "client_configured": bool(config.get("reddit_client_id") and config.get("reddit_client_secret")),
+        "connected": bool(config.get("reddit_refresh_token")),
+        "username": config.get("reddit_username", ""),
+        "default_subreddit": config.get("reddit_default_subreddit", "droidappshowcase"),
+    }
     return {
         "config": config,
         "defaults": CONFIG_DEFAULTS,
@@ -443,6 +468,7 @@ def _dashboard_context(
         "growth_posts": loaded.get("growth_posts", []),
         "growth_summary": loaded.get("growth_summary", {}),
         "youtube_connection": youtube_connection,
+        "reddit_connection": reddit_connection,
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -541,6 +567,10 @@ def save_config(
     youtube_client_id: str = Form(default=""),
     youtube_client_secret: str = Form(default=""),
     youtube_default_privacy: str = Form(default="unlisted"),
+    reddit_client_id: str = Form(default=""),
+    reddit_client_secret: str = Form(default=""),
+    reddit_default_subreddit: str = Form(default="droidappshowcase"),
+    reddit_user_agent: str = Form(default="web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     current_config = list_config()
@@ -575,6 +605,10 @@ def save_config(
             "youtube_client_id": youtube_client_id.strip() or current_config.get("youtube_client_id", ""),
             "youtube_client_secret": youtube_client_secret.strip() or current_config.get("youtube_client_secret", ""),
             "youtube_default_privacy": youtube_default_privacy if youtube_default_privacy in {"private", "unlisted", "public"} else "unlisted",
+            "reddit_client_id": reddit_client_id.strip() or current_config.get("reddit_client_id", ""),
+            "reddit_client_secret": reddit_client_secret.strip() or current_config.get("reddit_client_secret", ""),
+            "reddit_default_subreddit": reddit_default_subreddit.strip().removeprefix("r/") or "droidappshowcase",
+            "reddit_user_agent": reddit_user_agent.strip() or "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
         }
     )
     record_audit_log(
@@ -1223,6 +1257,68 @@ def save_reddit_draft_action(
     return _redirect_with_message("Reddit draft saved for manual review.", "success")
 
 
+@admin_router.post("/releases/{release_id}/reddit/publish")
+def publish_reddit_draft_action(
+    request: Request,
+    release_id: str,
+    title: str = Form(...),
+    body: str = Form(...),
+    communities: str = Form(...),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    publication = next(
+        (
+            item
+            for item in list_release_publications(release_id)
+            if item.get("channel") == "reddit" and item.get("language") == "en"
+        ),
+        None,
+    )
+    if not publication:
+        return _redirect_with_message("Generate and review the Reddit draft first.", "error")
+    if publication.get("status") == "published" and publication.get("external_url"):
+        return _redirect_with_message("This Reddit draft was already published.", "info")
+    if not claim_release_publication(release_id, "reddit", "en"):
+        return _redirect_with_message("This Reddit draft is already published or currently publishing.", "info")
+    try:
+        subreddit = normalize_subreddit(communities)
+        external_id, external_url = submit_reddit_post(
+            subreddit=subreddit,
+            title=title,
+            body=body,
+        )
+        update_release_publication(
+            release_id,
+            "reddit",
+            "en",
+            {
+                "content": format_reddit_draft(title, body, subreddit),
+                "status": "published",
+                "external_id": external_id,
+                "external_url": external_url,
+                "error_message": "",
+                "published_at": datetime.now(timezone.utc),
+                "increment_attempts": True,
+            },
+        )
+        record_audit_log(
+            actor=actor,
+            action="publish_reddit_post",
+            target_type="release_publication",
+            target_id=f"{release_id}:reddit:en",
+            details={"subreddit": subreddit, "url": external_url},
+        )
+        return _redirect_with_message(f"Published to r/{subreddit} successfully.", "success")
+    except Exception as exc:
+        update_release_publication(
+            release_id,
+            "reddit",
+            "en",
+            {"status": "failed", "error_message": str(exc)[:500], "increment_attempts": True},
+        )
+        return _redirect_with_message(f"Reddit publishing failed: {exc}", "error")
+
+
 @admin_router.post("/community/reply-draft")
 def community_reply_draft_action(
     request: Request,
@@ -1360,6 +1456,100 @@ def growth_retry_action(request: Request, post_id: str) -> RedirectResponse:
         return _redirect_with_message(f"{str(row.get('channel', 'Post')).title()} retry: {row.get('status', 'processed')}.", "success")
     except Exception as exc:
         return _redirect_with_message(f"Growth retry failed: {exc}", "error")
+
+
+@admin_router.post("/growth/{post_id}/reddit/publish")
+def growth_reddit_publish_action(
+    request: Request,
+    post_id: str,
+    subreddit: str = Form(...),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_growth_post(post_id)
+    if not row or row.get("channel") != "reddit":
+        return _redirect_with_message("Reddit campaign draft not found.", "error")
+    if row.get("status") == "published" and row.get("external_url"):
+        return _redirect_with_message("This Reddit campaign post was already published.", "info")
+    if not claim_growth_post(post_id, "reddit"):
+        return _redirect_with_message("This Reddit campaign post is already published or currently publishing.", "info")
+    draft = parse_reddit_draft(str(row.get("content", "")))
+    try:
+        target = normalize_subreddit(subreddit)
+        external_id, external_url = submit_reddit_post(
+            subreddit=target,
+            title=draft["title"],
+            body=draft["body"],
+        )
+        update_growth_post(
+            post_id,
+            {
+                "status": "published",
+                "external_id": external_id,
+                "external_url": external_url,
+                "error_message": "",
+                "published_at": datetime.now(timezone.utc),
+                "increment_attempts": True,
+            },
+        )
+        record_audit_log(
+            actor=actor,
+            action="publish_growth_reddit_post",
+            target_type="growth_post",
+            target_id=post_id,
+            details={"subreddit": target, "url": external_url},
+        )
+        return _redirect_with_message(f"Published campaign post to r/{target}.", "success")
+    except Exception as exc:
+        update_growth_post(
+            post_id,
+            {"status": "failed", "error_message": str(exc)[:500], "increment_attempts": True},
+        )
+        return _redirect_with_message(f"Reddit publishing failed: {exc}", "error")
+
+
+@admin_router.get("/reddit/connect")
+def reddit_connect_action(request: Request) -> RedirectResponse:
+    require_admin_role(request, "superadmin")
+    state = secrets.token_urlsafe(32)
+    request.session["reddit_oauth_state"] = state
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/reddit/callback"
+    try:
+        return RedirectResponse(
+            url=build_reddit_authorization_url(state=state, redirect_uri=redirect_uri),
+            status_code=302,
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"Reddit connection failed: {exc}", "error")
+
+
+@admin_router.get("/reddit/callback")
+def reddit_callback_action(request: Request, code: str = "", state: str = "", error: str = "") -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    expected = str(request.session.pop("reddit_oauth_state", ""))
+    if error:
+        return _redirect_with_message(f"Reddit authorization was cancelled: {error}", "error")
+    if not expected or not secrets.compare_digest(expected, state) or not code:
+        return _redirect_with_message("Invalid Reddit OAuth response.", "error")
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/reddit/callback"
+    try:
+        connection = connect_reddit(code=code, redirect_uri=redirect_uri)
+        record_audit_log(
+            actor=actor,
+            action="connect_reddit",
+            target_type="social_connection",
+            target_id=str(connection.get("username") or "reddit"),
+        )
+        return _redirect_with_message(f"Reddit connected: u/{connection.get('username') or 'account ready'}.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"Reddit OAuth failed: {exc}", "error")
+
+
+@admin_router.post("/reddit/disconnect")
+def reddit_disconnect_action(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    disconnect_reddit()
+    record_audit_log(actor=actor, action="disconnect_reddit", target_type="social_connection", target_id="reddit")
+    return _redirect_with_message("Reddit disconnected.", "success")
 
 
 @admin_router.get("/youtube/connect")

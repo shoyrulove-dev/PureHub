@@ -52,6 +52,12 @@ CONFIG_DEFAULTS = {
     "youtube_channel_id": "",
     "youtube_channel_title": "",
     "youtube_default_privacy": "unlisted",
+    "reddit_client_id": "",
+    "reddit_client_secret": "",
+    "reddit_refresh_token": "",
+    "reddit_username": "",
+    "reddit_default_subreddit": "droidappshowcase",
+    "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
 CURRENT_SCHEMA_VERSION = 10
@@ -1422,6 +1428,19 @@ def update_release_publication(release_id: str, channel: str, language: str, val
     )
 
 
+def claim_release_publication(release_id: str, channel: str, language: str) -> bool:
+    result = collection("release_publications").update_one(
+        {
+            "release_id": release_id,
+            "channel": channel,
+            "language": language,
+            "status": {"$nin": ["published", "publishing"]},
+        },
+        {"$set": {"status": "publishing", "error_message": "", "updated_at": utcnow()}},
+    )
+    return result.modified_count == 1
+
+
 def list_release_publications(release_id: str = "", limit: int = 100) -> list[dict[str, Any]]:
     filters = {"release_id": release_id} if release_id else {}
     rows = collection("release_publications").find(filters).sort("updated_at", DESCENDING).limit(limit)
@@ -1638,6 +1657,24 @@ def update_growth_post(post_id: str, values: dict[str, Any]) -> None:
     if increments:
         update["$inc"] = increments
     collection("growth_posts").update_one({"_id": object_id}, update)
+
+
+def claim_growth_post(post_id: str, channel: str) -> bool:
+    from bson import ObjectId
+
+    try:
+        object_id = ObjectId(post_id)
+    except Exception:
+        return False
+    result = collection("growth_posts").update_one(
+        {
+            "_id": object_id,
+            "channel": channel,
+            "status": {"$nin": ["published", "publishing"]},
+        },
+        {"$set": {"status": "publishing", "error_message": "", "updated_at": utcnow()}},
+    )
+    return result.modified_count == 1
 
 
 def get_growth_summary() -> dict[str, Any]:

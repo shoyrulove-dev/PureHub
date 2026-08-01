@@ -465,6 +465,9 @@
                   {% if item.channel == 'youtube' and item.status in ['ready_upload','uploading'] %}
                     {% if youtube_connection.connected %}<label class="button primary" style="cursor:pointer">Choose video<input type="file" accept="video/mp4,video/quicktime,video/webm" hidden data-youtube-upload="{{ item.id }}" /></label><span class="panel-copy" data-upload-status="{{ item.id }}">Uploads as {{ youtube_connection.privacy }}</span>{% else %}<a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Configure YouTube OAuth</a>{% endif %}
                   {% endif %}
+                  {% if item.channel == 'reddit' and item.status in ['ready_manual','failed'] %}
+                    {% if reddit_connection.connected %}<form action="{{ admin_prefix }}/growth/{{ item.id }}/reddit/publish" method="post" class="row-actions" onsubmit="return confirm('Publish this reviewed post to Reddit now?');"><input name="subreddit" value="{{ reddit_connection.default_subreddit }}" aria-label="Subreddit" required /><button class="button primary" type="submit">Publish Reddit</button></form>{% else %}<a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Connect Reddit OAuth</a>{% endif %}
+                  {% endif %}
                 </div>
               </div>
             </details>
@@ -475,9 +478,9 @@
         <section class="section panel" id="reddit-review" aria-labelledby="reddit-review-title">
           <div class="panel-head" style="margin-bottom:0">
             <div>
-              <p class="panel-kicker">Manual community sharing</p>
+              <p class="panel-kicker">Reviewed community sharing</p>
               <h2 id="reddit-review-title">Reddit review</h2>
-              <p class="panel-copy">AI prepares the copy only. Reddit destinations are curated manually to reduce removals and account bans.</p>
+              <p class="panel-copy">Review the AI draft and subreddit, then publish directly with the connected PureHub Reddit account.</p>
             </div>
             {% if releases %}<form action="{{ admin_prefix }}/releases/{{ releases[0].release_id }}/reddit/generate" method="post"><button class="button violet icon-button" type="submit" title="Generate new Reddit draft" aria-label="Generate new Reddit draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>{% endif %}
           </div>
@@ -485,25 +488,25 @@
           <div class="reddit-layout">
             <form class="reddit-form" action="{{ admin_prefix }}/releases/{{ reddit_publication.release_id }}/reddit/save" method="post">
               <label class="full"><span class="field-label">Post title</span><input id="redditDraftTitle" name="title" value="{{ reddit_draft.title }}" required /></label>
-              <label class="full"><span class="field-label">Approved destination</span><input name="communities" value="{{ reddit_draft.communities }}" /></label>
+              <label class="full"><span class="field-label">Subreddit (without r/)</span><input name="communities" value="{{ reddit_draft.communities or reddit_connection.default_subreddit }}" required /></label>
               <label class="full"><span class="field-label">Post body</span><textarea id="redditDraftBody" name="body" rows="6" required>{{ reddit_draft.body }}</textarea></label>
-              <label><span class="field-label">Review status</span><select name="status"><option value="draft" {% if reddit_publication.status == 'draft' %}selected{% endif %}>Still editing</option><option value="ready_manual" {% if reddit_publication.status == 'ready_manual' %}selected{% endif %}>Ready to share manually</option></select></label>
-              <button class="button primary" type="submit">Save Reddit review</button>
+              <label><span class="field-label">Review status</span><select name="status" {% if reddit_publication.status == 'published' %}disabled{% endif %}><option value="draft" {% if reddit_publication.status == 'draft' %}selected{% endif %}>Still editing</option><option value="ready_manual" {% if reddit_publication.status in ['ready_manual','failed'] %}selected{% endif %}>Ready to publish</option>{% if reddit_publication.status == 'published' %}<option value="published" selected>Published</option>{% endif %}</select></label>
+              <div class="row-actions">{% if reddit_publication.status != 'published' %}<button class="button" type="submit">Save draft</button>{% endif %}{% if reddit_connection.connected and reddit_publication.status != 'published' %}<button class="button primary" type="submit" formaction="{{ admin_prefix }}/releases/{{ reddit_publication.release_id }}/reddit/publish" onclick="return confirm('Publish this reviewed post to Reddit now?');">Publish Reddit</button>{% elif not reddit_connection.connected %}<a class="button primary" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Connect Reddit</a>{% endif %}{% if reddit_publication.external_url %}<a class="button primary" href="{{ reddit_publication.external_url }}" target="_blank" rel="noreferrer">Open post</a>{% endif %}</div>
             </form>
             <aside class="reddit-side">
-              <h3>Manual posting checklist</h3>
-              <p>Current safe route: post only in r/droidappshowcase. Do not cross-post to r/androidapps. PureHub now uses the MIT License; because of the earlier removal, use r/FOSSdroid only after moderator clearance.</p>
+              <h3>Publishing checklist</h3>
+              <p>Confirm the subreddit allows developer posts, keep the maker disclosure, and never cross-post the same copy. Reddit OAuth only removes the copy-and-paste step; community rules still apply.</p>
               <div class="quick-actions">
                 <div style="display:flex;gap:.5rem">
                   <button class="button icon-button" type="button" data-copy-target="redditDraftTitle" title="Copy title" aria-label="Copy Reddit title"><svg class="icon"><use href="#i-copy"/></svg></button>
                   <button class="button icon-button" type="button" data-copy-target="redditDraftBody" title="Copy body" aria-label="Copy Reddit body"><svg class="icon"><use href="#i-file"/></svg></button>
-                  <a class="button primary icon-button" href="https://www.reddit.com/submit" target="_blank" rel="noreferrer" title="Open Reddit submit" aria-label="Open Reddit submit"><svg class="icon"><use href="#i-external"/></svg></a>
+                  {% if reddit_publication.external_url %}<a class="button primary icon-button" href="{{ reddit_publication.external_url }}" target="_blank" rel="noreferrer" title="Open Reddit post" aria-label="Open Reddit post"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
                 </div>
               </div>
             </aside>
           </div>
           {% elif releases %}
-          <div class="reddit-side" style="margin-top:.9rem"><h3>No Reddit draft yet</h3><p>Generate the first draft from the latest release. Nothing will be posted automatically.</p></div>
+          <div class="reddit-side" style="margin-top:.9rem"><h3>No Reddit draft yet</h3><p>Generate the first draft, review it, then publish directly from Command Center.</p></div>
           {% else %}
           <div class="reddit-side" style="margin-top:.9rem"><h3>Create a release first</h3><p>Reddit drafts use verified release information so AI does not invent features or download links.</p></div>
           {% endif %}

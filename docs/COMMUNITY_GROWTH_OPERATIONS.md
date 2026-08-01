@@ -23,7 +23,7 @@ Automatic publishing cadence in each repeating 30-day campaign:
 - Telegram: three times per seven-day cycle.
 - DEV: four useful technical articles per 30 days.
 - YouTube: three prepared upload entries per seven-day cycle; a video file still needs to be selected and uploaded in Admin.
-- Reddit: two carefully prepared drafts per 30 days; manual review and posting remain required.
+- Reddit: two carefully prepared drafts per 30 days; review the destination, then publish from Command Center.
 
 ## Daily owner routine (10-15 minutes)
 
@@ -68,7 +68,7 @@ Automatic publishing cadence in each repeating 30-day campaign:
 
 - AI creates different channel-specific posts; Telegram, DEV, Bluesky, and Mastodon can publish automatically.
 - Community replies remain draft-and-approve to prevent incorrect, unsafe, or off-brand responses.
-- Reddit remains manual because community rules and promotion limits vary by subreddit.
+- Reddit requires a human review and explicit Publish click because community rules vary by subreddit; OAuth handles the actual posting and records the permalink.
 - YouTube account data and metrics are connected, but video generation/storage/upload is not yet a reliable unattended serverless workflow.
 
 ## Hosting decision
