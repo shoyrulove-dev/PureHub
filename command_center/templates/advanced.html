@@ -194,6 +194,13 @@
                     <option value="false" {% if config.get('support_monitor_enabled', defaults.support_monitor_enabled) == 'false' %}selected{% endif %}>Paused</option>
                   </select>
                 </label>
+                <label class="block">
+                  <span class="mb-2 block text-sm font-medium text-slate-200">Opportunity discovery</span>
+                  <select name="opportunity_monitor_enabled" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
+                    <option value="true" {% if config.get('opportunity_monitor_enabled', defaults.opportunity_monitor_enabled) == 'true' %}selected{% endif %}>Find relevant public questions</option>
+                    <option value="false" {% if config.get('opportunity_monitor_enabled', defaults.opportunity_monitor_enabled) == 'false' %}selected{% endif %}>Paused</option>
+                  </select>
+                </label>
               </div>
               <div class="mt-5 grid gap-5 sm:grid-cols-2">
                 <label><span class="mb-2 block text-sm">DeepSeek API key</span><input type="password" name="deepseek_api_key" value="" placeholder="{% if config.get('deepseek_api_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
@@ -208,6 +215,8 @@
                 <label><span class="mb-2 block text-sm">Bluesky app password</span><input type="password" name="bluesky_app_password" value="" placeholder="{% if config.get('bluesky_app_password') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
                 <label><span class="mb-2 block text-sm">Mastodon base URL</span><input name="mastodon_base_url" value="{{ config.get('mastodon_base_url', defaults.mastodon_base_url) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
                 <label><span class="mb-2 block text-sm">Mastodon access token</span><input type="password" name="mastodon_access_token" value="" placeholder="{% if config.get('mastodon_access_token') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label class="sm:col-span-2"><span class="mb-2 block text-sm">Discovery keywords</span><textarea name="opportunity_keywords" rows="2" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3">{{ config.get('opportunity_keywords', defaults.opportunity_keywords) }}</textarea></label>
+                <label><span class="mb-2 block text-sm">Maximum opportunities per day</span><input type="number" min="1" max="12" name="opportunity_daily_limit" value="{{ config.get('opportunity_daily_limit', defaults.opportunity_daily_limit) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
               </div>
             </div>
 

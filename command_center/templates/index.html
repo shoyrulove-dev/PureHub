@@ -445,6 +445,7 @@
           <div class="support-stats" style="margin-top:.9rem">
             <span class="badge" title="Total campaign items"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ growth_summary.total }}</span>
             <span class="badge published" title="Published"><svg class="icon"><use href="#i-check"/></svg>&nbsp;{{ growth_summary.statuses.get('published', 0) }}</span>
+            <span class="badge approved" title="Scheduled on YouTube"><svg class="icon"><use href="#i-history"/></svg>&nbsp;{{ growth_summary.statuses.get('scheduled', 0) }}</span>
             <span class="badge draft" title="YouTube uploads ready"><svg class="icon"><use href="#i-eye"/></svg>&nbsp;{{ growth_summary.statuses.get('ready_upload', 0) }}</span>
             <span class="badge {% if youtube_connection.connected %}published{% else %}draft{% endif %}" title="YouTube OAuth">YouTube {% if youtube_connection.connected %}connected{% else %}manual{% endif %}</span>
           </div>
@@ -457,6 +458,7 @@
               </summary>
               <div class="queue-body">
                 <textarea rows="7" readonly>{{ item.content }}</textarea>
+                {% if item.channel == 'youtube' and item.scheduled_at %}<p class="panel-copy" style="margin-top:.6rem">YouTube publish time: {{ item.scheduled_at }}</p>{% endif %}
                 {% set post_metrics = item.metadata.get('metrics', {}) %}
                 {% if post_metrics %}<div class="support-stats" style="margin-top:.7rem">{% for name, value in post_metrics.items() %}<span class="badge">{{ name }} {{ value }}</span>{% endfor %}</div>{% endif %}
                 {% if item.error_message %}<p class="release-summary" style="color:var(--rose);margin-top:.7rem">{{ item.error_message }}</p>{% endif %}
@@ -552,7 +554,7 @@
             <div>
               <p class="panel-kicker">Community operations</p>
               <h2 style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-emerald"><use href="#i-inbox"/></svg>Support Inbox</h2>
-              <p class="panel-copy">Replies and mentions are drafted by AI, then held for human approval.</p>
+              <p class="panel-copy">Mentions and relevant public questions are discovered automatically. AI prepares a useful, transparent reply for your approval.</p>
             </div>
             <form action="{{ admin_prefix }}/support/sync" method="post">
               <button class="button primary icon-button" type="submit" title="Sync all support channels" aria-label="Sync all support channels"><svg class="icon"><use href="#i-history"/></svg></button>
@@ -561,6 +563,7 @@
           <div class="support-stats" style="margin-top: 0.9rem">
             <span class="badge" title="New messages"><svg class="icon"><use href="#i-inbox"/></svg>&nbsp;{{ support_metrics.new }}<span class="sr-only"> new</span></span>
             <span class="badge draft" title="AI drafts"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ support_metrics.draft_ready }}<span class="sr-only"> drafts</span></span>
+            <span class="badge approved" title="Relevant public questions"><svg class="icon"><use href="#i-spark"/></svg>&nbsp;{{ support_metrics.opportunities }}<span class="sr-only"> opportunities</span></span>
             <span class="badge approved" title="Approved"><svg class="icon"><use href="#i-check"/></svg>&nbsp;{{ support_metrics.approved }}<span class="sr-only"> approved</span></span>
             <span class="badge published" title="Replied"><svg class="icon"><use href="#i-send"/></svg>&nbsp;{{ support_metrics.replied }}<span class="sr-only"> replied</span></span>
             <span class="badge ready_manual" title="Manual actions"><svg class="icon"><use href="#i-external"/></svg>&nbsp;{{ support_metrics.manual_required }}<span class="sr-only"> manual</span></span>

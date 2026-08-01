@@ -42,6 +42,9 @@ CONFIG_DEFAULTS = {
     "release_auto_channels": "telegram,devto,bluesky,mastodon",
     "community_reply_mode": "draft",
     "support_monitor_enabled": "true",
+    "opportunity_monitor_enabled": "true",
+    "opportunity_keywords": "offline Android app,no ads app,privacy tools,Pomodoro app,QR code app,expense tracker app",
+    "opportunity_daily_limit": "6",
     "growth_automation_enabled": "false",
     "growth_auto_publish": "true",
     "growth_campaign_start_date": "",
@@ -61,7 +64,7 @@ CONFIG_DEFAULTS = {
 }
 
 CURRENT_SCHEMA_VERSION = 10
-DEFAULTS_BOOTSTRAP_VERSION = 5
+DEFAULTS_BOOTSTRAP_VERSION = 6
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -1538,6 +1541,7 @@ def get_support_metrics() -> dict[str, Any]:
         "replied": messages.count_documents({"status": "replied"}),
         "manual_required": messages.count_documents({"status": "manual_required"}),
         "failed": messages.count_documents({"status": "failed"}),
+        "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
     }
 

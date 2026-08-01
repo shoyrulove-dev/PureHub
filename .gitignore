@@ -43,3 +43,6 @@ release-secrets/
 .vercel
 marketing/video/build/
 marketing/video/output/
+marketing/video/raw/
+marketing/video/device-captures/
+.tools/

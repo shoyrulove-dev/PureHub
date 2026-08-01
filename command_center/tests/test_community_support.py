@@ -5,11 +5,16 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from command_center.community_support import _plain_text, ingest_telegram_update
+from command_center.community_support import _looks_like_question, _plain_text, ingest_telegram_update
 from command_center.database import upsert_support_message
 
 
 class CommunitySupportTests(unittest.TestCase):
+    def test_opportunity_filter_prefers_real_questions(self) -> None:
+        self.assertTrue(_looks_like_question("Any app that works offline without ads?"))
+        self.assertTrue(_looks_like_question("Looking for a simple QR code app"))
+        self.assertFalse(_looks_like_question("Download the best Android app now"))
+
     @patch("command_center.database.collection")
     def test_support_upsert_does_not_write_source_url_with_conflicting_operators(self, collection) -> None:
         support_messages = MagicMock()

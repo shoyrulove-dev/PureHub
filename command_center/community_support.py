@@ -98,8 +98,9 @@ def ingest_telegram_update(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
+    is_opportunity = str((row.get("reply_context") or {}).get("source_kind", "")) == "discovery"
     fallback = {
-        "category": "question" if "?" in row.get("content", "") else "feedback",
+        "category": "opportunity" if is_opportunity else "question" if "?" in row.get("content", "") else "feedback",
         "priority": "normal",
         "language": "en",
         "requires_reply": True,
@@ -115,9 +116,12 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
                     "content": (
                         "You triage support for PureHub, a free, no-ads, privacy-first, open-source collection of 22 tools. "
                         "Return JSON only with category, priority, language, requires_reply, and draft. Categories: question, "
-                        "bug, feature_request, privacy, installation, praise, spam, other. Priorities: low, normal, high, urgent. "
+                        "bug, feature_request, privacy, installation, opportunity, praise, spam, other. Priorities: low, normal, high, urgent. "
                         "Reply in the user's language, keep it friendly and concise, never invent a shipped fix, never request "
-                        "passwords or API keys, and request app version/device details for bugs. Use no more than two relevant emoji."
+                        "passwords or API keys, and request app version/device details for bugs. For discovery opportunities, answer "
+                        "the person's actual question first, disclose 'I build PureHub' before mentioning it, mention PureHub only when "
+                        "it genuinely fits, include no link unless the person asked for recommendations, and never sound like an ad. "
+                        "Use no more than two relevant emoji."
                     ),
                 },
                 {
@@ -138,7 +142,7 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
         data = json.loads(raw)
         category = str(data.get("category", fallback["category"]))
         priority = str(data.get("priority", "normal"))
-        if category not in {"question", "bug", "feature_request", "privacy", "installation", "praise", "spam", "other"}:
+        if category not in {"question", "bug", "feature_request", "privacy", "installation", "opportunity", "praise", "spam", "other"}:
             category = "other"
         if priority not in {"low", "normal", "high", "urgent"}:
             priority = "normal"
@@ -346,6 +350,179 @@ def _sync_mastodon() -> int:
     return created
 
 
+def _opportunity_keywords() -> list[str]:
+    raw = get_config_value(
+        "opportunity_keywords",
+        "offline Android app,no ads app,privacy tools,Pomodoro app,QR code app,expense tracker app",
+    )
+    values = [item.strip() for item in raw.replace("\n", ",").split(",") if item.strip()]
+    return values[:8]
+
+
+def _looks_like_question(text: str) -> bool:
+    value = text.lower()
+    signals = ("?", "how do", "how can", "which app", "what app", "any app", "recommend", "looking for", "alternative")
+    return any(signal in value for signal in signals)
+
+
+def _discover_bluesky(keywords: list[str], limit: int) -> int:
+    own_handle = get_config_value("bluesky_handle").lower().lstrip("@")
+    session = _bluesky_session()
+    created = 0
+    for keyword in keywords:
+        response = requests.get(
+            "https://bsky.social/xrpc/app.bsky.feed.searchPosts",
+            headers={"Authorization": f"Bearer {session['accessJwt']}"},
+            params={"q": keyword, "limit": 10, "sort": "latest"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        for post in response.json().get("posts", []):
+            record = post.get("record") or {}
+            text = str(record.get("text", "")).strip()
+            author = post.get("author") or {}
+            handle = str(author.get("handle", ""))
+            if not text or handle.lower() == own_handle or not _looks_like_question(text):
+                continue
+            uri, cid = str(post.get("uri", "")), str(post.get("cid", ""))
+            if not uri or not cid:
+                continue
+            key = uri.rsplit("/", 1)[-1]
+            _, inserted = upsert_support_message(
+                {
+                    "source_key": f"opportunity:bluesky:{uri}",
+                    "platform": "bluesky",
+                    "external_id": uri,
+                    "thread_id": uri,
+                    "author_id": str(author.get("did", "")),
+                    "author_name": str(author.get("displayName") or handle),
+                    "author_handle": handle,
+                    "content": text,
+                    "source_url": f"https://bsky.app/profile/{handle}/post/{key}",
+                    "received_at": _iso_datetime(record.get("createdAt") or post.get("indexedAt")),
+                    "reply_context": {"uri": uri, "cid": cid, "root": {"uri": uri, "cid": cid}, "source_kind": "discovery", "keyword": keyword},
+                }
+            )
+            created += int(inserted)
+            if created >= limit:
+                return created
+    return created
+
+
+def _discover_mastodon(keywords: list[str], limit: int) -> int:
+    base = get_config_value("mastodon_base_url").rstrip("/")
+    headers = {"Authorization": f"Bearer {get_config_value('mastodon_access_token')}", "user-agent": "PureHub-Opportunity-Monitor/1.0"}
+    created = 0
+    fallback_tags = ("android", "opensource", "foss", "productivity")
+    sources: list[tuple[str, list[dict[str, Any]]]] = []
+    search_denied = False
+    for keyword in keywords:
+        if search_denied:
+            break
+        response = requests.get(
+            f"{base}/api/v2/search",
+            headers=headers,
+            params={"q": keyword, "type": "statuses", "limit": 10, "resolve": "false"},
+            timeout=30,
+        )
+        if response.status_code == 403:
+            search_denied = True
+            break
+        response.raise_for_status()
+        sources.append((keyword, response.json().get("statuses", [])))
+    if search_denied:
+        for tag in fallback_tags:
+            response = requests.get(
+                f"{base}/api/v1/timelines/tag/{tag}",
+                headers={"user-agent": "PureHub-Opportunity-Monitor/1.0"},
+                params={"limit": 20},
+                timeout=30,
+            )
+            response.raise_for_status()
+            sources.append((f"#{tag}", response.json()))
+    for keyword, statuses in sources:
+        for status in statuses:
+            account = status.get("account") or {}
+            text = _plain_text(str(status.get("content", "")))
+            status_id = str(status.get("id", ""))
+            if not status_id or not text or not _looks_like_question(text):
+                continue
+            _, inserted = upsert_support_message(
+                {
+                    "source_key": f"opportunity:mastodon:{status_id}",
+                    "platform": "mastodon",
+                    "external_id": status_id,
+                    "thread_id": status_id,
+                    "author_id": str(account.get("id", "")),
+                    "author_name": str(account.get("display_name") or account.get("username", "")),
+                    "author_handle": str(account.get("acct", "")),
+                    "content": text,
+                    "source_url": str(status.get("url", "")),
+                    "received_at": _iso_datetime(status.get("created_at")),
+                    "reply_context": {"status_id": status_id, "account": str(account.get("acct", "")), "source_kind": "discovery", "keyword": keyword},
+                }
+            )
+            created += int(inserted)
+            if created >= limit:
+                return created
+    return created
+
+
+def _discover_devto(keywords: list[str], limit: int) -> int:
+    tokens = {part.lower() for keyword in keywords for part in keyword.split() if len(part) >= 4}
+    created = 0
+    for tag in ("android", "opensource", "productivity", "discuss"):
+        response = requests.get(
+            "https://dev.to/api/articles",
+            headers={"accept": "application/vnd.forem.api-v1+json", "user-agent": "PureHub-Opportunity-Monitor/1.0"},
+            params={"tag": tag, "state": "fresh", "per_page": 20},
+            timeout=30,
+        )
+        response.raise_for_status()
+        for article in response.json():
+            title = str(article.get("title", ""))
+            description = str(article.get("description", ""))
+            combined = f"{title}\n{description}".strip()
+            if not _looks_like_question(combined) or not any(token in combined.lower() for token in tokens):
+                continue
+            article_id = str(article.get("id", ""))
+            user = article.get("user") or {}
+            _, inserted = upsert_support_message(
+                {
+                    "source_key": f"opportunity:devto:{article_id}",
+                    "platform": "devto",
+                    "external_id": article_id,
+                    "thread_id": article_id,
+                    "author_id": str(user.get("user_id", "")),
+                    "author_name": str(user.get("name") or user.get("username", "")),
+                    "author_handle": str(user.get("username", "")),
+                    "content": combined,
+                    "source_url": str(article.get("url", "")),
+                    "received_at": _iso_datetime(article.get("published_timestamp") or article.get("published_at")),
+                    "reply_context": {"article_id": article_id, "source_kind": "discovery", "keyword": tag},
+                }
+            )
+            created += int(inserted)
+            if created >= limit:
+                return created
+    return created
+
+
+def discover_opportunities() -> dict[str, Any]:
+    if get_config_value("opportunity_monitor_enabled", "true").lower() != "true":
+        return {"enabled": False, "channels": {}}
+    keywords = _opportunity_keywords()
+    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "6") or 6), 12))
+    per_platform = max(1, total_limit // 3)
+    result: dict[str, Any] = {"enabled": True, "channels": {}}
+    for platform, discover in (("bluesky", _discover_bluesky), ("mastodon", _discover_mastodon), ("devto", _discover_devto)):
+        try:
+            result["channels"][platform] = {"ok": True, "created": discover(keywords, per_platform)}
+        except Exception as exc:
+            result["channels"][platform] = {"ok": False, "created": 0, "error": str(exc)[:500]}
+    return result
+
+
 def _sync_telegram_metrics() -> dict[str, int]:
     response = requests.get(
         f"https://api.telegram.org/bot{get_config_value('telegram_bot_token')}/getChatMemberCount",
@@ -462,7 +639,8 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
             error = str(exc)[:500]
             result["channels"][platform] = {"ok": False, "created": 0, "error": error}
             update_support_sync_state(platform, {"last_synced_at": datetime.now(timezone.utc), "error_message": error})
-    result["drafts"] = generate_support_drafts(limit=5) if generate_drafts else {}
+    result["opportunities"] = discover_opportunities()
+    result["drafts"] = generate_support_drafts(limit=8) if generate_drafts else {}
     result["engagement"] = sync_engagement_metrics()
     return result
 

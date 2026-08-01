@@ -114,6 +114,20 @@ def _parse_upload_copy(content: str) -> tuple[str, str]:
     return title, description[:5000]
 
 
+def _scheduled_publish_at(row: dict[str, Any]) -> datetime | None:
+    raw = row.get("scheduled_at")
+    if not raw:
+        return None
+    try:
+        value = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    value = value.astimezone(timezone.utc)
+    return value if value > datetime.now(timezone.utc) else None
+
+
 def create_upload_session(post_id: str, *, content_type: str, content_length: int) -> dict[str, str]:
     row = get_growth_post(post_id)
     if not row or row.get("channel") != "youtube":
@@ -123,9 +137,13 @@ def create_upload_session(post_id: str, *, content_type: str, content_length: in
     if content_length <= 0 or content_length > 1024 * 1024 * 1024:
         raise ValueError("Video size must be between 1 byte and 1 GB.")
     title, description = _parse_upload_copy(str(row.get("content", "")))
-    privacy = get_config_value("youtube_default_privacy", "unlisted")
+    publish_at = _scheduled_publish_at(row)
+    privacy = "private" if publish_at else get_config_value("youtube_default_privacy", "unlisted")
     if privacy not in {"private", "unlisted", "public"}:
         privacy = "unlisted"
+    status: dict[str, Any] = {"privacyStatus": privacy, "selfDeclaredMadeForKids": False}
+    if publish_at:
+        status["publishAt"] = publish_at.isoformat().replace("+00:00", "Z")
     response = requests.post(
         UPLOAD_BASE,
         headers={
@@ -143,7 +161,7 @@ def create_upload_session(post_id: str, *, content_type: str, content_length: in
                 "defaultLanguage": "en",
                 "tags": ["PureHub", "OpenSource", "AndroidApps", "NoAds", "PrivacyTools"],
             },
-            "status": {"privacyStatus": privacy, "selfDeclaredMadeForKids": False},
+            "status": status,
         },
         timeout=30,
     )
@@ -151,8 +169,16 @@ def create_upload_session(post_id: str, *, content_type: str, content_length: in
     upload_url = response.headers.get("Location", "")
     if not upload_url:
         raise ValueError("YouTube did not return a resumable upload URL.")
-    update_growth_post(post_id, {"status": "uploading", "error_message": ""})
-    return {"upload_url": upload_url, "title": title, "privacy": privacy}
+    metadata = dict(row.get("metadata") or {})
+    if publish_at:
+        metadata["youtube_publish_at"] = publish_at.isoformat().replace("+00:00", "Z")
+    update_growth_post(post_id, {"status": "uploading", "metadata": metadata, "error_message": ""})
+    return {
+        "upload_url": upload_url,
+        "title": title,
+        "privacy": privacy,
+        "publish_at": status.get("publishAt", ""),
+    }
 
 
 def complete_upload(post_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -160,17 +186,19 @@ def complete_upload(post_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     if not video_id:
         raise ValueError("YouTube upload response is missing the video ID.")
     metadata = dict((get_growth_post(post_id) or {}).get("metadata") or {})
+    publish_at = str(metadata.get("youtube_publish_at") or "")
     metadata["youtube"] = {
         "privacy": str((payload.get("status") or {}).get("privacyStatus", "")),
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "publish_at": publish_at,
     }
     update_growth_post(
         post_id,
         {
-            "status": "published",
+            "status": "scheduled" if publish_at else "published",
             "external_id": video_id,
             "external_url": f"https://youtu.be/{video_id}",
-            "published_at": datetime.now(timezone.utc),
+            "published_at": None if publish_at else datetime.now(timezone.utc),
             "metadata": metadata,
             "error_message": "",
         },
@@ -179,7 +207,12 @@ def complete_upload(post_id: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def sync_youtube_metrics() -> dict[str, Any]:
-    rows = [row for row in list_growth_posts(50, status="published", channel="youtube") if row.get("external_id")]
+    rows = [
+        row
+        for status in ("published", "scheduled")
+        for row in list_growth_posts(50, status=status, channel="youtube")
+        if row.get("external_id")
+    ]
     if not rows or not get_config_value("youtube_refresh_token"):
         return {}
     ids = [str(row["external_id"]) for row in rows]
@@ -204,6 +237,9 @@ def sync_youtube_metrics() -> dict[str, Any]:
         }
         metadata = dict(row.get("metadata") or {})
         metadata.update({"metrics": metrics, "metrics_fetched_at": datetime.now(timezone.utc).isoformat()})
-        update_growth_post(str(row["id"]), {"metadata": metadata})
+        values: dict[str, Any] = {"metadata": metadata}
+        if str((item.get("status") or {}).get("privacyStatus", "")) == "public" and row.get("status") == "scheduled":
+            values.update({"status": "published", "published_at": datetime.now(timezone.utc)})
+        update_growth_post(str(row["id"]), values)
         result[str(row["id"])] = metrics
     return result
