@@ -1,7 +1,7 @@
 {
   "name": "PureHub",
   "short_name": "PureHub",
-  "description": "A privacy-first offline utility super app with 17 mini-apps.",
+  "description": "22 free, ad-free, privacy-first mini apps that work offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,6 +11,12 @@
   "lang": "en",
   "categories": ["productivity", "utilities", "lifestyle"],
   "icons": [
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icons/app-icon.svg",
       "sizes": "any",

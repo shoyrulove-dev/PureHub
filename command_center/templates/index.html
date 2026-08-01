@@ -467,9 +467,14 @@
             <span class="badge draft" title="YouTube uploads ready"><svg class="icon"><use href="#i-eye"/></svg>&nbsp;{{ growth_summary.statuses.get('ready_upload', 0) }}</span>
             <span class="badge {% if youtube_connection.connected %}published{% else %}draft{% endif %}" title="YouTube OAuth">YouTube {% if youtube_connection.connected %}connected{% else %}manual{% endif %}</span>
           </div>
-          <div class="queue" style="margin-top:1rem">
-            {% for item in growth_posts[:14] %}
-            <details class="queue-item">
+          <details class="disclosure" style="margin-top:1rem">
+            <summary class="disclosure-summary">
+              <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-history"/></svg></span><span><strong>Content schedule</strong><span class="panel-copy" style="display:block;margin-top:.2rem">YouTube queue and recent campaign posts · hidden</span></span></span>
+              <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="disclosure-content queue" style="padding-top:.65rem">
+              {% for item in growth_posts[:14] %}
+              <details class="queue-item">
               <summary>
                 <span class="queue-label"><span class="queue-title">Day {{ item.metadata.get('cycle_day', item.day_number) }} · {{ item.channel|upper }} · {{ item.topic }}</span><span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span></span>
                 {% if item.external_url %}<a class="link" href="{{ item.external_url }}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">Open post</a>{% endif %}
@@ -490,9 +495,10 @@
                   {% endif %}
                 </div>
               </div>
-            </details>
-            {% else %}<div class="release-card"><p class="release-title">Campaign has not started</p><p class="release-summary">Enable it in Advanced Controls or run day one manually.</p></div>{% endfor %}
-          </div>
+              </details>
+              {% else %}<div class="release-card"><p class="release-title">Campaign has not started</p><p class="release-summary">Enable it in Advanced Controls or run day one manually.</p></div>{% endfor %}
+            </div>
+          </details>
         </section>
 
         <section class="section panel" id="reddit-review" aria-labelledby="reddit-review-title">

@@ -12,16 +12,21 @@ export const SEO_MINI_APP_IDS = [
   'compass',
   'bubble-level',
   'decibel-meter',
+  'smart-flashlight',
   'unit-converter',
   'qr-studio',
   'doc-to-pdf',
   'ocr-text',
   'color-grabber',
   'speaker-cleaner',
+  'deep-cleaner',
+  'wifi-analyzer',
   'password-vault',
+  'wallpaper-changer',
   'bill-splitter',
   'expense-tracker',
   'decision-wheel',
+  'community-pro-unlock',
 ] as const
 
 export type SeoMiniAppId = (typeof SEO_MINI_APP_IDS)[number]
@@ -34,6 +39,40 @@ export type SeoMetaEntry = {
 }
 
 export type SeoMetaDictionary = Record<SeoMiniAppId, Record<SeoLanguage, SeoMetaEntry>>
+
+export const SEO_SITE_PAGE_IDS = ['home', 'tools', 'community', 'download', 'changelog'] as const
+
+export type SeoSitePageId = (typeof SEO_SITE_PAGE_IDS)[number]
+
+export type SeoSiteMetaEntry = SeoMetaEntry & { segment: string }
+
+export const seoSiteMeta: Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaEntry>> = {
+  home: {
+    en: { segment: '', slug: '', title: 'PureHub – 22 Free Offline Mini Apps, No Ads', description: 'Use 22 free, ad-free mini apps for focus, measurement, scanning, privacy, finance and more. PureHub works offline and keeps data on your device.', keywords: ['free mini apps', 'offline tools', 'no ads apps', 'privacy-first PWA'] },
+    vi: { segment: '', slug: '', title: 'PureHub – 22 Mini App Miễn Phí, Offline, Không Quảng Cáo', description: 'Dùng 22 mini app miễn phí cho tập trung, đo lường, quét tài liệu, bảo mật và tài chính. PureHub chạy offline và giữ dữ liệu trên thiết bị.', keywords: ['mini app mien phi', 'cong cu offline', 'khong quang cao', 'PWA rieng tu'] },
+    zh: { segment: '', slug: '', title: 'PureHub – 22 个免费离线迷你应用，无广告', description: '使用 22 个免费迷你应用完成专注、测量、扫描、隐私和财务任务。PureHub 支持离线运行，数据保留在设备中。', keywords: ['免费迷你应用', '离线工具', '无广告应用', '隐私PWA'] },
+  },
+  tools: {
+    en: { segment: 'tools', slug: 'tools', title: 'All 22 Free Offline Tools | PureHub', description: 'Explore all 22 PureHub mini apps for focus, measurement, vision, security, audio, and finance—free, private, offline, and without ads.', keywords: ['free online tools', 'offline utility apps', 'privacy tools', 'no ads mini apps'] },
+    vi: { segment: 'tools', slug: 'tools', title: 'Tất Cả 22 Công Cụ Offline Miễn Phí | PureHub', description: 'Khám phá 22 mini app PureHub cho tập trung, đo lường, hình ảnh, bảo mật, âm thanh và tài chính—miễn phí, riêng tư, không quảng cáo.', keywords: ['cong cu online mien phi', 'mini app offline', 'cong cu rieng tu', 'khong quang cao'] },
+    zh: { segment: 'tools', slug: 'tools', title: '全部 22 个免费离线工具 | PureHub', description: '探索 PureHub 的 22 个专注、测量、视觉、安全、音频和财务工具，免费、私密、离线且无广告。', keywords: ['免费在线工具', '离线应用', '隐私工具', '无广告迷你应用'] },
+  },
+  community: {
+    en: { segment: 'community', slug: 'community', title: 'PureHub Open-Source Community', description: 'Join the PureHub community to get support, suggest mini apps, report issues, and help build useful tools that remain free and ad-free.', keywords: ['PureHub community', 'open source community', 'suggest mini app', 'free no ads tools'] },
+    vi: { segment: 'community', slug: 'community', title: 'Cộng Đồng Mã Nguồn Mở PureHub', description: 'Tham gia cộng đồng PureHub để nhận hỗ trợ, đề xuất mini app, báo lỗi và cùng xây dựng công cụ hữu ích luôn miễn phí, không quảng cáo.', keywords: ['cong dong PureHub', 'ma nguon mo', 'de xuat mini app', 'cong cu mien phi'] },
+    zh: { segment: 'community', slug: 'community', title: 'PureHub 开源社区', description: '加入 PureHub 社区，获取支持、提出迷你应用建议、报告问题，并共同打造始终免费且无广告的实用工具。', keywords: ['PureHub社区', '开源社区', '迷你应用建议', '免费工具'] },
+  },
+  download: {
+    en: { segment: 'download', slug: 'download', title: 'Download PureHub for Android | Free, No Ads', description: 'Download the signed PureHub Android app or install the PWA to access 22 private, ad-free mini apps with strong offline support.', keywords: ['download PureHub Android', 'free no ads APK', 'offline PWA', 'signed Android app'] },
+    vi: { segment: 'download', slug: 'download', title: 'Tải PureHub Cho Android | Miễn Phí, Không Quảng Cáo', description: 'Tải ứng dụng Android PureHub đã ký hoặc cài PWA để dùng 22 mini app riêng tư, không quảng cáo và hỗ trợ offline mạnh.', keywords: ['tai PureHub Android', 'APK mien phi', 'PWA offline', 'khong quang cao'] },
+    zh: { segment: 'download', slug: 'download', title: '下载 PureHub Android 版 | 免费无广告', description: '下载已签名的 PureHub Android 应用或安装 PWA，使用 22 个私密、无广告且支持离线的迷你应用。', keywords: ['下载PureHub', '免费Android应用', '离线PWA', '无广告APK'] },
+  },
+  changelog: {
+    en: { segment: 'changelog', slug: 'changelog', title: 'PureHub Changelog & Release Notes', description: 'Follow PureHub releases, UX improvements, bug fixes, and new mini apps across the free, ad-free, open-source utility platform.', keywords: ['PureHub changelog', 'release notes', 'mini app updates', 'open source releases'] },
+    vi: { segment: 'changelog', slug: 'changelog', title: 'Nhật Ký Cập Nhật & Phiên Bản PureHub', description: 'Theo dõi phiên bản PureHub, cải tiến UX, sửa lỗi và mini app mới trên nền tảng tiện ích miễn phí, không quảng cáo, mã nguồn mở.', keywords: ['cap nhat PureHub', 'nhat ky phien ban', 'mini app moi', 'ma nguon mo'] },
+    zh: { segment: 'changelog', slug: 'changelog', title: 'PureHub 更新日志与发行说明', description: '查看 PureHub 的版本发布、体验改进、错误修复和新迷你应用，持续保持免费、无广告与开源。', keywords: ['PureHub更新日志', '发行说明', '迷你应用更新', '开源版本'] },
+  },
+}
 
 export const seoMeta: SeoMetaDictionary = {
   'lunar-calendar': {
@@ -197,6 +236,29 @@ export const seoMeta: SeoMetaDictionary = {
       keywords: ['离线分贝仪', '声音检测', '麦克风工具', '隐私音频工具'],
     },
   },
+  'smart-flashlight': {
+    en: {
+      slug: 'smart-flashlight',
+      title: 'Smart Flashlight Online | Free, No Ads',
+      description:
+        'Use a bright screen flashlight with adjustable color and quick controls. PureHub Smart Flashlight is free, lightweight, and ad-free.',
+      keywords: ['smart flashlight online', 'screen flashlight', 'free flashlight no ads', 'browser flashlight'],
+    },
+    vi: {
+      slug: 'den-pin-thong-minh',
+      title: 'Đèn Pin Thông Minh Online | Miễn Phí, Không Quảng Cáo',
+      description:
+        'Dùng màn hình làm đèn pin sáng với màu sắc tùy chỉnh và điều khiển nhanh, miễn phí và không quảng cáo.',
+      keywords: ['den pin thong minh', 'den pin man hinh', 'den pin online', 'khong quang cao'],
+    },
+    zh: {
+      slug: 'zhi-neng-shou-dian',
+      title: '智能在线手电筒 | 免费无广告',
+      description:
+        '使用可调颜色的明亮屏幕手电筒和快捷控制，PureHub 免费、轻量且无广告。',
+      keywords: ['智能手电筒', '屏幕手电筒', '在线手电筒', '无广告工具'],
+    },
+  },
   'unit-converter': {
     en: {
       slug: 'unit-converter',
@@ -335,6 +397,52 @@ export const seoMeta: SeoMetaDictionary = {
       keywords: ['扬声器清理', '离线音频工具', '频率发生器', '无广告'],
     },
   },
+  'deep-cleaner': {
+    en: {
+      slug: 'deep-cleaner',
+      title: 'Browser Storage Cleaner | Private Device Cleanup',
+      description:
+        'Review and clear PureHub local cache, temporary data, and offline storage with transparent controls and no invasive device permissions.',
+      keywords: ['browser storage cleaner', 'clear pwa cache', 'private device cleanup', 'offline storage manager'],
+    },
+    vi: {
+      slug: 'don-dep-thiet-bi',
+      title: 'Dọn Dẹp Bộ Nhớ Trình Duyệt | Riêng Tư, An Toàn',
+      description:
+        'Kiểm tra và dọn cache, dữ liệu tạm cùng bộ nhớ offline của PureHub bằng điều khiển rõ ràng, không cần quyền xâm nhập thiết bị.',
+      keywords: ['don dep bo nho trinh duyet', 'xoa cache pwa', 'don du lieu offline', 'cong cu rieng tu'],
+    },
+    zh: {
+      slug: 'shen-du-qing-li',
+      title: '浏览器存储清理 | 私密设备整理',
+      description:
+        '透明检查并清理 PureHub 本地缓存、临时数据与离线存储，无需侵入性设备权限。',
+      keywords: ['浏览器存储清理', '清除PWA缓存', '离线数据整理', '隐私工具'],
+    },
+  },
+  'wifi-analyzer': {
+    en: {
+      slug: 'wifi-analyzer',
+      title: 'Wi-Fi Connection Analyzer | Private Browser Test',
+      description:
+        'Inspect browser-visible Wi-Fi connection quality, latency, and network status without ads or collecting your network data.',
+      keywords: ['wifi analyzer browser', 'network latency test', 'connection quality checker', 'private wifi tool'],
+    },
+    vi: {
+      slug: 'phan-tich-wifi',
+      title: 'Phân Tích Kết Nối Wi-Fi | Kiểm Tra Riêng Tư',
+      description:
+        'Kiểm tra chất lượng kết nối, độ trễ và trạng thái mạng mà trình duyệt cho phép, không quảng cáo và không thu thập dữ liệu Wi-Fi.',
+      keywords: ['phan tich wifi', 'kiem tra do tre mang', 'chat luong ket noi', 'wifi rieng tu'],
+    },
+    zh: {
+      slug: 'wifi-fen-xi',
+      title: 'Wi-Fi 连接分析 | 私密浏览器测试',
+      description:
+        '检查浏览器可见的网络质量、延迟与连接状态，不显示广告，也不收集 Wi-Fi 数据。',
+      keywords: ['WiFi连接分析', '网络延迟测试', '连接质量检查', '隐私网络工具'],
+    },
+  },
   'password-vault': {
     en: {
       slug: 'password-vault',
@@ -356,6 +464,29 @@ export const seoMeta: SeoMetaDictionary = {
       description:
         'PureHub 密码保险库支持本地离线保存，隐私优先且没有广告干扰。',
       keywords: ['离线密码库', '本地密码管理', '隐私保险库', '无广告密码工具'],
+    },
+  },
+  'wallpaper-changer': {
+    en: {
+      slug: 'wallpaper-changer',
+      title: 'Wallpaper Preview & Changer | Free Browser Tool',
+      description:
+        'Preview wallpapers, crop images for your screen, and prepare a clean background locally with no uploads, ads, or tracking.',
+      keywords: ['wallpaper changer browser', 'wallpaper preview tool', 'crop phone wallpaper', 'private image tool'],
+    },
+    vi: {
+      slug: 'doi-hinh-nen',
+      title: 'Xem Trước & Đổi Hình Nền | Công Cụ Miễn Phí',
+      description:
+        'Xem trước, cắt ảnh theo màn hình và chuẩn bị hình nền ngay trên thiết bị, không tải lên mạng và không quảng cáo.',
+      keywords: ['doi hinh nen', 'cat anh hinh nen', 'xem truoc wallpaper', 'cong cu anh rieng tu'],
+    },
+    zh: {
+      slug: 'bi-zhi-geng-huan',
+      title: '壁纸预览与更换 | 免费浏览器工具',
+      description:
+        '在设备本地预览并裁剪适合屏幕的壁纸，无需上传、无广告，也不跟踪用户。',
+      keywords: ['壁纸更换', '壁纸预览', '手机壁纸裁剪', '本地图像工具'],
     },
   },
   'bill-splitter': {
@@ -427,6 +558,29 @@ export const seoMeta: SeoMetaDictionary = {
       keywords: ['离线决策转盘', '随机选择', '转盘工具', '无广告'],
     },
   },
+  'community-pro-unlock': {
+    en: {
+      slug: 'community-pro-unlock',
+      title: 'PureHub Community | Free Open-Source Mini Apps',
+      description:
+        'Join the PureHub community, suggest useful mini apps, report issues, and help keep private everyday tools free, open source, and ad-free.',
+      keywords: ['PureHub community', 'open source mini apps', 'free no ads tools', 'community built apps'],
+    },
+    vi: {
+      slug: 'mo-khoa-cong-dong',
+      title: 'Cộng Đồng PureHub | Mini App Mã Nguồn Mở Miễn Phí',
+      description:
+        'Tham gia cộng đồng PureHub để đề xuất mini app, báo lỗi và cùng duy trì các công cụ riêng tư miễn phí, mã nguồn mở, không quảng cáo.',
+      keywords: ['cong dong PureHub', 'mini app ma nguon mo', 'cong cu mien phi', 'khong quang cao'],
+    },
+    zh: {
+      slug: 'she-qu-jie-suo',
+      title: 'PureHub 社区 | 免费开源迷你应用',
+      description:
+        '加入 PureHub 社区，提出应用建议、报告问题，并共同维护免费、开源、无广告的私密日常工具。',
+      keywords: ['PureHub社区', '开源迷你应用', '免费无广告工具', '社区共建应用'],
+    },
+  },
 }
 
 export type SeoRouteEntry = {
@@ -449,7 +603,13 @@ export const seoRouteEntries: SeoRouteEntry[] = SEO_MINI_APP_IDS.flatMap((appId)
 )
 
 export function buildSeoSitemapPaths() {
-  return seoRouteEntries.map((entry) => entry.path)
+  const sitePaths = SEO_SITE_PAGE_IDS.flatMap((pageId) =>
+    SEO_LANGUAGES.map((lang) => {
+      const segment = seoSiteMeta[pageId][lang].segment
+      return `/${lang}${segment ? `/${segment}` : ''}`
+    }),
+  )
+  return [...sitePaths, ...seoRouteEntries.map((entry) => entry.path)]
 }
 
 export function getSeoMetaBySlug(lang: SeoLanguage, slug: string) {
@@ -466,4 +626,9 @@ export function getSeoMetaBySlug(lang: SeoLanguage, slug: string) {
 
 export function buildCanonicalUrl(lang: SeoLanguage, slug: string) {
   return `${SITE_ORIGIN}/${lang}/${slug}`
+}
+
+export function buildSitePageUrl(lang: SeoLanguage, pageId: SeoSitePageId) {
+  const segment = seoSiteMeta[pageId][lang].segment
+  return `${SITE_ORIGIN}/${lang}${segment ? `/${segment}` : ''}`
 }
