@@ -585,7 +585,22 @@
                 {% if item.source_url %}<a class="link" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Open source message</a>{% endif %}
                 {% if item.status in ['new'] %}
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post" class="row-actions"><button class="button violet" type="submit">Generate AI draft</button></form>
-                {% elif item.status in ['draft_ready', 'approved', 'failed', 'manual_required'] %}
+                {% elif item.status == 'approved' %}
+                  <div style="margin-top:.8rem;padding:.85rem;border:1px solid #86efac;border-radius:.9rem;background:#f0fdf4">
+                    <p class="release-title" style="display:flex;align-items:center;gap:.45rem;color:#166534"><svg class="icon"><use href="#i-check"/></svg>Approved — ready to send</p>
+                    <p class="support-submeta" style="margin-top:.35rem;color:#166534">Approval is saved. Sending is the final action and will publish this reply on {{ item.platform|upper }}.</p>
+                    <textarea rows="4" readonly style="margin-top:.65rem">{{ item.reply_text or item.ai_draft }}</textarea>
+                    <div class="row-actions">
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" onsubmit="return confirm('Send this approved reply on {{ item.platform }} now?');">
+                        <button class="button primary" type="submit">{% if item.platform == 'devto' %}Prepare DEV manual reply{% else %}Send reply now{% endif %}</button>
+                      </form>
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
+                        <input type="hidden" name="reply_text" value="{{ item.reply_text or item.ai_draft }}" />
+                        <button class="button" type="submit" name="action" value="save">Back to editing</button>
+                      </form>
+                    </div>
+                  </div>
+                {% elif item.status in ['draft_ready', 'failed'] %}
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
                     <textarea name="reply_text" rows="5" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
                     <div class="row-actions">
@@ -594,12 +609,14 @@
                       <button class="button" type="submit" name="action" value="ignore">Ignore</button>
                     </div>
                   </form>
-                  {% if item.status == 'approved' %}
-                    <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" class="row-actions" onsubmit="return confirm('Send this approved reply on {{ item.platform }}?');">
-                      <button class="button primary" type="submit">{% if item.platform == 'devto' %}Prepare manual reply{% else %}Send approved reply{% endif %}</button>
-                    </form>
-                  {% endif %}
                   {% if item.error_message %}<p class="support-submeta" style="color: var(--rose)">{{ item.error_message }}</p>{% endif %}
+                {% elif item.status == 'manual_required' %}
+                  <div style="margin-top:.8rem;padding:.85rem;border:1px solid #fdba74;border-radius:.9rem;background:#fff7ed">
+                    <p class="release-title" style="color:#9a3412">Manual DEV reply required</p>
+                    <p class="support-submeta" style="margin-top:.35rem;color:#9a3412">DEV's public API cannot create comments. Copy this approved reply, open the source, and paste it there.</p>
+                    <textarea id="manualReply{{ item.id }}" rows="4" readonly style="margin-top:.65rem">{{ item.reply_text or item.ai_draft }}</textarea>
+                    <div class="row-actions"><button class="button" type="button" data-copy-target="manualReply{{ item.id }}">Copy reply</button>{% if item.source_url %}<a class="button primary" href="{{ item.source_url }}" target="_blank" rel="noreferrer">Open DEV source</a>{% endif %}</div>
+                  </div>
                 {% elif item.status == 'replied' %}
                   {% if item.external_reply_url %}<a class="button primary" href="{{ item.external_reply_url }}" target="_blank" rel="noreferrer" style="margin-top: 0.8rem">Open reply</a>{% endif %}
                 {% endif %}

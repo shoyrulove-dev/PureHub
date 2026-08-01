@@ -1371,10 +1371,10 @@ def support_draft_action(request: Request, message_id: str) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
     if not row:
-        return _redirect_with_message("Support message not found.", "error")
+        return _redirect_with_message("Support message not found.", "error", anchor="support")
     result = generate_support_draft(message_id)
     record_audit_log(actor=actor, action="generate_support_draft", target_type="support_message", target_id=message_id)
-    return _redirect_with_message(f"AI draft generated as {result.get('category', 'support')}", "success")
+    return _redirect_with_message(f"AI draft generated as {result.get('category', 'support')}", "success", anchor="support")
 
 
 @admin_router.post("/support/{message_id}/review")
@@ -1387,12 +1387,12 @@ def support_review_action(
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
     if not row:
-        return _redirect_with_message("Support message not found.", "error")
+        return _redirect_with_message("Support message not found.", "error", anchor="support")
     if action not in {"save", "approve", "ignore"}:
-        return _redirect_with_message("Unsupported support action.", "error")
+        return _redirect_with_message("Unsupported support action.", "error", anchor="support")
     status = {"save": "draft_ready", "approve": "approved", "ignore": "ignored"}[action]
     if action != "ignore" and not reply_text.strip():
-        return _redirect_with_message("Reply text cannot be empty.", "error")
+        return _redirect_with_message("Reply text cannot be empty.", "error", anchor="support")
     update_support_message(message_id, {"reply_text": reply_text.strip(), "status": status, "error_message": ""})
     record_audit_log(
         actor=actor,
@@ -1401,7 +1401,7 @@ def support_review_action(
         target_id=message_id,
         details={"platform": row.get("platform")},
     )
-    return _redirect_with_message(f"Support reply {action} completed.", "success")
+    return _redirect_with_message(f"Support reply {action} completed.", "success", anchor="support")
 
 
 @admin_router.post("/support/{message_id}/send")
@@ -1417,10 +1417,10 @@ def support_send_action(request: Request, message_id: str) -> RedirectResponse:
             details={"platform": row.get("platform"), "status": row.get("status")},
         )
         if row.get("status") == "manual_required":
-            return _redirect_with_message("DEV draft approved. Open the source comment and paste the prepared reply.", "info")
-        return _redirect_with_message("Support reply sent successfully.", "success")
+            return _redirect_with_message("DEV draft approved. Open the source comment and paste the prepared reply.", "info", anchor="support")
+        return _redirect_with_message("Support reply sent successfully.", "success", anchor="support")
     except Exception as exc:
-        return _redirect_with_message(f"Support reply failed: {exc}", "error")
+        return _redirect_with_message(f"Support reply failed: {exc}", "error", anchor="support")
 
 
 @admin_router.post("/growth/run")
@@ -1898,8 +1898,14 @@ def mask_secret(value: str) -> str:
     return f"{value[:4]}...{value[-4:]}"
 
 
-def _redirect_with_message(message: str, message_type: Literal["success", "info", "error"]) -> RedirectResponse:
-    url = f"{PUBLIC_ADMIN_PREFIX}?message={quote_plus(message)}&message_type={message_type}"
+def _redirect_with_message(
+    message: str,
+    message_type: Literal["success", "info", "error"],
+    *,
+    anchor: str = "",
+) -> RedirectResponse:
+    fragment = f"#{anchor}" if anchor else ""
+    url = f"{PUBLIC_ADMIN_PREFIX}?message={quote_plus(message)}&message_type={message_type}{fragment}"
     return RedirectResponse(url=url, status_code=303)
 
 
