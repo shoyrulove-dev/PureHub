@@ -198,6 +198,16 @@ try:
         sync_youtube_metrics,
         youtube_connection_state,
     )
+    from .tiktok_connector import (
+        build_authorization_url as build_tiktok_authorization_url,
+        complete_upload as complete_tiktok_upload,
+        connect_tiktok,
+        create_upload_session as create_tiktok_upload_session,
+        disconnect_tiktok,
+        fetch_creator_info as fetch_tiktok_creator_info,
+        fetch_publish_status as fetch_tiktok_publish_status,
+        tiktok_connection_state,
+    )
 except ImportError:
     from database import claim_growth_post, get_growth_post, get_growth_summary, list_growth_posts, update_growth_post
     from growth_automation import retry_growth_post, run_growth_automation, sync_growth_post_metrics
@@ -209,6 +219,16 @@ except ImportError:
         disconnect_youtube,
         sync_youtube_metrics,
         youtube_connection_state,
+    )
+    from tiktok_connector import (
+        build_authorization_url as build_tiktok_authorization_url,
+        complete_upload as complete_tiktok_upload,
+        connect_tiktok,
+        create_upload_session as create_tiktok_upload_session,
+        disconnect_tiktok,
+        fetch_creator_info as fetch_tiktok_creator_info,
+        fetch_publish_status as fetch_tiktok_publish_status,
+        tiktok_connection_state,
     )
 
 try:
@@ -444,6 +464,13 @@ def _dashboard_context(
         "channel_title": config.get("youtube_channel_title"),
         "privacy": config.get("youtube_default_privacy", "unlisted"),
     }
+    tiktok_connection = {
+        "client_configured": bool(config.get("tiktok_client_key") and config.get("tiktok_client_secret")),
+        "connected": bool(config.get("tiktok_refresh_token")),
+        "display_name": config.get("tiktok_display_name", ""),
+        "open_id": config.get("tiktok_open_id", ""),
+        "environment": config.get("tiktok_environment", "sandbox"),
+    }
     reddit_connection = {
         "client_configured": bool(config.get("reddit_client_id") and config.get("reddit_client_secret")),
         "connected": bool(config.get("reddit_refresh_token")),
@@ -494,6 +521,7 @@ def _dashboard_context(
         "growth_posts": loaded.get("growth_posts", []),
         "growth_summary": loaded.get("growth_summary", {}),
         "youtube_connection": youtube_connection,
+        "tiktok_connection": tiktok_connection,
         "reddit_connection": reddit_connection,
         "august_goal": august_goal,
         "product_growth": loaded.get("product_growth", {}),
@@ -598,6 +626,9 @@ def save_config(
     youtube_client_id: str = Form(default=""),
     youtube_client_secret: str = Form(default=""),
     youtube_default_privacy: str = Form(default="unlisted"),
+    tiktok_client_key: str = Form(default=""),
+    tiktok_client_secret: str = Form(default=""),
+    tiktok_environment: str = Form(default="sandbox"),
     reddit_client_id: str = Form(default=""),
     reddit_client_secret: str = Form(default=""),
     reddit_default_subreddit: str = Form(default="droidappshowcase"),
@@ -639,6 +670,9 @@ def save_config(
             "youtube_client_id": youtube_client_id.strip() or current_config.get("youtube_client_id", ""),
             "youtube_client_secret": youtube_client_secret.strip() or current_config.get("youtube_client_secret", ""),
             "youtube_default_privacy": youtube_default_privacy if youtube_default_privacy in {"private", "unlisted", "public"} else "unlisted",
+            "tiktok_client_key": tiktok_client_key.strip() or current_config.get("tiktok_client_key", ""),
+            "tiktok_client_secret": tiktok_client_secret.strip() or current_config.get("tiktok_client_secret", ""),
+            "tiktok_environment": "production" if tiktok_environment == "production" else "sandbox",
             "reddit_client_id": reddit_client_id.strip() or current_config.get("reddit_client_id", ""),
             "reddit_client_secret": reddit_client_secret.strip() or current_config.get("reddit_client_secret", ""),
             "reddit_default_subreddit": reddit_default_subreddit.strip().removeprefix("r/") or "droidappshowcase",
@@ -1675,6 +1709,136 @@ async def youtube_complete_api(request: Request) -> dict[str, Any]:
             details={"video_id": row.get("external_id", ""), "url": row.get("external_url", "")},
         )
         return {"ok": True, "item": row}
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@admin_router.get("/tiktok/connect")
+def tiktok_connect_action(request: Request) -> RedirectResponse:
+    require_admin_role(request, "superadmin")
+    state = secrets.token_urlsafe(32)
+    request.session["tiktok_oauth_state"] = state
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/tiktok/callback"
+    try:
+        return RedirectResponse(
+            url=build_tiktok_authorization_url(state=state, redirect_uri=redirect_uri),
+            status_code=302,
+        )
+    except Exception as exc:
+        return _redirect_with_message(f"TikTok connection failed: {exc}", "error")
+
+
+@admin_router.get("/tiktok/callback")
+def tiktok_callback_action(
+    request: Request,
+    code: str = "",
+    state: str = "",
+    error: str = "",
+    error_description: str = "",
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    expected = str(request.session.pop("tiktok_oauth_state", ""))
+    if error:
+        return _redirect_with_message(f"TikTok authorization was cancelled: {error_description or error}", "error")
+    if not expected or not secrets.compare_digest(expected, state) or not code:
+        return _redirect_with_message("Invalid TikTok OAuth response.", "error")
+    redirect_uri = f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/admin/tiktok/callback"
+    try:
+        connection = connect_tiktok(code=code, redirect_uri=redirect_uri)
+        record_audit_log(
+            actor=actor,
+            action="connect_tiktok",
+            target_type="social_connection",
+            target_id=str(connection.get("open_id") or "tiktok"),
+            details={"display_name": connection.get("display_name", ""), "environment": connection.get("environment", "sandbox")},
+        )
+        return _redirect_with_message(f"TikTok connected: {connection.get('display_name') or 'creator ready'}.", "success")
+    except Exception as exc:
+        return _redirect_with_message(f"TikTok OAuth failed: {exc}", "error")
+
+
+@admin_router.post("/tiktok/disconnect")
+def tiktok_disconnect_action(request: Request) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin")["username"]
+    disconnect_tiktok()
+    record_audit_log(actor=actor, action="disconnect_tiktok", target_type="social_connection", target_id="tiktok")
+    return _redirect_with_message("TikTok disconnected.", "success")
+
+
+@admin_api_router.get("/tiktok/creator-info")
+def tiktok_creator_info_api(request: Request) -> dict[str, Any]:
+    require_admin_role(request, "superadmin", "editor")
+    try:
+        return {"ok": True, "creator": fetch_tiktok_creator_info()}
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@admin_api_router.post("/tiktok/upload-session")
+async def tiktok_upload_session_api(request: Request) -> dict[str, Any]:
+    require_admin_role(request, "superadmin", "editor")
+    payload = await request.json()
+    if not bool(payload.get("consent")):
+        raise HTTPException(status_code=422, detail="Approve this specific TikTok upload before continuing.")
+    try:
+        return create_tiktok_upload_session(
+            caption=str(payload.get("caption", "")),
+            mode=str(payload.get("mode", "draft")),
+            privacy_level=str(payload.get("privacy_level", "SELF_ONLY")),
+            disable_comment=bool(payload.get("disable_comment", False)),
+            disable_duet=bool(payload.get("disable_duet", False)),
+            disable_stitch=bool(payload.get("disable_stitch", False)),
+            content_type=str(payload.get("content_type", "")),
+            content_length=int(payload.get("content_length", 0)),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@admin_api_router.post("/tiktok/complete")
+async def tiktok_complete_api(request: Request) -> dict[str, Any]:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    payload = await request.json()
+    try:
+        row = complete_tiktok_upload(
+            post_id=str(payload.get("post_id", "")),
+            publish_id=str(payload.get("publish_id", "")),
+        )
+        record_audit_log(
+            actor=actor,
+            action="upload_tiktok_video",
+            target_type="growth_post",
+            target_id=str(row.get("id", "")),
+            details={"publish_id": str(payload.get("publish_id", ""))},
+        )
+        return {"ok": True, "item": row}
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@admin_api_router.post("/tiktok/status")
+async def tiktok_status_api(request: Request) -> dict[str, Any]:
+    require_admin_role(request, "superadmin", "editor")
+    payload = await request.json()
+    post_id = str(payload.get("post_id", ""))
+    publish_id = str(payload.get("publish_id", ""))
+    try:
+        status = fetch_tiktok_publish_status(publish_id)
+        row = get_growth_post(post_id)
+        if row and row.get("channel") == "tiktok":
+            metadata = dict(row.get("metadata") or {})
+            metadata["tiktok_status"] = status
+            state = str(status.get("status") or "").upper()
+            values: dict[str, Any] = {"metadata": metadata}
+            if state == "PUBLISH_COMPLETE":
+                public_ids = status.get("publicaly_available_post_id") or status.get("publicly_available_post_id") or []
+                values.update({"status": "published", "published_at": datetime.now(timezone.utc), "external_id": str(public_ids[0] if public_ids else publish_id)})
+            elif state == "FAILED":
+                values.update({"status": "failed", "error_message": str(status.get("fail_reason") or "TikTok processing failed")[:500]})
+            else:
+                values["status"] = "processing"
+            update_growth_post(post_id, values)
+        return {"ok": True, "status": status}
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

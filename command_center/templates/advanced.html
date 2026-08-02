@@ -241,6 +241,17 @@
                 {% if youtube_connection.connected %}<button class="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-2 text-sm" type="submit" formaction="{{ admin_prefix }}/youtube/disconnect" formmethod="post">Disconnect YouTube</button>{% elif youtube_connection.client_configured %}<a class="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm" href="{{ admin_prefix }}/youtube/connect">Connect YouTube securely</a>{% endif %}
               </div>
 
+              <p class="mb-4 mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-pink-300">TikTok OAuth</p>
+              <div class="grid gap-5 sm:grid-cols-2">
+                <label><span class="mb-2 block text-sm">TikTok Client key</span><input type="password" name="tiktok_client_key" value="" placeholder="{% if config.get('tiktok_client_key') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">TikTok Client secret</span><input type="password" name="tiktok_client_secret" value="" placeholder="{% if config.get('tiktok_client_secret') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
+                <label><span class="mb-2 block text-sm">Environment</span><select name="tiktok_environment" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3"><option value="sandbox" {% if config.get('tiktok_environment', 'sandbox') == 'sandbox' %}selected{% endif %}>Sandbox</option><option value="production" {% if config.get('tiktok_environment') == 'production' %}selected{% endif %}>Production</option></select></label>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm"><span class="block text-slate-400">Connection</span><strong>{% if tiktok_connection.connected %}{{ tiktok_connection.display_name or 'TikTok creator' }} connected{% elif tiktok_connection.client_configured %}Ready to authorize{% else %}Add Sandbox credentials first{% endif %}</strong><span class="mt-2 block text-xs text-slate-400">Redirect URI: https://hub.blissbiovn.com/admin/tiktok/callback · scopes: user.info.basic, video.upload, video.publish</span></div>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-3">
+                {% if tiktok_connection.connected %}<button class="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-2 text-sm" type="submit" formaction="{{ admin_prefix }}/tiktok/disconnect" formmethod="post">Disconnect TikTok</button>{% elif tiktok_connection.client_configured %}<a class="rounded-2xl border border-pink-400/20 bg-pink-400/10 px-4 py-2 text-sm" href="{{ admin_prefix }}/tiktok/connect">Connect TikTok securely</a>{% endif %}
+              </div>
+
               <p class="mb-4 mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">Reddit OAuth</p>
               <div class="grid gap-5 sm:grid-cols-2">
                 <label><span class="mb-2 block text-sm">Reddit web app client ID</span><input type="password" name="reddit_client_id" value="" placeholder="{% if config.get('reddit_client_id') %}Configured - enter a value to rotate{% else %}Not configured{% endif %}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>

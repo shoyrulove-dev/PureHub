@@ -583,7 +583,29 @@
             <span class="badge approved" title="Scheduled on YouTube"><svg class="icon"><use href="#i-history"/></svg>&nbsp;{{ growth_summary.statuses.get('scheduled', 0) }}</span>
             <span class="badge draft" title="YouTube uploads ready"><svg class="icon"><use href="#i-eye"/></svg>&nbsp;{{ growth_summary.statuses.get('ready_upload', 0) }}</span>
             <span class="badge {% if youtube_connection.connected %}published{% else %}draft{% endif %}" title="YouTube OAuth">YouTube {% if youtube_connection.connected %}connected{% else %}manual{% endif %}</span>
+            <span class="badge {% if tiktok_connection.connected %}published{% else %}draft{% endif %}" title="TikTok OAuth">TikTok {% if tiktok_connection.connected %}connected{% else %}manual{% endif %}</span>
           </div>
+          <details class="disclosure" style="margin-top:1rem" id="tiktok-publisher">
+            <summary class="disclosure-summary">
+              <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-send"/></svg></span><span><strong>TikTok publisher</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{% if tiktok_connection.connected %}{{ tiktok_connection.display_name or 'Creator connected' }} · approval required per upload{% else %}OAuth not connected · hidden{% endif %}</span></span></span>
+              <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="disclosure-content" style="padding-top:.8rem">
+              {% if tiktok_connection.connected %}
+              <form id="tiktokPublisherForm" class="reddit-form" style="max-width:none">
+                <label class="full"><span class="field-label">Video</span><input id="tiktokVideoFile" type="file" accept="video/mp4,video/quicktime" required /></label>
+                <label class="full"><span class="field-label">Caption</span><textarea id="tiktokCaption" rows="3" maxlength="2200" required placeholder="Show what this PureHub mini app solves, then ask one useful question."></textarea></label>
+                <label><span class="field-label">Publishing mode</span><select id="tiktokMode"><option value="draft">Send to TikTok Inbox (first test)</option><option value="direct">Direct Post</option></select></label>
+                <label><span class="field-label">Visibility</span><select id="tiktokPrivacy"><option value="SELF_ONLY">Only me (Sandbox)</option></select></label>
+                <label><span class="field-label">Interaction controls</span><span style="display:flex;flex-wrap:wrap;gap:.8rem;padding:.7rem 0"><span><input id="tiktokDisableComment" type="checkbox" /> Disable comments</span><span><input id="tiktokDisableDuet" type="checkbox" /> Disable duet</span><span><input id="tiktokDisableStitch" type="checkbox" /> Disable stitch</span></span></label>
+                <label class="full"><span style="display:flex;align-items:flex-start;gap:.6rem"><input id="tiktokConsent" type="checkbox" required style="margin-top:.25rem" /><span class="panel-copy">I reviewed this video, caption, visibility, and interaction settings and approve this specific TikTok upload.</span></span></label>
+                <div class="row-actions full"><button class="button" type="button" id="tiktokRefreshCreator">Refresh creator options</button><button class="button violet" type="submit">Approve & upload</button><span class="panel-copy" id="tiktokUploadStatus">MP4 or MOV · maximum 64 MB</span></div>
+              </form>
+              {% else %}
+              <div class="release-card"><p class="release-title">Connect TikTok first</p><p class="release-summary">Add the Sandbox Client key and secret, then authorize the target PureHub creator account.</p><a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Open connections</a></div>
+              {% endif %}
+            </div>
+          </details>
           <details class="disclosure" style="margin-top:1rem">
             <summary class="disclosure-summary">
               <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-history"/></svg></span><span><strong>Content schedule</strong><span class="panel-copy" style="display:block;margin-top:.2rem">YouTube queue and recent campaign posts · hidden</span></span></span>
@@ -984,6 +1006,94 @@
               input.value = "";
             }
           });
+        });
+        const tiktokForm = document.getElementById("tiktokPublisherForm");
+        const tiktokStatus = document.getElementById("tiktokUploadStatus");
+        const tiktokPrivacy = document.getElementById("tiktokPrivacy");
+        const tiktokMode = document.getElementById("tiktokMode");
+        const setTikTokStatus = (message) => { if (tiktokStatus) tiktokStatus.textContent = message; };
+        const refreshTikTokCreator = async () => {
+          const response = await fetch("{{ api_prefix }}/tiktok/creator-info", { credentials: "same-origin", cache: "no-store" });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.detail || "Could not load TikTok creator settings.");
+          const creator = payload.creator || {};
+          const labels = { PUBLIC_TO_EVERYONE: "Public", MUTUAL_FOLLOW_FRIENDS: "Friends", FOLLOWER_OF_CREATOR: "Followers", SELF_ONLY: "Only me" };
+          const options = creator.privacy_level_options?.length ? creator.privacy_level_options : ["SELF_ONLY"];
+          if (tiktokPrivacy) {
+            tiktokPrivacy.replaceChildren(...options.map((value) => {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = labels[value] || value;
+              return option;
+            }));
+          }
+          const forced = [["tiktokDisableComment", "comment_disabled"], ["tiktokDisableDuet", "duet_disabled"], ["tiktokDisableStitch", "stitch_disabled"]];
+          forced.forEach(([id, key]) => {
+            const input = document.getElementById(id);
+            if (input && creator[key]) { input.checked = true; input.disabled = true; }
+          });
+          setTikTokStatus(`${creator.creator_nickname || "TikTok creator"} ready · ${options.length} visibility option(s)`);
+          return creator;
+        };
+        document.getElementById("tiktokRefreshCreator")?.addEventListener("click", async () => {
+          try { await refreshTikTokCreator(); } catch (error) { setTikTokStatus(error instanceof Error ? error.message : "Creator refresh failed."); }
+        });
+        tiktokMode?.addEventListener("change", () => {
+          if (tiktokPrivacy) tiktokPrivacy.disabled = tiktokMode.value !== "direct";
+        });
+        if (tiktokPrivacy && tiktokMode?.value !== "direct") tiktokPrivacy.disabled = true;
+        tiktokForm?.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const file = document.getElementById("tiktokVideoFile")?.files?.[0];
+          const consent = document.getElementById("tiktokConsent")?.checked;
+          if (!file || !consent) return;
+          const submit = tiktokForm.querySelector('button[type="submit"]');
+          if (submit) submit.disabled = true;
+          try {
+            if (tiktokMode.value === "direct") await refreshTikTokCreator();
+            setTikTokStatus("Creating secure TikTok upload session…");
+            const sessionResponse = await fetch("{{ api_prefix }}/tiktok/upload-session", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                caption: document.getElementById("tiktokCaption")?.value || "",
+                mode: tiktokMode.value,
+                privacy_level: tiktokPrivacy?.value || "SELF_ONLY",
+                disable_comment: document.getElementById("tiktokDisableComment")?.checked || false,
+                disable_duet: document.getElementById("tiktokDisableDuet")?.checked || false,
+                disable_stitch: document.getElementById("tiktokDisableStitch")?.checked || false,
+                consent: true,
+                content_type: file.type || "video/mp4",
+                content_length: file.size,
+              }),
+            });
+            const session = await sessionResponse.json();
+            if (!sessionResponse.ok) throw new Error(session.detail || "Could not start TikTok upload.");
+            setTikTokStatus(`Uploading ${file.name}…`);
+            const uploadResponse = await fetch(session.upload_url, {
+              method: "PUT",
+              headers: {
+                "Content-Type": file.type || "video/mp4",
+                "Content-Range": `bytes 0-${file.size - 1}/${file.size}`,
+              },
+              body: file,
+            });
+            if (!uploadResponse.ok) throw new Error(`TikTok upload failed (${uploadResponse.status}).`);
+            const completeResponse = await fetch("{{ api_prefix }}/tiktok/complete", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ post_id: session.post_id, publish_id: session.publish_id }),
+            });
+            const complete = await completeResponse.json();
+            if (!completeResponse.ok) throw new Error(complete.detail || "Could not save TikTok upload.");
+            setTikTokStatus(session.mode === "draft" ? "Uploaded to TikTok Inbox. Open TikTok to finish the draft." : "TikTok is processing the approved post.");
+          } catch (error) {
+            setTikTokStatus(error instanceof Error ? error.message : "TikTok upload failed.");
+          } finally {
+            if (submit) submit.disabled = false;
+          }
         });
         let previousOpen = Number(openMetric?.textContent || 0);
         const refreshSupportStatus = async (sync = false) => {
