@@ -1040,6 +1040,27 @@
         const tiktokMode = document.getElementById("tiktokMode");
         const tiktokSandbox = {{ 'true' if tiktok_connection.environment == 'sandbox' else 'false' }};
         const setTikTokStatus = (message) => { if (tiktokStatus) tiktokStatus.textContent = message; };
+        const pollTikTokStatus = async (postId, publishId) => {
+          for (let attempt = 0; attempt < 24; attempt += 1) {
+            const response = await fetch("{{ api_prefix }}/tiktok/status", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ post_id: postId, publish_id: publishId }),
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.detail || "Could not check TikTok publishing status.");
+            const state = String(payload.status?.status || "").toUpperCase();
+            if (state === "PUBLISH_COMPLETE") {
+              setTikTokStatus(tiktokSandbox ? "Published successfully · Only me (Sandbox)." : "Published successfully on TikTok.");
+              return;
+            }
+            if (state === "FAILED") throw new Error(payload.status?.fail_reason || "TikTok processing failed.");
+            setTikTokStatus("TikTok is processing the approved post…");
+            await new Promise((resolve) => window.setTimeout(resolve, 5000));
+          }
+          setTikTokStatus("TikTok is still processing. The result will remain in Content schedule.");
+        };
         const refreshTikTokCreator = async () => {
           const response = await fetch("{{ api_prefix }}/tiktok/creator-info", { credentials: "same-origin", cache: "no-store" });
           const payload = await response.json();
@@ -1118,6 +1139,11 @@
             const complete = await completeResponse.json();
             if (!completeResponse.ok) throw new Error(complete.detail || "Could not save TikTok upload.");
             setTikTokStatus(session.mode === "draft" ? "Uploaded to TikTok Inbox. Open TikTok to finish the draft." : "TikTok is processing the approved post.");
+            if (session.mode === "direct") {
+              pollTikTokStatus(session.post_id, session.publish_id).catch((error) => {
+                setTikTokStatus(error instanceof Error ? error.message : "TikTok status check failed.");
+              });
+            }
           } catch (error) {
             setTikTokStatus(error instanceof Error ? error.message : "TikTok upload failed.");
           } finally {
