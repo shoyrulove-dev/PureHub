@@ -204,6 +204,20 @@
       .reddit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
       .reddit-form .full { grid-column: 1 / -1; }
       .reddit-form textarea { margin-top: 0; }
+      .tiktok-form { display: grid; gap: .65rem; }
+      .tiktok-compose { display: grid; grid-template-columns: minmax(14rem,.72fr) minmax(0,1.28fr); gap: .65rem; }
+      .tiktok-compose textarea { min-height: 4.7rem; margin-top: 0; }
+      .tiktok-actionbar { display: grid; grid-template-columns: minmax(14rem,.7fr) minmax(0,1fr) auto auto; align-items: end; gap: .55rem; }
+      .tiktok-consent { display: flex; min-height: 2.75rem; align-items: center; gap: .5rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .75rem; background: #f8fafc; }
+      .tiktok-consent input, .tiktok-checks input { width: auto; padding: 0; }
+      .tiktok-consent span { color: var(--muted); font-size: .68rem; font-weight: 650; line-height: 1.35; }
+      .tiktok-options { border: 1px solid var(--line); border-radius: .8rem; background: #f8fafc; }
+      .tiktok-options summary { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .62rem .75rem; cursor: pointer; list-style: none; color: #334155; font-size: .7rem; font-weight: 760; }
+      .tiktok-options summary::-webkit-details-marker { display: none; }
+      .tiktok-option-grid { display: grid; grid-template-columns: minmax(12rem,.55fr) minmax(0,1.45fr); gap: .65rem; padding: 0 .75rem .75rem; }
+      .tiktok-checks { display: flex; min-height: 2.75rem; flex-wrap: wrap; align-items: center; gap: .55rem 1rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .75rem; background: #fff; color: var(--muted); font-size: .69rem; }
+      .tiktok-checks span { display: inline-flex; align-items: center; gap: .35rem; }
+      .tiktok-state { display: flex; min-height: 1.5rem; align-items: center; gap: .4rem; margin: 0; color: var(--muted); font-size: .7rem; font-weight: 620; }
       .field-label { display: block; margin-bottom: .3rem; color: var(--muted); font-size: .66rem; font-weight: 760; letter-spacing: .08em; text-transform: uppercase; }
       .reddit-side { padding: .85rem; border: 1px solid var(--line); border-radius: .95rem; background: #f8fafc; }
       .reddit-side h3 { margin-bottom: .45rem; font-size: .82rem; }
@@ -369,6 +383,8 @@
         .product-signals { grid-template-columns: repeat(2,minmax(0,1fr)); }
         .reddit-form { grid-template-columns: 1fr; }
         .reddit-form .full { grid-column: auto; }
+        .tiktok-compose, .tiktok-actionbar, .tiktok-option-grid { grid-template-columns: 1fr; }
+        .tiktok-actionbar .button { width: 100%; margin-top: 0; }
         .panel-head, .release-top { display: block; }
         .panel-head .button, .release-top .badge { margin-top: 0.7rem; }
         details.queue-item summary { align-items: flex-start; }
@@ -592,14 +608,25 @@
             </summary>
             <div class="disclosure-content" style="padding-top:.8rem">
               {% if tiktok_connection.connected %}
-              <form id="tiktokPublisherForm" class="reddit-form" style="max-width:none">
-                <label class="full"><span class="field-label">Video</span><input id="tiktokVideoFile" type="file" accept="video/mp4,video/quicktime" required /></label>
-                <label class="full"><span class="field-label">Caption</span><textarea id="tiktokCaption" rows="3" maxlength="2200" required placeholder="Show what this PureHub mini app solves, then ask one useful question."></textarea></label>
-                <label><span class="field-label">Publishing mode</span><select id="tiktokMode"><option value="draft">Send to TikTok Inbox (first test)</option><option value="direct">Direct Post</option></select></label>
-                <label><span class="field-label">Visibility</span><select id="tiktokPrivacy"><option value="SELF_ONLY">Only me (Sandbox)</option></select></label>
-                <label><span class="field-label">Interaction controls</span><span style="display:flex;flex-wrap:wrap;gap:.8rem;padding:.7rem 0"><span><input id="tiktokDisableComment" type="checkbox" /> Disable comments</span><span><input id="tiktokDisableDuet" type="checkbox" /> Disable duet</span><span><input id="tiktokDisableStitch" type="checkbox" /> Disable stitch</span></span></label>
-                <label class="full"><span style="display:flex;align-items:flex-start;gap:.6rem"><input id="tiktokConsent" type="checkbox" required style="margin-top:.25rem" /><span class="panel-copy">I reviewed this video, caption, visibility, and interaction settings and approve this specific TikTok upload.</span></span></label>
-                <div class="row-actions full"><button class="button" type="button" id="tiktokRefreshCreator">Refresh creator options</button><button class="button violet" type="submit">Approve & upload</button><span class="panel-copy" id="tiktokUploadStatus">MP4 or MOV · maximum 64 MB</span></div>
+              <form id="tiktokPublisherForm" class="tiktok-form">
+                <div class="tiktok-compose">
+                  <label><span class="field-label">Video</span><input id="tiktokVideoFile" type="file" accept="video/mp4,video/quicktime" required /></label>
+                  <label><span class="field-label">Caption</span><textarea id="tiktokCaption" rows="2" maxlength="2200" required placeholder="What does this tool solve? End with one useful question."></textarea></label>
+                </div>
+                <div class="tiktok-actionbar">
+                  <label><span class="field-label">Mode</span><select id="tiktokMode"><option value="draft">TikTok Inbox</option><option value="direct">Direct Post</option></select></label>
+                  <label class="tiktok-consent"><input id="tiktokConsent" type="checkbox" required /><span>I reviewed and approve this specific upload.</span></label>
+                  <button class="button icon-button" type="button" id="tiktokRefreshCreator" title="Refresh creator options" aria-label="Refresh TikTok creator options"><svg class="icon"><use href="#i-history"/></svg></button>
+                  <button class="button violet" type="submit">Approve & upload</button>
+                </div>
+                <details class="tiktok-options">
+                  <summary><span>Posting options <small style="color:var(--muted);font-weight:600">visibility and interactions</small></span><svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg></summary>
+                  <div class="tiktok-option-grid">
+                    <label><span class="field-label">Visibility</span><select id="tiktokPrivacy"><option value="SELF_ONLY">Only me (Sandbox)</option></select></label>
+                    <label><span class="field-label">Interactions</span><span class="tiktok-checks"><span><input id="tiktokDisableComment" type="checkbox" /> Comments off</span><span><input id="tiktokDisableDuet" type="checkbox" /> Duet off</span><span><input id="tiktokDisableStitch" type="checkbox" /> Stitch off</span></span></label>
+                  </div>
+                </details>
+                <p class="tiktok-state" id="tiktokUploadStatus"><svg class="icon"><use href="#i-check"/></svg> MP4 or MOV · maximum 64 MB</p>
               </form>
               {% else %}
               <div class="release-card"><p class="release-title">Connect TikTok first</p><p class="release-summary">Add the Sandbox Client key and secret, then authorize the target PureHub creator account.</p><a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Open connections</a></div>
