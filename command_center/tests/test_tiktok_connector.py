@@ -33,3 +33,20 @@ class TikTokConnectorTest(TestCase):
     def test_browser_upload_rejects_unsupported_media_type(self) -> None:
         with self.assertRaisesRegex(ValueError, "MP4 or MOV"):
             tiktok_connector._validate_video(content_type="video/webm", content_length=1024)
+
+    def test_unaudited_client_error_explains_private_account_requirement(self) -> None:
+        response = type(
+            "Response",
+            (),
+            {
+                "ok": False,
+                "status_code": 403,
+                "text": '{"error":{"code":"unaudited_client_can_only_post_to_private_accounts"}}',
+                "json": lambda self: {
+                    "error": {"code": "unaudited_client_can_only_post_to_private_accounts"}
+                },
+            },
+        )()
+
+        with self.assertRaisesRegex(ValueError, "account itself to be Private"):
+            tiktok_connector._api_data(response, "TikTok upload initialization")

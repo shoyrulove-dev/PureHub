@@ -136,6 +136,18 @@ def _authorized_headers(access_token: str = "") -> dict[str, str]:
 
 def _api_data(response: requests.Response, label: str) -> dict[str, Any]:
     if not response.ok:
+        try:
+            error = dict(response.json().get("error") or {})
+        except (ValueError, AttributeError, TypeError):
+            error = {}
+        if str(error.get("code") or "") == "unaudited_client_can_only_post_to_private_accounts":
+            raise ValueError(
+                "TikTok has not audited this client yet. Sandbox Direct Post requires the connected "
+                "TikTok account itself to be Private and the post visibility to be Only me. "
+                "Setting a post to Only me is not enough while the account is Public. "
+                "Use a private account for the review demo, or complete TikTok Production review "
+                "before posting to a public account."
+            )
         raise ValueError(f"{label} failed ({response.status_code}): {response.text[:500]}")
     payload = response.json()
     error = dict(payload.get("error") or {})

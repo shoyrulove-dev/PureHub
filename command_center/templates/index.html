@@ -626,7 +626,7 @@
                     <label><span class="field-label">Interactions</span><span class="tiktok-checks"><span><input id="tiktokDisableComment" type="checkbox" /> Comments off</span><span><input id="tiktokDisableDuet" type="checkbox" /> Duet off</span><span><input id="tiktokDisableStitch" type="checkbox" /> Stitch off</span></span></label>
                   </div>
                 </details>
-                <p class="tiktok-state" id="tiktokUploadStatus"><svg class="icon"><use href="#i-check"/></svg> MP4 or MOV · maximum 64 MB</p>
+                <p class="tiktok-state" id="tiktokUploadStatus"><svg class="icon"><use href="#i-check"/></svg>{% if tiktok_connection.environment == 'sandbox' %} Sandbox Direct Post requires the connected TikTok account to be Private · Only me{% else %} MP4 or MOV · maximum 64 MB{% endif %}</p>
               </form>
               {% else %}
               <div class="release-card"><p class="release-title">Connect TikTok first</p><p class="release-summary">Add the Sandbox Client key and secret, then authorize the target PureHub creator account.</p><a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Open connections</a></div>
