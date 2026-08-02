@@ -614,10 +614,10 @@
                   <label><span class="field-label">Caption</span><textarea id="tiktokCaption" rows="2" maxlength="2200" required placeholder="What does this tool solve? End with one useful question."></textarea></label>
                 </div>
                 <div class="tiktok-actionbar">
-                  <label><span class="field-label">Mode</span><select id="tiktokMode"><option value="draft">TikTok Inbox</option><option value="direct">Direct Post</option></select></label>
+                  <label><span class="field-label">Mode</span><select id="tiktokMode"><option value="direct">Direct Post from PC</option><option value="draft">Inbox draft (mobile finish)</option></select></label>
                   <label class="tiktok-consent"><input id="tiktokConsent" type="checkbox" required /><span>I reviewed and approve this specific upload.</span></label>
                   <button class="button icon-button" type="button" id="tiktokRefreshCreator" title="Refresh creator options" aria-label="Refresh TikTok creator options"><svg class="icon"><use href="#i-history"/></svg></button>
-                  <button class="button violet" type="submit">Approve & upload</button>
+                  <button class="button violet" type="submit">Approve & publish</button>
                 </div>
                 <details class="tiktok-options">
                   <summary><span>Posting options <small style="color:var(--muted);font-weight:600">visibility and interactions</small></span><svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg></summary>
@@ -1038,6 +1038,7 @@
         const tiktokStatus = document.getElementById("tiktokUploadStatus");
         const tiktokPrivacy = document.getElementById("tiktokPrivacy");
         const tiktokMode = document.getElementById("tiktokMode");
+        const tiktokSandbox = {{ 'true' if tiktok_connection.environment == 'sandbox' else 'false' }};
         const setTikTokStatus = (message) => { if (tiktokStatus) tiktokStatus.textContent = message; };
         const refreshTikTokCreator = async () => {
           const response = await fetch("{{ api_prefix }}/tiktok/creator-info", { credentials: "same-origin", cache: "no-store" });
@@ -1045,7 +1046,8 @@
           if (!response.ok) throw new Error(payload.detail || "Could not load TikTok creator settings.");
           const creator = payload.creator || {};
           const labels = { PUBLIC_TO_EVERYONE: "Public", MUTUAL_FOLLOW_FRIENDS: "Friends", FOLLOWER_OF_CREATOR: "Followers", SELF_ONLY: "Only me" };
-          const options = creator.privacy_level_options?.length ? creator.privacy_level_options : ["SELF_ONLY"];
+          const reportedOptions = creator.privacy_level_options?.length ? creator.privacy_level_options : ["SELF_ONLY"];
+          const options = tiktokSandbox ? ["SELF_ONLY"] : reportedOptions;
           if (tiktokPrivacy) {
             tiktokPrivacy.replaceChildren(...options.map((value) => {
               const option = document.createElement("option");

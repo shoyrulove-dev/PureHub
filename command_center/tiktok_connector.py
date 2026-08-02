@@ -191,6 +191,8 @@ def create_upload_session(
         options = [str(item) for item in creator_info.get("privacy_level_options") or []]
         if not options:
             options = ["SELF_ONLY"]
+        if get_config_value("tiktok_environment", "sandbox") == "sandbox":
+            options = ["SELF_ONLY"]
         if privacy_level not in options:
             privacy_level = "SELF_ONLY" if "SELF_ONLY" in options else options[0]
         payload: dict[str, Any] = {
