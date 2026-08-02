@@ -52,6 +52,7 @@ try:
         list_roadmap_options,
         list_top_referrers,
         record_audit_log,
+        record_growth_funnel_event,
         record_miniapp_event,
         record_roadmap_vote,
         register_failed_login,
@@ -97,6 +98,7 @@ except ImportError:
         list_roadmap_options,
         list_top_referrers,
         record_audit_log,
+        record_growth_funnel_event,
         record_miniapp_event,
         record_roadmap_vote,
         register_failed_login,
@@ -1958,6 +1960,20 @@ async def public_product_event(request: Request) -> dict[str, bool]:
     return {"ok": True}
 
 
+@public_api_router.post("/journey-event")
+async def public_journey_event(request: Request) -> dict[str, bool]:
+    payload = await request.json()
+    try:
+        record_growth_funnel_event(
+            str(payload.get("stage", "")),
+            str(payload.get("source", "direct")),
+            str(payload.get("campaign", "none")),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True}
+
+
 @public_api_router.post("/feedback")
 async def public_feedback(request: Request) -> dict[str, bool]:
     payload = await request.json()
@@ -1966,7 +1982,7 @@ async def public_feedback(request: Request) -> dict[str, bool]:
     miniapp_id = str(payload.get("miniapp_id", "")).strip()
     category = str(payload.get("category", "feedback")).strip()
     message = " ".join(str(payload.get("message", "")).split()).strip()
-    if category not in {"feedback", "bug", "feature_request"}:
+    if category not in {"feedback", "bug", "feature_request", "device_report"}:
         raise HTTPException(status_code=422, detail="Unsupported feedback category.")
     if len(message) < 10 or len(message) > 1000:
         raise HTTPException(status_code=422, detail="Feedback must contain 10 to 1,000 characters.")
@@ -1982,17 +1998,19 @@ async def public_feedback(request: Request) -> dict[str, bool]:
             "external_id": feedback_id,
             "thread_id": miniapp_id,
             "author_id": "",
-            "author_name": "Anonymous product feedback",
+            "author_name": "Anonymous early tester" if category == "device_report" else "Anonymous product feedback",
             "author_handle": "",
             "content": message,
             "category": category,
-            "priority": "high" if category == "bug" else "normal",
+            "priority": "high" if category in {"bug", "device_report"} else "normal",
             "status": "new",
             "source_url": f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/en/tools",
             "received_at": datetime.now(timezone.utc),
             "reply_context": {"miniapp_id": miniapp_id, "privacy": "aggregate-no-identifier"},
         }
     )
+    if category == "device_report":
+        record_growth_funnel_event("device_report", "early-testers", miniapp_id)
     return {"ok": True}
 
 

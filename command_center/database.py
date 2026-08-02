@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 11
+CURRENT_SCHEMA_VERSION = 12
 DEFAULTS_BOOTSTRAP_VERSION = 6
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -106,8 +106,8 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/pomodoro-zen",
         "route_zh": "/zh/chan-fan-qie-zhong",
         "enabled": True,
-        "traffic_priority": 7,
-        "notes": "Focus timer with local white noise.",
+        "traffic_priority": 10,
+        "notes": "Flagship focus timer with local white noise.",
     },
     {
         "miniapp_id": "zen-breath",
@@ -117,8 +117,8 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/tho-zen",
         "route_zh": "/zh/chan-hu-xi",
         "enabled": True,
-        "traffic_priority": 5,
-        "notes": "Breathing and calm UX surface.",
+        "traffic_priority": 9,
+        "notes": "Flagship breathing and calm UX surface.",
     },
     {
         "miniapp_id": "compass",
@@ -173,7 +173,7 @@ MINIAPP_DEFAULTS = [
         "route_zh": "/zh/er-wei-ma-gong-fang",
         "enabled": True,
         "traffic_priority": 9,
-        "notes": "Scan and generate QR offline.",
+        "notes": "Flagship tool to scan and generate QR offline.",
     },
     {
         "miniapp_id": "doc-to-pdf",
@@ -577,6 +577,10 @@ def init_database() -> None:
         [("day", ASCENDING), ("miniapp_id", ASCENDING), ("event", ASCENDING)],
         unique=True,
     )
+    db.growth_funnel_daily.create_index(
+        [("day", ASCENDING), ("stage", ASCENDING), ("source", ASCENDING), ("campaign", ASCENDING)],
+        unique=True,
+    )
     db.roadmap_options.create_index([("option_id", ASCENDING)], unique=True)
     db.roadmap_options.create_index([("active", ASCENDING), ("priority", DESCENDING)])
 
@@ -674,6 +678,7 @@ def run_schema_migrations() -> None:
         (9, "ensure-community-engagement-metrics", _migration_community_metrics),
         (10, "ensure-growth-autopilot", _migration_growth_autopilot),
         (11, "ensure-product-growth-signals", _migration_product_growth_signals),
+        (12, "ensure-privacy-growth-funnel", _migration_privacy_growth_funnel),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -715,6 +720,19 @@ def _migration_product_growth_signals() -> None:
             {"option_id": option_id},
             {"$setOnInsert": {"title": title, "description": description, "priority": priority, "votes": 0, "active": True, "created_at": now}, "$set": {"updated_at": now}},
             upsert=True,
+        )
+
+
+def _migration_privacy_growth_funnel() -> None:
+    collection("growth_funnel_daily").create_index(
+        [("day", ASCENDING), ("stage", ASCENDING), ("source", ASCENDING), ("campaign", ASCENDING)],
+        unique=True,
+    )
+    priorities = {"zen-pomodoro": 10, "zen-breath": 9, "qr-studio": 10}
+    for miniapp_id, priority in priorities.items():
+        collection("miniapps").update_one(
+            {"miniapp_id": miniapp_id},
+            {"$set": {"traffic_priority": priority, "flagship": True, "updated_at": utcnow()}},
         )
 
 
@@ -1287,6 +1305,8 @@ def get_analytics_snapshot() -> dict[str, Any]:
 
 
 PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
+PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "device_report"}
+FLAGSHIP_MINIAPP_IDS = {"zen-pomodoro", "zen-breath", "qr-studio"}
 
 
 def record_miniapp_event(miniapp_id: str, event: str) -> None:
@@ -1296,6 +1316,28 @@ def record_miniapp_event(miniapp_id: str, event: str) -> None:
     day = utcnow().date().isoformat()
     collection("miniapp_events_daily").update_one(
         {"day": day, "miniapp_id": miniapp_id, "event": event},
+        {"$inc": {"count": 1}, "$set": {"updated_at": utcnow()}},
+        upsert=True,
+    )
+
+
+def _clean_funnel_dimension(value: str, fallback: str, allowed: set[str]) -> str:
+    cleaned = "".join(character for character in value.strip().lower() if character.isalnum() or character in {"-", "_", "."})
+    aliases = {"www.google.com": "google", "google.com": "google", "github.com": "github", "t.co": "other"}
+    cleaned = aliases.get(cleaned, cleaned)
+    return cleaned if cleaned in allowed else fallback
+
+
+def record_growth_funnel_event(stage: str, source: str = "direct", campaign: str = "none") -> None:
+    if stage not in PUBLIC_FUNNEL_STAGES:
+        raise ValueError("Unsupported journey stage.")
+    day = utcnow().date().isoformat()
+    allowed_sources = {"direct", "telegram", "devto", "bluesky", "mastodon", "youtube", "reddit", "github", "tiktok", "google", "facebook", "whatsapp", "zalo", "early-testers", "other"}
+    allowed_campaigns = {"none", "august", "community-foundation-30d-v1", *FLAGSHIP_MINIAPP_IDS}
+    safe_source = _clean_funnel_dimension(source, "other", allowed_sources)
+    safe_campaign = _clean_funnel_dimension(campaign, "none", allowed_campaigns)
+    collection("growth_funnel_daily").update_one(
+        {"day": day, "stage": stage, "source": safe_source, "campaign": safe_campaign},
         {"$inc": {"count": 1}, "$set": {"updated_at": utcnow()}},
         upsert=True,
     )
@@ -1340,6 +1382,23 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
         for miniapp_id, values in sorted(tools.items(), key=lambda item: (-item[1]["open"], item[0]))[:5]
     ]
     roadmap = list_roadmap_options()
+    funnel_rows = list(collection("growth_funnel_daily").find({"day": {"$gte": start_day}}, {"_id": 0}))
+    funnel = {stage: 0 for stage in PUBLIC_FUNNEL_STAGES}
+    sources: dict[str, int] = {}
+    for row in funnel_rows:
+        stage = str(row.get("stage", ""))
+        count = max(0, int(row.get("count", 0) or 0))
+        if stage not in funnel:
+            continue
+        funnel[stage] += count
+        if stage == "visit":
+            source = str(row.get("source", "direct"))
+            sources[source] = sources.get(source, 0) + count
+    flagship = [
+        {"miniapp_id": miniapp_id, **values}
+        for miniapp_id, values in sorted(tools.items(), key=lambda item: (-item[1]["open"], item[0]))
+        if miniapp_id in FLAGSHIP_MINIAPP_IDS
+    ]
     return {
         "days": safe_days,
         "totals": totals,
@@ -1347,6 +1406,17 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
         "top_tools": top_tools,
         "roadmap": roadmap,
         "roadmap_votes": sum(int(item.get("votes", 0) or 0) for item in roadmap),
+        "funnel": funnel,
+        "funnel_rates": {
+            "tool_open": round((totals["open"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
+            "download": round((funnel["download"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
+            "first_open": round((funnel["first_open"] / funnel["download"]) * 100, 1) if funnel["download"] else 0.0,
+        },
+        "top_sources": [
+            {"source": source, "visits": visits}
+            for source, visits in sorted(sources.items(), key=lambda item: (-item[1], item[0]))[:5]
+        ],
+        "flagship": flagship,
     }
 
 

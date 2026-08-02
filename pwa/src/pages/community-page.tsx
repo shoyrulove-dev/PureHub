@@ -1,8 +1,9 @@
-import { Bot, Bug, Check, Code2, Download, HeartHandshake, Languages, Lightbulb, MessageCircle, Vote } from 'lucide-react'
+import { Bot, Bug, Check, Code2, Download, HeartHandshake, Languages, Lightbulb, MessageCircle, Send, Smartphone, TestTube2, Vote } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { normalizeLocale } from '../i18n/locales'
-import { loadRoadmap, submitRoadmapVote, type RoadmapOption } from '../lib/community-api'
+import { loadRoadmap, submitProductFeedback, submitRoadmapVote, trackJourneyEvent, type RoadmapOption } from '../lib/community-api'
+import type { MiniAppId } from '../features/catalog/tabs'
 
 const TELEGRAM_URL = 'https://t.me/aaa_letan_vip_bot'
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
@@ -44,6 +45,9 @@ export function CommunityPage() {
   const [totalVotes, setTotalVotes] = useState(0)
   const [votedFor, setVotedFor] = useState(() => window.localStorage.getItem('purehub-roadmap-vote') ?? '')
   const [roadmapStatus, setRoadmapStatus] = useState<'loading' | 'ready' | 'voting' | 'error'>('loading')
+  const [testerTool, setTesterTool] = useState<MiniAppId>('zen-pomodoro')
+  const [deviceReport, setDeviceReport] = useState('')
+  const [testerStatus, setTesterStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   useEffect(() => {
     loadRoadmap().then((payload) => {
@@ -65,6 +69,19 @@ export function CommunityPage() {
       setRoadmapStatus('ready')
     } catch {
       setRoadmapStatus('error')
+    }
+  }
+  const sendDeviceReport = async () => {
+    const report = deviceReport.trim()
+    if (report.length < 10 || testerStatus === 'sending') return
+    setTesterStatus('sending')
+    try {
+      await submitProductFeedback(testerTool, 'device_report', report)
+      void trackJourneyEvent('tester_join')
+      setDeviceReport('')
+      setTesterStatus('sent')
+    } catch {
+      setTesterStatus('error')
     }
   }
   return (
@@ -89,6 +106,34 @@ export function CommunityPage() {
           </article>
         ))}
       </div>
+
+      <section id="early-testers" className="rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="tool-card__icon text-emerald-600 dark:text-emerald-300"><TestTube2 className="size-5" /></span>
+            <div>
+              <p className="eyebrow text-emerald-700 dark:text-emerald-300">Early Testers</p>
+              <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Help polish our three flagship tools</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">Test on your real phone and report one thing that worked, felt confusing, or failed. Our first goal is 20 useful device reports.</p>
+            </div>
+          </div>
+          <span className="filter-chip"><Smartphone className="size-3.5" /> Goal 20 reports</span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.8fr)_auto] sm:items-end">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tool tested
+            <select value={testerTool} onChange={(event) => setTesterTool(event.target.value as MiniAppId)} className="mt-2 min-h-11 w-full rounded-[14px] border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+              <option value="zen-pomodoro">Zen Pomodoro</option><option value="zen-breath">Zen Breath</option><option value="qr-studio">QR Studio</option>
+            </select>
+          </label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Device report
+            <input value={deviceReport} onChange={(event) => { setDeviceReport(event.target.value); setTesterStatus('idle') }} maxLength={1000} placeholder="Android 14 / Samsung A54 — controls were clear, but the sound button was hard to find." className="mt-2 min-h-11 w-full rounded-[14px] border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+          </label>
+          <button type="button" onClick={() => void sendDeviceReport()} disabled={deviceReport.trim().length < 10 || testerStatus === 'sending'} className="primary-button min-h-11 justify-center disabled:cursor-not-allowed disabled:opacity-50"><Send className="size-4" /> {testerStatus === 'sending' ? 'Sending...' : 'Send report'}</button>
+        </div>
+        {testerStatus === 'sent' ? <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300"><Check className="size-4" /> Thank you. Your anonymous report is now in the community support inbox.</p> : null}
+        {testerStatus === 'error' ? <p className="mt-3 text-sm font-semibold text-rose-600">The report could not be sent. Please try again or use GitHub Discussions.</p> : null}
+        <p className="mt-3 text-xs text-slate-500">No account is required. Do not include your name, email, phone number, or other personal information.</p>
+      </section>
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start justify-between gap-4">

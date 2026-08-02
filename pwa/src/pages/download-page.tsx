@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle2, Code2, Download, FileArchive, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { normalizeLocale } from '../i18n/locales'
+import { trackJourneyEvent } from '../lib/community-api'
 
 type Release = {
   release_id: string
@@ -99,7 +100,7 @@ export function DownloadPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {latest.apk_url ? (
-              <a className="primary-button justify-center" href={latest.apk_url}>
+              <a className="primary-button justify-center" href={latest.apk_url} onClick={() => void trackJourneyEvent('download')}>
                 <Download className="size-4" /> Download signed APK
               </a>
             ) : (

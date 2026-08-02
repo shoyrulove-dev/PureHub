@@ -1,4 +1,5 @@
 import { Code2, Download, Grid2X2, Home, Moon, Settings, Sparkles, Sun, Users } from 'lucide-react'
+import { useEffect } from 'react'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/navigation/BottomNav'
@@ -10,7 +11,8 @@ import {
   persistSelectedLocale,
   resolveEntryBySlug,
 } from '../i18n/routing'
-import { useThemePreference } from '../lib/preferences'
+import { anonymousMetricsEnabled, useThemePreference } from '../lib/preferences'
+import { trackJourneyEvent } from '../lib/community-api'
 
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
 
@@ -21,6 +23,19 @@ export function AppShell() {
   const locale = normalizeLocale(lang)
   const currentEntry = appSlug ? resolveEntryBySlug(appSlug) : null
   const { theme, setTheme } = useThemePreference()
+
+  useEffect(() => {
+    if (!anonymousMetricsEnabled()) return
+    const today = new Date().toISOString().slice(0, 10)
+    if (window.localStorage.getItem('purehub-visit-day') !== today) {
+      window.localStorage.setItem('purehub-visit-day', today)
+      void trackJourneyEvent('visit')
+    }
+    if (!window.localStorage.getItem('purehub-first-open')) {
+      window.localStorage.setItem('purehub-first-open', today)
+      void trackJourneyEvent('first_open')
+    }
+  }, [])
 
   const localizedTarget = (nextLocale: (typeof SUPPORTED_LOCALES)[number]) => {
     if (location.pathname.endsWith('/tools')) return `/${nextLocale}/tools`

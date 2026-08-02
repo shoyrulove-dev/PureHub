@@ -78,6 +78,7 @@ export type MiniAppDefinition = {
   titleKey: string
   summaryKey: string
   slugs: LocalizedSlugMap
+  flagship?: boolean
 }
 
 type SeoBackedMiniAppId = Exclude<
@@ -190,6 +191,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.zenPomodoro.title',
     summaryKey: 'miniApps.zenPomodoro.summary',
     slugs: seoSlugs('zen-pomodoro'),
+    flagship: true,
   },
   {
     id: 'zen-breath',
@@ -198,6 +200,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.zenBreath.title',
     summaryKey: 'miniApps.zenBreath.summary',
     slugs: seoSlugs('zen-breath'),
+    flagship: true,
   },
   {
     id: 'compass',
@@ -250,6 +253,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.qrStudio.title',
     summaryKey: 'miniApps.qrStudio.summary',
     slugs: seoSlugs('qr-studio'),
+    flagship: true,
   },
   {
     id: 'doc-to-pdf',

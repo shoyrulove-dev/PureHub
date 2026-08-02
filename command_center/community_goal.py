@@ -76,7 +76,7 @@ def build_august_growth_goal(
         + int(support_metrics.get("replied", 0) or 0)
     )
 
-    actionable_categories = {"question", "bug", "feature_request", "feedback", "privacy", "installation"}
+    actionable_categories = {"question", "bug", "feature_request", "feedback", "device_report", "privacy", "installation"}
     feedback = 0
     for item in support_messages:
         received_at = _parse_datetime(item.get("received_at"))
@@ -127,7 +127,7 @@ def build_august_growth_goal(
         "audience": "Telegram members + Bluesky and Mastodon followers",
         "views": "DEV, Telegram and YouTube views returned by connected APIs",
         "engagement": "Likes, reactions, comments, reposts and handled conversations",
-        "feedback": "Questions, bugs, installation, privacy and feature requests in August",
+        "feedback": "Questions, device reports, bugs, installation, privacy and feature requests in August",
         "videos": "YouTube Shorts published or scheduled during August",
     }
     milestones = [

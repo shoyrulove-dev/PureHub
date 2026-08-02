@@ -2,7 +2,8 @@ import type { MiniAppId } from '../features/catalog/tabs'
 import { anonymousMetricsEnabled } from './preferences'
 
 export type ProductEvent = 'open' | 'helpful' | 'share' | 'feedback'
-export type FeedbackCategory = 'feedback' | 'bug' | 'feature_request'
+export type FeedbackCategory = 'feedback' | 'bug' | 'feature_request' | 'device_report'
+export type JourneyStage = 'visit' | 'download' | 'first_open' | 'tester_join'
 
 export type RoadmapOption = {
   option_id: string
@@ -29,6 +30,14 @@ async function postJson(path: string, payload: Record<string, unknown>) {
 export function trackProductEvent(miniAppId: MiniAppId, event: ProductEvent) {
   if (!anonymousMetricsEnabled()) return Promise.resolve()
   return postJson('/public-api/product-event', { miniapp_id: miniAppId, event }).then(() => undefined).catch(() => undefined)
+}
+
+export function trackJourneyEvent(stage: JourneyStage) {
+  if (!anonymousMetricsEnabled()) return Promise.resolve()
+  const query = new URLSearchParams(window.location.search)
+  const source = query.get('utm_source') || document.referrer.split('/')[2] || 'direct'
+  const campaign = query.get('utm_campaign') || 'none'
+  return postJson('/public-api/journey-event', { stage, source, campaign }).then(() => undefined).catch(() => undefined)
 }
 
 export function submitProductFeedback(miniAppId: MiniAppId, category: FeedbackCategory, message: string) {

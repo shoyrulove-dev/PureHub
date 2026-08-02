@@ -2,6 +2,17 @@
 
 Date: 2026-08-02
 
+## Privacy-first growth and Early Testers upgrade
+
+- Added an anonymous 30-day journey funnel for daily visits, tool opens, downloads, first browser opens, Early Tester joins, and device reports.
+- Attribution accepts only a fixed safe list of community sources and campaigns. It stores no IP, account, user ID, device ID, free-form referrer, or personal identifier.
+- Added funnel counts and conversion rates to the Admin Growth Overview, including a 20-report Early Tester goal.
+- Promoted Zen Pomodoro, Zen Breath, and QR Studio as the first three flagship tools across the public dashboard, database priorities, and automated community topics.
+- Added a public Early Testers form. Anonymous device reports enter Support Inbox as high-priority review items; the form explicitly asks users not to include personal information.
+- Connected PWA install acceptance and signed APK clicks to the same aggregate funnel, while respecting Do Not Track and the existing anonymous-metrics preference.
+- TikTok Sandbox Direct Post was validated with a private post. The Production app configuration and two end-to-end review videos have been submitted and are currently in review.
+- TikTok review recordings remain local and are excluded from Git because they are temporary platform-review artifacts.
+
 ## August community command center
 
 - Added a compact August mission dashboard with live progress for audience, qualified views, interactions, useful feedback, and YouTube Shorts.
@@ -250,7 +261,7 @@ Completed:
 
 Remaining owner/external actions:
 
-1. Upload the prepared YouTube Short as Unlisted, review it on a phone, then publish it. TikTok remains paused until an account can be created.
+1. Monitor the scheduled YouTube queue and keep TikTok test posts private until the Production review is approved.
 2. Recover and establish the Reddit account before posting once to `r/droidappshowcase`; do not repost to `r/androidapps`. Ask `r/FOSSdroid` moderators before a later MIT-licensed development/release post.
 3. Commission an independent Password Vault review before presenting it as suitable as the only store for critical credentials; the internal review and hardening work are complete.
 4. Replace the first PWA-based teaser with polished Android screen recordings after community review of this UI pass.

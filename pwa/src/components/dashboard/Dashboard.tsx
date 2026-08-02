@@ -15,7 +15,7 @@ import { buildMiniAppPath, buildTabPath } from '../../i18n/routing'
 import { normalizeLocale } from '../../i18n/locales'
 import { useToolPreferences } from '../../lib/preferences'
 
-const quickIds: MiniAppId[] = ['qr-studio', 'zen-pomodoro', 'bill-splitter', 'ocr-text']
+const quickIds: MiniAppId[] = ['qr-studio', 'zen-pomodoro', 'zen-breath', 'ocr-text']
 
 function ToolCard({
   tool,
@@ -39,7 +39,10 @@ function ToolCard({
           <Icon className="size-5" strokeWidth={2} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-semibold text-slate-900 dark:text-white">{t(tool.titleKey)}</span>
+          <span className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-white">
+            {t(tool.titleKey)}
+            {tool.flagship ? <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">Community focus</span> : null}
+          </span>
           <span className="mt-1 line-clamp-2 block text-sm leading-5 text-slate-500 dark:text-slate-400">
             {t(tool.summaryKey)}
           </span>
@@ -85,6 +88,7 @@ export function Dashboard() {
   const quickTools = quickIds
     .map((id) => MINI_APP_BY_ID.get(id))
     .filter((tool): tool is MiniAppDefinition => Boolean(tool))
+  const flagshipTools = MINI_APP_ITEMS.filter((tool) => tool.flagship)
 
   return (
     <section className="space-y-8">
@@ -134,6 +138,18 @@ export function Dashboard() {
           favorites={favorites}
           onFavorite={toggleFavorite}
         />
+      ) : null}
+
+      {!query ? (
+        <div className="rounded-[20px] border border-violet-200 bg-violet-50/70 p-4 sm:p-5 dark:border-violet-500/20 dark:bg-violet-500/5">
+          <p className="eyebrow text-violet-700 dark:text-violet-300">Improve with us</p>
+          <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Three flagship tools, shaped by real use</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">Try one, tell us what feels unclear, and help choose the next improvement.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {flagshipTools.map((tool) => <ToolCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={() => toggleFavorite(tool.id)} />)}
+          </div>
+          <Link to={`/${locale}/community#early-testers`} className="text-link mt-4">Join Early Testers <ArrowRight className="size-3.5" /></Link>
+        </div>
       ) : null}
 
       {!query && recentTools.length > 0 ? (

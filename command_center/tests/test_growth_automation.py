@@ -1,11 +1,19 @@
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 from command_center.growth_automation import TOPICS, _channels_for_day, _fallback_content
 from command_center.youtube_connector import _parse_upload_copy, _scheduled_publish_at
 
 
 class GrowthAutomationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.config_patch = patch("command_center.growth_automation.get_config_value", side_effect=lambda _key, default="": default)
+        self.config_patch.start()
+
+    def tearDown(self) -> None:
+        self.config_patch.stop()
+
     def test_future_youtube_schedule_is_accepted(self) -> None:
         future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
         self.assertIsNotNone(_scheduled_publish_at({"scheduled_at": future}))
@@ -25,6 +33,8 @@ class GrowthAutomationTest(unittest.TestCase):
         topic = TOPICS[0]
         self.assertLessEqual(len(_fallback_content("bluesky", topic, 1)), 300)
         self.assertLessEqual(len(_fallback_content("mastodon", topic, 1)), 500)
+        self.assertIn("utm_source=bluesky", _fallback_content("bluesky", topic, 1))
+        self.assertIn("utm_campaign=community-foundation-30d-v1", _fallback_content("telegram", topic, 1))
 
     def test_youtube_copy_parser_excludes_script(self) -> None:
         title, description = _parse_upload_copy(

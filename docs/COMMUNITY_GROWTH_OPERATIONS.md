@@ -6,6 +6,14 @@ PureHub is a community-built collection of 22 free, ad-free, privacy-first tools
 
 Primary call to action: try one tool, report one issue or idea, and vote on what should improve next.
 
+Current flagship tools: Zen Pomodoro, Zen Breath, and QR Studio. Community content should lead with one of these tools often enough to build recognition, while the remaining catalog continues to receive supporting demos and SEO coverage.
+
+## Privacy-first journey funnel
+
+Admin tracks aggregate daily journey signals for visits, tool opens, downloads, first browser opens, Early Tester joins, and device reports. Source and campaign values are restricted to an allowlist; unknown values become `other` or `none`. No IP address, account, user ID, device ID, free-form referrer, or feedback content is stored in funnel records.
+
+The public Early Testers form sends its voluntary report text to Support Inbox, where it follows the existing human-review workflow. The initial target is 20 useful device reports across the three flagship tools. Never ask testers to submit names, email addresses, phone numbers, serial numbers, or account details.
+
 ## Daily automation schedule
 
 All Vercel cron expressions use UTC. The times below use Asia/Bangkok (UTC+7).
@@ -35,7 +43,7 @@ Automatic publishing cadence in each repeating 30-day campaign:
 
 The dashboard tracks five August outcomes from connected APIs: 100 community members, 1,500 qualified views, 30 interactions, 20 useful feedback items, and eight Shorts. The schedule and low-frequency controls stay collapsed; selecting a next-action chip opens the relevant section.
 
-Product Signals uses anonymous daily aggregate counters only. It tracks which miniapps are opened, marked helpful, shared, or accompanied by feedback, without a user ID, device ID, content payload, cookie, or stored IP. Community roadmap voting is intentionally lightweight and stores the one-vote marker only in the visitor's own browser.
+Product Signals uses anonymous daily aggregate counters only. It tracks which miniapps are opened, marked helpful, shared, or accompanied by feedback, without a user ID, device ID, content payload, cookie, or stored IP. Journey events also respect Do Not Track and the anonymous-metrics setting. Community roadmap voting is intentionally lightweight and stores the one-vote marker only in the visitor's own browser.
 
 ## Weekly community loop
 

@@ -44,15 +44,15 @@ CAMPAIGN_ID = "community-foundation-30d-v1"
 AUTO_CHANNELS = {"telegram", "devto", "bluesky", "mastodon"}
 TOPICS = (
     "Meet PureHub: 22 useful tools with no ads",
-    "How local-first utility tools protect everyday privacy",
-    "OCR: extract text from an image in English, Vietnamese, or Chinese",
+    "Zen Breath: a calm offline reset with no account or ads",
+    "QR Studio: create and scan useful codes without a tracking layer",
     "A clean Pomodoro flow without subscriptions or popups",
     "Engineering lesson: load OCR language data only when requested",
     "Community poll: which mini-app should be improved next?",
-    "Week one build-in-public report and an invitation for testers",
+    "Week one flagship report and an invitation for Early Testers",
     "Password generation and safer Vault defaults",
     "Why automatic locking and timed password reveals matter",
-    "Android beta challenge across different phone models",
+    "Early Testers: try one flagship tool on a real Android phone",
     "Bubble Level: turn a phone sensor into a useful everyday check",
     "Testing navigation and security contracts across all 22 Android tools",
     "Behind the scenes of building a community-owned utility hub",
@@ -90,9 +90,13 @@ def _channels_for_day(day_number: int) -> list[str]:
     return channels
 
 
-def _fallback_content(channel: str, topic: str, day_number: int) -> str:
+def _campaign_url(channel: str, path: str = "/en/tools") -> str:
     site = get_config_value("site_url", "https://hub.blissbiovn.com").rstrip("/")
-    tools_url = f"{site}/en/tools"
+    return f"{site}{path}?utm_source={channel}&utm_campaign={CAMPAIGN_ID}"
+
+
+def _fallback_content(channel: str, topic: str, day_number: int) -> str:
+    tools_url = _campaign_url(channel)
     if channel == "telegram":
         return (
             f"🛠️ PureHub community build — day {day_number}\n\n{topic}.\n\n"
@@ -142,15 +146,19 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
             for row in list_community_metrics()
             if row.get("platform") in channels
         }
+        channel_urls = {channel: _campaign_url(channel) for channel in channels if channel != "youtube"}
         client, model = _ai_client()
         prompt = {
             "task": "Create channel-specific community content for one day of PureHub's build-in-public campaign.",
             "day": day_number,
             "topic": topic,
             "channels": channels,
+            "channel_urls": channel_urls,
             "recent_platform_signals": performance_signals,
             "verified_facts": [
                 "PureHub contains 22 mini-apps and is free, ad-free, open source, and community-built.",
+                "The current flagship tools are Zen Pomodoro, Zen Breath, and QR Studio.",
+                "The Early Testers program asks for anonymous device reports and has an initial goal of 20 useful reports.",
                 "The shared mobile UI has received a clarity, contrast, and one-handed-use pass.",
                 "OCR supports English, Vietnamese, and Simplified Chinese packs loaded on demand.",
                 "OCR and Password Vault are route-level lazy chunks on the web app.",
@@ -163,6 +171,7 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
                 "Use recent platform signals only to improve format and topic emphasis; never quote private or low metrics in public copy.",
                 "At this early stage, lead with one concrete utility result and ask one specific product-feedback question.",
                 "Write genuinely different content for each channel.",
+                "Use the exact matching channel URL supplied in channel_urls; do not alter or remove its campaign parameters.",
                 "Bluesky must be at most 300 characters; Mastodon at most 500 characters.",
                 "Telegram should be compact and scannable; DEV should teach a useful engineering lesson in Markdown.",
                 "YouTube must contain Title, Description without an external URL, and a 12–22 second shot script.",

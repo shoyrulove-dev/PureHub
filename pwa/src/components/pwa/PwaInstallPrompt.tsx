@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { GiCrystalBall } from 'react-icons/gi'
+import { trackJourneyEvent } from '../../lib/community-api'
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -43,7 +44,8 @@ export function PwaInstallPrompt() {
                 type="button"
                 onClick={async () => {
                   await deferredPrompt.prompt()
-                  await deferredPrompt.userChoice
+                  const choice = await deferredPrompt.userChoice
+                  if (choice.outcome === 'accepted') void trackJourneyEvent('download')
                   setDeferredPrompt(null)
                   setOpen(false)
                 }}
