@@ -10,6 +10,10 @@ Date: 2026-08-02
 - Growth content now uses recent platform signals to improve topic emphasis without exposing private or low metrics.
 - Expanded safe question discovery to eight focused searches and up to nine review-only opportunities per day. Replies still require human approval.
 - Reduced overview-only database work; warm dashboard context loads are under roughly 1.1 seconds in local production-data checks.
+- Added privacy-preserving daily miniapp counters for opens, helpful taps, shares, and feedback; no account, cookie, device ID, raw interaction, or stored IP is used.
+- Added a compact Product Signals row to Admin with helpful rate, shares, roadmap votes, and the leading community request.
+- Added contextual Helpful, Feedback, and Share actions to all 22 web miniapps. Product feedback enters Support Inbox and can be marked reviewed in one click.
+- Added a public roadmap vote to Community and an opt-out anonymous counters switch to Settings, with automatic Do Not Track support.
 
 ## Product direction
 

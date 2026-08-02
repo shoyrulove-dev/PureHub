@@ -38,6 +38,7 @@ try:
         get_dashboard_metrics,
         get_env_value,
         get_login_guard_state,
+        get_product_growth_snapshot,
         get_schema_status,
         get_user_stats,
         import_control_bundle,
@@ -48,8 +49,11 @@ try:
         list_article_jobs,
         list_config,
         list_miniapps,
+        list_roadmap_options,
         list_top_referrers,
         record_audit_log,
+        record_miniapp_event,
+        record_roadmap_vote,
         register_failed_login,
         update_admin_account,
         update_admin_credentials,
@@ -79,6 +83,7 @@ except ImportError:
         get_dashboard_metrics,
         get_env_value,
         get_login_guard_state,
+        get_product_growth_snapshot,
         get_schema_status,
         get_user_stats,
         import_control_bundle,
@@ -89,8 +94,11 @@ except ImportError:
         list_article_jobs,
         list_config,
         list_miniapps,
+        list_roadmap_options,
         list_top_referrers,
         record_audit_log,
+        record_miniapp_event,
+        record_roadmap_vote,
         register_failed_login,
         update_admin_account,
         update_admin_credentials,
@@ -157,6 +165,7 @@ try:
         list_support_messages,
         list_support_sync_states,
         update_support_message,
+        upsert_support_message,
     )
 except ImportError:
     from community_support import (
@@ -174,6 +183,7 @@ except ImportError:
         list_support_messages,
         list_support_sync_states,
         update_support_message,
+        upsert_support_message,
     )
 
 try:
@@ -379,6 +389,7 @@ def _dashboard_context(
         "community_metrics_list": list_community_metrics,
         "growth_posts": lambda: list_growth_posts(40),
         "growth_summary": get_growth_summary,
+        "product_growth": get_product_growth_snapshot,
     }
     advanced_loaders = {
         "metrics": get_dashboard_metrics,
@@ -485,6 +496,7 @@ def _dashboard_context(
         "youtube_connection": youtube_connection,
         "reddit_connection": reddit_connection,
         "august_goal": august_goal,
+        "product_growth": loaded.get("product_growth", {}),
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -1770,6 +1782,70 @@ def support_api(request: Request, status: str = "", platform: str = "") -> dict[
 def support_sync_api(request: Request) -> dict[str, Any]:
     require_admin_role(request, "superadmin", "editor")
     return sync_support_channels(generate_drafts=True)
+
+
+@public_api_router.post("/product-event")
+async def public_product_event(request: Request) -> dict[str, bool]:
+    payload = await request.json()
+    try:
+        record_miniapp_event(str(payload.get("miniapp_id", "")), str(payload.get("event", "")))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True}
+
+
+@public_api_router.post("/feedback")
+async def public_feedback(request: Request) -> dict[str, bool]:
+    payload = await request.json()
+    if str(payload.get("website", "")).strip():
+        return {"ok": True}
+    miniapp_id = str(payload.get("miniapp_id", "")).strip()
+    category = str(payload.get("category", "feedback")).strip()
+    message = " ".join(str(payload.get("message", "")).split()).strip()
+    if category not in {"feedback", "bug", "feature_request"}:
+        raise HTTPException(status_code=422, detail="Unsupported feedback category.")
+    if len(message) < 10 or len(message) > 1000:
+        raise HTTPException(status_code=422, detail="Feedback must contain 10 to 1,000 characters.")
+    try:
+        record_miniapp_event(miniapp_id, "feedback")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    feedback_id = secrets.token_urlsafe(12)
+    upsert_support_message(
+        {
+            "source_key": f"pwa:{feedback_id}",
+            "platform": "pwa",
+            "external_id": feedback_id,
+            "thread_id": miniapp_id,
+            "author_id": "",
+            "author_name": "Anonymous product feedback",
+            "author_handle": "",
+            "content": message,
+            "category": category,
+            "priority": "high" if category == "bug" else "normal",
+            "status": "new",
+            "source_url": f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/en/tools",
+            "received_at": datetime.now(timezone.utc),
+            "reply_context": {"miniapp_id": miniapp_id, "privacy": "aggregate-no-identifier"},
+        }
+    )
+    return {"ok": True}
+
+
+@public_api_router.get("/roadmap")
+def public_roadmap() -> dict[str, object]:
+    items = list_roadmap_options()
+    return {"items": items, "total_votes": sum(int(item.get("votes", 0) or 0) for item in items)}
+
+
+@public_api_router.post("/roadmap/vote")
+async def public_roadmap_vote(request: Request) -> dict[str, object]:
+    payload = await request.json()
+    try:
+        item = record_roadmap_vote(str(payload.get("option_id", "")).strip())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True, "item": item}
 
 
 @public_api_router.get("/releases")

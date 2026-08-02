@@ -35,6 +35,8 @@ Automatic publishing cadence in each repeating 30-day campaign:
 
 The dashboard tracks five August outcomes from connected APIs: 100 community members, 1,500 qualified views, 30 interactions, 20 useful feedback items, and eight Shorts. The schedule and low-frequency controls stay collapsed; selecting a next-action chip opens the relevant section.
 
+Product Signals uses anonymous daily aggregate counters only. It tracks which miniapps are opened, marked helpful, shared, or accompanied by feedback, without a user ID, device ID, content payload, cookie, or stored IP. Community roadmap voting is intentionally lightweight and stores the one-vote marker only in the visitor's own browser.
+
 ## Weekly community loop
 
 1. Monday: select one mini-app and one user problem for the week's story.

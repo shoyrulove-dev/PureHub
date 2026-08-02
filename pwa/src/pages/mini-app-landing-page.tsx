@@ -6,6 +6,7 @@ import type { MiniAppDefinition, TabDefinition } from '../features/catalog/tabs'
 import { normalizeLocale } from '../i18n/locales'
 import { buildTabPath } from '../i18n/routing'
 import { rememberRecentTool, useToolPreferences } from '../lib/preferences'
+import { MiniAppEngagement } from '../components/mini-apps/MiniAppEngagement'
 
 const MiniAppSurface = lazy(() =>
   import('../components/mini-apps/MiniAppSurface').then((module) => ({
@@ -69,6 +70,8 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>
         <MiniAppSurface miniAppId={miniApp.id} />
       </Suspense>
+
+      <MiniAppEngagement miniAppId={miniApp.id} title={t(miniApp.titleKey)} />
 
       <div className="app-surface rounded-[18px] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

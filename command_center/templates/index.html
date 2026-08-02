@@ -196,6 +196,10 @@
       .automation-strip > span { color: var(--muted); }
       .automation-strip b { color: #0369a1; }
       .automation-safe { display: inline-flex; align-items: center; gap: .25rem; margin-left: auto; color: #047857 !important; font-weight: 720; }
+      .product-signals { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: .45rem; margin-top: .7rem; }
+      .product-signal { padding: .62rem .7rem; border: 1px solid var(--line); border-radius: .75rem; background: #fff; }
+      .product-signal span { display: block; color: var(--muted); font-size: .58rem; font-weight: 720; letter-spacing: .08em; text-transform: uppercase; }
+      .product-signal strong { display: block; margin-top: .22rem; overflow: hidden; color: #0f172a; font-size: .86rem; text-overflow: ellipsis; white-space: nowrap; }
       .reddit-layout { display: grid; grid-template-columns: minmax(0,1fr) 16rem; gap: 1rem; margin-top: .9rem; }
       .reddit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
       .reddit-form .full { grid-column: 1 / -1; }
@@ -333,6 +337,7 @@
         .reach-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .grid-two { grid-template-columns: 1fr; }
         .goal-roadmap { grid-template-columns: repeat(2,minmax(0,1fr)); }
+        .product-signals { grid-template-columns: repeat(3,minmax(0,1fr)); }
       }
       @media (max-width: 860px) {
         .shell { display: block; }
@@ -361,6 +366,7 @@
         .goal-overview { grid-template-columns: 1fr; }
         .goal-score { min-height: auto; }
         .goal-milestones, .goal-roadmap { grid-template-columns: 1fr; }
+        .product-signals { grid-template-columns: repeat(2,minmax(0,1fr)); }
         .reddit-form { grid-template-columns: 1fr; }
         .reddit-form .full { grid-column: auto; }
         .panel-head, .release-top { display: block; }
@@ -497,6 +503,15 @@
             {% for week in august_goal.weeks %}
             <article class="goal-week {{ week.status }}"><span class="goal-week-state"><svg class="icon"><use href="{% if week.status == 'done' %}#i-check{% elif week.status == 'active' %}#i-spark{% else %}#i-history{% endif %}"/></svg></span><div><strong>{{ week.label }} <small>{{ week.range }}</small></strong><span>{{ week.focus }}</span></div></article>
             {% endfor %}
+          </div>
+          {% set product_totals = product_growth.get('totals', {}) %}
+          {% set roadmap_leader = product_growth.get('roadmap', [])|first %}
+          <div class="product-signals" aria-label="Anonymous product signals for the last 30 days">
+            <div class="product-signal"><span>Tool opens</span><strong>{{ product_totals.get('open', 0) }}</strong></div>
+            <div class="product-signal"><span>Helpful</span><strong>{{ product_totals.get('helpful', 0) }} · {{ product_growth.get('helpful_rate', 0) }}%</strong></div>
+            <div class="product-signal"><span>Shares</span><strong>{{ product_totals.get('share', 0) }}</strong></div>
+            <div class="product-signal"><span>Roadmap votes</span><strong>{{ product_growth.get('roadmap_votes', 0) }}</strong></div>
+            <div class="product-signal"><span>Leading request</span><strong title="{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}">{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}</strong></div>
           </div>
           <div class="automation-strip"><strong>Daily automation</strong>{% for item in august_goal.automation %}<span><b>{{ item.time }}</b> {{ item.label }}</span>{% endfor %}<span class="automation-safe"><svg class="icon"><use href="#i-check"/></svg>Replies still require approval</span></div>
         </section>
@@ -709,7 +724,7 @@
               <article class="support-row {{ item.priority }}" id="supportRow{{ item.id }}">
                 <div class="support-row-head">
                   <span class="support-platform" title="{{ item.platform|upper }}">
-                    <span class="platform-icon {{ item.platform }}"><svg class="icon"><use href="{% if item.platform == 'devto' %}#i-code{% elif item.platform == 'bluesky' %}#i-spark{% else %}#i-message{% endif %}"/></svg></span>
+                    <span class="platform-icon {{ item.platform }}"><svg class="icon"><use href="{% if item.platform == 'devto' %}#i-code{% elif item.platform == 'bluesky' %}#i-spark{% elif item.platform == 'pwa' %}#i-package{% else %}#i-message{% endif %}"/></svg></span>
                     {{ item.platform|upper }}
                   </span>
                   <span class="support-author" title="{{ item.author_handle or item.author_name or 'Community member' }}">{{ item.author_name or item.author_handle or 'Community member' }}</span>
@@ -717,7 +732,9 @@
                   <span class="badge {{ item.status }}" title="{{ item.category|replace('_', ' ') }} · {{ item.priority }} · {{ item.received_at[:16]|replace('T', ' ') }}">{{ item.status|replace('_', ' ') }}</span>
                   <div class="support-actions">
                     {% if item.source_url %}<a class="button icon-button" href="{{ item.source_url }}" target="_blank" rel="noreferrer" title="{% if item.platform == 'devto' %}Open DEV post or comment{% else %}Open source message{% endif %}" aria-label="Open source message"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
-                    {% if item.status == 'new' %}
+                    {% if item.status == 'new' and item.platform == 'pwa' %}
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="reply_text" value=""/><button class="button icon-button" type="submit" name="action" value="ignore" title="Mark product feedback reviewed" aria-label="Mark product feedback reviewed"><svg class="icon"><use href="#i-check"/></svg></button></form>
+                    {% elif item.status == 'new' %}
                       <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post"><button class="button violet icon-button" type="submit" title="Generate AI draft" aria-label="Generate AI draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>
                     {% endif %}
                     {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}

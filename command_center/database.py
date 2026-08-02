@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 from dotenv import load_dotenv
 from passlib.context import CryptContext
-from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient, ReturnDocument
 from pymongo.collection import Collection
 from pymongo.database import Database
 import os
@@ -63,7 +63,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 10
+CURRENT_SCHEMA_VERSION = 11
 DEFAULTS_BOOTSTRAP_VERSION = 6
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -567,6 +567,12 @@ def init_database() -> None:
     )
     db.growth_posts.create_index([("scheduled_at", DESCENDING)])
     db.growth_posts.create_index([("status", ASCENDING), ("scheduled_at", DESCENDING)])
+    db.miniapp_events_daily.create_index(
+        [("day", ASCENDING), ("miniapp_id", ASCENDING), ("event", ASCENDING)],
+        unique=True,
+    )
+    db.roadmap_options.create_index([("option_id", ASCENDING)], unique=True)
+    db.roadmap_options.create_index([("active", ASCENDING), ("priority", DESCENDING)])
 
     run_schema_migrations()
     seed_default_documents()
@@ -661,6 +667,7 @@ def run_schema_migrations() -> None:
         (8, "ensure-community-support-inbox", _migration_community_support),
         (9, "ensure-community-engagement-metrics", _migration_community_metrics),
         (10, "ensure-growth-autopilot", _migration_growth_autopilot),
+        (11, "ensure-product-growth-signals", _migration_product_growth_signals),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -687,6 +694,22 @@ def get_schema_status() -> dict[str, Any]:
         "applied_version": latest,
         "migrations": items,
     }
+
+
+def _migration_product_growth_signals() -> None:
+    defaults = (
+        ("ocr-workflow", "Improve OCR workflow", "Better crop, rotate, scan history, and text export.", 10),
+        ("qr-toolkit", "Expand QR Studio", "Scan history plus Wi-Fi, contact, and batch QR templates.", 9),
+        ("money-tools", "Deepen money tools", "Categories, recurring expenses, CSV export, and clearer bill settlement.", 8),
+        ("focus-insights", "Add focus insights", "Weekly Pomodoro and habit progress with calm reminders.", 7),
+    )
+    now = utcnow()
+    for option_id, title, description, priority in defaults:
+        collection("roadmap_options").update_one(
+            {"option_id": option_id},
+            {"$setOnInsert": {"title": title, "description": description, "priority": priority, "votes": 0, "active": True, "created_at": now}, "$set": {"updated_at": now}},
+            upsert=True,
+        )
 
 
 def _migration_seed_defaults() -> None:
@@ -922,7 +945,7 @@ def increment_invites(referrer_id: int) -> dict[str, Any] | None:
             "$inc": {"invites_count": 1},
             "$set": {"updated_at": utcnow()},
         },
-        return_document=True,
+        return_document=ReturnDocument.AFTER,
     )
     return _serialize(row) if row else None
 
@@ -1257,6 +1280,70 @@ def get_analytics_snapshot() -> dict[str, Any]:
     }
 
 
+PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
+
+
+def record_miniapp_event(miniapp_id: str, event: str) -> None:
+    valid_ids = {str(item["miniapp_id"]) for item in MINIAPP_DEFAULTS}
+    if miniapp_id not in valid_ids or event not in PUBLIC_MINIAPP_EVENTS:
+        raise ValueError("Unsupported product event.")
+    day = utcnow().date().isoformat()
+    collection("miniapp_events_daily").update_one(
+        {"day": day, "miniapp_id": miniapp_id, "event": event},
+        {"$inc": {"count": 1}, "$set": {"updated_at": utcnow()}},
+        upsert=True,
+    )
+
+
+def list_roadmap_options() -> list[dict[str, Any]]:
+    rows = collection("roadmap_options").find(
+        {"active": True},
+        {"_id": 0, "option_id": 1, "title": 1, "description": 1, "votes": 1},
+    ).sort([("votes", DESCENDING), ("priority", DESCENDING)])
+    return [_serialize(row) for row in rows]
+
+
+def record_roadmap_vote(option_id: str) -> dict[str, Any]:
+    row = collection("roadmap_options").find_one_and_update(
+        {"option_id": option_id, "active": True},
+        {"$inc": {"votes": 1}, "$set": {"updated_at": utcnow()}},
+        projection={"_id": 0, "option_id": 1, "title": 1, "description": 1, "votes": 1},
+        return_document=True,
+    )
+    if not row:
+        raise ValueError("Roadmap option not found.")
+    return _serialize(row)
+
+
+def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
+    safe_days = max(1, min(int(days), 90))
+    start_day = (utcnow() - timedelta(days=safe_days - 1)).date().isoformat()
+    rows = list(collection("miniapp_events_daily").find({"day": {"$gte": start_day}}, {"_id": 0}))
+    totals = {event: 0 for event in PUBLIC_MINIAPP_EVENTS}
+    tools: dict[str, dict[str, int]] = {}
+    for row in rows:
+        event = str(row.get("event", ""))
+        count = max(0, int(row.get("count", 0) or 0))
+        if event in totals:
+            totals[event] += count
+        tool = tools.setdefault(str(row.get("miniapp_id", "unknown")), {item: 0 for item in PUBLIC_MINIAPP_EVENTS})
+        if event in tool:
+            tool[event] += count
+    top_tools = [
+        {"miniapp_id": miniapp_id, **values}
+        for miniapp_id, values in sorted(tools.items(), key=lambda item: (-item[1]["open"], item[0]))[:5]
+    ]
+    roadmap = list_roadmap_options()
+    return {
+        "days": safe_days,
+        "totals": totals,
+        "helpful_rate": round((totals["helpful"] / totals["open"]) * 100, 1) if totals["open"] else 0.0,
+        "top_tools": top_tools,
+        "roadmap": roadmap,
+        "roadmap_votes": sum(int(item.get("votes", 0) or 0) for item in roadmap),
+    }
+
+
 def export_control_bundle() -> dict[str, Any]:
     return {
         "exported_at": utcnow().isoformat(),
@@ -1470,10 +1557,10 @@ def upsert_support_message(values: dict[str, Any]) -> tuple[dict[str, Any], bool
         "created_at": now,
         "updated_at": now,
         "status": "new",
-        "category": "unclassified",
-        "priority": "normal",
-        "language": "en",
-        "requires_reply": True,
+        "category": str(values.get("category", "unclassified")),
+        "priority": str(values.get("priority", "normal")),
+        "language": str(values.get("language", "en")),
+        "requires_reply": bool(values.get("requires_reply", True)),
         "ai_draft": "",
         "reply_text": "",
         "external_reply_id": "",

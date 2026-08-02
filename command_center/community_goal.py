@@ -76,7 +76,7 @@ def build_august_growth_goal(
         + int(support_metrics.get("replied", 0) or 0)
     )
 
-    actionable_categories = {"question", "bug", "feature_request", "privacy", "installation"}
+    actionable_categories = {"question", "bug", "feature_request", "feedback", "privacy", "installation"}
     feedback = 0
     for item in support_messages:
         received_at = _parse_datetime(item.get("received_at"))

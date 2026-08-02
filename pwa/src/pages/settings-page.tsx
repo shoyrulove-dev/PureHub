@@ -1,8 +1,8 @@
-import { Check, Languages, Moon, ShieldCheck, Sun, SunMoon } from 'lucide-react'
+import { Activity, Check, Languages, Moon, ShieldCheck, Sun, SunMoon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
-import { type ThemePreference, useThemePreference } from '../lib/preferences'
+import { type ThemePreference, useAnonymousMetricsPreference, useThemePreference } from '../lib/preferences'
 
 const themes: Array<{ id: ThemePreference; label: string; icon: typeof Sun }> = [
   { id: 'system', label: 'System', icon: SunMoon },
@@ -14,6 +14,7 @@ export function SettingsPage() {
   const { lang } = useParams()
   const locale = normalizeLocale(lang)
   const { theme, setTheme } = useThemePreference()
+  const { enabled: anonymousMetrics, setEnabled: setAnonymousMetrics, lockedByDnt } = useAnonymousMetricsPreference()
 
   return (
     <section className="space-y-6">
@@ -52,6 +53,22 @@ export function SettingsPage() {
               {item}
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="app-surface rounded-[18px] p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Activity className="mt-0.5 size-5 text-sky-500" />
+            <div>
+              <h2 className="font-bold text-slate-950 dark:text-white">Anonymous usage counters</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Share aggregate tool opens, helpful taps, and shares. PureHub does not send a user ID, device ID, content, or stored IP.</p>
+              {lockedByDnt ? <p className="mt-1 text-xs font-semibold text-emerald-600">Disabled because Do Not Track is enabled in your browser.</p> : null}
+            </div>
+          </div>
+          <button type="button" role="switch" aria-checked={anonymousMetrics} disabled={lockedByDnt} className={`relative h-7 w-12 shrink-0 rounded-full transition ${anonymousMetrics ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} onClick={() => setAnonymousMetrics(!anonymousMetrics)}>
+            <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${anonymousMetrics ? 'left-6' : 'left-1'}`} />
+          </button>
         </div>
       </section>
 

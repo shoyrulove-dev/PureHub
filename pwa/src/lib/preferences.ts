@@ -6,6 +6,7 @@ export type ThemePreference = 'system' | 'light' | 'dark'
 const FAVORITES_KEY = 'purehub-favorite-tools'
 const RECENTS_KEY = 'purehub-recent-tools'
 const THEME_KEY = 'purehub-theme'
+const ANONYMOUS_METRICS_KEY = 'purehub-anonymous-metrics'
 const CHANGE_EVENT = 'purehub-preferences-change'
 
 function readList(key: string): MiniAppId[] {
@@ -93,4 +94,32 @@ export function useThemePreference() {
   }
 
   return { theme, setTheme }
+}
+
+export function anonymousMetricsEnabled() {
+  if (typeof window === 'undefined') return false
+  if (window.navigator.doNotTrack === '1') return false
+  return window.localStorage.getItem(ANONYMOUS_METRICS_KEY) !== 'false'
+}
+
+export function useAnonymousMetricsPreference() {
+  const [enabled, setEnabledState] = useState(() => anonymousMetricsEnabled())
+
+  useEffect(() => {
+    const sync = () => setEnabledState(anonymousMetricsEnabled())
+    window.addEventListener(CHANGE_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+
+  const setEnabled = (next: boolean) => {
+    window.localStorage.setItem(ANONYMOUS_METRICS_KEY, String(next))
+    setEnabledState(next)
+    emitChange()
+  }
+
+  return { enabled, setEnabled, lockedByDnt: typeof navigator !== 'undefined' && navigator.doNotTrack === '1' }
 }
