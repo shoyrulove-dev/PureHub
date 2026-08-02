@@ -13,6 +13,7 @@ try:
     from .database import (
         get_config_value,
         get_growth_post,
+        list_community_metrics,
         list_growth_posts,
         record_audit_log,
         update_growth_post,
@@ -30,6 +31,7 @@ except ImportError:
     from database import (
         get_config_value,
         get_growth_post,
+        list_community_metrics,
         list_growth_posts,
         record_audit_log,
         update_growth_post,
@@ -135,12 +137,18 @@ def _fallback_content(channel: str, topic: str, day_number: int) -> str:
 def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[str, str]:
     fallback = {channel: _fallback_content(channel, topic, day_number) for channel in channels}
     try:
+        performance_signals = {
+            str(row.get("platform")): row.get("metrics") or {}
+            for row in list_community_metrics()
+            if row.get("platform") in channels
+        }
         client, model = _ai_client()
         prompt = {
             "task": "Create channel-specific community content for one day of PureHub's build-in-public campaign.",
             "day": day_number,
             "topic": topic,
             "channels": channels,
+            "recent_platform_signals": performance_signals,
             "verified_facts": [
                 "PureHub contains 22 mini-apps and is free, ad-free, open source, and community-built.",
                 "The shared mobile UI has received a clarity, contrast, and one-handed-use pass.",
@@ -152,6 +160,8 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
             "rules": [
                 "Return a JSON object whose keys exactly match the requested channels.",
                 "English first. Do not invent users, metrics, reviews, features, audits, or release dates.",
+                "Use recent platform signals only to improve format and topic emphasis; never quote private or low metrics in public copy.",
+                "At this early stage, lead with one concrete utility result and ask one specific product-feedback question.",
                 "Write genuinely different content for each channel.",
                 "Bluesky must be at most 300 characters; Mastodon at most 500 characters.",
                 "Telegram should be compact and scannable; DEV should teach a useful engineering lesson in Markdown.",

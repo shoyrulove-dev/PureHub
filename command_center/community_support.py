@@ -358,7 +358,7 @@ def _sync_mastodon() -> int:
 def _opportunity_keywords() -> list[str]:
     raw = get_config_value(
         "opportunity_keywords",
-        "offline Android app,no ads app,privacy tools,Pomodoro app,QR code app,expense tracker app",
+        "offline Android app,no ads app,privacy tools,offline OCR,password manager no ads,Pomodoro app,QR scanner app,expense tracker app",
     )
     values = [item.strip() for item in raw.replace("\n", ",").split(",") if item.strip()]
     return values[:8]
@@ -520,7 +520,7 @@ def discover_opportunities() -> dict[str, Any]:
     if state.get("last_synced_at") and _iso_datetime(str(state["last_synced_at"])).date() == datetime.now(timezone.utc).date():
         return {"enabled": True, "skipped": True, "reason": "Daily discovery already completed.", "channels": {}}
     keywords = _opportunity_keywords()
-    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "6") or 6), 12))
+    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "9") or 9), 12))
     per_platform = max(1, total_limit // 3)
     result: dict[str, Any] = {"enabled": True, "channels": {}}
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}

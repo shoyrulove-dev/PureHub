@@ -15,6 +15,11 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 try:
+    from .community_goal import build_august_growth_goal
+except ImportError:
+    from community_goal import build_august_growth_goal
+
+try:
     from .content_generator import DEFAULT_KEYWORDS, generate_articles
     from .database import (
         ADMIN_ROLES,
@@ -361,12 +366,8 @@ def _dashboard_context(
     admin_username = str(request.session["admin_username"])
     common_loaders = {
         "config": list_config,
-        "metrics": get_dashboard_metrics,
-        "miniapps": lambda: list_miniapps(miniapp_query, miniapp_tab),
         "schema_status": get_schema_status,
         "analytics": get_analytics_snapshot,
-        "admins": list_admin_accounts,
-        "admin_profile": lambda: get_admin_profile(admin_username),
         "releases": list_releases,
     }
     overview_loaders = {
@@ -380,6 +381,10 @@ def _dashboard_context(
         "growth_summary": get_growth_summary,
     }
     advanced_loaders = {
+        "metrics": get_dashboard_metrics,
+        "miniapps": lambda: list_miniapps(miniapp_query, miniapp_tab),
+        "admins": list_admin_accounts,
+        "admin_profile": lambda: get_admin_profile(admin_username),
         "jobs": list_article_jobs,
         "top_referrers": list_top_referrers,
         "api_catalog": lambda: list_api_catalog(api_query, api_group),
@@ -434,21 +439,29 @@ def _dashboard_context(
         "username": config.get("reddit_username", ""),
         "default_subreddit": config.get("reddit_default_subreddit", "droidappshowcase"),
     }
+    august_goal = build_august_growth_goal(
+        config=config,
+        community_metrics=loaded.get("community_metrics_list", []),
+        growth_posts=loaded.get("growth_posts", []),
+        support_messages=support_messages,
+        support_metrics=loaded.get("support_metrics", {}),
+        reddit_connected=reddit_connection["connected"],
+    ) if view == "overview" else {}
     return {
         "config": config,
         "defaults": CONFIG_DEFAULTS,
         "stats": loaded.get("stats", {}),
-        "metrics": loaded["metrics"],
+        "metrics": loaded.get("metrics", {}),
         "jobs": loaded.get("jobs", []),
         "top_referrers": loaded.get("top_referrers", []),
         "bot_state": telegram_bot_manager.state,
-        "miniapps": loaded["miniapps"],
+        "miniapps": loaded.get("miniapps", []),
         "api_catalog": loaded.get("api_catalog", []),
         "audit_logs": loaded.get("audit_logs", []),
         "schema_status": loaded["schema_status"],
         "analytics": analytics,
         "analytics_json": json.dumps(analytics, ensure_ascii=False),
-        "admins": loaded["admins"],
+        "admins": loaded.get("admins", []),
         "admin_roles": ADMIN_ROLES,
         "message": message,
         "message_type": message_type,
@@ -456,7 +469,7 @@ def _dashboard_context(
         "api_prefix": PUBLIC_API_PREFIX,
         "default_keywords": "\n".join(DEFAULT_KEYWORDS),
         "admin_username": admin_username,
-        "admin_profile": loaded["admin_profile"],
+        "admin_profile": loaded.get("admin_profile", {}),
         "releases": releases,
         "release_publications": release_publications,
         "actionable_publications": actionable_publications,
@@ -471,6 +484,7 @@ def _dashboard_context(
         "growth_summary": loaded.get("growth_summary", {}),
         "youtube_connection": youtube_connection,
         "reddit_connection": reddit_connection,
+        "august_goal": august_goal,
         "mongo_db_name": get_env_value("MONGO_DB_NAME", "purehub_command_center"),
         "miniapp_query": miniapp_query,
         "miniapp_tab": miniapp_tab,
@@ -563,8 +577,8 @@ def save_config(
     community_reply_mode: str = Form(default="draft"),
     support_monitor_enabled: str = Form(default="true"),
     opportunity_monitor_enabled: str = Form(default="true"),
-    opportunity_keywords: str = Form(default="offline Android app,no ads app,privacy tools,Pomodoro app,QR code app,expense tracker app"),
-    opportunity_daily_limit: int = Form(default=6),
+    opportunity_keywords: str = Form(default="offline Android app,no ads app,privacy tools,offline OCR,password manager no ads,Pomodoro app,QR scanner app,expense tracker app"),
+    opportunity_daily_limit: int = Form(default=9),
     growth_automation_enabled: str = Form(default="false"),
     growth_auto_publish: str = Form(default="true"),
     growth_campaign_start_date: str = Form(default=""),

@@ -27,11 +27,13 @@ Automatic publishing cadence in each repeating 30-day campaign:
 
 ## Daily owner routine (10-15 minutes)
 
-1. Open Admin and check failed jobs and new support drafts.
+1. Open Admin and read the August Growth Overview: outcome score, lagging milestone, and next actions.
 2. Edit and approve replies that are accurate and helpful.
 3. Reply personally to high-value feedback or contributor questions.
 4. On a YouTube day, upload one 15-30 second demo using the prepared title and description.
 5. Record repeated requests as roadmap candidates instead of promising dates immediately.
+
+The dashboard tracks five August outcomes from connected APIs: 100 community members, 1,500 qualified views, 30 interactions, 20 useful feedback items, and eight Shorts. The schedule and low-frequency controls stay collapsed; selecting a next-action chip opens the relevant section.
 
 ## Weekly community loop
 

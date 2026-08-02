@@ -1,6 +1,15 @@
 # PureHub System Update Report
 
-Date: 2026-07-31
+Date: 2026-08-02
+
+## August community command center
+
+- Added a compact August mission dashboard with live progress for audience, qualified views, interactions, useful feedback, and YouTube Shorts.
+- Added a weighted outcome score, month/campaign timeline, four-week roadmap, daily automation strip, and data-driven next actions.
+- Reordered the admin overview around goal, support, and approvals. Platform details, Growth Autopilot schedules, Reddit, credentials, resolved support, and system operations are collapsed until needed.
+- Growth content now uses recent platform signals to improve topic emphasis without exposing private or low metrics.
+- Expanded safe question discovery to eight focused searches and up to nine review-only opportunities per day. Replies still require human approval.
+- Reduced overview-only database work; warm dashboard context loads are under roughly 1.1 seconds in local production-data checks.
 
 ## Product direction
 

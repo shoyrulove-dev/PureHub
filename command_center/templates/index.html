@@ -104,7 +104,19 @@
       }
       .logout:hover, .side-link:hover { border-color: var(--line-strong); background: #f1f5f9; }
 
-      .main { width: 100%; max-width: 104rem; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2.75rem) 4rem; }
+      .main { display: flex; width: 100%; max-width: 104rem; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2.75rem) 4rem; flex-direction: column; }
+      .topbar { order: 0; }
+      .flash { order: 1; }
+      .metrics { order: 2; }
+      #august-goal { order: 3; }
+      #support { order: 4; }
+      #growth-autopilot { order: 5; }
+      #community-reach { order: 6; }
+      #queue { order: 7; }
+      #reddit-review { order: 8; }
+      #channels { order: 9; }
+      #resolved-support { order: 10; }
+      #operations { order: 11; }
       .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
       .eyebrow { margin: 0 0 0.45rem; color: var(--cyan); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
       h1 { margin-bottom: 0.45rem; font-size: clamp(1.75rem, 4vw, 2.65rem); line-height: 1.1; letter-spacing: -0.045em; }
@@ -148,6 +160,42 @@
       .platform-icon.bluesky { color: #1d4ed8; background: #dbeafe; }
       .platform-icon.mastodon { color: #6d28d9; background: #ede9fe; }
       .reach-error { color: #be123c; font-size: .67rem; }
+      .goal-overview { display: grid; grid-template-columns: 12rem minmax(0,1fr); gap: 1rem; margin-top: .9rem; }
+      .goal-score { display: grid; min-height: 12rem; place-items: center; padding: 1rem; border: 1px solid #bae6fd; border-radius: 1rem; background: linear-gradient(145deg,#f0f9ff,#ecfdf5); text-align: center; }
+      .goal-ring { display: grid; width: 7.5rem; height: 7.5rem; place-items: center; border-radius: 50%; background: conic-gradient(var(--emerald) calc(var(--goal-progress) * 1%), #dbeafe 0); }
+      .goal-ring::before { grid-area: 1/1; width: 5.65rem; height: 5.65rem; border-radius: 50%; background: #fff; content: ""; }
+      .goal-ring > div { z-index: 1; display: grid; grid-area: 1/1; gap: .1rem; }
+      .goal-ring > div strong { font-size: 1.7rem; font-weight: 880; letter-spacing: -.05em; }
+      .goal-ring > div span { color: var(--muted); font-size: .62rem; font-weight: 750; text-transform: uppercase; }
+      .goal-time { margin-top: .75rem; color: #334155; font-size: .69rem; font-weight: 700; }
+      .goal-caption { max-width: 10rem; margin: .55rem 0 0; color: var(--muted); font-size: .61rem; line-height: 1.4; }
+      .goal-body { min-width: 0; }
+      .goal-milestones { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+      .goal-item { padding: .72rem .8rem; border: 1px solid var(--line); border-radius: .85rem; background: #f8fafc; }
+      .goal-item-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; font-size: .72rem; font-weight: 780; }
+      .goal-bar { height: .42rem; margin-top: .55rem; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
+      .goal-bar > span { display: block; width: calc(var(--item-progress) * 1%); height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--emerald),var(--cyan)); }
+      .goal-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .75rem; }
+      .goal-action { display: inline-flex; align-items: center; gap: .38rem; padding: .48rem .62rem; border: 1px solid var(--line); border-radius: .65rem; color: #334155; background: #fff; font-size: .67rem; font-weight: 720; }
+      .goal-action.done { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
+      .goal-action.urgent { border-color: #fda4af; color: #be123c; background: #fff1f2; }
+      .goal-action.attention { border-color: #fcd34d; color: #92400e; background: #fffbeb; }
+      .goal-action.info { border-color: #bae6fd; color: #0369a1; background: #f0f9ff; }
+      .goal-roadmap { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .45rem; margin-top: .75rem; }
+      .goal-week { display: flex; align-items: flex-start; gap: .48rem; padding: .6rem .68rem; border: 1px solid var(--line); border-radius: .75rem; background: #f8fafc; }
+      .goal-week.active { border-color: #7dd3fc; background: #f0f9ff; }
+      .goal-week.done { border-color: #a7f3d0; background: #ecfdf5; }
+      .goal-week strong, .goal-week span { display: block; }
+      .goal-week strong { font-size: .68rem; }
+      .goal-week strong small { margin-left: .25rem; color: var(--muted); font-size: .56rem; font-weight: 650; }
+      .goal-week span { margin-top: .2rem; color: var(--muted); font-size: .6rem; line-height: 1.35; }
+      .goal-week-state { display: grid !important; flex: 0 0 auto; width: 1.45rem; height: 1.45rem; margin: 0 !important; place-items: center; border-radius: .48rem; color: #0369a1 !important; background: #e0f2fe; }
+      .goal-week-state .icon { width: .75rem; height: .75rem; }
+      .automation-strip { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .8rem; margin-top: .7rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .75rem; background: #f8fafc; font-size: .63rem; }
+      .automation-strip > strong { color: #0f172a; }
+      .automation-strip > span { color: var(--muted); }
+      .automation-strip b { color: #0369a1; }
+      .automation-safe { display: inline-flex; align-items: center; gap: .25rem; margin-left: auto; color: #047857 !important; font-weight: 720; }
       .reddit-layout { display: grid; grid-template-columns: minmax(0,1fr) 16rem; gap: 1rem; margin-top: .9rem; }
       .reddit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
       .reddit-form .full { grid-column: 1 / -1; }
@@ -284,6 +332,7 @@
         .channels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .reach-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .grid-two { grid-template-columns: 1fr; }
+        .goal-roadmap { grid-template-columns: repeat(2,minmax(0,1fr)); }
       }
       @media (max-width: 860px) {
         .shell { display: block; }
@@ -298,6 +347,7 @@
         .support-row-head .support-author { display: none; }
         .support-row-head .badge { display: none; }
         .reddit-layout { grid-template-columns: 1fr; }
+        .goal-overview { grid-template-columns: 10rem minmax(0,1fr); }
       }
       @media (max-width: 580px) {
         .main { padding: 1.1rem 0.8rem 3rem; }
@@ -308,6 +358,9 @@
         .metric { min-height: 6.5rem; padding: 0.85rem; }
         .channels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .reach-grid { grid-template-columns: 1fr; }
+        .goal-overview { grid-template-columns: 1fr; }
+        .goal-score { min-height: auto; }
+        .goal-milestones, .goal-roadmap { grid-template-columns: 1fr; }
         .reddit-form { grid-template-columns: 1fr; }
         .reddit-form .full { grid-column: auto; }
         .panel-head, .release-top { display: block; }
@@ -394,14 +447,14 @@
             <p class="metric-note">of {{ analytics.miniapps.total }} enabled</p>
           </article>
           <article class="metric">
-            <div class="metric-head"><p class="metric-label">Releases</p><span class="metric-icon accent-cyan"><svg class="icon"><use href="#i-send"/></svg></span></div>
-            <div class="metric-value accent-cyan">{{ releases|length }}</div>
-            <p class="metric-note">signed records in Mongo</p>
+            <div class="metric-head"><p class="metric-label">Audience</p><span class="metric-icon accent-cyan"><svg class="icon"><use href="#i-users"/></svg></span></div>
+            <div class="metric-value accent-cyan">{{ august_goal.values.audience }}</div>
+            <p class="metric-note">of 100 August goal</p>
           </article>
           <article class="metric">
-            <div class="metric-head"><p class="metric-label">Community</p><span class="metric-icon accent-emerald"><svg class="icon"><use href="#i-users"/></svg></span></div>
-            <div class="metric-value accent-emerald">{{ stats.total_users }}</div>
-            <p class="metric-note">Telegram users tracked</p>
+            <div class="metric-head"><p class="metric-label">Qualified views</p><span class="metric-icon accent-emerald"><svg class="icon"><use href="#i-eye"/></svg></span></div>
+            <div class="metric-value accent-emerald">{{ august_goal.values.views }}</div>
+            <p class="metric-note">of 1,500 August goal</p>
           </article>
           <article class="metric">
             <div class="metric-head"><p class="metric-label">Needs reply</p><span class="metric-icon accent-amber"><svg class="icon"><use href="#i-inbox"/></svg></span></div>
@@ -410,7 +463,50 @@
           </article>
         </section>
 
-        <section class="section panel" aria-labelledby="community-reach-title">
+        <section class="section panel" id="august-goal" aria-labelledby="august-goal-title">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">{{ august_goal.label }} community mission</p>
+              <h2 id="august-goal-title" style="display:flex;align-items:center;gap:.55rem"><svg class="icon icon-lg accent-violet"><use href="#i-spark"/></svg>Growth overview</h2>
+              <p class="panel-copy">{{ august_goal.headline }}</p>
+            </div>
+            <span class="badge published">Day {{ august_goal.campaign_day }}/{{ august_goal.campaign_total }}</span>
+          </div>
+          <div class="goal-overview">
+            <div class="goal-score">
+              <div class="goal-ring" style="--goal-progress:{{ august_goal.outcome_percent }}"><div><strong>{{ august_goal.outcome_percent }}%</strong><span>outcome</span></div></div>
+              <p class="goal-time">Month {{ august_goal.elapsed_days }}/{{ august_goal.days_total }}</p>
+              <div class="goal-bar" title="{{ august_goal.timeline_percent }}% of August elapsed"><span style="--item-progress:{{ august_goal.timeline_percent }}"></span></div>
+              <p class="goal-caption">Progress is weighted by audience, qualified views, interactions, feedback and Shorts.</p>
+            </div>
+            <div class="goal-body">
+              <div class="goal-milestones">
+                {% for item in august_goal.milestones %}
+                <article class="goal-item" title="{{ item.note }}">
+                  <div class="goal-item-head"><span>{{ item.label }}</span><strong>{{ "{:,}".format(item.value) }}/{{ "{:,}".format(item.target) }}</strong></div>
+                  <div class="goal-bar"><span style="--item-progress:{{ item.percent }}"></span></div>
+                </article>
+                {% endfor %}
+              </div>
+              <div class="goal-actions" aria-label="Recommended next actions">
+                {% for action in august_goal.actions %}<a class="goal-action {{ action.tone }}" href="{{ action.href }}"><svg class="icon"><use href="{% if action.tone == 'done' %}#i-check{% elif action.tone in ['urgent','attention'] %}#i-inbox{% else %}#i-chevron{% endif %}"/></svg>{{ action.label }}</a>{% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="goal-roadmap" aria-label="August roadmap">
+            {% for week in august_goal.weeks %}
+            <article class="goal-week {{ week.status }}"><span class="goal-week-state"><svg class="icon"><use href="{% if week.status == 'done' %}#i-check{% elif week.status == 'active' %}#i-spark{% else %}#i-history{% endif %}"/></svg></span><div><strong>{{ week.label }} <small>{{ week.range }}</small></strong><span>{{ week.focus }}</span></div></article>
+            {% endfor %}
+          </div>
+          <div class="automation-strip"><strong>Daily automation</strong>{% for item in august_goal.automation %}<span><b>{{ item.time }}</b> {{ item.label }}</span>{% endfor %}<span class="automation-safe"><svg class="icon"><use href="#i-check"/></svg>Replies still require approval</span></div>
+        </section>
+
+        <details class="section panel disclosure" id="community-reach">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-users"/></svg></span><span><strong>Platform details</strong><span class="panel-copy" style="display:block;margin-top:.2rem">Telegram, DEV, Bluesky and Mastodon metrics · hidden</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content" style="padding-top:1rem">
           <div class="panel-head" style="margin-bottom:0">
             <div>
               <p class="panel-kicker">Live platform signals</p>
@@ -445,9 +541,15 @@
               {% if mastodon_values %}<div class="reach-values"><div class="reach-value" title="Followers"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span class="sr-only">followers</span></div><div class="reach-value" title="Recent likes"><span class="stat-icon"><svg class="icon"><use href="#i-heart"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span class="sr-only">recent likes</span></div><div class="reach-value" title="Recent boosts"><span class="stat-icon"><svg class="icon"><use href="#i-repeat"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span class="sr-only">recent boosts</span></div><div class="reach-value" title="Recent replies"><span class="stat-icon"><svg class="icon"><use href="#i-message"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span class="sr-only">recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section class="section panel" id="growth-autopilot" aria-labelledby="growth-autopilot-title">
+        <details class="section panel disclosure" id="growth-autopilot">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-spark"/></svg></span><span><strong>Growth Autopilot</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{% if config.get('growth_automation_enabled') == 'true' %}Running{% else %}Paused{% endif %} · {{ growth_summary.total }} campaign items · schedule hidden</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content" style="padding-top:1rem">
           <div class="panel-head" style="margin-bottom:0">
             <div>
               <p class="panel-kicker">30-day community engine</p>
@@ -499,9 +601,15 @@
               {% else %}<div class="release-card"><p class="release-title">Campaign has not started</p><p class="release-summary">Enable it in Advanced Controls or run day one manually.</p></div>{% endfor %}
             </div>
           </details>
-        </section>
+          </div>
+        </details>
 
-        <section class="section panel" id="reddit-review" aria-labelledby="reddit-review-title">
+        <details class="section panel disclosure" id="reddit-review">
+          <summary class="disclosure-summary">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-message"/></svg></span><span><strong>Reddit review</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{% if reddit_connection.connected %}Connected · review before publishing{% else %}API approval pending · manual drafts only{% endif %}</span></span></span>
+            <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <div class="disclosure-content" style="padding-top:1rem">
           <div class="panel-head" style="margin-bottom:0">
             <div>
               <p class="panel-kicker">Reviewed community sharing</p>
@@ -536,7 +644,8 @@
           {% else %}
           <div class="reddit-side" style="margin-top:.9rem"><h3>Create a release first</h3><p>Reddit drafts use verified release information so AI does not invent features or download links.</p></div>
           {% endif %}
-        </section>
+          </div>
+        </details>
 
         <details class="section panel disclosure" id="channels">
           <summary class="disclosure-summary">
@@ -646,7 +755,7 @@
         </section>
 
         {% if support_history %}
-        <details class="section panel disclosure">
+        <details class="section panel disclosure" id="resolved-support">
           <summary class="disclosure-summary">
             <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-history"/></svg></span><span><strong>Resolved support</strong><span class="panel-copy" style="display:block;margin-top:.2rem">{{ support_history|length }} recent items · hidden</span></span></span>
             <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
