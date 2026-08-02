@@ -9,6 +9,7 @@ import { SettingsPage } from '../pages/settings-page'
 import { DownloadPage } from '../pages/download-page'
 import { ChangelogPage } from '../pages/changelog-page'
 import { BackendRouteRecovery } from '../pages/backend-route-recovery'
+import { PrivacyPage, TermsPage } from '../pages/legal-pages'
 
 export const appRouter = createBrowserRouter([
   {
@@ -54,6 +55,14 @@ export const appRouter = createBrowserRouter([
       {
         path: 'changelog',
         element: <ChangelogPage />,
+      },
+      {
+        path: 'privacy',
+        element: <PrivacyPage />,
+      },
+      {
+        path: 'terms',
+        element: <TermsPage />,
       },
       {
         path: ':appSlug',

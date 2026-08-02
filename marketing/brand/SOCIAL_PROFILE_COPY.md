@@ -37,6 +37,20 @@ Explore PureHub and help choose what we improve next.
   - `PureHub`: `https://hub.blissbiovn.com`
   - `Source code`: `https://github.com/shoyrulove-dev/PureHub`
 
+## TikTok profile
+
+- Display name: `PureHub · Free Tools`
+- Preferred username: `@purehubapp`
+- Username fallbacks: `@purehubtools`, then `@purehubofficial`
+- Bio: `22 free tools · No ads · Privacy-first · Open source · Android + Web`
+- Website: `https://hub.blissbiovn.com/en`
+- Avatar: `purehub-social-avatar-1024.png`
+- Category, when available: `Software` or `Science & Technology`
+
+Use a Personal/Creator account initially. Connect the PureHub YouTube channel from
+**Edit profile > Links**. If TikTok does not show the Website field yet, keep the
+plain domain `hub.blissbiovn.com` in the bio until the account is eligible.
+
 ## Mastodon profile
 
 ```text

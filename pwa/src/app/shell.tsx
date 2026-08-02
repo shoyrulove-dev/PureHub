@@ -28,6 +28,8 @@ export function AppShell() {
     if (location.pathname.endsWith('/settings')) return `/${nextLocale}/settings`
     if (location.pathname.endsWith('/download')) return `/${nextLocale}/download`
     if (location.pathname.endsWith('/changelog')) return `/${nextLocale}/changelog`
+    if (location.pathname.endsWith('/privacy')) return `/${nextLocale}/privacy`
+    if (location.pathname.endsWith('/terms')) return `/${nextLocale}/terms`
     if (!currentEntry) return `/${nextLocale}`
     return currentEntry.kind === 'tab'
       ? buildTabPath(nextLocale, currentEntry.item.id)
@@ -112,6 +114,11 @@ export function AppShell() {
 
           <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 sm:pt-6">
             <div key={location.pathname} className="page-enter"><Outlet /></div>
+            <footer className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-500/10 pt-5 text-xs text-slate-500">
+              <Link to={`/${locale}/privacy`} className="hover:text-slate-900 dark:hover:text-white">Privacy</Link>
+              <Link to={`/${locale}/terms`} className="hover:text-slate-900 dark:hover:text-white">Terms</Link>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-white">Open source</a>
+            </footer>
           </main>
 
           <BottomNav />

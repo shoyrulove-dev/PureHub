@@ -42,6 +42,12 @@ export function LocaleLayout() {
           <meta name="robots" content="noindex, follow" />
         </Helmet>
       ) : null}
+      {pageSegment === 'privacy' || pageSegment === 'terms' ? (
+        <Helmet>
+          <title>{pageSegment === 'privacy' ? 'Privacy Policy' : 'Terms of Service'} | PureHub</title>
+          <meta name="description" content={`${pageSegment === 'privacy' ? 'Privacy Policy' : 'Terms of Service'} for the free, ad-free, open-source PureHub mini tools.`} />
+        </Helmet>
+      ) : null}
       <AppShell />
     </>
   )
