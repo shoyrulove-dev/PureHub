@@ -540,6 +540,21 @@
             <div class="product-signal"><span>Leading request</span><strong title="{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}">{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}</strong></div>
           </div>
           <p class="panel-copy" style="margin-top:.65rem">Journey signals are anonymous daily event totals. No user ID, device ID, account, or IP address is stored.</p>
+          {% set flagship_monitor = product_growth.get('flagship_monitor', {}) %}
+          <details class="section panel disclosure" style="margin-top:.75rem">
+            <summary class="disclosure-summary">
+              <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-history"/></svg></span><span><strong>14-day flagship monitor</strong><span class="panel-copy" style="display:block;margin-top:.2rem">QR Studio, Zen Pomodoro and Zen Breath · compact</span></span></span>
+              <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="disclosure-content" style="padding-top:.8rem">
+              <div class="product-signals" aria-label="Fourteen day flagship comparison">
+                {% for tool in flagship_monitor.get('tools', []) %}
+                <div class="product-signal"><span>{{ tool.miniapp_id }}</span><strong title="opens · helpful · shares">{{ tool.get('open', 0) }} · {{ tool.get('helpful', 0) }} · {{ tool.get('share', 0) }}</strong></div>
+                {% endfor %}
+              </div>
+              <p class="panel-copy" style="margin-top:.55rem">{{ flagship_monitor.get('selection_rule', 'Compare useful use after 14 days.') }}</p>
+            </div>
+          </details>
           <div class="automation-strip"><strong>Daily automation</strong>{% for item in august_goal.automation %}<span><b>{{ item.time }}</b> {{ item.label }}</span>{% endfor %}<span class="automation-safe"><svg class="icon"><use href="#i-check"/></svg>Replies still require approval</span></div>
         </section>
 

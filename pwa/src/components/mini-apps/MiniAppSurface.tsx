@@ -17,24 +17,9 @@ type MiniAppSurfaceProps = {
 
 const OcrTextSurface = lazy(() => import('./surfaces/OcrTextSurface'))
 const PasswordVaultSurface = lazy(() => import('./surfaces/PasswordVaultSurface'))
-
-const BREATH_PATTERNS = {
-  calm: [
-    { label: 'Inhale', duration: 4000, scale: 1.05 },
-    { label: 'Exhale', duration: 6000, scale: 0.72 },
-  ],
-  box: [
-    { label: 'Inhale', duration: 4000, scale: 1.05 },
-    { label: 'Hold', duration: 4000, scale: 1.05 },
-    { label: 'Exhale', duration: 4000, scale: 0.72 },
-    { label: 'Hold', duration: 4000, scale: 0.72 },
-  ],
-  '478': [
-    { label: 'Inhale', duration: 4000, scale: 1.05 },
-    { label: 'Hold', duration: 7000, scale: 1.05 },
-    { label: 'Exhale', duration: 8000, scale: 0.72 },
-  ],
-} as const
+const QrStudioSurface = lazy(() => import('./surfaces/QrStudioSurface'))
+const ZenPomodoroSurface = lazy(() => import('./surfaces/ZenPomodoroSurface'))
+const ZenBreathSurface = lazy(() => import('./surfaces/ZenBreathSurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -43,9 +28,9 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'zen-habit':
       return <ZenHabitSurface />
     case 'zen-pomodoro':
-      return <ZenPomodoroSurface />
+      return <LazyTool><ZenPomodoroSurface /></LazyTool>
     case 'zen-breath':
-      return <ZenBreathSurface />
+      return <LazyTool><ZenBreathSurface /></LazyTool>
     case 'compass':
       return <CompassSurface />
     case 'bubble-level':
@@ -57,7 +42,7 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'unit-converter':
       return <UnitConverterSurface />
     case 'qr-studio':
-      return <QrStudioSurface />
+      return <LazyTool><QrStudioSurface /></LazyTool>
     case 'doc-to-pdf':
       return <DocToPdfSurface />
     case 'ocr-text':
@@ -241,90 +226,6 @@ function CompassSurface() {
         </div>
       </div>
     </Panel>
-  )
-}
-
-function QrStudioSurface() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const [qrValue, setQrValue] = useState('https://hub.blissbiovn.com')
-  const [scanResult, setScanResult] = useState('')
-  const [scanStatus, setScanStatus] = useState('Upload an image to scan if BarcodeDetector is supported.')
-
-  useEffect(() => {
-    if (!canvasRef.current) return
-    void (async () => {
-      const { default: QRCode } = await import('qrcode')
-      await QRCode.toCanvas(canvasRef.current, qrValue || ' ', {
-        width: 220,
-        margin: 2,
-        color: {
-          dark: '#f8fafc',
-          light: '#020617',
-        },
-      })
-    })()
-  }, [qrValue])
-
-  const handleScanFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const Detector = (window as Window & { BarcodeDetector?: new (options?: { formats?: string[] }) => { detect: (input: ImageBitmap) => Promise<Array<{ rawValue?: string }>> } }).BarcodeDetector
-    if (!Detector) {
-      setScanStatus('BarcodeDetector is not available in this browser yet.')
-      return
-    }
-
-    const bitmap = await createImageBitmap(file)
-    const detector = new Detector({ formats: ['qr_code'] })
-    const detected = await detector.detect(bitmap)
-    const rawValue = detected[0]?.rawValue ?? ''
-    setScanResult(rawValue)
-    setScanStatus(rawValue ? 'QR detected from the uploaded image.' : 'No QR code found in that image.')
-  }
-
-  return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
-      <Panel title="QR Forge" subtitle="Generate a shareable QR code entirely offline.">
-        <FormTextArea rows={4} value={qrValue} onChange={(event) => setQrValue(event.target.value)} />
-        <div className="mt-4 flex flex-col items-center gap-4 rounded-[24px] border border-slate-500/15 bg-white/80 dark:bg-slate-950/80 p-4">
-          <canvas ref={canvasRef} className="rounded-2xl" />
-          <ActionButton
-            onClick={() => {
-              const dataUrl = canvasRef.current?.toDataURL('image/png')
-              if (!dataUrl) return
-              const link = document.createElement('a')
-              link.href = dataUrl
-              link.download = 'purehub-qr.png'
-              link.click()
-            }}
-          >
-            Download PNG
-          </ActionButton>
-        </div>
-      </Panel>
-
-      <Panel title="QR Scan" subtitle="Uses the browser BarcodeDetector when available.">
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-700 dark:text-slate-300">Scan from image</span>
-          <FormInput type="file" accept="image/*" onChange={handleScanFile} />
-        </label>
-        <div className="mt-4 rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{scanStatus}</p>
-          {scanResult ? (
-            <div className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-900 dark:text-emerald-100">
-              <p className="break-all">{scanResult}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <ActionButton tone="muted" onClick={() => void navigator.clipboard.writeText(scanResult)}>Copy</ActionButton>
-                {/^https?:\/\//i.test(scanResult) ? (
-                  <ActionButton onClick={() => window.open(scanResult, '_blank', 'noopener,noreferrer')}>Open link</ActionButton>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </Panel>
-    </div>
   )
 }
 
@@ -544,99 +445,6 @@ function ZenHabitSurface() {
             </div>
           )
         })}
-      </div>
-    </Panel>
-  )
-}
-
-function ZenPomodoroSurface() {
-  const [minutes, setMinutes] = useState(25)
-  const [remaining, setRemaining] = useState(minutes * 60)
-  const [running, setRunning] = useState(false)
-  const progress = minutes > 0 ? 1 - remaining / (minutes * 60) : 0
-
-  useEffect(() => {
-    setRemaining(minutes * 60)
-  }, [minutes])
-
-  useEffect(() => {
-    if (!running) return
-    const timer = window.setInterval(() => {
-      setRemaining((value) => {
-        if (value <= 1) {
-          window.clearInterval(timer)
-          setRunning(false)
-          return 0
-        }
-        return value - 1
-      })
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [running])
-
-  return (
-    <Panel title="Zen Pomodoro" subtitle="A clean focus loop that runs fully offline.">
-      <div className="flex flex-wrap gap-2">
-        {[15, 25, 50].map((preset) => (
-          <ActionButton key={preset} tone={minutes === preset ? 'primary' : 'muted'} onClick={() => setMinutes(preset)}>
-            {preset} min
-          </ActionButton>
-        ))}
-      </div>
-      <div className="mt-6 flex flex-col items-center text-center">
-        <div className="grid size-64 place-items-center rounded-full p-3" style={{ background: `conic-gradient(#10b981 ${progress * 360}deg, rgba(148,163,184,.14) 0deg)` }}>
-          <div className="grid size-full place-items-center rounded-full bg-white dark:bg-[#131b26]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">{running ? 'Focus session' : remaining === 0 ? 'Session complete' : 'Ready'}</p>
-              <p className="mt-2 text-5xl font-bold tracking-tight text-slate-950 dark:text-white">{formatDuration(remaining)}</p>
-            </div>
-          </div>
-        </div>
-        <div className="mt-5 flex justify-center gap-2">
-          <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Pause' : 'Start'}</ActionButton>
-          <ActionButton tone="muted" onClick={() => { setRunning(false); setRemaining(minutes * 60) }}>Reset</ActionButton>
-        </div>
-      </div>
-    </Panel>
-  )
-}
-
-function ZenBreathSurface() {
-  const [phaseIndex, setPhaseIndex] = useState(0)
-  const [running, setRunning] = useState(false)
-  const [pattern, setPattern] = useState<'calm' | 'box' | '478'>('calm')
-  const phases = BREATH_PATTERNS[pattern]
-
-  useEffect(() => {
-    if (!running) return
-    const timer = window.setTimeout(() => {
-      setPhaseIndex((value) => (value + 1) % phases.length)
-    }, phases[phaseIndex].duration)
-    return () => window.clearTimeout(timer)
-  }, [phaseIndex, phases, running])
-
-  const phase = phases[phaseIndex]
-
-  return (
-    <Panel title="Zen Breath" subtitle="A gentle breathing ritual with a large animated focus orb.">
-      <div className="flex flex-wrap gap-2">
-        {([['calm', 'Calm 4–6'], ['box', 'Box 4–4–4–4'], ['478', 'Relax 4–7–8']] as const).map(([id, label]) => (
-          <ActionButton key={id} tone={pattern === id ? 'primary' : 'muted'} onClick={() => { setPattern(id); setPhaseIndex(0) }}>{label}</ActionButton>
-        ))}
-      </div>
-      <div className="flex flex-col items-center gap-6 py-4">
-        <div className="relative flex size-64 items-center justify-center">
-          <div
-            className="absolute rounded-full bg-emerald-400/15 shadow-[0_0_80px_rgba(52,211,153,0.35)] transition-transform duration-[4000ms]"
-            style={{ width: '12rem', height: '12rem', transform: `scale(${phase.scale})` }}
-          />
-          <div className="relative rounded-full border border-slate-500/20 bg-white/80 dark:bg-slate-950/80 px-8 py-6 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">{phase.label}</p>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{Math.round(phase.duration / 1000)} sec</p>
-          </div>
-        </div>
-        <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Pause session' : 'Start breathing'}</ActionButton>
-        <p className="text-center text-xs leading-5 text-slate-500">Breathe comfortably and stop if you feel dizzy or unwell.</p>
       </div>
     </Panel>
   )
@@ -1345,12 +1153,6 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">{value}</p>
     </div>
   )
-}
-
-function formatDuration(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 function calculateStreak(days: string[]) {

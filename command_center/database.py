@@ -1399,6 +1399,16 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
         for miniapp_id, values in sorted(tools.items(), key=lambda item: (-item[1]["open"], item[0]))
         if miniapp_id in FLAGSHIP_MINIAPP_IDS
     ]
+    flagship_start_day = (utcnow() - timedelta(days=13)).date().isoformat()
+    flagship_window = {
+        miniapp_id: {item: 0 for item in PUBLIC_MINIAPP_EVENTS}
+        for miniapp_id in ("qr-studio", "zen-pomodoro", "zen-breath")
+    }
+    for row in rows:
+        miniapp_id = str(row.get("miniapp_id", ""))
+        event = str(row.get("event", ""))
+        if miniapp_id in flagship_window and event in flagship_window[miniapp_id] and str(row.get("day", "")) >= flagship_start_day:
+            flagship_window[miniapp_id][event] += max(0, int(row.get("count", 0) or 0))
     return {
         "days": safe_days,
         "totals": totals,
@@ -1417,6 +1427,12 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
             for source, visits in sorted(sources.items(), key=lambda item: (-item[1], item[0]))[:5]
         ],
         "flagship": flagship,
+        "flagship_monitor": {
+            "days": 14,
+            "start_day": flagship_start_day,
+            "tools": [{"miniapp_id": miniapp_id, **values} for miniapp_id, values in flagship_window.items()],
+            "selection_rule": "Highest useful-use score: opens + 3x helpful + 2x shares after 14 days.",
+        },
     }
 
 

@@ -10,6 +10,26 @@
   "theme_color": "#0f172a",
   "lang": "en",
   "categories": ["productivity", "utilities", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "QR Studio",
+      "short_name": "QR Studio",
+      "description": "Scan and create QR codes privately",
+      "url": "/en/qr-studio?source=pwa-shortcut"
+    },
+    {
+      "name": "Zen Pomodoro",
+      "short_name": "Pomodoro",
+      "description": "Start an offline focus timer",
+      "url": "/en/zen-pomodoro?source=pwa-shortcut"
+    },
+    {
+      "name": "Zen Breath",
+      "short_name": "Breath",
+      "description": "Open the private breathing guide",
+      "url": "/en/zen-breath?source=pwa-shortcut"
+    }
+  ],
   "icons": [
     {
       "src": "/favicon-512.png",

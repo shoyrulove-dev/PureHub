@@ -7,6 +7,8 @@ import { normalizeLocale } from '../i18n/locales'
 import { buildTabPath } from '../i18n/routing'
 import { rememberRecentTool, useToolPreferences } from '../lib/preferences'
 import { MiniAppEngagement } from '../components/mini-apps/MiniAppEngagement'
+import { MiniAppErrorBoundary } from '../components/mini-apps/MiniAppErrorBoundary'
+import { getMiniAppRuntime } from '../features/miniapps/runtime'
 
 const MiniAppSurface = lazy(() =>
   import('../components/mini-apps/MiniAppSurface').then((module) => ({
@@ -25,6 +27,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const normalizedLocale = normalizeLocale(lang)
   const { favorites, toggleFavorite } = useToolPreferences()
   const favorite = favorites.includes(miniApp.id)
+  const runtime = getMiniAppRuntime(miniApp.id)
   const capabilityLabel = miniApp.id === 'community-pro-unlock'
     ? 'Community online'
     : miniApp.id === 'ocr-text'
@@ -67,9 +70,11 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
         ))}
       </div>
 
-      <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>
-        <MiniAppSurface miniAppId={miniApp.id} />
-      </Suspense>
+      <MiniAppErrorBoundary key={miniApp.id} appId={miniApp.id}>
+        <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>
+          <MiniAppSurface miniAppId={miniApp.id} />
+        </Suspense>
+      </MiniAppErrorBoundary>
 
       <MiniAppEngagement miniAppId={miniApp.id} title={t(miniApp.titleKey)} />
 
@@ -88,6 +93,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
             {t('app.browseTab')}
           </Link>
         </div>
+        <p className="mt-3 text-xs text-slate-400">Isolated storage: {runtime.storageNamespace} · {runtime.isolation === 'lazy' ? 'On-demand module' : 'Shared lightweight module'}</p>
       </div>
     </section>
   )

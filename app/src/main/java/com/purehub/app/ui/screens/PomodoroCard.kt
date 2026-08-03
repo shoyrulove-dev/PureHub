@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -73,6 +74,11 @@ fun PomodoroCard(
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.SemiBold,
             )
+            CircularProgressIndicator(
+                progress = { 1f - uiState.progress.coerceIn(0f, 1f) },
+                modifier = Modifier.padding(vertical = 4.dp),
+                strokeWidth = 8.dp,
+            )
             LinearProgressIndicator(
                 progress = { uiState.progress.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),
@@ -115,6 +121,11 @@ fun PomodoroCard(
                 text = uiState.note,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "This week: ${uiState.weeklySessions} sessions · ${uiState.weeklyMinutes} focused minutes",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }

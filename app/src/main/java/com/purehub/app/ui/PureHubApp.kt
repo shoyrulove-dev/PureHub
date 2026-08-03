@@ -86,7 +86,7 @@ import com.purehub.app.ui.screens.ZenTimeScreen
 private const val MINI_APP_ROUTE_PREFIX = "mini_app"
 
 @Composable
-fun PureHubApp() {
+fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry.value?.destination
@@ -140,6 +140,7 @@ fun PureHubApp() {
                 navController = navController,
                 onOpenMiniApp = { navController.navigate(miniAppRoute(it)) },
                 onOpenHelp = { navController.navigate(Help.route) },
+                initialMiniAppId = initialMiniAppId,
             )
         }
     }
@@ -151,10 +152,11 @@ private fun PureHubNavHost(
     navController: NavHostController,
     onOpenMiniApp: (MiniAppId) -> Unit,
     onOpenHelp: () -> Unit,
+    initialMiniAppId: MiniAppId? = null,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Home.route,
+        startDestination = initialMiniAppId?.let(::miniAppRoute) ?: Home.route,
     ) {
         composable(Home.route) {
             HomeScreen(

@@ -2,6 +2,11 @@ package com.purehub.app.ui.screens
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
+import android.net.Uri
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -10,6 +15,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,8 +52,10 @@ fun QrStudioScreen(
     onRequestCameraPermission: () -> Unit,
     innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    val context = LocalContext.current
+    val scanPreferences = remember { context.getSharedPreferences("purehub.qr-studio.v1", 0) }
     var qrText by rememberSaveable { mutableStateOf("https://example.com/purehub") }
-    var latestScan by rememberSaveable { mutableStateOf("No code scanned yet") }
+    var latestScan by rememberSaveable { mutableStateOf(scanPreferences.getString("latest_scan", null) ?: "No code scanned yet") }
     val qrBitmap = remember(qrText) { com.purehub.app.feature.qr.QrBitmapGenerator.generate(qrText) }
 
     Column(
@@ -98,12 +107,36 @@ fun QrStudioScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (latestScan != "No code scanned yet") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = {
+                            val clipboard = context.getSystemService(ClipboardManager::class.java)
+                            clipboard.setPrimaryClip(ClipData.newPlainText("QR result", latestScan))
+                        }) { Text("Copy") }
+                        if (latestScan.startsWith("https://") || latestScan.startsWith("http://")) {
+                            Button(onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(latestScan)))
+                            }) { Text("Open") }
+                        }
+                        Button(onClick = {
+                            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, latestScan)
+                            }, "Share QR result"))
+                        }) { Text("Share") }
+                    }
+                }
                 if (hasCameraPermission) {
                     QrCameraPreview(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(280.dp),
-                        onCodeDetected = { latestScan = it },
+                        onCodeDetected = {
+                            if (it != latestScan) {
+                                latestScan = it
+                                scanPreferences.edit().putString("latest_scan", it).apply()
+                            }
+                        },
                     )
                 } else {
                     Button(onClick = onRequestCameraPermission) {
@@ -122,26 +155,43 @@ private fun QrCameraPreview(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val barcodeScanner = remember { BarcodeScanning.getClient() }
+    var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    var torchEnabled by rememberSaveable { mutableStateOf(false) }
     val previewView = remember {
         PreviewView(context).apply {
             scaleType = PreviewView.ScaleType.FILL_CENTER
         }
     }
 
-    AndroidView(
-        factory = { previewView },
-        modifier = modifier,
-    )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        AndroidView(factory = { previewView }, modifier = modifier)
+        if (camera?.cameraInfo?.hasFlashUnit() == true) {
+            Button(onClick = {
+                torchEnabled = !torchEnabled
+                camera?.cameraControl?.enableTorch(torchEnabled)
+            }) { Text(if (torchEnabled) "Torch off" else "Torch on") }
+        }
+    }
 
     LaunchedEffect(previewView) {
-        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
-        bindQrCamera(
+        val provider = ProcessCameraProvider.getInstance(context).get()
+        cameraProvider = provider
+        camera = bindQrCamera(
             context = context,
             previewView = previewView,
-            cameraProvider = cameraProvider,
+            cameraProvider = provider,
             lifecycleOwner = lifecycleOwner,
             onCodeDetected = onCodeDetected,
+            scanner = barcodeScanner,
         )
+    }
+    DisposableEffect(lifecycleOwner) {
+        onDispose {
+            cameraProvider?.unbindAll()
+            barcodeScanner.close()
+        }
     }
 }
 
@@ -152,12 +202,12 @@ private fun bindQrCamera(
     cameraProvider: ProcessCameraProvider,
     lifecycleOwner: androidx.lifecycle.LifecycleOwner,
     onCodeDetected: (String) -> Unit,
-) {
+    scanner: com.google.mlkit.vision.barcode.BarcodeScanner,
+): Camera {
     val preview = Preview.Builder().build().also {
         it.surfaceProvider = previewView.surfaceProvider
     }
 
-    val barcodeScanner = BarcodeScanning.getClient()
     val analyzer = ImageAnalysis.Builder()
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         .build()
@@ -166,13 +216,13 @@ private fun bindQrCamera(
                 processQrFrame(
                     imageProxy = imageProxy,
                     onCodeDetected = onCodeDetected,
-                    scanner = barcodeScanner,
+                    scanner = scanner,
                 )
             }
         }
 
     cameraProvider.unbindAll()
-    cameraProvider.bindToLifecycle(
+    return cameraProvider.bindToLifecycle(
         lifecycleOwner,
         CameraSelector.DEFAULT_BACK_CAMERA,
         preview,
