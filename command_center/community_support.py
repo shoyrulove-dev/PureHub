@@ -180,12 +180,14 @@ def generate_support_drafts(limit: int = 20) -> dict[str, int]:
     with ThreadPoolExecutor(max_workers=min(4, max(1, len(rows)))) as executor:
         analyses = list(executor.map(_analyze_message, rows))
     for row, analysis in zip(rows, analyses):
-        requires_reply = analysis["requires_reply"] and analysis["category"] not in {"praise", "spam"}
+        asks_question = _looks_like_question(str(row.get("content") or ""))
+        requires_reply = analysis["category"] != "spam" and (analysis["requires_reply"] or asks_question)
+        category = "question" if asks_question and analysis["category"] == "praise" else analysis["category"]
         status = "draft_ready" if requires_reply else "ignored"
         update_support_message(
             row["id"],
             {
-                "category": analysis["category"],
+                "category": category,
                 "priority": analysis["priority"],
                 "language": analysis["language"],
                 "requires_reply": requires_reply,
@@ -213,11 +215,13 @@ def generate_support_draft(
         previous_draft=previous_draft.strip()[:2000],
         guidance=guidance.strip()[:500],
     )
-    requires_reply = analysis["requires_reply"] and analysis["category"] not in {"praise", "spam"}
+    asks_question = _looks_like_question(str(row.get("content") or ""))
+    requires_reply = analysis["category"] != "spam" and (analysis["requires_reply"] or asks_question)
+    category = "question" if asks_question and analysis["category"] == "praise" else analysis["category"]
     update_support_message(
         message_id,
         {
-            "category": analysis["category"],
+            "category": category,
             "priority": analysis["priority"],
             "language": analysis["language"],
             "requires_reply": requires_reply,

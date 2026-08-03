@@ -83,6 +83,29 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertEqual(update.call_args.args[1]["reply_text"], "New accurate answer")
         self.assertEqual(result["reply_text"], "New accurate answer")
 
+    @patch("command_center.community_support.update_support_message")
+    @patch("command_center.community_support._analyze_message")
+    @patch("command_center.community_support.get_support_message")
+    def test_praise_with_a_question_still_creates_review_draft(self, get_message, analyze, update) -> None:
+        row = {"id": "message-id", "content": "Well done! Did you develop all the tools?", "status": "ignored"}
+        get_message.side_effect = [row, {**row, "status": "draft_ready", "category": "question"}]
+        analyze.return_value = {
+            "category": "praise",
+            "priority": "normal",
+            "language": "en",
+            "requires_reply": False,
+            "draft": "Thank you. Yes, PureHub's tools are developed as part of this open-source project.",
+        }
+
+        result = generate_support_draft("message-id")
+
+        values = update.call_args.args[1]
+        self.assertTrue(values["requires_reply"])
+        self.assertEqual(values["category"], "question")
+        self.assertEqual(values["status"], "draft_ready")
+        self.assertTrue(values["reply_text"])
+        self.assertEqual(result["status"], "draft_ready")
+
     @patch("command_center.community_support.upsert_support_message")
     @patch("command_center.community_support.get_config_value", return_value="-1003762178712")
     def test_telegram_group_message_is_ingested(self, _config, upsert) -> None:
