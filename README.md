@@ -59,8 +59,8 @@ Some tools depend on device capabilities such as a camera, microphone, motion se
 <table>
   <tr>
     <td align="center"><img src="marketing/video/source/01-home.png" width="245" alt="PureHub home screen" /><br /><strong>One calm home</strong></td>
-    <td align="center"><img src="marketing/video/device-captures/raw-frames/06-qr-studio.png" width="245" alt="QR Studio on Android" /><br /><strong>QR Studio</strong></td>
-    <td align="center"><img src="marketing/video/device-captures/raw-frames/01-pomodoro.png" width="245" alt="Zen Pomodoro on Android" /><br /><strong>Zen Pomodoro</strong></td>
+    <td align="center"><img src="marketing/video/source/02-tools.png" width="245" alt="PureHub tools catalog" /><br /><strong>All tools</strong></td>
+    <td align="center"><img src="marketing/video/source/03-pomodoro.png" width="245" alt="Zen Pomodoro" /><br /><strong>Zen Pomodoro</strong></td>
   </tr>
 </table>
 
