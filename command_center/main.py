@@ -162,6 +162,7 @@ try:
     from .database import (
         get_support_message,
         get_support_metrics,
+        count_support_messages,
         delete_support_message,
         list_community_metrics,
         list_support_messages,
@@ -180,6 +181,7 @@ except ImportError:
     from database import (
         get_support_message,
         get_support_metrics,
+        count_support_messages,
         delete_support_message,
         list_community_metrics,
         list_support_messages,
@@ -394,8 +396,12 @@ def _dashboard_context(
     miniapp_tab: str,
     api_query: str,
     api_group: str,
+    support_page: int,
 ) -> dict[str, Any]:
     admin_username = str(request.session["admin_username"])
+    active_support_statuses = ("new", "draft_ready", "approved", "failed", "manual_required")
+    support_page_size = 20
+    support_page = max(1, support_page)
     common_loaders = {
         "config": list_config,
         "schema_status": get_schema_status,
@@ -406,6 +412,12 @@ def _dashboard_context(
         "stats": get_user_stats,
         "release_publications": list_release_publications,
         "support_messages": lambda: list_support_messages(limit=100),
+        "active_support_messages": lambda: list_support_messages(
+            statuses=active_support_statuses,
+            limit=support_page_size,
+            skip=(support_page - 1) * support_page_size,
+        ),
+        "active_support_count": lambda: count_support_messages(statuses=active_support_statuses),
         "support_metrics": get_support_metrics,
         "support_sync_states": list_support_sync_states,
         "community_metrics_list": list_community_metrics,
@@ -432,8 +444,17 @@ def _dashboard_context(
         loaded = {key: future.result() for key, future in futures.items()}
 
     support_messages = loaded.get("support_messages", [])
-    active_support_statuses = {"new", "draft_ready", "approved", "failed", "manual_required"}
-    active_support_messages = [item for item in support_messages if item.get("status") in active_support_statuses][:24]
+    active_support_count = int(loaded.get("active_support_count", 0))
+    support_page_count = max(1, (active_support_count + support_page_size - 1) // support_page_size)
+    if support_page > support_page_count:
+        support_page = support_page_count
+        active_support_messages = list_support_messages(
+            statuses=active_support_statuses,
+            limit=support_page_size,
+            skip=(support_page - 1) * support_page_size,
+        )
+    else:
+        active_support_messages = loaded.get("active_support_messages", [])
     support_history = [item for item in support_messages if item.get("status") in {"replied", "ignored"}][:12]
     releases = loaded["releases"]
     current_release_id = str(releases[0].get("release_id", "")) if releases else ""
@@ -516,6 +537,10 @@ def _dashboard_context(
         "reddit_publication": reddit_publication,
         "reddit_draft": parse_reddit_draft(str(reddit_publication.get("content", ""))),
         "active_support_messages": active_support_messages,
+        "support_page": support_page,
+        "support_page_count": support_page_count,
+        "active_support_count": active_support_count,
+        "support_page_size": support_page_size,
         "support_history": support_history,
         "support_metrics": loaded.get("support_metrics", {}),
         "support_sync_states": loaded.get("support_sync_states", []),
@@ -544,6 +569,7 @@ def dashboard(
     miniapp_tab: str = "",
     api_query: str = "",
     api_group: str = "",
+    support_page: int = 1,
 ) -> HTMLResponse:
     if not request.session.get("admin_username"):
         return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
@@ -560,6 +586,7 @@ def dashboard(
             miniapp_tab=miniapp_tab,
             api_query=api_query,
             api_group=api_group,
+            support_page=support_page,
         ),
     )
 
@@ -573,6 +600,7 @@ def advanced_dashboard(
     miniapp_tab: str = "",
     api_query: str = "",
     api_group: str = "",
+    support_page: int = 1,
 ) -> HTMLResponse:
     if not request.session.get("admin_username"):
         return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
@@ -589,6 +617,7 @@ def advanced_dashboard(
             miniapp_tab=miniapp_tab,
             api_query=api_query,
             api_group=api_group,
+            support_page=support_page,
         ),
     )
 
@@ -1436,6 +1465,7 @@ def support_draft_action(
     message_id: str,
     reply_text: str = Form(default=""),
     regeneration_note: str = Form(default=""),
+    return_page: int = Form(default=1),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
@@ -1456,9 +1486,14 @@ def support_draft_action(
             details={"platform": row.get("platform"), "operator_guidance": bool(regeneration_note.strip())},
         )
         message = "A new AI reply alternative is ready for review." if previous_draft else f"AI draft generated as {result.get('category', 'support')}"
-        return _redirect_with_message(message, "success", anchor="support")
+        return _redirect_with_message(message, "success", anchor="support", query={"support_page": max(1, return_page)})
     except Exception as exc:
-        return _redirect_with_message(f"AI reply generation failed: {exc}", "error", anchor="support")
+        return _redirect_with_message(
+            f"AI reply generation failed: {exc}",
+            "error",
+            anchor="support",
+            query={"support_page": max(1, return_page)},
+        )
 
 
 @admin_router.post("/support/{message_id}/review")
@@ -1467,6 +1502,7 @@ def support_review_action(
     message_id: str,
     reply_text: str = Form(default=""),
     action: str = Form(default="save"),
+    return_page: int = Form(default=1),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
@@ -1485,11 +1521,58 @@ def support_review_action(
         target_id=message_id,
         details={"platform": row.get("platform")},
     )
-    return _redirect_with_message(f"Support reply {action} completed.", "success", anchor="support")
+    return _redirect_with_message(
+        f"Support reply {action} completed.",
+        "success",
+        anchor="support",
+        query={"support_page": max(1, return_page)},
+    )
+
+
+@admin_router.post("/support/bulk-approve")
+def support_bulk_approve_action(
+    request: Request,
+    message_ids: list[str] = Form(default=[]),
+    return_page: int = Form(default=1),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    selected_ids = list(dict.fromkeys(message_ids))[:100]
+    approved_ids: list[str] = []
+    skipped = 0
+    for message_id in selected_ids:
+        row = get_support_message(message_id)
+        reply_text = str((row or {}).get("reply_text") or (row or {}).get("ai_draft") or "").strip()
+        if not row or row.get("status") not in {"draft_ready", "failed"} or not reply_text:
+            skipped += 1
+            continue
+        update_support_message(message_id, {"reply_text": reply_text, "status": "approved", "error_message": ""})
+        approved_ids.append(message_id)
+    if approved_ids:
+        record_audit_log(
+            actor=actor,
+            action="bulk_approve_support_replies",
+            target_type="support_message_batch",
+            target_id=f"page-{max(1, return_page)}",
+            details={"approved_ids": approved_ids, "approved_count": len(approved_ids), "skipped_count": skipped},
+        )
+    if not selected_ids:
+        message, message_type = "Select at least one AI draft to approve.", "info"
+    elif not approved_ids:
+        message, message_type = "No selected replies were eligible for approval.", "info"
+    else:
+        suffix = f" {skipped} ineligible item(s) skipped." if skipped else ""
+        noun = "reply" if len(approved_ids) == 1 else "replies"
+        message, message_type = f"Approved {len(approved_ids)} support {noun}.{suffix}", "success"
+    return _redirect_with_message(
+        message,
+        message_type,
+        anchor="support",
+        query={"support_page": max(1, return_page)},
+    )
 
 
 @admin_router.post("/support/{message_id}/send")
-def support_send_action(request: Request, message_id: str) -> RedirectResponse:
+def support_send_action(request: Request, message_id: str, return_page: int = Form(default=1)) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         row = send_support_reply(message_id)
@@ -1501,14 +1584,29 @@ def support_send_action(request: Request, message_id: str) -> RedirectResponse:
             details={"platform": row.get("platform"), "status": row.get("status")},
         )
         if row.get("status") == "manual_required":
-            return _redirect_with_message("DEV draft approved. Open the source comment and paste the prepared reply.", "info", anchor="support")
-        return _redirect_with_message("Support reply sent successfully.", "success", anchor="support")
+            return _redirect_with_message(
+                "DEV draft approved. Open the source comment and paste the prepared reply.",
+                "info",
+                anchor="support",
+                query={"support_page": max(1, return_page)},
+            )
+        return _redirect_with_message(
+            "Support reply sent successfully.",
+            "success",
+            anchor="support",
+            query={"support_page": max(1, return_page)},
+        )
     except Exception as exc:
-        return _redirect_with_message(f"Support reply failed: {exc}", "error", anchor="support")
+        return _redirect_with_message(
+            f"Support reply failed: {exc}",
+            "error",
+            anchor="support",
+            query={"support_page": max(1, return_page)},
+        )
 
 
 @admin_router.post("/support/{message_id}/delete")
-def support_delete_action(request: Request, message_id: str) -> RedirectResponse:
+def support_delete_action(request: Request, message_id: str, return_page: int = Form(default=1)) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
     if not row:
@@ -1522,7 +1620,12 @@ def support_delete_action(request: Request, message_id: str) -> RedirectResponse
         target_id=message_id,
         details={"platform": row.get("platform"), "status": row.get("status")},
     )
-    return _redirect_with_message("Support message deleted permanently.", "success", anchor="support")
+    return _redirect_with_message(
+        "Support message deleted permanently.",
+        "success",
+        anchor="support",
+        query={"support_page": max(1, return_page)},
+    )
 
 
 @admin_router.post("/growth/run")
@@ -2215,9 +2318,11 @@ def _redirect_with_message(
     message_type: Literal["success", "info", "error"],
     *,
     anchor: str = "",
+    query: dict[str, Any] | None = None,
 ) -> RedirectResponse:
     fragment = f"#{anchor}" if anchor else ""
-    url = f"{PUBLIC_ADMIN_PREFIX}?message={quote_plus(message)}&message_type={message_type}{fragment}"
+    extra_query = "".join(f"&{quote_plus(str(key))}={quote_plus(str(value))}" for key, value in (query or {}).items())
+    url = f"{PUBLIC_ADMIN_PREFIX}?message={quote_plus(message)}&message_type={message_type}{extra_query}{fragment}"
     return RedirectResponse(url=url, status_code=303)
 
 

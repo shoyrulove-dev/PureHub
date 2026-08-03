@@ -1730,14 +1730,36 @@ def get_support_message(message_id: str) -> dict[str, Any] | None:
     return _serialize(row) if row else None
 
 
-def list_support_messages(status: str = "", platform: str = "", limit: int = 100) -> list[dict[str, Any]]:
+def list_support_messages(
+    status: str = "",
+    platform: str = "",
+    limit: int = 100,
+    *,
+    statuses: list[str] | tuple[str, ...] | None = None,
+    skip: int = 0,
+) -> list[dict[str, Any]]:
     filters: dict[str, Any] = {}
-    if status:
+    if statuses:
+        filters["status"] = {"$in": list(statuses)}
+    elif status:
         filters["status"] = status
     if platform:
         filters["platform"] = platform
-    rows = collection("support_messages").find(filters).sort("received_at", DESCENDING).limit(limit)
+    rows = (
+        collection("support_messages")
+        .find(filters)
+        .sort("received_at", DESCENDING)
+        .skip(max(0, skip))
+        .limit(max(1, limit))
+    )
     return [_serialize(item) for item in rows]
+
+
+def count_support_messages(*, statuses: list[str] | tuple[str, ...] | None = None) -> int:
+    filters: dict[str, Any] = {}
+    if statuses:
+        filters["status"] = {"$in": list(statuses)}
+    return collection("support_messages").count_documents(filters)
 
 
 def update_support_message(message_id: str, values: dict[str, Any]) -> None:

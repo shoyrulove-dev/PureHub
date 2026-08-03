@@ -257,10 +257,21 @@
       .release-list, .queue { display: grid; gap: 0.75rem; }
       .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
       .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .support-bulkbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem; margin-top: .8rem; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: .78rem; background: #f8fafc; }
+      .support-select-all { display: inline-flex; align-items: center; gap: .5rem; color: #334155; font-size: .72rem; font-weight: 760; cursor: pointer; }
+      .support-select-all input, .support-select input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--emerald); cursor: pointer; }
+      .support-select input:disabled { cursor: not-allowed; opacity: .38; }
+      .support-bulk-actions { display: flex; align-items: center; gap: .55rem; }
+      .support-selection-count { color: var(--muted); font-size: .68rem; font-weight: 720; }
+      .support-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; margin-top: .85rem; }
+      .support-pagination .button { min-height: 2.15rem; padding: .42rem .65rem; }
+      .support-page-label { color: #475569; font-size: .7rem; font-weight: 760; }
       .support-list { display: grid; gap: 0.4rem; margin-top: 1rem; }
       .support-row { position: relative; border: 1px solid var(--line); border-radius: .78rem; background: #f8fafc; }
+      .support-row:has(.support-select input:checked) { border-color: #6ee7b7; background: #f0fdf9; box-shadow: 0 0 0 1px rgba(16,185,129,.1); }
       .support-row.urgent, .support-row.high { border-color: #fda4af; }
-      .support-row-head { display: grid; grid-template-columns: 7.5rem minmax(7rem, .8fr) minmax(12rem, 3fr) auto auto; min-height: 3.15rem; align-items: center; gap: .65rem; padding: .48rem .58rem .48rem .75rem; }
+      .support-row-head { display: grid; grid-template-columns: auto 7.5rem minmax(7rem, .8fr) minmax(12rem, 3fr) auto auto; min-height: 3.15rem; align-items: center; gap: .65rem; padding: .48rem .58rem; }
+      .support-select { display: inline-flex; align-items: center; justify-content: center; }
       .support-platform { display: flex; min-width: 0; align-items: center; gap: .45rem; color: #334155; font-size: .67rem; font-weight: 820; }
       .support-platform .platform-icon { width: 1.65rem; height: 1.65rem; border-radius: .52rem; }
       .support-author { margin: 0; font-size: 0.83rem; font-weight: 780; }
@@ -373,7 +384,7 @@
         .nav a { flex: 0 0 auto; padding: 0.58rem 0.72rem; }
         .sidebar-bottom { display: none; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .support-row-head { grid-template-columns: 6.5rem minmax(0,1fr) auto; }
+        .support-row-head { grid-template-columns: auto 6.5rem minmax(0,1fr) auto; }
         .support-row-head .support-author { display: none; }
         .support-row-head .badge { display: none; }
         .reddit-layout { grid-template-columns: 1fr; }
@@ -404,7 +415,7 @@
         .panel-head .button, .release-top .badge { margin-top: 0.7rem; }
         details.queue-item summary { align-items: flex-start; }
         .queue-label { align-items: flex-start; flex-direction: column; }
-        .support-row-head { grid-template-columns: minmax(0,1fr) auto; gap: .4rem; }
+        .support-row-head { grid-template-columns: auto minmax(0,1fr) auto; gap: .4rem; }
         .support-regenerate { grid-template-columns: 1fr; }
         .support-platform { display: none; }
       }
@@ -811,10 +822,29 @@
               <span class="sync-state {% if state.error_message %}error{% endif %}">{{ state.platform|upper }}{% if state.error_message %} error{% else %} synced{% endif %}</span>
             {% endfor %}
           </div>
+          {% if active_support_messages %}
+          <form class="support-bulkbar" id="supportBulkApproveForm" action="{{ admin_prefix }}/support/bulk-approve" method="post" onsubmit="return confirm('Approve all selected AI replies? You can still edit them before sending.');">
+            <input type="hidden" name="return_page" value="{{ support_page }}" />
+            <label class="support-select-all">
+              <input id="supportSelectAll" type="checkbox" aria-label="Select all approvable replies on this page" />
+              <span>Select all on this page</span>
+            </label>
+            <div class="support-bulk-actions">
+              <span class="support-selection-count" id="supportSelectionCount">0 selected</span>
+              <button class="button violet" id="supportBulkApproveButton" type="submit" disabled title="Approve all selected replies">
+                <svg class="icon"><use href="#i-check"/></svg><span>Approve selected</span>
+              </button>
+            </div>
+          </form>
+          {% endif %}
           <div class="support-list">
             {% for item in active_support_messages %}
               <article class="support-row {{ item.priority }}" id="supportRow{{ item.id }}">
                 <div class="support-row-head">
+                  {% set bulk_approvable = item.status in ['draft_ready', 'failed'] and (item.reply_text or item.ai_draft) %}
+                  <label class="support-select" title="{% if bulk_approvable %}Select this reply{% else %}Generate or edit a reply before approval{% endif %}">
+                    <input type="checkbox" name="message_ids" value="{{ item.id }}" form="supportBulkApproveForm" data-support-select {% if not bulk_approvable %}disabled{% endif %} aria-label="Select reply from {{ item.author_name or item.author_handle or 'community member' }}" />
+                  </label>
                   <span class="support-platform" title="{{ item.platform|upper }}">
                     <span class="platform-icon {{ item.platform }}"><svg class="icon"><use href="{% if item.platform == 'devto' %}#i-code{% elif item.platform == 'bluesky' %}#i-spark{% elif item.platform == 'pwa' %}#i-package{% else %}#i-message{% endif %}"/></svg></span>
                     {{ item.platform|upper }}
@@ -825,26 +855,27 @@
                   <div class="support-actions">
                     {% if item.source_url %}<a class="button icon-button" href="{{ item.source_url }}" target="_blank" rel="noreferrer" title="{% if item.platform == 'devto' %}Open DEV post or comment{% else %}Open source message{% endif %}" aria-label="Open source message"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
                     {% if item.status == 'new' and item.platform == 'pwa' %}
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="reply_text" value=""/><button class="button icon-button" type="submit" name="action" value="ignore" title="Mark product feedback reviewed" aria-label="Mark product feedback reviewed"><svg class="icon"><use href="#i-check"/></svg></button></form>
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="return_page" value="{{ support_page }}"/><input type="hidden" name="reply_text" value=""/><button class="button icon-button" type="submit" name="action" value="ignore" title="Mark product feedback reviewed" aria-label="Mark product feedback reviewed"><svg class="icon"><use href="#i-check"/></svg></button></form>
                     {% elif item.status == 'new' %}
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post"><button class="button violet icon-button" type="submit" title="Generate AI draft" aria-label="Generate AI draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/draft" method="post"><input type="hidden" name="return_page" value="{{ support_page }}"/><button class="button violet icon-button" type="submit" title="Generate AI draft" aria-label="Generate AI draft"><svg class="icon"><use href="#i-spark"/></svg></button></form>
                     {% endif %}
                     {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}
                       <button class="button icon-button" type="button" data-support-edit="supportEdit{{ item.id }}" title="Edit reply" aria-label="Edit reply" aria-expanded="false"><svg class="icon"><use href="#i-edit"/></svg></button>
                     {% endif %}
                     {% if item.status in ['draft_ready', 'failed'] %}
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="reply_text" value="{{ item.reply_text or item.ai_draft }}"/><button class="button violet icon-button" type="submit" name="action" value="approve" title="Approve reply" aria-label="Approve reply"><svg class="icon"><use href="#i-check"/></svg></button></form>
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post"><input type="hidden" name="return_page" value="{{ support_page }}"/><input type="hidden" name="reply_text" value="{{ item.reply_text or item.ai_draft }}"/><button class="button violet icon-button" type="submit" name="action" value="approve" title="Approve reply" aria-label="Approve reply"><svg class="icon"><use href="#i-check"/></svg></button></form>
                     {% elif item.status == 'approved' %}
-                      <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" onsubmit="return confirm('Send this approved reply on {{ item.platform }} now?');"><button class="button primary icon-button" type="submit" title="{% if item.platform == 'devto' %}Prepare DEV manual reply{% else %}Send approved reply{% endif %}" aria-label="Send approved reply"><svg class="icon"><use href="#i-send"/></svg></button></form>
+                      <form action="{{ admin_prefix }}/support/{{ item.id }}/send" method="post" onsubmit="return confirm('Send this approved reply on {{ item.platform }} now?');"><input type="hidden" name="return_page" value="{{ support_page }}"/><button class="button primary icon-button" type="submit" title="{% if item.platform == 'devto' %}Prepare DEV manual reply{% else %}Send approved reply{% endif %}" aria-label="Send approved reply"><svg class="icon"><use href="#i-send"/></svg></button></form>
                     {% elif item.status == 'manual_required' %}
                       <button class="button icon-button" type="button" data-copy-target="replyText{{ item.id }}" title="Copy reply" aria-label="Copy reply"><svg class="icon"><use href="#i-copy"/></svg></button>
                     {% endif %}
-                    <form action="{{ admin_prefix }}/support/{{ item.id }}/delete" method="post" onsubmit="return confirm('Permanently delete this support message?');"><button class="button danger icon-button" type="submit" title="Delete message" aria-label="Delete message"><svg class="icon"><use href="#i-trash"/></svg></button></form>
+                    <form action="{{ admin_prefix }}/support/{{ item.id }}/delete" method="post" onsubmit="return confirm('Permanently delete this support message?');"><input type="hidden" name="return_page" value="{{ support_page }}"/><button class="button danger icon-button" type="submit" title="Delete message" aria-label="Delete message"><svg class="icon"><use href="#i-trash"/></svg></button></form>
                   </div>
                 </div>
                 {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}
                 <div class="support-edit-panel" id="supportEdit{{ item.id }}" hidden>
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
+                    <input type="hidden" name="return_page" value="{{ support_page }}" />
                     <textarea id="replyText{{ item.id }}" name="reply_text" rows="4" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
                     <div class="support-regenerate">
                       <input name="regeneration_note" maxlength="500" placeholder="What should AI correct? e.g. answer more directly and do not claim this feature is available" aria-label="Instructions for a different AI reply" />
@@ -865,6 +896,13 @@
               <div class="release-card"><p class="release-title" style="display:flex;align-items:center;gap:.5rem"><svg class="icon accent-emerald"><use href="#i-check"/></svg>Inbox clear</p><p class="release-summary">Nothing needs your attention. Channel monitors are ready.</p></div>
             {% endfor %}
           </div>
+          {% if support_page_count > 1 %}
+          <nav class="support-pagination" aria-label="Support inbox pages">
+            {% if support_page > 1 %}<a class="button icon-button" href="?support_page={{ support_page - 1 }}#support" title="Previous page" aria-label="Previous support page"><svg class="icon"><use href="#i-chevron"/></svg></a>{% endif %}
+            <span class="support-page-label">Page {{ support_page }} of {{ support_page_count }} · showing {{ ((support_page - 1) * support_page_size) + 1 }}–{{ [support_page * support_page_size, active_support_count]|min }} of {{ active_support_count }}</span>
+            {% if support_page < support_page_count %}<a class="button icon-button" href="?support_page={{ support_page + 1 }}#support" title="Next page" aria-label="Next support page"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-chevron"/></svg></a>{% endif %}
+          </nav>
+          {% endif %}
         </section>
 
         {% if support_history %}
@@ -1041,6 +1079,26 @@
             if (!panel.hidden) panel.querySelector("textarea")?.focus();
           });
         });
+        const supportSelectAll = document.getElementById("supportSelectAll");
+        const supportSelections = [...document.querySelectorAll("[data-support-select]")].filter((input) => !input.disabled);
+        const supportSelectionCount = document.getElementById("supportSelectionCount");
+        const supportBulkApproveButton = document.getElementById("supportBulkApproveButton");
+        const updateSupportSelection = () => {
+          const selected = supportSelections.filter((input) => input.checked).length;
+          if (supportSelectionCount) supportSelectionCount.textContent = `${selected} selected`;
+          if (supportBulkApproveButton) supportBulkApproveButton.disabled = selected === 0;
+          if (supportSelectAll) {
+            supportSelectAll.checked = supportSelections.length > 0 && selected === supportSelections.length;
+            supportSelectAll.indeterminate = selected > 0 && selected < supportSelections.length;
+            supportSelectAll.disabled = supportSelections.length === 0;
+          }
+        };
+        supportSelectAll?.addEventListener("change", () => {
+          supportSelections.forEach((input) => { input.checked = supportSelectAll.checked; });
+          updateSupportSelection();
+        });
+        supportSelections.forEach((input) => input.addEventListener("change", updateSupportSelection));
+        updateSupportSelection();
         document.querySelectorAll("[data-youtube-upload]").forEach((input) => {
           input.addEventListener("change", async () => {
             const file = input.files?.[0];

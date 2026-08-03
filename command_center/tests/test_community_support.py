@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from command_center.community_support import _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
-from command_center.database import delete_support_message, upsert_support_message
+from command_center.database import delete_support_message, list_support_messages, upsert_support_message
+from command_center.main import support_bulk_approve_action
 
 
 class CommunitySupportTests(unittest.TestCase):
@@ -50,6 +51,47 @@ class CommunitySupportTests(unittest.TestCase):
     def test_delete_support_message_rejects_invalid_id(self, collection) -> None:
         self.assertFalse(delete_support_message("not-an-object-id"))
         collection.assert_not_called()
+
+    @patch("command_center.database.collection")
+    def test_support_pagination_filters_active_statuses_and_skips_previous_pages(self, collection) -> None:
+        cursor = MagicMock()
+        cursor.sort.return_value = cursor
+        cursor.skip.return_value = cursor
+        cursor.limit.return_value = [{"status": "draft_ready", "content": "Question"}]
+        support_messages = MagicMock()
+        support_messages.find.return_value = cursor
+        collection.return_value = support_messages
+
+        rows = list_support_messages(statuses=("new", "draft_ready"), limit=20, skip=20)
+
+        support_messages.find.assert_called_once_with({"status": {"$in": ["new", "draft_ready"]}})
+        cursor.skip.assert_called_once_with(20)
+        cursor.limit.assert_called_once_with(20)
+        self.assertEqual(rows[0]["content"], "Question")
+
+    @patch("command_center.main.record_audit_log")
+    @patch("command_center.main.update_support_message")
+    @patch("command_center.main.get_support_message")
+    @patch("command_center.main.require_admin_role", return_value={"username": "admin"})
+    def test_bulk_approve_only_updates_eligible_drafts(self, _role, get_message, update, audit) -> None:
+        get_message.side_effect = [
+            {"id": "eligible", "status": "draft_ready", "ai_draft": "A useful answer."},
+            {"id": "already-approved", "status": "approved", "reply_text": "Already approved."},
+        ]
+
+        response = support_bulk_approve_action(
+            MagicMock(),
+            message_ids=["eligible", "already-approved"],
+            return_page=2,
+        )
+
+        update.assert_called_once_with(
+            "eligible",
+            {"reply_text": "A useful answer.", "status": "approved", "error_message": ""},
+        )
+        audit.assert_called_once()
+        self.assertEqual(response.status_code, 303)
+        self.assertIn("support_page=2", response.headers["location"])
 
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")
