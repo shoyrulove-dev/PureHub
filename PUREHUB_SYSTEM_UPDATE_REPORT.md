@@ -12,6 +12,7 @@ Date: 2026-08-02
 - Connected PWA install acceptance and signed APK clicks to the same aggregate funnel, while respecting Do Not Track and the existing anonymous-metrics preference.
 - TikTok Sandbox Direct Post was validated with a private post. The Production app configuration and two end-to-end review videos have been submitted and are currently in review.
 - TikTok review recordings remain local and are excluded from Git because they are temporary platform-review artifacts.
+- Growth Autopilot now treats an active scheduled YouTube queue as complete coverage. It no longer creates duplicate script-only upload tasks while future Shorts are already scheduled, and Admin prioritizes the next automatic publish time over optional upload drafts.
 
 ## August community command center
 

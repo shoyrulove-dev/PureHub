@@ -22,7 +22,13 @@ class CommunityGoalTests(unittest.TestCase):
                     "status": "scheduled",
                     "scheduled_at": "2026-08-04T12:30:00+00:00",
                     "metadata": {"metrics": {"views": 30}},
-                }
+                },
+                {
+                    "channel": "youtube",
+                    "status": "ready_upload",
+                    "scheduled_at": "2026-08-02T03:00:00+00:00",
+                    "metadata": {},
+                },
             ],
             support_messages=[
                 {"category": "bug", "received_at": "2026-08-02T01:00:00+00:00"},
@@ -41,6 +47,9 @@ class CommunityGoalTests(unittest.TestCase):
         self.assertEqual(goal["campaign_day"], 1)
         self.assertEqual(goal["weeks"][0]["status"], "active")
         self.assertIn("Reddit API approval pending", " ".join(item["label"] for item in goal["actions"]))
+        action_labels = " ".join(item["label"] for item in goal["actions"])
+        self.assertIn("Next Short scheduled", action_labels)
+        self.assertNotIn("Upload 1 prepared", action_labels)
 
 
 if __name__ == "__main__":

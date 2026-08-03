@@ -157,11 +157,11 @@ def build_august_growth_goal(
         actions.append({"tone": "urgent", "label": f"Review {open_support} community repl{'y' if open_support == 1 else 'ies'}", "href": "#support"})
     else:
         actions.append({"tone": "done", "label": "Support inbox is clear", "href": "#support"})
-    if ready_video_uploads:
-        actions.append({"tone": "attention", "label": f"Upload {ready_video_uploads} prepared YouTube demo(s)", "href": "#growth-autopilot"})
-    elif next_youtube:
+    if next_youtube:
         publish_time = next_youtube[0].astimezone(local_zone).strftime("%d %b at %H:%M")
         actions.append({"tone": "done", "label": f"Next Short scheduled {publish_time}", "href": "#growth-autopilot"})
+    elif ready_video_uploads:
+        actions.append({"tone": "attention", "label": f"Upload {ready_video_uploads} prepared YouTube demo(s)", "href": "#growth-autopilot"})
     if not reddit_connected:
         actions.append({"tone": "muted", "label": "Reddit API approval pending - drafts stay manual", "href": "#reddit-review"})
     actions.append({"tone": "info", "label": f"{published_content} campaign item(s) published or scheduled", "href": "#growth-autopilot"})

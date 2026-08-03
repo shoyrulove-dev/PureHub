@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from command_center.growth_automation import TOPICS, _channels_for_day, _fallback_content
+from command_center.growth_automation import TOPICS, _channels_for_day, _fallback_content, _has_upcoming_youtube_queue
 from command_center.youtube_connector import _parse_upload_copy, _scheduled_publish_at
 
 
@@ -17,6 +17,13 @@ class GrowthAutomationTest(unittest.TestCase):
     def test_future_youtube_schedule_is_accepted(self) -> None:
         future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
         self.assertIsNotNone(_scheduled_publish_at({"scheduled_at": future}))
+
+    def test_scheduled_queue_suppresses_duplicate_youtube_packages(self) -> None:
+        future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+        past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        self.assertTrue(_has_upcoming_youtube_queue([{"channel": "youtube", "status": "scheduled", "scheduled_at": future}]))
+        self.assertFalse(_has_upcoming_youtube_queue([{"channel": "youtube", "status": "published", "scheduled_at": future}]))
+        self.assertFalse(_has_upcoming_youtube_queue([{"channel": "youtube", "status": "scheduled", "scheduled_at": past}]))
 
     def test_campaign_has_thirty_distinct_topics(self) -> None:
         self.assertEqual(len(TOPICS), 30)

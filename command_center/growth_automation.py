@@ -90,6 +90,25 @@ def _channels_for_day(day_number: int) -> list[str]:
     return channels
 
 
+def _has_upcoming_youtube_queue(posts: list[dict[str, Any]], now: datetime | None = None) -> bool:
+    reference = now or datetime.now(timezone.utc)
+    for item in posts:
+        if item.get("channel") != "youtube" or item.get("status") != "scheduled":
+            continue
+        raw = item.get("scheduled_at")
+        if not raw:
+            continue
+        try:
+            scheduled_at = raw if isinstance(raw, datetime) else datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if scheduled_at.tzinfo is None:
+            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+        if scheduled_at > reference:
+            return True
+    return False
+
+
 def _campaign_url(channel: str, path: str = "/en/tools") -> str:
     site = get_config_value("site_url", "https://hub.blissbiovn.com").rstrip("/")
     return f"{site}{path}?utm_source={channel}&utm_campaign={CAMPAIGN_ID}"
@@ -276,13 +295,16 @@ def run_growth_automation(
     cycle_day = ((day_number - 1) % 30) + 1
     topic = TOPICS[cycle_day - 1]
     channels = _channels_for_day(cycle_day)
+    existing_posts = list_growth_posts(500)
+    if "youtube" in channels and _has_upcoming_youtube_queue(existing_posts):
+        channels.remove("youtube")
     bundle = _generate_bundle(topic, cycle_day, channels)
 
     rows: list[dict[str, Any]] = []
     created = 0
     existing_keys = {
         (int(item.get("day_number", 0)), str(item.get("channel", "")))
-        for item in list_growth_posts(500)
+        for item in existing_posts
         if item.get("campaign_id") == CAMPAIGN_ID
     }
     for channel in channels:

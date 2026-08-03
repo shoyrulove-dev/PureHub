@@ -82,6 +82,7 @@ Product Signals uses anonymous daily aggregate counters only. It tracks which mi
 - Community replies remain draft-and-approve to prevent incorrect, unsafe, or off-brand responses.
 - Reddit requires a human review and explicit Publish click because community rules vary by subreddit; OAuth handles the actual posting and records the permalink.
 - YouTube rendering and upload run locally from the connected Android device; publishing is unattended because YouTube stores the private `publishAt` schedule.
+- When future YouTube Shorts are already scheduled, Growth Autopilot suppresses extra script-only YouTube packages. Admin shows the next automatic publish time instead of asking for a duplicate manual upload.
 
 ## Hosting decision
 
