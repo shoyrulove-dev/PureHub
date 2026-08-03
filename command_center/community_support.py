@@ -100,7 +100,11 @@ def ingest_telegram_update(payload: dict[str, Any]) -> dict[str, Any] | None:
     return row
 
 
-def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
+def _analyze_message(
+    row: dict[str, Any],
+    previous_draft: str = "",
+    guidance: str = "",
+) -> dict[str, Any]:
     is_opportunity = str((row.get("reply_context") or {}).get("source_kind", "")) == "discovery"
     fallback = {
         "category": "opportunity" if is_opportunity else "question" if "?" in row.get("content", "") else "feedback",
@@ -124,7 +128,11 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
                         "passwords or API keys, and request app version/device details for bugs. For discovery opportunities, answer "
                         "the person's actual question first, disclose 'I build PureHub' before mentioning it, mention PureHub only when "
                         "it genuinely fits, include no link unless the person asked for recommendations, and never sound like an ad. "
-                        "Use no more than two relevant emoji."
+                        "Use no more than two relevant emoji. Answer the actual question before discussing PureHub. Base the reply "
+                        "only on the supplied message and context; do not assume a feature, fix, release status, or platform capability. "
+                        "If the facts are insufficient, say what is uncertain and ask one focused follow-up question. When a previous "
+                        "draft is supplied, create a materially different and more accurate alternative rather than merely paraphrasing it, "
+                        "and follow the operator's requested correction."
                     ),
                 },
                 {
@@ -134,12 +142,15 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
                             "platform": row.get("platform"),
                             "author": row.get("author_handle") or row.get("author_name"),
                             "message": row.get("content"),
+                            "task": "write_alternative_reply" if previous_draft else "write_first_reply",
+                            "previous_draft": previous_draft,
+                            "operator_correction": guidance,
                         },
                         ensure_ascii=False,
                     ),
                 },
             ],
-            temperature=0.2,
+            temperature=0.55 if previous_draft else 0.2,
         )
         raw = (response.choices[0].message.content or "").strip().removeprefix("```json").removesuffix("```").strip()
         data = json.loads(raw)
@@ -157,6 +168,8 @@ def _analyze_message(row: dict[str, Any]) -> dict[str, Any]:
             "draft": str(data.get("draft", fallback["draft"])).strip(),
         }
     except Exception:
+        if previous_draft:
+            raise
         return fallback
 
 
@@ -187,11 +200,19 @@ def generate_support_drafts(limit: int = 20) -> dict[str, int]:
     return {"generated": generated, "ignored": ignored}
 
 
-def generate_support_draft(message_id: str) -> dict[str, Any]:
+def generate_support_draft(
+    message_id: str,
+    previous_draft: str = "",
+    guidance: str = "",
+) -> dict[str, Any]:
     row = get_support_message(message_id)
     if not row:
         raise ValueError("Support message not found.")
-    analysis = _analyze_message(row)
+    analysis = _analyze_message(
+        row,
+        previous_draft=previous_draft.strip()[:2000],
+        guidance=guidance.strip()[:500],
+    )
     requires_reply = analysis["requires_reply"] and analysis["category"] not in {"praise", "spam"}
     update_support_message(
         message_id,

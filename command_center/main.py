@@ -1431,14 +1431,34 @@ def support_sync_action(request: Request) -> RedirectResponse:
 
 
 @admin_router.post("/support/{message_id}/draft")
-def support_draft_action(request: Request, message_id: str) -> RedirectResponse:
+def support_draft_action(
+    request: Request,
+    message_id: str,
+    reply_text: str = Form(default=""),
+    regeneration_note: str = Form(default=""),
+) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
     if not row:
         return _redirect_with_message("Support message not found.", "error", anchor="support")
-    result = generate_support_draft(message_id)
-    record_audit_log(actor=actor, action="generate_support_draft", target_type="support_message", target_id=message_id)
-    return _redirect_with_message(f"AI draft generated as {result.get('category', 'support')}", "success", anchor="support")
+    previous_draft = reply_text.strip() or str(row.get("reply_text") or row.get("ai_draft") or "").strip()
+    try:
+        result = generate_support_draft(
+            message_id,
+            previous_draft=previous_draft,
+            guidance=regeneration_note,
+        )
+        record_audit_log(
+            actor=actor,
+            action="regenerate_support_draft" if previous_draft else "generate_support_draft",
+            target_type="support_message",
+            target_id=message_id,
+            details={"platform": row.get("platform"), "operator_guidance": bool(regeneration_note.strip())},
+        )
+        message = "A new AI reply alternative is ready for review." if previous_draft else f"AI draft generated as {result.get('category', 'support')}"
+        return _redirect_with_message(message, "success", anchor="support")
+    except Exception as exc:
+        return _redirect_with_message(f"AI reply generation failed: {exc}", "error", anchor="support")
 
 
 @admin_router.post("/support/{message_id}/review")

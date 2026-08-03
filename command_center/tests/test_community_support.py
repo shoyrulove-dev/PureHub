@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from command_center.community_support import _looks_like_question, _plain_text, ingest_telegram_update
+from command_center.community_support import _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
 from command_center.database import delete_support_message, upsert_support_message
 
 
@@ -53,6 +53,35 @@ class CommunitySupportTests(unittest.TestCase):
 
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")
+
+    @patch("command_center.community_support.update_support_message")
+    @patch("command_center.community_support._analyze_message")
+    @patch("command_center.community_support.get_support_message")
+    def test_regenerate_support_draft_uses_operator_correction(self, get_message, analyze, update) -> None:
+        row = {"id": "message-id", "content": "Does this work offline?", "status": "draft_ready"}
+        get_message.side_effect = [row, {**row, "reply_text": "New accurate answer"}]
+        analyze.return_value = {
+            "category": "question",
+            "priority": "normal",
+            "language": "en",
+            "requires_reply": True,
+            "draft": "New accurate answer",
+        }
+
+        result = generate_support_draft(
+            "message-id",
+            previous_draft="Old vague answer",
+            guidance="Explain that only the Android app is fully offline.",
+        )
+
+        analyze.assert_called_once_with(
+            row,
+            previous_draft="Old vague answer",
+            guidance="Explain that only the Android app is fully offline.",
+        )
+        self.assertEqual(update.call_args.args[1]["status"], "draft_ready")
+        self.assertEqual(update.call_args.args[1]["reply_text"], "New accurate answer")
+        self.assertEqual(result["reply_text"], "New accurate answer")
 
     @patch("command_center.community_support.upsert_support_message")
     @patch("command_center.community_support.get_config_value", return_value="-1003762178712")

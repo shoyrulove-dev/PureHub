@@ -274,6 +274,8 @@
       .support-edit-panel { padding: .25rem .65rem .7rem; border-top: 1px solid #e2e8f0; }
       .support-edit-panel[hidden] { display: none; }
       .support-edit-panel textarea { min-height: 6rem; margin-top: .55rem; }
+      .support-regenerate { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .55rem; align-items: center; margin-top: .55rem; }
+      .support-regenerate input { min-width: 0; }
       .support-submeta { margin: 0.28rem 0 0; color: var(--muted); font-size: 0.67rem; }
       .sync-state { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.66rem; }
       .sync-state::before { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--emerald); content: ""; }
@@ -403,6 +405,7 @@
         details.queue-item summary { align-items: flex-start; }
         .queue-label { align-items: flex-start; flex-direction: column; }
         .support-row-head { grid-template-columns: minmax(0,1fr) auto; gap: .4rem; }
+        .support-regenerate { grid-template-columns: 1fr; }
         .support-platform { display: none; }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -843,6 +846,10 @@
                 <div class="support-edit-panel" id="supportEdit{{ item.id }}" hidden>
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
                     <textarea id="replyText{{ item.id }}" name="reply_text" rows="4" aria-label="Reply draft">{{ item.reply_text or item.ai_draft }}</textarea>
+                    <div class="support-regenerate">
+                      <input name="regeneration_note" maxlength="500" placeholder="What should AI correct? e.g. answer more directly and do not claim this feature is available" aria-label="Instructions for a different AI reply" />
+                      <button class="button violet" type="submit" formaction="{{ admin_prefix }}/support/{{ item.id }}/draft" formmethod="post" title="Generate a different reply using this correction"><svg class="icon"><use href="#i-spark"/></svg><span>Try another reply</span></button>
+                    </div>
                     {% if item.error_message %}<p class="support-submeta" style="color:var(--rose)">{{ item.error_message }}</p>{% endif %}
                     <div class="row-actions">
                       <button class="button icon-button" type="submit" name="action" value="save" title="Save changes" aria-label="Save changes"><svg class="icon"><use href="#i-file"/></svg></button>
