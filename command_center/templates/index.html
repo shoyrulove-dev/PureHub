@@ -537,7 +537,8 @@
             <div class="product-signal"><span>Helpful</span><strong>{{ product_totals.get('helpful', 0) }} · {{ product_growth.get('helpful_rate', 0) }}%</strong></div>
             <div class="product-signal"><span>Shares</span><strong>{{ product_totals.get('share', 0) }}</strong></div>
             <div class="product-signal"><span>Roadmap votes</span><strong>{{ product_growth.get('roadmap_votes', 0) }}</strong></div>
-            <div class="product-signal"><span>Leading request</span><strong title="{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}">{{ roadmap_leader.title if roadmap_leader else 'No votes yet' }}</strong></div>
+            {% set has_roadmap_votes = product_growth.get('roadmap_votes', 0) > 0 %}
+            <div class="product-signal"><span>Leading request</span><strong title="{{ roadmap_leader.title if has_roadmap_votes and roadmap_leader else 'No votes yet' }}">{{ roadmap_leader.title if has_roadmap_votes and roadmap_leader else 'No votes yet' }}</strong></div>
           </div>
           <p class="panel-copy" style="margin-top:.65rem">Journey signals are anonymous daily event totals. No user ID, device ID, account, or IP address is stored.</p>
           {% set flagship_monitor = product_growth.get('flagship_monitor', {}) %}

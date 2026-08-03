@@ -30,6 +30,18 @@ CHANNELS = ("telegram", "devto", "bluesky", "mastodon", "reddit", "hackernews", 
 AUTO_CHANNELS = {"telegram", "devto", "bluesky", "mastodon"}
 
 
+def validate_social_content(content: str) -> str:
+    """Reject text that was damaged while crossing a non-UTF-8 boundary."""
+    text = (content or "").strip()
+    mojibake_markers = ("\ufffd", "\u00c2", "\u00c3", "\u00e2\u20ac", "\u00f0\u0178")
+    has_standalone_replacement = bool(re.search(r"(?m)(^|\s)\?(?:\s|$)", text))
+    if not text:
+        raise ValueError("Social content cannot be empty.")
+    if any(marker in text for marker in mojibake_markers) or "??" in text or has_standalone_replacement:
+        raise ValueError("Social content appears to contain mojibake or lost Unicode characters.")
+    return text
+
+
 def format_reddit_draft(title: str, body: str, suggested_communities: str = "") -> str:
     parts = [f"Title: {title.strip()}"]
     if suggested_communities.strip():
@@ -279,6 +291,7 @@ def generate_reply_draft(message: str, context: str = "") -> str:
 
 
 def _publish_telegram(content: str) -> tuple[str, str]:
+    content = validate_social_content(content)
     token = get_config_value("telegram_bot_token")
     chat_id = get_config_value("telegram_notify_chat_id")
     response = requests.post(
@@ -292,6 +305,7 @@ def _publish_telegram(content: str) -> tuple[str, str]:
 
 
 def _publish_devto(content: str, release: dict[str, Any]) -> tuple[str, str]:
+    content = validate_social_content(content)
     response = requests.post(
         "https://dev.to/api/articles",
         headers={
@@ -317,6 +331,7 @@ def _publish_devto(content: str, release: dict[str, Any]) -> tuple[str, str]:
 
 
 def _publish_bluesky(content: str) -> tuple[str, str]:
+    content = validate_social_content(content)
     handle = get_config_value("bluesky_handle")
     password = get_config_value("bluesky_app_password")
     session = requests.post(
@@ -350,6 +365,7 @@ def _publish_bluesky(content: str) -> tuple[str, str]:
 
 
 def _publish_mastodon(content: str) -> tuple[str, str]:
+    content = validate_social_content(content)
     base_url = get_config_value("mastodon_base_url").rstrip("/")
     response = requests.post(
         f"{base_url}/api/v1/statuses",
