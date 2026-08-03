@@ -206,6 +206,16 @@ function CompassSurface() {
           <div className="absolute inset-6 rounded-full border border-dashed border-slate-500/20" />
           <div className="absolute inset-12 rounded-full border border-slate-500/15" />
           <div
+            className="absolute inset-3 transition-transform duration-300"
+            style={{ transform: `rotate(${-heading}deg)` }}
+            aria-hidden="true"
+          >
+            <span className="absolute left-1/2 top-1 -translate-x-1/2 text-sm font-black text-rose-300">N</span>
+            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-sm font-black text-slate-200">S</span>
+            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-sm font-black text-slate-200">E</span>
+            <span className="absolute left-1 top-1/2 -translate-y-1/2 text-sm font-black text-slate-200">W</span>
+          </div>
+          <div
             className="absolute h-28 w-1 rounded-full bg-gradient-to-b from-rose-400 to-emerald-300 transition-transform duration-300"
             style={{ transform: `rotate(${heading}deg) translateY(-72px)` }}
           />
@@ -466,17 +476,30 @@ function BubbleLevelSurface() {
 
   const left = Math.max(12, Math.min(88, 50 + tilt.gamma))
   const top = Math.max(12, Math.min(88, 50 + tilt.beta))
+  const isLevel = Math.abs(tilt.beta) < 2 && Math.abs(tilt.gamma) < 2
 
   return (
     <Panel title="Bubble Level" subtitle="Quick 2D balance feedback using device orientation.">
       <div className="mx-auto flex max-w-sm flex-col items-center gap-4">
         <div className="relative aspect-square w-full rounded-[32px] border border-slate-500/20 bg-slate-500/5">
           <div className="absolute inset-[10%] rounded-[26px] border border-dashed border-slate-500/20" />
+          <div className="absolute inset-0" aria-hidden="true">
+            <span className="absolute left-[10%] top-[10%] h-px w-[56.5%] origin-left rotate-45 bg-slate-400/35" />
+            <span className="absolute right-[10%] top-[10%] h-px w-[56.5%] origin-right -rotate-45 bg-slate-400/35" />
+            <span className="absolute bottom-[10%] left-[10%] h-px w-[56.5%] origin-left -rotate-45 bg-slate-400/35" />
+            <span className="absolute bottom-[10%] right-[10%] h-px w-[56.5%] origin-right rotate-45 bg-slate-400/35" />
+            <span className={`absolute left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${isLevel ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-400/45'}`} />
+            <span className="absolute left-1/2 top-[38%] h-[24%] w-px -translate-x-1/2 bg-slate-400/45" />
+            <span className="absolute left-[38%] top-1/2 h-px w-[24%] -translate-y-1/2 bg-slate-400/45" />
+          </div>
           <div
-            className="absolute size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/20 bg-cyan-300/85 shadow-[0_0_35px_rgba(103,232,249,0.45)] transition-all duration-150"
+            className={`absolute size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border shadow-[0_0_35px_rgba(103,232,249,0.45)] transition-all duration-150 ${isLevel ? 'border-emerald-100 bg-emerald-400' : 'border-cyan-200/20 bg-cyan-300/85'}`}
             style={{ left: `${left}%`, top: `${top}%` }}
           />
         </div>
+        <p className={`rounded-full px-3 py-1 text-xs font-bold ${isLevel ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-slate-600 dark:text-slate-300'}`}>
+          {isLevel ? 'Centered · surface is level' : 'Move the bubble into the center target'}
+        </p>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Beta {tilt.beta.toFixed(1)}° · Gamma {tilt.gamma.toFixed(1)}°
         </p>
@@ -489,7 +512,8 @@ function DecibelMeterSurface() {
   const [running, setRunning] = useState(false)
   const [level, setLevel] = useState(0)
   const [peak, setPeak] = useState(0)
-  const [samples, setSamples] = useState<number[]>([])
+  const [samples, setSamples] = useState<Array<{ value: number; at: number }>>([])
+  const [averageWindow, setAverageWindow] = useState(5)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -498,6 +522,7 @@ function DecibelMeterSurface() {
     if (!running) return
 
     let animationFrame = 0
+    let lastSampleAt = 0
 
     const start = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -522,7 +547,11 @@ function DecibelMeterSurface() {
         const db = Math.max(0, Math.min(100, Math.round(20 * Math.log10(rms || 0.0001) + 100)))
         setLevel(db)
         setPeak((value) => Math.max(value, db))
-        setSamples((values) => [...values.slice(-39), db])
+        const now = Date.now()
+        if (now - lastSampleAt >= 250) {
+          lastSampleAt = now
+          setSamples((values) => [...values.filter((sample) => sample.at >= now - 60_000), { value: db, at: now }])
+        }
         animationFrame = window.requestAnimationFrame(tick)
       }
 
@@ -542,12 +571,18 @@ function DecibelMeterSurface() {
     }
   }, [running])
 
+  const averageSamples = samples.filter((sample) => sample.at >= Date.now() - averageWindow * 1000)
+  const average = averageSamples.length
+    ? Math.round(averageSamples.reduce((sum, sample) => sum + sample.value, 0) / averageSamples.length)
+    : 0
+  const chartSamples = samples.slice(-40)
+
   return (
     <Panel title="Decibel Meter" subtitle="Private microphone analysis with no uploads and no ads.">
       <div className="space-y-4">
         <div className="flex h-28 items-end gap-1 rounded-[16px] bg-slate-500/5 p-3" aria-label="Recent loudness history">
-          {samples.length ? samples.map((sample, index) => (
-            <span key={`${index}-${sample}`} className="min-w-1 flex-1 rounded-t bg-emerald-500/70 transition-all" style={{ height: `${Math.max(4, sample)}%` }} />
+          {chartSamples.length ? chartSamples.map((sample) => (
+            <span key={sample.at} className="min-w-1 flex-1 rounded-t bg-emerald-500/70 transition-all" style={{ height: `${Math.max(4, sample.value)}%` }} />
           )) : <span className="m-auto text-sm text-slate-500">Start the microphone to see a private local chart.</span>}
         </div>
         <div className="h-4 overflow-hidden rounded-full border border-slate-500/20 bg-slate-500/5">
@@ -559,6 +594,21 @@ function DecibelMeterSurface() {
             <p className="mt-1 text-sm text-slate-500">Peak ~{peak} dB · {noiseLabel(level)}</p>
           </div>
           <ActionButton onClick={() => setRunning((value) => !value)}>{running ? 'Stop mic' : 'Start mic'}</ActionButton>
+        </div>
+        <div className="rounded-[16px] border border-slate-500/15 bg-slate-500/5 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Rolling average</p>
+              <p className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">~{average} dB <span className="text-sm font-medium text-slate-500">last {averageWindow}s</span></p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[5, 10, 30, 60].map((seconds) => (
+                <ActionButton key={seconds} tone={averageWindow === seconds ? 'primary' : 'muted'} onClick={() => setAverageWindow(seconds)} className="min-h-9 px-3 py-1.5 text-xs">
+                  {seconds}s
+                </ActionButton>
+              ))}
+            </div>
+          </div>
         </div>
         <p className="rounded-[14px] bg-amber-500/10 p-3 text-xs leading-5 text-amber-800 dark:text-amber-200">
           Estimated reading only. Browser microphones are not calibrated sound meters and this result must not be used for legal or workplace safety decisions.

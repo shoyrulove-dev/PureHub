@@ -4,6 +4,14 @@ import { ActionButton, Panel } from '../MiniAppPrimitives'
 
 const STORAGE_KEY = 'purehub.zen-pomodoro.stats.v1'
 type DayStats = Record<string, { sessions: number; minutes: number }>
+type Soundscape = 'white' | 'brown' | 'rain'
+type ActiveSound = { context: AudioContext; source: AudioBufferSourceNode; gain: GainNode }
+
+const soundscapes: Array<{ id: Soundscape; label: string }> = [
+  { id: 'white', label: 'White noise' },
+  { id: 'brown', label: 'Brown noise' },
+  { id: 'rain', label: 'Soft rain' },
+]
 
 function readStats(): DayStats {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') as DayStats } catch { return {} }
@@ -20,13 +28,66 @@ export default function ZenPomodoroSurface() {
   const [running, setRunning] = useState(false)
   const [targetAt, setTargetAt] = useState<number | null>(null)
   const [stats, setStats] = useState<DayStats>(readStats)
+  const [soundscape, setSoundscape] = useState<Soundscape>('white')
+  const [volume, setVolume] = useState(0.3)
   const completedRef = useRef(false)
+  const soundRef = useRef<ActiveSound | null>(null)
   const totalSeconds = minutes * 60
   const elapsed = Math.max(0, totalSeconds - remaining)
   const progress = totalSeconds ? elapsed / totalSeconds : 0
   const week = useMemo(() => Object.values(stats).slice(-7).reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 }), [stats])
 
+  const stopSound = () => {
+    const active = soundRef.current
+    soundRef.current = null
+    if (!active) return
+    try { active.source.stop() } catch { /* source may already be stopped */ }
+    active.source.disconnect()
+    active.gain.disconnect()
+    void active.context.close()
+  }
+
+  const startSound = async (kind: Soundscape = soundscape) => {
+    stopSound()
+    const AudioContextClass = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+    const context = new AudioContextClass()
+    await context.resume()
+    const length = context.sampleRate * 2
+    const buffer = context.createBuffer(1, length, context.sampleRate)
+    const data = buffer.getChannelData(0)
+    let smoothed = 0
+    for (let index = 0; index < length; index += 1) {
+      const white = Math.random() * 2 - 1
+      if (kind === 'brown') {
+        smoothed = (smoothed + 0.02 * white) / 1.02
+        data[index] = smoothed * 3.2
+      } else if (kind === 'rain') {
+        smoothed = smoothed * 0.985 + white * 0.015
+        data[index] = white * 0.18 + smoothed * 1.6
+      } else {
+        data[index] = white * 0.72
+      }
+    }
+    const source = context.createBufferSource()
+    const gain = context.createGain()
+    source.buffer = buffer
+    source.loop = true
+    gain.gain.value = volume
+    source.connect(gain).connect(context.destination)
+    source.start()
+    soundRef.current = { context, source, gain }
+  }
+
+  useEffect(() => () => stopSound(), [])
+
+  useEffect(() => {
+    const active = soundRef.current
+    if (active) active.gain.gain.setTargetAtTime(volume, active.context.currentTime, 0.04)
+  }, [volume])
+
   const selectSession = (nextMode: 'focus' | 'break', nextMinutes: number) => {
+    stopSound()
     setMode(nextMode); setMinutes(nextMinutes); setRemaining(nextMinutes * 60); setRunning(false); setTargetAt(null); completedRef.current = false
   }
 
@@ -36,6 +97,7 @@ export default function ZenPomodoroSurface() {
       const next = Math.max(0, Math.ceil((targetAt - Date.now()) / 1000))
       setRemaining(next)
       if (next === 0) {
+        stopSound()
         setRunning(false); setTargetAt(null)
         if (mode === 'focus' && !completedRef.current) {
           completedRef.current = true
@@ -55,11 +117,13 @@ export default function ZenPomodoroSurface() {
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', update) }
   }, [mode, minutes, running, targetAt])
 
-  const toggle = () => {
+  const toggle = async () => {
     if (remaining <= 0) { setRemaining(totalSeconds); completedRef.current = false }
     if (running) {
+      stopSound()
       setRunning(false); setTargetAt(null)
     } else {
+      await startSound()
       setTargetAt(Date.now() + (remaining <= 0 ? totalSeconds : remaining) * 1000); setRunning(true)
     }
   }
@@ -77,6 +141,18 @@ export default function ZenPomodoroSurface() {
           </div>
         </div>
         <div className="mt-5 flex gap-2"><ActionButton onClick={toggle}><Timer className="size-4" />{running ? 'Pause' : 'Start'}</ActionButton><ActionButton tone="muted" onClick={() => selectSession(mode, minutes)}><RotateCcw className="size-4" />Reset</ActionButton></div>
+        <div className="mt-5 w-full max-w-md rounded-[18px] border border-slate-500/15 bg-slate-500/5 p-4 text-left">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="text-sm font-bold text-slate-950 dark:text-white">Focus sound</p><p className="text-xs text-slate-500">Plays locally while the timer is running.</p></div>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${running ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-slate-500'}`}>{running ? 'Playing' : 'Ready'}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {soundscapes.map((option) => <ActionButton key={option.id} tone={soundscape === option.id ? 'primary' : 'muted'} className="min-h-9 px-3 py-1.5 text-xs" onClick={() => { setSoundscape(option.id); if (running) void startSound(option.id) }}>{option.label}</ActionButton>)}
+          </div>
+          <label className="mt-3 block text-xs font-semibold text-slate-600 dark:text-slate-300">Volume {Math.round(volume * 100)}%
+            <input className="mt-2 w-full accent-emerald-600" type="range" min="0" max="0.7" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
+          </label>
+        </div>
         <p className="mt-4 max-w-md text-xs leading-5 text-slate-500">Your timer and weekly totals remain on this device. No account, tracking, or ads.</p>
       </div>
     </Panel>
