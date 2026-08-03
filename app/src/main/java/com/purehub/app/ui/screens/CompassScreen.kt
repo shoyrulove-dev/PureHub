@@ -1,5 +1,6 @@
 package com.purehub.app.ui.screens
 
+import android.graphics.Paint
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -28,6 +29,8 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -112,6 +115,20 @@ fun CompassScreen(
                         strokeWidth = strokeWidth,
                         cap = StrokeCap.Round,
                     )
+                    val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        textAlign = Paint.Align.CENTER
+                        textSize = 18.dp.toPx()
+                        typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    }
+                    val labelRadius = radius * 0.78f
+                    drawContext.canvas.nativeCanvas.apply {
+                        labelPaint.color = tertiaryColor.toArgb()
+                        drawText("N", radius, radius - labelRadius + labelPaint.textSize * 0.35f, labelPaint)
+                        labelPaint.color = outlineColor.toArgb()
+                        drawText("S", radius, radius + labelRadius + labelPaint.textSize * 0.35f, labelPaint)
+                        drawText("E", radius + labelRadius, radius + labelPaint.textSize * 0.35f, labelPaint)
+                        drawText("W", radius - labelRadius, radius + labelPaint.textSize * 0.35f, labelPaint)
+                    }
                 }
             }
         }

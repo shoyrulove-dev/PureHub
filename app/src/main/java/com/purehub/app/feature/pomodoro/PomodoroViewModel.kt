@@ -21,7 +21,7 @@ data class PomodoroUiState(
     val selectedPreset: PomodoroPreset = PomodoroPreset("Focus 25", 25),
     val secondsRemaining: Int = 25 * 60,
     val isRunning: Boolean = false,
-    val selectedSoundscape: String = "Rain",
+    val selectedSoundscape: String = "White Noise",
     val volume: Float = 0.35f,
     val note: String = "Select a soundscape and press Start to play a local loop.",
     val weeklySessions: Int = 0,

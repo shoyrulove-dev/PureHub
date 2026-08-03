@@ -11,6 +11,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -32,7 +33,7 @@ fun PomodoroCard(
     viewModel: PomodoroViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val soundscapes = listOf("Rain", "Cafe", "Brown Noise")
+    val soundscapes = listOf("White Noise", "Brown Noise", "Soft Rain")
 
     Card(
         modifier = Modifier
@@ -103,7 +104,8 @@ fun PomodoroCard(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 soundscapes.forEach { label ->
-                    AssistChip(
+                    FilterChip(
+                        selected = label == uiState.selectedSoundscape,
                         onClick = { viewModel.selectSoundscape(label) },
                         label = { Text(label) },
                     )

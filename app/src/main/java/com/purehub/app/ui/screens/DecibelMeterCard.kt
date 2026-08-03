@@ -7,12 +7,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,6 +80,23 @@ fun DecibelMeterCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant,
             )
+            Text(
+                text = "Rolling average ~${uiState.averageDecibel.toInt()} dB · last ${uiState.averageWindowSeconds}s",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf(5, 10, 30, 60).forEach { seconds ->
+                    FilterChip(
+                        selected = uiState.averageWindowSeconds == seconds,
+                        onClick = { viewModel.selectAverageWindow(seconds) },
+                        label = { Text("${seconds}s") },
+                    )
+                }
+            }
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()

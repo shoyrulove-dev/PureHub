@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,8 @@ fun BubbleLevelCard(
     var rulerCentimeters by remember { mutableFloatStateOf(8f) }
     var sensorActive by rememberSaveable { mutableStateOf(false) }
     val colorScheme = MaterialTheme.colorScheme
+    val isLevel = uiState.tiltMagnitude < 0.55f
+    val levelColor = Color(0xFF10B981)
 
     DisposableEffect(sensorActive) {
         if (sensorActive) viewModel.start() else viewModel.stop()
@@ -86,6 +89,7 @@ fun BubbleLevelCard(
                     val radius = size.minDimension * 0.36f
                     val bubbleOffsetX = (uiState.roll / 45f).coerceIn(-1f, 1f) * radius * 0.6f
                     val bubbleOffsetY = (uiState.pitch / 45f).coerceIn(-1f, 1f) * radius * 0.6f
+                    val guideInset = 12.dp.toPx()
 
                     drawCircle(
                         color = colorScheme.secondaryContainer,
@@ -98,6 +102,19 @@ fun BubbleLevelCard(
                         center = center,
                         style = Stroke(width = 4.dp.toPx()),
                     )
+                    listOf(
+                        Offset(guideInset, guideInset),
+                        Offset(size.width - guideInset, guideInset),
+                        Offset(guideInset, size.height - guideInset),
+                        Offset(size.width - guideInset, size.height - guideInset),
+                    ).forEach { corner ->
+                        drawLine(
+                            color = colorScheme.outlineVariant,
+                            start = corner,
+                            end = center,
+                            strokeWidth = 1.5.dp.toPx(),
+                        )
+                    }
                     drawLine(
                         color = colorScheme.outlineVariant,
                         start = Offset(center.x - radius, center.y),
@@ -111,7 +128,13 @@ fun BubbleLevelCard(
                         strokeWidth = 2.dp.toPx(),
                     )
                     drawCircle(
-                        color = colorScheme.primary,
+                        color = if (isLevel) levelColor else colorScheme.outline,
+                        radius = 34.dp.toPx(),
+                        center = center,
+                        style = Stroke(width = 3.dp.toPx()),
+                    )
+                    drawCircle(
+                        color = if (isLevel) levelColor else colorScheme.primary,
                         radius = 18.dp.toPx(),
                         center = Offset(center.x + bubbleOffsetX, center.y + bubbleOffsetY),
                     )
@@ -119,9 +142,10 @@ fun BubbleLevelCard(
             }
 
             Text(
-                text = if (uiState.tiltMagnitude < 0.55f) "Surface is close to level." else "Adjust device until bubble reaches center.",
+                text = if (isLevel) "Centered · surface is level." else "Move the bubble into the center target.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (isLevel) levelColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (isLevel) FontWeight.SemiBold else FontWeight.Normal,
             )
 
             val pxPerCm = metrics.xdpi / 2.54f
