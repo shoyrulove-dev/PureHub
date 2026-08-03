@@ -70,7 +70,7 @@ CONFIG_DEFAULTS = {
 }
 
 CURRENT_SCHEMA_VERSION = 12
-DEFAULTS_BOOTSTRAP_VERSION = 6
+DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -165,6 +165,17 @@ MINIAPP_DEFAULTS = [
         "notes": "High-frequency utility search intent.",
     },
     {
+        "miniapp_id": "smart-flashlight",
+        "name": "Smart Flashlight",
+        "tab": "Measure & Tools",
+        "route_en": "/en/smart-flashlight",
+        "route_vi": "/vi/den-pin-thong-minh",
+        "route_zh": "/zh/zhi-neng-shou-dian",
+        "enabled": True,
+        "traffic_priority": 5,
+        "notes": "Screen and supported camera-light utility.",
+    },
+    {
         "miniapp_id": "qr-studio",
         "name": "QR Studio",
         "tab": "Vision",
@@ -220,6 +231,28 @@ MINIAPP_DEFAULTS = [
         "notes": "Strong device-fix search intent.",
     },
     {
+        "miniapp_id": "deep-cleaner",
+        "name": "Deep Cleaner",
+        "tab": "Security & Audio",
+        "route_en": "/en/deep-cleaner",
+        "route_vi": "/vi/don-dep-thiet-bi",
+        "route_zh": "/zh/shen-du-qing-li",
+        "enabled": True,
+        "traffic_priority": 5,
+        "notes": "Safe cleanup guidance and PureHub local-data controls.",
+    },
+    {
+        "miniapp_id": "wifi-analyzer",
+        "name": "Wi-Fi Analyzer",
+        "tab": "Security & Audio",
+        "route_en": "/en/wifi-analyzer",
+        "route_vi": "/vi/phan-tich-wifi",
+        "route_zh": "/zh/wifi-fen-xi",
+        "enabled": True,
+        "traffic_priority": 6,
+        "notes": "Connection and nearby-network diagnostics within platform limits.",
+    },
+    {
         "miniapp_id": "password-vault",
         "name": "Password Vault",
         "tab": "Security & Audio",
@@ -229,6 +262,17 @@ MINIAPP_DEFAULTS = [
         "enabled": True,
         "traffic_priority": 7,
         "notes": "Privacy-first storage utility.",
+    },
+    {
+        "miniapp_id": "wallpaper-changer",
+        "name": "Wallpaper Changer",
+        "tab": "Security & Audio",
+        "route_en": "/en/wallpaper-changer",
+        "route_vi": "/vi/doi-hinh-nen",
+        "route_zh": "/zh/bi-zhi-geng-huan",
+        "enabled": True,
+        "traffic_priority": 4,
+        "notes": "Local wallpaper preview and supported Android apply workflow.",
     },
     {
         "miniapp_id": "bill-splitter",

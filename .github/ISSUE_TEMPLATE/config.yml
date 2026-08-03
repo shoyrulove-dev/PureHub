@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PureHub community
+    url: https://hub.blissbiovn.com/en/community
+    about: Join the community, vote on the roadmap, or send product feedback.
+  - name: Security report
+    url: https://github.com/shoyrulove-dev/PureHub/security/policy
+    about: Read the private security-reporting instructions before disclosing a vulnerability.
+

@@ -1,0 +1,42 @@
+name: Feature or workflow request
+description: Suggest a focused improvement to an existing tool or PureHub workflow.
+title: "[Request]: "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: area
+    attributes:
+      label: Mini app or area
+      placeholder: OCR Text, Expense Tracker, accessibility...
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the user situation before describing a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed workflow
+      description: Explain the smallest useful change and how it should behave.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where is this most useful?
+      options:
+        - Web and Android
+        - Web / PWA
+        - Android
+        - Command Center
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Offline, privacy, or permission impact
+      description: Mention network access, local storage, accounts, sensors, files, camera, microphone, or location if relevant.

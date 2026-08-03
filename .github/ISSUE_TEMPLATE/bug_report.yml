@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible PureHub problem without sharing sensitive data.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Web / PWA
+        - Android
+        - Command Center
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Affected mini app or area
+      placeholder: QR Studio, Zen Pomodoro, navigation, download page...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device and version
+      description: Include OS, browser, and PureHub version when known.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open...\n2. Tap...\n3. Observe..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed passwords, tokens, private documents, personal QR content, and other sensitive data.
+          required: true
