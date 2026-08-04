@@ -175,8 +175,13 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertEqual(result["status"], "draft_ready")
 
     @patch("command_center.community_support.upsert_support_message")
-    @patch("command_center.community_support.get_config_value", return_value="-1003762178712")
-    def test_telegram_group_message_is_ingested(self, _config, upsert) -> None:
+    @patch("command_center.community_support.get_config_value")
+    def test_telegram_group_message_is_ingested(self, config, upsert) -> None:
+        config.side_effect = lambda key, default="": {
+            "telegram_support_chat_id": "-1003762178712",
+            "telegram_notify_chat_id": "-1004332046536",
+            "telegram_bot_username": "aaa_letan_vip_bot",
+        }.get(key, default)
         upsert.return_value = ({"id": "message-id", "status": "new"}, True)
         result = ingest_telegram_update(
             {
@@ -195,8 +200,12 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertEqual(payload["content"], "How do I use OCR?")
 
     @patch("command_center.community_support.upsert_support_message")
-    @patch("command_center.community_support.get_config_value", return_value="-1003762178712")
-    def test_telegram_bot_commands_are_not_duplicated_in_support(self, _config, upsert) -> None:
+    @patch("command_center.community_support.get_config_value")
+    def test_telegram_bot_commands_are_not_duplicated_in_support(self, config, upsert) -> None:
+        config.side_effect = lambda key, default="": {
+            "telegram_support_chat_id": "-1003762178712",
+            "telegram_notify_chat_id": "-1004332046536",
+        }.get(key, default)
         result = ingest_telegram_update(
             {
                 "message": {
@@ -205,6 +214,50 @@ class CommunitySupportTests(unittest.TestCase):
                     "from": {"id": 8, "first_name": "Tester", "is_bot": False},
                     "chat": {"id": -1003762178712, "type": "supergroup"},
                     "text": "/ask How do I use OCR?",
+                }
+            }
+        )
+        self.assertIsNone(result)
+        upsert.assert_not_called()
+
+    @patch("command_center.community_support.upsert_support_message")
+    @patch("command_center.community_support.get_config_value")
+    def test_telegram_channel_auto_forward_is_not_ingested(self, config, upsert) -> None:
+        config.side_effect = lambda key, default="": {
+            "telegram_support_chat_id": "-1003762178712",
+            "telegram_notify_chat_id": "-1004332046536",
+        }.get(key, default)
+        result = ingest_telegram_update(
+            {
+                "message": {
+                    "message_id": 44,
+                    "date": 1_700_000_000,
+                    "from": {"id": 777000, "first_name": "Telegram", "is_bot": False},
+                    "sender_chat": {"id": -1004332046536, "type": "channel", "title": "PureHub"},
+                    "chat": {"id": -1003762178712, "type": "supergroup"},
+                    "is_automatic_forward": True,
+                    "text": "PureHub community build — day 3",
+                }
+            }
+        )
+        self.assertIsNone(result)
+        upsert.assert_not_called()
+
+    @patch("command_center.community_support.upsert_support_message")
+    @patch("command_center.community_support.get_config_value")
+    def test_telegram_private_auto_reply_is_not_duplicated_in_support(self, config, upsert) -> None:
+        config.side_effect = lambda key, default="": {
+            "telegram_support_chat_id": "-1003762178712",
+            "community_reply_mode": "auto",
+        }.get(key, default)
+        result = ingest_telegram_update(
+            {
+                "message": {
+                    "message_id": 45,
+                    "date": 1_700_000_000,
+                    "from": {"id": 8, "first_name": "Tester", "is_bot": False},
+                    "chat": {"id": 8, "type": "private"},
+                    "text": "How do I use OCR?",
                 }
             }
         )

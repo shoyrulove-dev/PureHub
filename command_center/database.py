@@ -40,7 +40,7 @@ CONFIG_DEFAULTS = {
     "mastodon_base_url": "",
     "mastodon_access_token": "",
     "release_auto_channels": "telegram,devto,bluesky,mastodon",
-    "community_reply_mode": "draft",
+    "community_reply_mode": "auto",
     "support_monitor_enabled": "true",
     "opportunity_monitor_enabled": "true",
     "opportunity_keywords": "offline Android app,no ads app,privacy tools,offline OCR,password manager no ads,Pomodoro app,QR scanner app,expense tracker app",

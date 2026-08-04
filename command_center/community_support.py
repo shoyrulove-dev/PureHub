@@ -72,6 +72,32 @@ def ingest_telegram_update(payload: dict[str, Any]) -> dict[str, Any] | None:
     support_chat_id = get_config_value("telegram_support_chat_id", "-1003762178712")
     if chat.get("type") != "private" and chat_id != support_chat_id:
         return None
+    # Private messages are handled immediately by TelegramBotWorker when auto
+    # reply is enabled. Keeping a second Support Inbox copy would create a
+    # duplicate draft after the user has already received an answer.
+    if chat.get("type") == "private" and get_config_value("community_reply_mode", "draft") == "auto":
+        return None
+
+    # Telegram automatically forwards channel posts into a linked discussion
+    # group. Those posts are PureHub campaign content, not support requests.
+    # Also ignore posts explicitly authored or forwarded by our own channel.
+    notify_chat_id = get_config_value("telegram_notify_chat_id", "").strip()
+    sender_chat = message.get("sender_chat") or {}
+    forward_from_chat = message.get("forward_from_chat") or {}
+    forward_origin = message.get("forward_origin") or {}
+    origin_chat = forward_origin.get("chat") if isinstance(forward_origin, dict) else {}
+    source_chats = [item for item in (sender_chat, forward_from_chat, origin_chat) if isinstance(item, dict)]
+    if message.get("is_automatic_forward"):
+        return None
+    if any(str(item.get("id", "")) == notify_chat_id for item in source_chats if notify_chat_id):
+        return None
+    if str(sender_chat.get("type", "")).lower() == "channel":
+        return None
+
+    bot_username = get_config_value("telegram_bot_username", "").strip().lstrip("@").lower()
+    sender_username = str(sender.get("username", "")).strip().lstrip("@").lower()
+    if bot_username and sender_username == bot_username:
+        return None
     content = str(message.get("text") or message.get("caption") or "").strip()
     if not content or content.startswith(("/start", "/help", "/profile", "/github", "/release", "/ask")):
         return None

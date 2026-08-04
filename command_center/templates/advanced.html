@@ -183,8 +183,8 @@
                 <label class="block">
                   <span class="mb-2 block text-sm font-medium text-slate-200">Community reply mode</span>
                   <select name="community_reply_mode" class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white">
-                    <option value="draft" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'draft' %}selected{% endif %}>Draft for approval</option>
-                    <option value="auto" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'auto' %}selected{% endif %}>Auto (use carefully)</option>
+                    <option value="draft" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'draft' %}selected{% endif %}>Draft every Telegram reply</option>
+                    <option value="auto" {% if config.get('community_reply_mode', defaults.community_reply_mode) == 'auto' %}selected{% endif %}>Auto-reply to Telegram private chat</option>
                   </select>
                 </label>
                 <label class="block">
@@ -228,7 +228,7 @@
                 <label><span class="mb-2 block text-sm">Campaign start date</span><input type="date" name="growth_campaign_start_date" value="{{ config.get('growth_campaign_start_date', defaults.growth_campaign_start_date) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
                 <label><span class="mb-2 block text-sm">Campaign timezone</span><input name="growth_timezone" value="{{ config.get('growth_timezone', defaults.growth_timezone) }}" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3" /></label>
               </div>
-              <p class="mt-3 text-xs text-slate-400">Bluesky and Mastodon run daily; Telegram three times weekly; DEV weekly. Replies remain drafts for approval. Reddit is never auto-posted.</p>
+              <p class="mt-3 text-xs text-slate-400">Telegram private chats can reply automatically. Public Telegram groups, Bluesky, Mastodon, DEV, and Reddit remain approval-first.</p>
 
               <p class="mb-4 mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-red-300">YouTube OAuth</p>
               <div class="grid gap-5 sm:grid-cols-2">
