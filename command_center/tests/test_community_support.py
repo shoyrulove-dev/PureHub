@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from command_center.community_support import _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
 from command_center.database import delete_support_message, list_support_messages, upsert_support_message
-from command_center.main import support_bulk_approve_action
+from command_center.main import support_bulk_approve_action, support_bulk_send_action
 
 
 class CommunitySupportTests(unittest.TestCase):
@@ -92,6 +92,32 @@ class CommunitySupportTests(unittest.TestCase):
         audit.assert_called_once()
         self.assertEqual(response.status_code, 303)
         self.assertIn("support_page=2", response.headers["location"])
+
+    @patch("command_center.main.record_audit_log")
+    @patch("command_center.main.send_support_reply")
+    @patch("command_center.main.get_support_message")
+    @patch("command_center.main.require_admin_role", return_value={"username": "admin"})
+    def test_bulk_send_processes_only_approved_replies(self, _role, get_message, send, audit) -> None:
+        get_message.side_effect = [
+            {"id": "telegram", "status": "approved", "platform": "telegram"},
+            {"id": "devto", "status": "approved", "platform": "devto"},
+            {"id": "draft", "status": "draft_ready", "platform": "mastodon"},
+        ]
+        send.side_effect = [
+            {"id": "telegram", "status": "replied", "platform": "telegram"},
+            {"id": "devto", "status": "manual_required", "platform": "devto"},
+        ]
+
+        response = support_bulk_send_action(
+            MagicMock(),
+            message_ids=["telegram", "devto", "draft"],
+            return_page=3,
+        )
+
+        self.assertEqual([call.args[0] for call in send.call_args_list], ["telegram", "devto"])
+        audit.assert_called_once()
+        self.assertEqual(response.status_code, 303)
+        self.assertIn("support_page=3", response.headers["location"])
 
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")

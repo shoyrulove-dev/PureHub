@@ -1532,11 +1532,11 @@ def support_review_action(
 @admin_router.post("/support/bulk-approve")
 def support_bulk_approve_action(
     request: Request,
-    message_ids: list[str] = Form(default=[]),
+    message_ids: list[str] | None = Form(default=None),
     return_page: int = Form(default=1),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
-    selected_ids = list(dict.fromkeys(message_ids))[:100]
+    selected_ids = list(dict.fromkeys(message_ids or []))[:100]
     approved_ids: list[str] = []
     skipped = 0
     for message_id in selected_ids:
@@ -1563,6 +1563,71 @@ def support_bulk_approve_action(
         suffix = f" {skipped} ineligible item(s) skipped." if skipped else ""
         noun = "reply" if len(approved_ids) == 1 else "replies"
         message, message_type = f"Approved {len(approved_ids)} support {noun}.{suffix}", "success"
+    return _redirect_with_message(
+        message,
+        message_type,
+        anchor="support",
+        query={"support_page": max(1, return_page)},
+    )
+
+
+@admin_router.post("/support/bulk-send")
+def support_bulk_send_action(
+    request: Request,
+    message_ids: list[str] | None = Form(default=None),
+    return_page: int = Form(default=1),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    selected_ids = list(dict.fromkeys(message_ids or []))[:100]
+    replied_ids: list[str] = []
+    manual_ids: list[str] = []
+    failed_ids: list[str] = []
+    skipped = 0
+    for message_id in selected_ids:
+        row = get_support_message(message_id)
+        if not row or row.get("status") != "approved":
+            skipped += 1
+            continue
+        try:
+            result = send_support_reply(message_id)
+            if result.get("status") == "manual_required":
+                manual_ids.append(message_id)
+            elif result.get("status") == "replied":
+                replied_ids.append(message_id)
+            else:
+                failed_ids.append(message_id)
+        except Exception:
+            failed_ids.append(message_id)
+    processed_ids = replied_ids + manual_ids
+    if selected_ids:
+        record_audit_log(
+            actor=actor,
+            action="bulk_send_support_replies",
+            target_type="support_message_batch",
+            target_id=f"page-{max(1, return_page)}",
+            details={
+                "replied_ids": replied_ids,
+                "manual_ids": manual_ids,
+                "failed_ids": failed_ids,
+                "skipped_count": skipped,
+            },
+        )
+    if not selected_ids:
+        message, message_type = "Select at least one approved reply to send.", "info"
+    elif not processed_ids and not failed_ids:
+        message, message_type = "No selected replies were approved and ready to send.", "info"
+    else:
+        parts = []
+        if replied_ids:
+            parts.append(f"sent {len(replied_ids)}")
+        if manual_ids:
+            parts.append(f"prepared {len(manual_ids)} DEV manual repl{'y' if len(manual_ids) == 1 else 'ies'}")
+        if failed_ids:
+            parts.append(f"failed {len(failed_ids)}")
+        if skipped:
+            parts.append(f"skipped {skipped} ineligible")
+        message = "Bulk support result: " + ", ".join(parts) + "."
+        message_type = "error" if failed_ids and not processed_ids else ("info" if failed_ids or manual_ids else "success")
     return _redirect_with_message(
         message,
         message_type,

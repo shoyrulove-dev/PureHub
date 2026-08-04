@@ -258,10 +258,13 @@
       .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
       .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
       .support-bulkbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem; margin-top: .8rem; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: .78rem; background: #f8fafc; }
-      .support-select-all { display: inline-flex; align-items: center; gap: .5rem; color: #334155; font-size: .72rem; font-weight: 760; cursor: pointer; }
+      .support-select-all { display: inline-flex; width: 2.15rem; height: 2.15rem; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: .62rem; color: #334155; background: #fff; cursor: pointer; }
+      .support-select-all:hover { border-color: var(--line-strong); background: #f1f5f9; }
       .support-select-all input, .support-select input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--emerald); cursor: pointer; }
+      .support-select-all .icon { display: none; }
       .support-select input:disabled { cursor: not-allowed; opacity: .38; }
       .support-bulk-actions { display: flex; align-items: center; gap: .55rem; }
+      .support-bulk-actions .button { width: 2.15rem; min-height: 2.15rem; padding: 0; border-radius: .62rem; }
       .support-selection-count { color: var(--muted); font-size: .68rem; font-weight: 720; }
       .support-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; margin-top: .85rem; }
       .support-pagination .button { min-height: 2.15rem; padding: .42rem .65rem; }
@@ -823,16 +826,19 @@
             {% endfor %}
           </div>
           {% if active_support_messages %}
-          <form class="support-bulkbar" id="supportBulkApproveForm" action="{{ admin_prefix }}/support/bulk-approve" method="post" onsubmit="return confirm('Approve all selected AI replies? You can still edit them before sending.');">
+          <form class="support-bulkbar" id="supportBulkForm" action="{{ admin_prefix }}/support/bulk-approve" method="post">
             <input type="hidden" name="return_page" value="{{ support_page }}" />
-            <label class="support-select-all">
-              <input id="supportSelectAll" type="checkbox" aria-label="Select all approvable replies on this page" />
-              <span>Select all on this page</span>
+            <label class="support-select-all" title="Select all actionable replies on this page">
+              <input id="supportSelectAll" type="checkbox" aria-label="Select all actionable replies on this page" />
+              <span class="sr-only">Select all on this page</span>
             </label>
             <div class="support-bulk-actions">
               <span class="support-selection-count" id="supportSelectionCount">0 selected</span>
-              <button class="button violet" id="supportBulkApproveButton" type="submit" disabled title="Approve all selected replies">
-                <svg class="icon"><use href="#i-check"/></svg><span>Approve selected</span>
+              <button class="button violet icon-button" id="supportBulkApproveButton" type="submit" disabled title="Approve all selected drafts" aria-label="Approve all selected drafts" onclick="return confirm('Approve all selected AI replies? You can still edit them before sending.');">
+                <svg class="icon"><use href="#i-check"/></svg>
+              </button>
+              <button class="button primary icon-button" id="supportBulkSendButton" type="submit" formaction="{{ admin_prefix }}/support/bulk-send" disabled title="Send all selected approved replies" aria-label="Send all selected approved replies" onclick="return confirm('Send all selected approved replies now? DEV replies will be prepared for manual posting.');">
+                <svg class="icon"><use href="#i-send"/></svg>
               </button>
             </div>
           </form>
@@ -841,9 +847,9 @@
             {% for item in active_support_messages %}
               <article class="support-row {{ item.priority }}" id="supportRow{{ item.id }}">
                 <div class="support-row-head">
-                  {% set bulk_approvable = item.status in ['draft_ready', 'failed'] and (item.reply_text or item.ai_draft) %}
-                  <label class="support-select" title="{% if bulk_approvable %}Select this reply{% else %}Generate or edit a reply before approval{% endif %}">
-                    <input type="checkbox" name="message_ids" value="{{ item.id }}" form="supportBulkApproveForm" data-support-select {% if not bulk_approvable %}disabled{% endif %} aria-label="Select reply from {{ item.author_name or item.author_handle or 'community member' }}" />
+                  {% set bulk_actionable = item.status in ['draft_ready', 'failed', 'approved'] and (item.reply_text or item.ai_draft) %}
+                  <label class="support-select" title="{% if bulk_actionable %}Select this reply{% else %}Generate or edit a reply before bulk action{% endif %}">
+                    <input type="checkbox" name="message_ids" value="{{ item.id }}" form="supportBulkForm" data-support-select data-support-status="{{ item.status }}" {% if not bulk_actionable %}disabled{% endif %} aria-label="Select reply from {{ item.author_name or item.author_handle or 'community member' }}" />
                   </label>
                   <span class="support-platform" title="{{ item.platform|upper }}">
                     <span class="platform-icon {{ item.platform }}"><svg class="icon"><use href="{% if item.platform == 'devto' %}#i-code{% elif item.platform == 'bluesky' %}#i-spark{% elif item.platform == 'pwa' %}#i-package{% else %}#i-message{% endif %}"/></svg></span>
@@ -1083,10 +1089,18 @@
         const supportSelections = [...document.querySelectorAll("[data-support-select]")].filter((input) => !input.disabled);
         const supportSelectionCount = document.getElementById("supportSelectionCount");
         const supportBulkApproveButton = document.getElementById("supportBulkApproveButton");
+        const supportBulkSendButton = document.getElementById("supportBulkSendButton");
         const updateSupportSelection = () => {
-          const selected = supportSelections.filter((input) => input.checked).length;
-          if (supportSelectionCount) supportSelectionCount.textContent = `${selected} selected`;
-          if (supportBulkApproveButton) supportBulkApproveButton.disabled = selected === 0;
+          const selectedInputs = supportSelections.filter((input) => input.checked);
+          const selected = selectedInputs.length;
+          const canApprove = selectedInputs.some((input) => ["draft_ready", "failed"].includes(input.dataset.supportStatus));
+          const canSend = selectedInputs.some((input) => input.dataset.supportStatus === "approved");
+          if (supportSelectionCount) {
+            supportSelectionCount.textContent = `${selected} selected`;
+            supportSelectionCount.title = `${selected} support replies selected`;
+          }
+          if (supportBulkApproveButton) supportBulkApproveButton.disabled = !canApprove;
+          if (supportBulkSendButton) supportBulkSendButton.disabled = !canSend;
           if (supportSelectAll) {
             supportSelectAll.checked = supportSelections.length > 0 && selected === supportSelections.length;
             supportSelectAll.indeterminate = selected > 0 && selected < supportSelections.length;
