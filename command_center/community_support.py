@@ -109,6 +109,7 @@ def ingest_telegram_update(payload: dict[str, Any]) -> dict[str, Any] | None:
         {
             "source_key": f"telegram:{chat_id}:{message_id}",
             "platform": "telegram",
+            "inbox_type": "direct_support",
             "external_id": message_id,
             "thread_id": chat_id,
             "parent_external_id": str(reply_to.get("message_id", "")),
@@ -294,6 +295,7 @@ def _sync_devto() -> int:
                         {
                             "source_key": f"devto:{article_id}:{comment_id}",
                             "platform": "devto",
+                            "inbox_type": "purehub_post",
                             "external_id": comment_id,
                             "thread_id": article_id,
                             "parent_external_id": parent_id,
@@ -351,6 +353,7 @@ def _sync_bluesky() -> int:
             {
                 "source_key": f"bluesky:{uri}",
                 "platform": "bluesky",
+                "inbox_type": "purehub_post" if notification.get("reason") in {"reply", "quote"} else "social_mention",
                 "external_id": uri,
                 "thread_id": str((root or {}).get("uri", uri)),
                 "parent_external_id": str((reply.get("parent") or {}).get("uri", "")),
@@ -360,7 +363,7 @@ def _sync_bluesky() -> int:
                 "content": str(record.get("text", "")).strip(),
                 "source_url": f"https://bsky.app/profile/{handle}/post/{record_key}",
                 "received_at": _iso_datetime(notification.get("indexedAt")),
-                "reply_context": {"uri": uri, "cid": cid, "root": root},
+                "reply_context": {"uri": uri, "cid": cid, "root": root, "interaction_kind": notification.get("reason", "mention")},
             }
         )
         created += int(inserted)
@@ -369,12 +372,16 @@ def _sync_bluesky() -> int:
 
 def _sync_mastodon() -> int:
     base = get_config_value("mastodon_base_url").rstrip("/")
+    headers = {
+        "Authorization": f"Bearer {get_config_value('mastodon_access_token')}",
+        "user-agent": "PureHub-Support-Monitor/1.0",
+    }
+    own_account_response = requests.get(f"{base}/api/v1/accounts/verify_credentials", headers=headers, timeout=30)
+    own_account_response.raise_for_status()
+    own_account_id = str(own_account_response.json().get("id", ""))
     response = requests.get(
         f"{base}/api/v1/notifications",
-        headers={
-            "Authorization": f"Bearer {get_config_value('mastodon_access_token')}",
-            "user-agent": "PureHub-Support-Monitor/1.0",
-        },
+        headers=headers,
         params=[("limit", "80"), ("types[]", "mention")],
         timeout=30,
     )
@@ -386,10 +393,12 @@ def _sync_mastodon() -> int:
         status_id = str(status.get("id", ""))
         if not status_id:
             continue
+        is_purehub_reply = bool(own_account_id and str(status.get("in_reply_to_account_id", "")) == own_account_id)
         _, inserted = upsert_support_message(
             {
                 "source_key": f"mastodon:{status_id}",
                 "platform": "mastodon",
+                "inbox_type": "purehub_post" if is_purehub_reply else "social_mention",
                 "external_id": status_id,
                 "thread_id": str(status.get("in_reply_to_id") or status_id),
                 "parent_external_id": str(status.get("in_reply_to_id") or ""),
@@ -399,7 +408,11 @@ def _sync_mastodon() -> int:
                 "content": _plain_text(str(status.get("content", ""))),
                 "source_url": str(status.get("url", "")),
                 "received_at": _iso_datetime(status.get("created_at")),
-                "reply_context": {"status_id": status_id, "account": str(account.get("acct", ""))},
+                "reply_context": {
+                    "status_id": status_id,
+                    "account": str(account.get("acct", "")),
+                    "interaction_kind": "purehub_post" if is_purehub_reply else "mention",
+                },
             }
         )
         created += int(inserted)
@@ -448,6 +461,7 @@ def _discover_bluesky(keywords: list[str], limit: int) -> int:
                 {
                     "source_key": f"opportunity:bluesky:{uri}",
                     "platform": "bluesky",
+                    "inbox_type": "social_opportunity",
                     "external_id": uri,
                     "thread_id": uri,
                     "author_id": str(author.get("did", "")),
@@ -507,6 +521,7 @@ def _discover_mastodon(keywords: list[str], limit: int) -> int:
                 {
                     "source_key": f"opportunity:mastodon:{status_id}",
                     "platform": "mastodon",
+                    "inbox_type": "social_opportunity",
                     "external_id": status_id,
                     "thread_id": status_id,
                     "author_id": str(account.get("id", "")),
@@ -547,6 +562,7 @@ def _discover_devto(keywords: list[str], limit: int) -> int:
                 {
                     "source_key": f"opportunity:devto:{article_id}",
                     "platform": "devto",
+                    "inbox_type": "social_opportunity",
                     "external_id": article_id,
                     "thread_id": article_id,
                     "author_id": str(user.get("user_id", "")),

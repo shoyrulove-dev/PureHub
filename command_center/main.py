@@ -397,11 +397,13 @@ def _dashboard_context(
     api_query: str,
     api_group: str,
     support_page: int,
+    support_filter: str,
 ) -> dict[str, Any]:
     admin_username = str(request.session["admin_username"])
     active_support_statuses = ("new", "draft_ready", "approved", "failed", "manual_required")
     support_page_size = 20
     support_page = max(1, support_page)
+    support_filter = support_filter if support_filter in {"all", "bugs", "purehub_post", "product_feedback", "direct_support", "social_mention", "social_opportunity"} else "all"
     common_loaders = {
         "config": list_config,
         "schema_status": get_schema_status,
@@ -416,8 +418,9 @@ def _dashboard_context(
             statuses=active_support_statuses,
             limit=support_page_size,
             skip=(support_page - 1) * support_page_size,
+            inbox_filter=support_filter,
         ),
-        "active_support_count": lambda: count_support_messages(statuses=active_support_statuses),
+        "active_support_count": lambda: count_support_messages(statuses=active_support_statuses, inbox_filter=support_filter),
         "support_metrics": get_support_metrics,
         "support_sync_states": list_support_sync_states,
         "community_metrics_list": list_community_metrics,
@@ -452,6 +455,7 @@ def _dashboard_context(
             statuses=active_support_statuses,
             limit=support_page_size,
             skip=(support_page - 1) * support_page_size,
+            inbox_filter=support_filter,
         )
     else:
         active_support_messages = loaded.get("active_support_messages", [])
@@ -541,6 +545,7 @@ def _dashboard_context(
         "support_page_count": support_page_count,
         "active_support_count": active_support_count,
         "support_page_size": support_page_size,
+        "support_filter": support_filter,
         "support_history": support_history,
         "support_metrics": loaded.get("support_metrics", {}),
         "support_sync_states": loaded.get("support_sync_states", []),
@@ -570,6 +575,7 @@ def dashboard(
     api_query: str = "",
     api_group: str = "",
     support_page: int = 1,
+    support_filter: str = "all",
 ) -> HTMLResponse:
     if not request.session.get("admin_username"):
         return RedirectResponse(url=f"{PUBLIC_ADMIN_PREFIX}/login", status_code=303)
@@ -587,6 +593,7 @@ def dashboard(
             api_query=api_query,
             api_group=api_group,
             support_page=support_page,
+            support_filter=support_filter,
         ),
     )
 
@@ -618,6 +625,7 @@ def advanced_dashboard(
             api_query=api_query,
             api_group=api_group,
             support_page=support_page,
+            support_filter="all",
         ),
     )
 
@@ -1459,6 +1467,14 @@ def support_sync_action(request: Request) -> RedirectResponse:
     return _redirect_with_message(f"Support sync complete: {created} new messages.", "success")
 
 
+def _support_return_query(return_page: int, return_filter: str) -> dict[str, Any]:
+    allowed = {"all", "bugs", "purehub_post", "product_feedback", "direct_support", "social_mention", "social_opportunity"}
+    return {
+        "support_page": max(1, return_page),
+        "support_filter": return_filter if return_filter in allowed else "all",
+    }
+
+
 @admin_router.post("/support/{message_id}/draft")
 def support_draft_action(
     request: Request,
@@ -1466,6 +1482,7 @@ def support_draft_action(
     reply_text: str = Form(default=""),
     regeneration_note: str = Form(default=""),
     return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
@@ -1486,13 +1503,13 @@ def support_draft_action(
             details={"platform": row.get("platform"), "operator_guidance": bool(regeneration_note.strip())},
         )
         message = "A new AI reply alternative is ready for review." if previous_draft else f"AI draft generated as {result.get('category', 'support')}"
-        return _redirect_with_message(message, "success", anchor="support", query={"support_page": max(1, return_page)})
+        return _redirect_with_message(message, "success", anchor="support", query=_support_return_query(return_page, return_filter))
     except Exception as exc:
         return _redirect_with_message(
             f"AI reply generation failed: {exc}",
             "error",
             anchor="support",
-            query={"support_page": max(1, return_page)},
+            query=_support_return_query(return_page, return_filter),
         )
 
 
@@ -1503,6 +1520,7 @@ def support_review_action(
     reply_text: str = Form(default=""),
     action: str = Form(default="save"),
     return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
@@ -1525,7 +1543,7 @@ def support_review_action(
         f"Support reply {action} completed.",
         "success",
         anchor="support",
-        query={"support_page": max(1, return_page)},
+        query=_support_return_query(return_page, return_filter),
     )
 
 
@@ -1534,6 +1552,7 @@ def support_bulk_approve_action(
     request: Request,
     message_ids: list[str] | None = Form(default=None),
     return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     selected_ids = list(dict.fromkeys(message_ids or []))[:100]
@@ -1567,7 +1586,7 @@ def support_bulk_approve_action(
         message,
         message_type,
         anchor="support",
-        query={"support_page": max(1, return_page)},
+        query=_support_return_query(return_page, return_filter),
     )
 
 
@@ -1576,6 +1595,7 @@ def support_bulk_send_action(
     request: Request,
     message_ids: list[str] | None = Form(default=None),
     return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
 ) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     selected_ids = list(dict.fromkeys(message_ids or []))[:100]
@@ -1632,12 +1652,17 @@ def support_bulk_send_action(
         message,
         message_type,
         anchor="support",
-        query={"support_page": max(1, return_page)},
+        query=_support_return_query(return_page, return_filter),
     )
 
 
 @admin_router.post("/support/{message_id}/send")
-def support_send_action(request: Request, message_id: str, return_page: int = Form(default=1)) -> RedirectResponse:
+def support_send_action(
+    request: Request,
+    message_id: str,
+    return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
+) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     try:
         row = send_support_reply(message_id)
@@ -1653,25 +1678,30 @@ def support_send_action(request: Request, message_id: str, return_page: int = Fo
                 "DEV draft approved. Open the source comment and paste the prepared reply.",
                 "info",
                 anchor="support",
-                query={"support_page": max(1, return_page)},
+                query=_support_return_query(return_page, return_filter),
             )
         return _redirect_with_message(
             "Support reply sent successfully.",
             "success",
             anchor="support",
-            query={"support_page": max(1, return_page)},
+            query=_support_return_query(return_page, return_filter),
         )
     except Exception as exc:
         return _redirect_with_message(
             f"Support reply failed: {exc}",
             "error",
             anchor="support",
-            query={"support_page": max(1, return_page)},
+            query=_support_return_query(return_page, return_filter),
         )
 
 
 @admin_router.post("/support/{message_id}/delete")
-def support_delete_action(request: Request, message_id: str, return_page: int = Form(default=1)) -> RedirectResponse:
+def support_delete_action(
+    request: Request,
+    message_id: str,
+    return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
+) -> RedirectResponse:
     actor = require_admin_role(request, "superadmin", "editor")["username"]
     row = get_support_message(message_id)
     if not row:
@@ -1689,7 +1719,7 @@ def support_delete_action(request: Request, message_id: str, return_page: int = 
         "Support message deleted permanently.",
         "success",
         anchor="support",
-        query={"support_page": max(1, return_page)},
+        query=_support_return_query(return_page, return_filter),
     )
 
 
@@ -2183,6 +2213,7 @@ async def public_feedback(request: Request) -> dict[str, bool]:
         {
             "source_key": f"pwa:{feedback_id}",
             "platform": "pwa",
+            "inbox_type": "product_feedback",
             "external_id": feedback_id,
             "thread_id": miniapp_id,
             "author_id": "",

@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 12
+CURRENT_SCHEMA_VERSION = 13
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -609,6 +609,7 @@ def init_database() -> None:
     db.support_messages.create_index([("source_key", ASCENDING)], unique=True)
     db.support_messages.create_index([("status", ASCENDING), ("received_at", DESCENDING)])
     db.support_messages.create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
+    db.support_messages.create_index([("inbox_type", ASCENDING), ("status", ASCENDING), ("received_at", DESCENDING)])
     db.support_sync_state.create_index([("platform", ASCENDING)], unique=True)
     db.community_metrics.create_index([("platform", ASCENDING)], unique=True)
     db.growth_posts.create_index(
@@ -723,6 +724,7 @@ def run_schema_migrations() -> None:
         (10, "ensure-growth-autopilot", _migration_growth_autopilot),
         (11, "ensure-product-growth-signals", _migration_product_growth_signals),
         (12, "ensure-privacy-growth-funnel", _migration_privacy_growth_funnel),
+        (13, "classify-support-inbox-sources", _migration_support_inbox_sources),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -777,6 +779,16 @@ def _migration_privacy_growth_funnel() -> None:
         collection("miniapps").update_one(
             {"miniapp_id": miniapp_id},
             {"$set": {"traffic_priority": priority, "flagship": True, "updated_at": utcnow()}},
+        )
+
+
+def _migration_support_inbox_sources() -> None:
+    messages = collection("support_messages")
+    messages.create_index([("inbox_type", ASCENDING), ("status", ASCENDING), ("received_at", DESCENDING)])
+    for row in messages.find({"inbox_type": {"$exists": False}}, {"platform": 1, "parent_external_id": 1, "reply_context": 1}):
+        messages.update_one(
+            {"_id": row["_id"]},
+            {"$set": {"inbox_type": infer_support_inbox_type(row), "updated_at": utcnow()}},
         )
 
 
@@ -1673,6 +1685,29 @@ def list_release_publications(release_id: str = "", limit: int = 100) -> list[di
     return [_serialize(item) for item in rows]
 
 
+SUPPORT_INBOX_TYPES = ("purehub_post", "product_feedback", "direct_support", "social_mention", "social_opportunity")
+
+
+def infer_support_inbox_type(values: dict[str, Any]) -> str:
+    explicit = str(values.get("inbox_type", "")).strip().lower()
+    if explicit in SUPPORT_INBOX_TYPES:
+        return explicit
+    platform = str(values.get("platform", "")).strip().lower()
+    context = values.get("reply_context") or {}
+    if platform == "pwa":
+        return "product_feedback"
+    if str(context.get("source_kind", "")).lower() == "discovery":
+        return "social_opportunity"
+    if platform == "devto":
+        return "purehub_post"
+    if platform in {"bluesky", "mastodon"}:
+        interaction = str(context.get("interaction_kind", "")).lower()
+        if interaction in {"reply", "quote", "purehub_post"} or values.get("parent_external_id"):
+            return "purehub_post"
+        return "social_mention"
+    return "direct_support"
+
+
 def upsert_support_message(values: dict[str, Any]) -> tuple[dict[str, Any], bool]:
     now = utcnow()
     source_key = str(values["source_key"])
@@ -1680,6 +1715,7 @@ def upsert_support_message(values: dict[str, Any]) -> tuple[dict[str, Any], bool
     payload = {
         "source_key": source_key,
         "platform": str(values.get("platform", "")),
+        "inbox_type": infer_support_inbox_type(values),
         "external_id": str(values.get("external_id", "")),
         "thread_id": str(values.get("thread_id", "")),
         "parent_external_id": str(values.get("parent_external_id", "")),
@@ -1737,6 +1773,7 @@ def list_support_messages(
     *,
     statuses: list[str] | tuple[str, ...] | None = None,
     skip: int = 0,
+    inbox_filter: str = "all",
 ) -> list[dict[str, Any]]:
     filters: dict[str, Any] = {}
     if statuses:
@@ -1745,6 +1782,10 @@ def list_support_messages(
         filters["status"] = status
     if platform:
         filters["platform"] = platform
+    if inbox_filter == "bugs":
+        filters["category"] = {"$in": ["bug", "device_report"]}
+    elif inbox_filter in SUPPORT_INBOX_TYPES:
+        filters["inbox_type"] = inbox_filter
     rows = (
         collection("support_messages")
         .find(filters)
@@ -1755,10 +1796,18 @@ def list_support_messages(
     return [_serialize(item) for item in rows]
 
 
-def count_support_messages(*, statuses: list[str] | tuple[str, ...] | None = None) -> int:
+def count_support_messages(
+    *,
+    statuses: list[str] | tuple[str, ...] | None = None,
+    inbox_filter: str = "all",
+) -> int:
     filters: dict[str, Any] = {}
     if statuses:
         filters["status"] = {"$in": list(statuses)}
+    if inbox_filter == "bugs":
+        filters["category"] = {"$in": ["bug", "device_report"]}
+    elif inbox_filter in SUPPORT_INBOX_TYPES:
+        filters["inbox_type"] = inbox_filter
     return collection("support_messages").count_documents(filters)
 
 
@@ -1783,10 +1832,14 @@ def delete_support_message(message_id: str) -> bool:
 
 def get_support_metrics() -> dict[str, Any]:
     messages = collection("support_messages")
-    open_statuses = ["new", "draft_ready", "approved", "failed"]
+    open_statuses = ["new", "draft_ready", "approved", "failed", "manual_required"]
     by_platform = {
         platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
         for platform in ("telegram", "devto", "bluesky", "mastodon")
+    }
+    by_inbox_type = {
+        inbox_type: messages.count_documents({"inbox_type": inbox_type, "status": {"$in": open_statuses}})
+        for inbox_type in SUPPORT_INBOX_TYPES
     }
     return {
         "open": messages.count_documents({"status": {"$in": open_statuses}}),
@@ -1797,7 +1850,9 @@ def get_support_metrics() -> dict[str, Any]:
         "manual_required": messages.count_documents({"status": "manual_required"}),
         "failed": messages.count_documents({"status": "failed"}),
         "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
+        "bugs": messages.count_documents({"category": {"$in": ["bug", "device_report"]}, "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
+        "by_inbox_type": by_inbox_type,
     }
 
 

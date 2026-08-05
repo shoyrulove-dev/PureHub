@@ -6,11 +6,24 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from command_center.community_support import _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
-from command_center.database import delete_support_message, list_support_messages, upsert_support_message
+from command_center.database import delete_support_message, infer_support_inbox_type, list_support_messages, upsert_support_message
 from command_center.main import support_bulk_approve_action, support_bulk_send_action
 
 
 class CommunitySupportTests(unittest.TestCase):
+    def test_support_inbox_source_classification(self) -> None:
+        self.assertEqual(infer_support_inbox_type({"platform": "pwa"}), "product_feedback")
+        self.assertEqual(infer_support_inbox_type({"platform": "devto"}), "purehub_post")
+        self.assertEqual(
+            infer_support_inbox_type({"platform": "mastodon", "parent_external_id": "parent-status"}),
+            "purehub_post",
+        )
+        self.assertEqual(
+            infer_support_inbox_type({"platform": "bluesky", "reply_context": {"source_kind": "discovery"}}),
+            "social_opportunity",
+        )
+        self.assertEqual(infer_support_inbox_type({"platform": "telegram"}), "direct_support")
+
     def test_opportunity_filter_prefers_real_questions(self) -> None:
         self.assertTrue(_looks_like_question("Any app that works offline without ads?"))
         self.assertTrue(_looks_like_question("Looking for a simple QR code app"))
@@ -68,6 +81,22 @@ class CommunitySupportTests(unittest.TestCase):
         cursor.skip.assert_called_once_with(20)
         cursor.limit.assert_called_once_with(20)
         self.assertEqual(rows[0]["content"], "Question")
+
+    @patch("command_center.database.collection")
+    def test_support_filter_combines_status_and_source_type(self, collection) -> None:
+        cursor = MagicMock()
+        cursor.sort.return_value = cursor
+        cursor.skip.return_value = cursor
+        cursor.limit.return_value = []
+        support_messages = MagicMock()
+        support_messages.find.return_value = cursor
+        collection.return_value = support_messages
+
+        list_support_messages(statuses=("new", "draft_ready"), inbox_filter="purehub_post", limit=20)
+
+        support_messages.find.assert_called_once_with(
+            {"status": {"$in": ["new", "draft_ready"]}, "inbox_type": "purehub_post"}
+        )
 
     @patch("command_center.main.record_audit_log")
     @patch("command_center.main.update_support_message")
