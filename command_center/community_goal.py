@@ -8,9 +8,10 @@ from zoneinfo import ZoneInfo
 AUGUST_2026_GOALS = {
     "audience": 100,
     "views": 1500,
-    "engagement": 30,
+    "engagement": 120,
     "feedback": 20,
-    "videos": 8,
+    "videos": 12,
+    "leads": 600,
 }
 
 
@@ -73,7 +74,7 @@ def build_august_growth_goal(
         + mastodon.get("favourites", 0)
         + mastodon.get("boosts", 0)
         + mastodon.get("replies", 0)
-        + int(support_metrics.get("replied", 0) or 0)
+        + int(support_metrics.get("replied_month", 0) or 0)
     )
 
     actionable_categories = {"question", "bug", "feature_request", "feedback", "device_report", "privacy", "installation"}
@@ -115,6 +116,7 @@ def build_august_growth_goal(
         "engagement": engagement,
         "feedback": feedback,
         "videos": videos,
+        "leads": int(support_metrics.get("social_leads_month", 0) or 0),
     }
     labels = {
         "audience": "Community",
@@ -122,6 +124,7 @@ def build_august_growth_goal(
         "engagement": "Interactions",
         "feedback": "Useful feedback",
         "videos": "Short demos",
+        "leads": "Qualified social leads",
     }
     notes = {
         "audience": "Telegram members + Bluesky and Mastodon followers",
@@ -129,6 +132,7 @@ def build_august_growth_goal(
         "engagement": "Likes, reactions, comments, reposts and handled conversations",
         "feedback": "Questions, device reports, bugs, installation, privacy and feature requests in August",
         "videos": "YouTube Shorts published or scheduled during August",
+        "leads": "Relevant public questions discovered for helpful, human-approved replies",
     }
     milestones = [
         {
@@ -141,7 +145,7 @@ def build_august_growth_goal(
         }
         for key, target in AUGUST_2026_GOALS.items()
     ]
-    weights = {"audience": 0.30, "views": 0.25, "engagement": 0.20, "feedback": 0.15, "videos": 0.10}
+    weights = {"audience": 0.25, "views": 0.20, "engagement": 0.20, "feedback": 0.10, "videos": 0.10, "leads": 0.15}
     outcome_percent = round(sum(item["percent"] * weights[item["key"]] for item in milestones))
 
     campaign_start_raw = str(config.get("growth_campaign_start_date") or "2026-08-02")
@@ -183,7 +187,7 @@ def build_august_growth_goal(
 
     return {
         "label": "August 2026",
-        "headline": "Build trust, reach 100 real community members, and turn feedback into one shipped improvement.",
+        "headline": "Reach 100 real members through 600 qualified conversations, useful demos, and visible product improvements.",
         "timeline_percent": timeline_percent,
         "elapsed_days": elapsed_days,
         "days_total": 31,
@@ -195,7 +199,8 @@ def build_august_growth_goal(
         "actions": actions,
         "weeks": weeks,
         "automation": [
-            {"time": "07:00", "label": "Discover questions"},
+            {"time": "07:00", "label": "Discover up to 27 qualified questions"},
+            {"time": "12:00", "label": "Review the best 8-12 replies"},
             {"time": "19:00", "label": "Generate & publish"},
             {"time": "21:00", "label": "Refresh metrics"},
         ],

@@ -216,7 +216,7 @@ def generate_support_drafts(limit: int = 20) -> dict[str, int]:
     generated = 0
     ignored = 0
     rows = list_support_messages(status="new", limit=limit)
-    with ThreadPoolExecutor(max_workers=min(4, max(1, len(rows)))) as executor:
+    with ThreadPoolExecutor(max_workers=min(8, max(1, len(rows)))) as executor:
         analyses = list(executor.map(_analyze_message, rows))
     for row, analysis in zip(rows, analyses):
         asks_question = _looks_like_question(str(row.get("content") or ""))
@@ -434,16 +434,36 @@ def _sync_mastodon() -> int:
 def _opportunity_keywords() -> list[str]:
     raw = get_config_value(
         "opportunity_keywords",
-        "offline Android app,no ads app,privacy tools,offline OCR,password manager no ads,Pomodoro app,QR scanner app,expense tracker app",
+        "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline",
     )
     values = [item.strip() for item in raw.replace("\n", ",").split(",") if item.strip()]
-    return values[:8]
+    return values[:16]
 
 
 def _looks_like_question(text: str) -> bool:
     value = text.lower()
     signals = ("?", "how do", "how can", "which app", "what app", "any app", "recommend", "looking for", "alternative")
     return any(signal in value for signal in signals)
+
+
+def _looks_like_relevant_opportunity(text: str, keyword: str = "") -> bool:
+    if not _looks_like_question(text):
+        return False
+    value = f" {text.lower()} "
+    intent_signals = (
+        "any app", "which app", "what app", "recommend", "looking for", "alternative",
+        "without ads", "no ads", "offline", "privacy", "open source",
+    )
+    utility_signals = (
+        " app", " tool", "utility", "scanner", "ocr", "qr code", "pomodoro", "password",
+        "expense", "converter", "habit", "notes", "timer", "calculator",
+    )
+    if any(signal in value for signal in intent_signals):
+        return True
+    if keyword.startswith("#"):
+        return any(signal in value for signal in utility_signals)
+    keyword_tokens = [token.lower() for token in keyword.split() if len(token) >= 4]
+    return any(signal in value for signal in utility_signals) and any(token in value for token in keyword_tokens)
 
 
 def _discover_bluesky(keywords: list[str], limit: int) -> int:
@@ -463,7 +483,7 @@ def _discover_bluesky(keywords: list[str], limit: int) -> int:
             text = str(record.get("text", "")).strip()
             author = post.get("author") or {}
             handle = str(author.get("handle", ""))
-            if not text or handle.lower() == own_handle or not _looks_like_question(text):
+            if not text or handle.lower() == own_handle or not _looks_like_relevant_opportunity(text, keyword):
                 continue
             uri, cid = str(post.get("uri", "")), str(post.get("cid", ""))
             if not uri or not cid:
@@ -527,7 +547,7 @@ def _discover_mastodon(keywords: list[str], limit: int) -> int:
             account = status.get("account") or {}
             text = _plain_text(str(status.get("content", "")))
             status_id = str(status.get("id", ""))
-            if not status_id or not text or not _looks_like_question(text):
+            if not status_id or not text or not _looks_like_relevant_opportunity(text, keyword):
                 continue
             _, inserted = upsert_support_message(
                 {
@@ -566,7 +586,7 @@ def _discover_devto(keywords: list[str], limit: int) -> int:
             title = str(article.get("title", ""))
             description = str(article.get("description", ""))
             combined = f"{title}\n{description}".strip()
-            if not _looks_like_question(combined) or not any(token in combined.lower() for token in tokens):
+            if not _looks_like_relevant_opportunity(combined, tag) or not any(token in combined.lower() for token in tokens):
                 continue
             article_id = str(article.get("id", ""))
             user = article.get("user") or {}
@@ -599,16 +619,21 @@ def discover_opportunities() -> dict[str, Any]:
     if state.get("last_synced_at") and _iso_datetime(str(state["last_synced_at"])).date() == datetime.now(timezone.utc).date():
         return {"enabled": True, "skipped": True, "reason": "Daily discovery already completed.", "channels": {}}
     keywords = _opportunity_keywords()
-    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "9") or 9), 12))
-    per_platform = max(1, total_limit // 3)
-    result: dict[str, Any] = {"enabled": True, "channels": {}}
+    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "27") or 27), 30))
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
+    base_limit, remainder = divmod(total_limit, len(functions))
+    platform_limits = {
+        platform: base_limit + int(index < remainder)
+        for index, platform in enumerate(functions)
+    }
+    result: dict[str, Any] = {"enabled": True, "target": total_limit, "channels": {}}
 
     def run(platform: str, discover: Any) -> tuple[str, dict[str, Any]]:
         try:
-            return platform, {"ok": True, "created": discover(keywords, per_platform)}
+            target = platform_limits[platform]
+            return platform, {"ok": True, "target": target, "created": discover(keywords, target)}
         except Exception as exc:
-            return platform, {"ok": False, "created": 0, "error": str(exc)[:500]}
+            return platform, {"ok": False, "target": platform_limits[platform], "created": 0, "error": str(exc)[:500]}
 
     with ThreadPoolExecutor(max_workers=len(functions)) as executor:
         for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
@@ -744,7 +769,8 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
         for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
             result["channels"][platform] = outcome
     result["opportunities"] = discover_opportunities()
-    result["drafts"] = generate_support_drafts(limit=8) if generate_drafts else {}
+    draft_limit = max(8, min(int(get_config_value("opportunity_daily_limit", "27") or 27) + 4, 34))
+    result["drafts"] = generate_support_drafts(limit=draft_limit) if generate_drafts else {}
     result["engagement"] = sync_engagement_metrics()
     return result
 

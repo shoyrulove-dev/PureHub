@@ -43,8 +43,8 @@ CONFIG_DEFAULTS = {
     "community_reply_mode": "auto",
     "support_monitor_enabled": "true",
     "opportunity_monitor_enabled": "true",
-    "opportunity_keywords": "offline Android app,no ads app,privacy tools,offline OCR,password manager no ads,Pomodoro app,QR scanner app,expense tracker app",
-    "opportunity_daily_limit": "9",
+    "opportunity_keywords": "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline",
+    "opportunity_daily_limit": "27",
     "growth_automation_enabled": "false",
     "growth_auto_publish": "true",
     "growth_campaign_start_date": "",
@@ -1833,6 +1833,7 @@ def delete_support_message(message_id: str) -> bool:
 def get_support_metrics() -> dict[str, Any]:
     messages = collection("support_messages")
     open_statuses = ["new", "draft_ready", "approved", "failed", "manual_required"]
+    month_start = utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     by_platform = {
         platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
         for platform in ("telegram", "devto", "bluesky", "mastodon")
@@ -1847,9 +1848,12 @@ def get_support_metrics() -> dict[str, Any]:
         "draft_ready": messages.count_documents({"status": "draft_ready"}),
         "approved": messages.count_documents({"status": "approved"}),
         "replied": messages.count_documents({"status": "replied"}),
+        "replied_month": messages.count_documents({"status": "replied", "replied_at": {"$gte": month_start}}),
         "manual_required": messages.count_documents({"status": "manual_required"}),
         "failed": messages.count_documents({"status": "failed"}),
         "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
+        "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "received_at": {"$gte": month_start}}),
+        "social_replied_month": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": month_start}}),
         "bugs": messages.count_documents({"category": {"$in": ["bug", "device_report"]}, "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
         "by_inbox_type": by_inbox_type,

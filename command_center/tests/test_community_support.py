@@ -5,7 +5,15 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from command_center.community_support import _analyze_message, _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
+from command_center.community_support import (
+    _analyze_message,
+    _looks_like_question,
+    _looks_like_relevant_opportunity,
+    _plain_text,
+    discover_opportunities,
+    generate_support_draft,
+    ingest_telegram_update,
+)
 from command_center.database import delete_support_message, infer_support_inbox_type, list_support_messages, upsert_support_message
 from command_center.main import support_bulk_approve_action, support_bulk_send_action, support_complete_manual_action
 
@@ -67,6 +75,35 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertTrue(_looks_like_question("Any app that works offline without ads?"))
         self.assertTrue(_looks_like_question("Looking for a simple QR code app"))
         self.assertFalse(_looks_like_question("Download the best Android app now"))
+
+    def test_opportunity_relevance_rejects_broad_android_chatter(self) -> None:
+        self.assertFalse(_looks_like_relevant_opportunity("Does anyone want a TV stick without Android?", "#android"))
+        self.assertTrue(_looks_like_relevant_opportunity("Any offline QR scanner without ads?", "#android"))
+
+    @patch("command_center.community_support.update_support_sync_state")
+    @patch("command_center.community_support._discover_devto", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._discover_mastodon", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._discover_bluesky", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._opportunity_keywords", return_value=["offline app"])
+    @patch("command_center.community_support.get_support_sync_state", return_value={})
+    @patch("command_center.community_support.get_config_value")
+    def test_daily_discovery_distributes_27_leads_evenly(
+        self, config, _state, _keywords, bluesky, mastodon, devto, update_state
+    ) -> None:
+        config.side_effect = lambda key, default="": {
+            "opportunity_monitor_enabled": "true",
+            "opportunity_daily_limit": "27",
+        }.get(key, default)
+
+        result = discover_opportunities()
+
+        self.assertEqual(result["target"], 27)
+        self.assertEqual([result["channels"][name]["target"] for name in ("bluesky", "mastodon", "devto")], [9, 9, 9])
+        self.assertEqual(sum(item["created"] for item in result["channels"].values()), 27)
+        bluesky.assert_called_once_with(["offline app"], 9)
+        mastodon.assert_called_once_with(["offline app"], 9)
+        devto.assert_called_once_with(["offline app"], 9)
+        update_state.assert_called_once()
 
     @patch("command_center.database.collection")
     def test_support_upsert_does_not_write_source_url_with_conflicting_operators(self, collection) -> None:
