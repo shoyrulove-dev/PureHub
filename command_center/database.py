@@ -1852,7 +1852,7 @@ def get_support_metrics() -> dict[str, Any]:
         "manual_required": messages.count_documents({"status": "manual_required"}),
         "failed": messages.count_documents({"status": "failed"}),
         "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
-        "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "received_at": {"$gte": month_start}}),
+        "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "created_at": {"$gte": month_start}}),
         "social_replied_month": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": month_start}}),
         "bugs": messages.count_documents({"category": {"$in": ["bug", "device_report"]}, "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
