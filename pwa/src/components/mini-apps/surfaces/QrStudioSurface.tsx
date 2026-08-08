@@ -4,7 +4,7 @@ import {
   Camera, Check, Clipboard, Download, ExternalLink, Flashlight, History, ImageUp,
   QrCode, RefreshCw, ScanLine, Share2, ShieldCheck, Sparkles, Trash2,
 } from 'lucide-react'
-import { ActionButton, FormTextArea } from '../MiniAppPrimitives'
+import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 
 const STORAGE_KEY = 'purehub.qr-studio.history.v2'
 const MAX_HISTORY = 24
@@ -13,6 +13,7 @@ type StudioTab = 'scan' | 'create' | 'library'
 type ScanSource = 'Camera' | 'Image' | 'Created'
 type ScanEntry = { value: string; savedAt: string; source: ScanSource }
 type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'contact'
+type CreatorFields = { primary: string; secondary: string; tertiary: string }
 
 const templates: Record<QrTemplate, { label: string; value: string }> = {
   url: { label: 'Website', value: 'https://hub.blissbiovn.com' },
@@ -21,6 +22,25 @@ const templates: Record<QrTemplate, { label: string; value: string }> = {
   email: { label: 'Email', value: 'mailto:hello@example.com?subject=Hello' },
   phone: { label: 'Phone', value: 'tel:+10000000000' },
   contact: { label: 'Contact', value: 'MECARD:N:PureHub;URL:https://hub.blissbiovn.com;;' },
+}
+
+const defaultFields: Record<QrTemplate, CreatorFields> = {
+  url: { primary: 'https://hub.blissbiovn.com', secondary: '', tertiary: '' },
+  text: { primary: 'PureHub — free, private, and ad-free tools', secondary: '', tertiary: '' },
+  wifi: { primary: '', secondary: '', tertiary: 'WPA' },
+  email: { primary: '', secondary: '', tertiary: '' },
+  phone: { primary: '', secondary: '', tertiary: '' },
+  contact: { primary: '', secondary: '', tertiary: '' },
+}
+
+const escapeQrField = (value: string) => value.trim().replaceAll('\\', '\\\\').replaceAll(';', '\\;').replaceAll(',', '\\,').replaceAll(':', '\\:')
+
+function buildQrValue(template: QrTemplate, fields: CreatorFields) {
+  if (template === 'url' || template === 'text') return fields.primary.trim()
+  if (template === 'wifi') return `WIFI:T:${fields.tertiary === 'None' ? '' : fields.tertiary};S:${escapeQrField(fields.primary)};P:${escapeQrField(fields.secondary)};H:false;;`
+  if (template === 'email') return `mailto:${fields.primary.trim()}?subject=${encodeURIComponent(fields.secondary.trim())}`
+  if (template === 'phone') return `tel:${fields.primary.replaceAll(/\s/g, '')}`
+  return `MECARD:N:${escapeQrField(fields.primary)}${fields.secondary ? `;TEL:${escapeQrField(fields.secondary)}` : ''}${fields.tertiary ? `;EMAIL:${escapeQrField(fields.tertiary)}` : ''};;`
 }
 
 function loadHistory(): ScanEntry[] {
@@ -89,7 +109,7 @@ export default function QrStudioSurface() {
   const scanLockedRef = useRef(false)
   const [tab, setTab] = useState<StudioTab>('scan')
   const [template, setTemplate] = useState<QrTemplate>('url')
-  const [qrValue, setQrValue] = useState(templates.url.value)
+  const [creatorFields, setCreatorFields] = useState<CreatorFields>(defaultFields.url)
   const [foreground, setForeground] = useState('#0f172a')
   const [scanResult, setScanResult] = useState('')
   const [scanStatus, setScanStatus] = useState('Ready when you are. Nothing is uploaded.')
@@ -98,6 +118,7 @@ export default function QrStudioSurface() {
   const [torchOn, setTorchOn] = useState(false)
   const [copied, setCopied] = useState(false)
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
+  const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
   const resultDetails = useMemo(() => payloadDetails(scanResult), [scanResult])
 
   useEffect(() => {
@@ -280,9 +301,16 @@ export default function QrStudioSurface() {
         </div> : null}
 
         {tab === 'create' ? <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-          <div><h3 className="text-lg font-black text-slate-950 dark:text-white">Create a code</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Choose a starting format, then edit the raw content before export.</p>
-            <div className="mt-4 flex flex-wrap gap-2">{(Object.keys(templates) as QrTemplate[]).map((item) => <button key={item} type="button" onClick={() => { setTemplate(item); setQrValue(templates[item].value) }} className={`min-h-10 rounded-full border px-3 text-xs font-black ${template === item ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'}`}>{templates[item].label}</button>)}</div>
-            <FormTextArea className="mt-4 min-h-36" aria-label="QR content" value={qrValue} onChange={(event) => setQrValue(event.target.value)} />
+          <div><h3 className="text-lg font-black text-slate-950 dark:text-white">Create a code</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Pick a format and fill in only the information people need.</p>
+            <div className="mt-4 flex flex-wrap gap-2">{(Object.keys(templates) as QrTemplate[]).map((item) => <button key={item} type="button" onClick={() => { setTemplate(item); setCreatorFields(defaultFields[item]) }} className={`min-h-10 rounded-full border px-3 text-xs font-black ${template === item ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'}`}>{templates[item].label}</button>)}</div>
+            <div className="mt-4 grid gap-3">
+              {template === 'text'
+                ? <FormTextArea className="min-h-32" aria-label="Text" placeholder="Write something useful" value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />
+                : <FormInput aria-label={template === 'wifi' ? 'Network name' : template === 'contact' ? 'Contact name' : template === 'email' ? 'Email address' : template === 'phone' ? 'Phone number' : 'Website address'} placeholder={template === 'wifi' ? 'Wi-Fi name' : template === 'contact' ? 'Full name' : template === 'email' ? 'hello@example.com' : template === 'phone' ? '+1 000 000 0000' : 'https://example.com'} value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />}
+              {template === 'wifi' ? <><FormInput aria-label="Wi-Fi password" placeholder="Wi-Fi password" type="password" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /><select aria-label="Wi-Fi security" className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold dark:border-slate-600 dark:bg-slate-900" value={creatorFields.tertiary} onChange={(event) => setCreatorFields({ ...creatorFields, tertiary: event.target.value })}><option>WPA</option><option>WEP</option><option>None</option></select></> : null}
+              {template === 'email' ? <FormInput aria-label="Email subject" placeholder="Subject" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /> : null}
+              {template === 'contact' ? <><FormInput aria-label="Contact phone" placeholder="Phone" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /><FormInput aria-label="Contact email" placeholder="Email" value={creatorFields.tertiary} onChange={(event) => setCreatorFields({ ...creatorFields, tertiary: event.target.value })} /></> : null}
+            </div>
             <div className="mt-3 flex items-center gap-3"><label className="text-sm font-bold text-slate-600 dark:text-slate-300">Code color</label><input type="color" value={foreground} onChange={(event) => setForeground(event.target.value)} className="size-10 cursor-pointer rounded-lg border-0 bg-transparent" /><button type="button" className="text-xs font-bold text-slate-500" onClick={() => setForeground('#0f172a')}>Reset</button></div>
           </div>
           <div className="flex flex-col items-center rounded-[24px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950"><div className="rounded-[20px] bg-white p-3 shadow-sm"><canvas ref={qrCanvasRef} className="h-auto w-full max-w-[300px]" /></div><p className="mt-3 text-center text-xs font-semibold text-slate-500">High-contrast PNG · works with standard scanners</p><div className="mt-4 grid w-full grid-cols-2 gap-2"><ActionButton className="justify-center" onClick={downloadQr}><Download className="size-4" />Download</ActionButton><ActionButton tone="muted" className="justify-center" onClick={() => void shareQr()}><Share2 className="size-4" />Share</ActionButton><ActionButton tone="muted" className="col-span-2 justify-center" onClick={() => saveEntry(qrValue, 'Created')}><History className="size-4" />Save to library</ActionButton></div></div>

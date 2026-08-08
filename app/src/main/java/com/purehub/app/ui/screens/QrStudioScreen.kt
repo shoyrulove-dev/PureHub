@@ -16,6 +16,11 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -96,19 +101,21 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.time.Instant
+import kotlin.math.min
 
 private enum class QrStudioTab(val label: String) { Scan("Scan"), Create("Create"), Library("Library") }
-private enum class QrTemplate(val label: String, val value: String) {
-    Website("Website", "https://hub.blissbiovn.com"),
-    Text("Text", "PureHub — free, private, and ad-free tools"),
-    Wifi("Wi-Fi", "WIFI:T:WPA;S:Network name;P:Password;H:false;;"),
-    Email("Email", "mailto:hello@example.com?subject=Hello"),
-    Phone("Phone", "tel:+10000000000"),
-    Contact("Contact", "MECARD:N:PureHub;URL:https://hub.blissbiovn.com;;"),
+private enum class QrTemplate(val label: String) {
+    Website("Website"),
+    Text("Text"),
+    Wifi("Wi-Fi"),
+    Email("Email"),
+    Phone("Phone"),
+    Contact("Contact"),
 }
 
 private data class QrHistoryItem(val value: String, val source: String, val savedAt: String)
 private data class QrPayloadInfo(val kind: String, val action: String = "", val destination: String = "", val warning: String = "")
+private data class QrCreatorFields(val primary: String, val secondary: String = "", val tertiary: String = "")
 
 @Composable
 fun QrStudioScreen(
@@ -120,13 +127,20 @@ fun QrStudioScreen(
     val haptics = LocalHapticFeedback.current
     val preferences = remember { context.getSharedPreferences("purehub.qr-studio.v2", 0) }
     var selectedTab by rememberSaveable { mutableStateOf(QrStudioTab.Scan) }
-    var qrText by rememberSaveable { mutableStateOf(QrTemplate.Website.value) }
     var selectedTemplate by rememberSaveable { mutableStateOf(QrTemplate.Website) }
+    var creatorPrimary by rememberSaveable { mutableStateOf("https://hub.blissbiovn.com") }
+    var creatorSecondary by rememberSaveable { mutableStateOf("") }
+    var creatorTertiary by rememberSaveable { mutableStateOf("") }
     var latestScan by rememberSaveable { mutableStateOf("") }
     var scanSource by rememberSaveable { mutableStateOf("Camera") }
     var scanStatus by rememberSaveable { mutableStateOf("Ready. Codes are processed only on this device.") }
     var history by remember { mutableStateOf(loadQrHistory(preferences.getString("history", "[]") ?: "[]")) }
-    val qrBitmap = remember(qrText) { com.purehub.app.feature.qr.QrBitmapGenerator.generate(qrText) }
+    val qrText = remember(selectedTemplate, creatorPrimary, creatorSecondary, creatorTertiary) {
+        buildQrPayload(selectedTemplate, QrCreatorFields(creatorPrimary, creatorSecondary, creatorTertiary))
+    }
+    val qrBitmap = remember(qrText, creatorPrimary) {
+        if (creatorPrimary.isBlank()) null else com.purehub.app.feature.qr.QrBitmapGenerator.generate(qrText)
+    }
     val payloadInfo = remember(latestScan) { describeQrPayload(latestScan) }
 
     fun saveHistory(value: String, source: String) {
@@ -188,14 +202,22 @@ fun QrStudioScreen(
             )
 
             QrStudioTab.Create -> QrCreatorContent(
-                qrText = qrText,
                 selectedTemplate = selectedTemplate,
+                primary = creatorPrimary,
+                secondary = creatorSecondary,
+                tertiary = creatorTertiary,
                 qrBitmap = qrBitmap,
                 onTemplateSelected = {
                     selectedTemplate = it
-                    qrText = it.value
+                    defaultQrFields(it).also { fields ->
+                        creatorPrimary = fields.primary
+                        creatorSecondary = fields.secondary
+                        creatorTertiary = fields.tertiary
+                    }
                 },
-                onTextChanged = { qrText = it },
+                onPrimaryChanged = { creatorPrimary = it },
+                onSecondaryChanged = { creatorSecondary = it },
+                onTertiaryChanged = { creatorTertiary = it },
                 onSave = { saveHistory(qrText, "Created") },
             )
 
@@ -281,13 +303,13 @@ private fun QrScannerContent(
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (hasCameraPermission) {
                 QrCameraPreview(
-                    modifier = Modifier.fillMaxWidth().aspectRatio(0.86f),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                     scanningEnabled = latestScan.isBlank(),
                     onCodeDetected = onCodeDetected,
                 )
             } else {
                 Box(
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1.15f).clip(RoundedCornerShape(24.dp)).background(Color(0xFF07111F)),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(24.dp)).background(Color(0xFF07111F)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -352,18 +374,22 @@ private fun QrScannerContent(
 
 @Composable
 private fun QrCreatorContent(
-    qrText: String,
     selectedTemplate: QrTemplate,
+    primary: String,
+    secondary: String,
+    tertiary: String,
     qrBitmap: Bitmap?,
     onTemplateSelected: (QrTemplate) -> Unit,
-    onTextChanged: (String) -> Unit,
+    onPrimaryChanged: (String) -> Unit,
+    onSecondaryChanged: (String) -> Unit,
+    onTertiaryChanged: (String) -> Unit,
     onSave: () -> Unit,
 ) {
     val context = LocalContext.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Create a code", style = MaterialTheme.typography.titleLarge)
-            Text("Start with a useful format, edit the content, then share a crisp PNG.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Pick a format and fill in only the information people need.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 QrTemplate.entries.forEach { template ->
                     AssistChip(onClick = { onTemplateSelected(template) }, label = { Text(template.label) }, leadingIcon = {
@@ -371,17 +397,41 @@ private fun QrCreatorContent(
                     })
                 }
             }
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = qrText,
-                onValueChange = onTextChanged,
-                label = { Text("QR content") },
-                minLines = 3,
-                supportingText = { Text("Generated offline with error correction for reliable scanning.") },
-            )
+            when (selectedTemplate) {
+                QrTemplate.Website -> CreatorField("Website address", primary, onPrimaryChanged, "https://example.com")
+                QrTemplate.Text -> CreatorField("Text", primary, onPrimaryChanged, "Write something useful", minLines = 3)
+                QrTemplate.Wifi -> {
+                    CreatorField("Network name", primary, onPrimaryChanged, "Wi-Fi name")
+                    CreatorField("Password", secondary, onSecondaryChanged, "Wi-Fi password")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("WPA", "WEP", "None").forEach { security ->
+                            FilterChip(
+                                selected = tertiary == security,
+                                onClick = { onTertiaryChanged(security) },
+                                label = { Text(security) },
+                            )
+                        }
+                    }
+                }
+                QrTemplate.Email -> {
+                    CreatorField("Email address", primary, onPrimaryChanged, "hello@example.com")
+                    CreatorField("Subject", secondary, onSecondaryChanged, "Hello")
+                }
+                QrTemplate.Phone -> CreatorField("Phone number", primary, onPrimaryChanged, "+1 000 000 0000")
+                QrTemplate.Contact -> {
+                    CreatorField("Name", primary, onPrimaryChanged, "Full name")
+                    CreatorField("Phone", secondary, onSecondaryChanged, "+1 000 000 0000")
+                    CreatorField("Email", tertiary, onTertiaryChanged, "hello@example.com")
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Security, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.size(7.dp))
+                Text("Created offline with reliable error correction", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             qrBitmap?.let { bitmap ->
                 Surface(shape = RoundedCornerShape(24.dp), color = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                    Image(bitmap.asImageBitmap(), "Generated QR code", modifier = Modifier.size(280.dp).padding(14.dp))
+                    Image(bitmap.asImageBitmap(), "Generated QR code", modifier = Modifier.size(230.dp).padding(12.dp))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Button(onClick = { shareQrBitmap(context, bitmap) }, modifier = Modifier.weight(1f)) {
@@ -392,8 +442,41 @@ private fun QrCreatorContent(
                     }
                 }
             }
+            if (qrBitmap == null) {
+                Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(Icons.Rounded.QrCode2, null, modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.outline)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Complete the first field to preview", style = MaterialTheme.typography.titleSmall)
+                    }
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun CreatorField(
+    label: String,
+    value: String,
+    onValueChanged: (String) -> Unit,
+    placeholder: String,
+    minLines: Int = 1,
+) {
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = value,
+        onValueChange = onValueChanged,
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        minLines = minLines,
+        shape = RoundedCornerShape(16.dp),
+        singleLine = minLines == 1,
+    )
 }
 
 @Composable
@@ -444,6 +527,7 @@ private fun QrCameraPreview(
     var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var torchEnabled by rememberSaveable { mutableStateOf(false) }
+    var zoomRatio by rememberSaveable { mutableStateOf(1f) }
     val currentScanningEnabled by rememberUpdatedState(scanningEnabled)
     val currentOnCodeDetected by rememberUpdatedState(onCodeDetected)
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }
@@ -451,6 +535,31 @@ private fun QrCameraPreview(
     Box(modifier = modifier.clip(RoundedCornerShape(24.dp)).background(Color(0xFF07111F))) {
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
         QrViewfinderOverlay(Modifier.fillMaxSize())
+        Surface(
+            shape = RoundedCornerShape(999.dp),
+            color = Color.Black.copy(alpha = .48f),
+            modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
+        ) {
+            Row(modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Security, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(15.dp))
+                Spacer(Modifier.size(6.dp))
+                Text("On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
+            }
+        }
+        if (camera != null) {
+            Surface(
+                onClick = {
+                    val maxZoom = camera?.cameraInfo?.zoomState?.value?.maxZoomRatio ?: 1f
+                    zoomRatio = if (zoomRatio > 1f) 1f else min(2f, maxZoom)
+                    camera?.cameraControl?.setZoomRatio(zoomRatio)
+                },
+                shape = RoundedCornerShape(999.dp),
+                color = Color.Black.copy(alpha = .48f),
+                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
+            ) {
+                Text(if (zoomRatio > 1f) "2×" else "1×", color = Color.White, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+            }
+        }
         if (camera?.cameraInfo?.hasFlashUnit() == true) {
             FilledTonalButton(
                 onClick = {
@@ -488,6 +597,13 @@ private fun QrCameraPreview(
 
 @Composable
 private fun QrViewfinderOverlay(modifier: Modifier) {
+    val transition = rememberInfiniteTransition(label = "QR scan line")
+    val scanProgress by transition.animateFloat(
+        initialValue = .08f,
+        targetValue = .92f,
+        animationSpec = infiniteRepeatable(animation = tween(1600), repeatMode = RepeatMode.Reverse),
+        label = "QR scan progress",
+    )
     Canvas(modifier) {
         val side = size.minDimension * .58f
         val left = (size.width - side) / 2
@@ -495,12 +611,25 @@ private fun QrViewfinderOverlay(modifier: Modifier) {
         val length = side * .18f
         val color = Color(0xFF6EE7B7)
         val width = 7.dp.toPx()
+        val shade = Color.Black.copy(alpha = .34f)
+        drawRect(shade, topLeft = Offset.Zero, size = androidx.compose.ui.geometry.Size(size.width, top))
+        drawRect(shade, topLeft = Offset(0f, top + side), size = androidx.compose.ui.geometry.Size(size.width, size.height - top - side))
+        drawRect(shade, topLeft = Offset(0f, top), size = androidx.compose.ui.geometry.Size(left, side))
+        drawRect(shade, topLeft = Offset(left + side, top), size = androidx.compose.ui.geometry.Size(size.width - left - side, side))
         listOf(
             Offset(left, top) to Offset(left + length, top), Offset(left, top) to Offset(left, top + length),
             Offset(left + side, top) to Offset(left + side - length, top), Offset(left + side, top) to Offset(left + side, top + length),
             Offset(left, top + side) to Offset(left + length, top + side), Offset(left, top + side) to Offset(left, top + side - length),
             Offset(left + side, top + side) to Offset(left + side - length, top + side), Offset(left + side, top + side) to Offset(left + side, top + side - length),
         ).forEach { (start, end) -> drawLine(color, start, end, width, StrokeCap.Round) }
+        val scanY = top + side * scanProgress
+        drawLine(
+            color.copy(alpha = .9f),
+            Offset(left + side * .09f, scanY),
+            Offset(left + side * .91f, scanY),
+            2.dp.toPx(),
+            StrokeCap.Round,
+        )
     }
 }
 
@@ -552,6 +681,37 @@ private fun describeQrPayload(value: String): QrPayloadInfo {
         else -> QrPayloadInfo("Plain text")
     }
 }
+
+private fun defaultQrFields(template: QrTemplate): QrCreatorFields = when (template) {
+    QrTemplate.Website -> QrCreatorFields("https://hub.blissbiovn.com")
+    QrTemplate.Text -> QrCreatorFields("PureHub — free, private, and ad-free tools")
+    QrTemplate.Wifi -> QrCreatorFields("", "", "WPA")
+    QrTemplate.Email -> QrCreatorFields("", "")
+    QrTemplate.Phone -> QrCreatorFields("")
+    QrTemplate.Contact -> QrCreatorFields("", "", "")
+}
+
+private fun buildQrPayload(template: QrTemplate, fields: QrCreatorFields): String = when (template) {
+    QrTemplate.Website, QrTemplate.Text -> fields.primary.trim()
+    QrTemplate.Wifi -> {
+        val security = fields.tertiary.takeUnless { it == "None" }.orEmpty()
+        "WIFI:T:${escapeQrField(security)};S:${escapeQrField(fields.primary)};P:${escapeQrField(fields.secondary)};H:false;;"
+    }
+    QrTemplate.Email -> "mailto:${fields.primary.trim()}?subject=${Uri.encode(fields.secondary.trim())}"
+    QrTemplate.Phone -> "tel:${fields.primary.filterNot(Char::isWhitespace)}"
+    QrTemplate.Contact -> buildString {
+        append("MECARD:N:").append(escapeQrField(fields.primary))
+        if (fields.secondary.isNotBlank()) append(";TEL:").append(escapeQrField(fields.secondary))
+        if (fields.tertiary.isNotBlank()) append(";EMAIL:").append(escapeQrField(fields.tertiary))
+        append(";;")
+    }
+}
+
+private fun escapeQrField(value: String): String = value.trim()
+    .replace("\\", "\\\\")
+    .replace(";", "\\;")
+    .replace(",", "\\,")
+    .replace(":", "\\:")
 
 private fun loadQrHistory(raw: String): List<QrHistoryItem> = runCatching {
     val array = JSONArray(raw)
