@@ -43,7 +43,7 @@ CONFIG_DEFAULTS = {
     "community_reply_mode": "auto",
     "support_monitor_enabled": "true",
     "opportunity_monitor_enabled": "true",
-    "opportunity_keywords": "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline",
+    "opportunity_keywords": "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline,flashlight app no ads,bubble level app,document scanner offline,wifi analyzer app",
     "opportunity_daily_limit": "27",
     "growth_automation_enabled": "false",
     "growth_auto_publish": "true",

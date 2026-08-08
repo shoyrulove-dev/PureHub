@@ -434,7 +434,7 @@ def _sync_mastodon() -> int:
 def _opportunity_keywords() -> list[str]:
     raw = get_config_value(
         "opportunity_keywords",
-        "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline",
+        "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline,flashlight app no ads,bubble level app,document scanner offline,wifi analyzer app",
     )
     values = [item.strip() for item in raw.replace("\n", ",").split(",") if item.strip()]
     return values[:16]

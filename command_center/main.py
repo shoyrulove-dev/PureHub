@@ -656,7 +656,7 @@ def save_config(
     community_reply_mode: str = Form(default="draft"),
     support_monitor_enabled: str = Form(default="true"),
     opportunity_monitor_enabled: str = Form(default="true"),
-    opportunity_keywords: str = Form(default="best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline"),
+    opportunity_keywords: str = Form(default="best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline,flashlight app no ads,bubble level app,document scanner offline,wifi analyzer app"),
     opportunity_daily_limit: int = Form(default=27),
     growth_automation_enabled: str = Form(default="false"),
     growth_auto_publish: str = Form(default="true"),
