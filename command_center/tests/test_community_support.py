@@ -31,6 +31,25 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertTrue(result["draft"].strip())
         self.assertIn("I build PureHub", result["draft"])
 
+    @patch("command_center.community_support._ai_client")
+    def test_question_heuristic_has_draft_when_ai_says_no_reply(self, ai_client) -> None:
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content='{"category":"other","priority":"low","language":"en","requires_reply":false,"draft":""}'))]
+        )
+        ai_client.return_value = (client, "test-model")
+
+        result = _analyze_message(
+            {
+                "platform": "mastodon",
+                "content": "Does anyone want this without Android?",
+                "reply_context": {"source_kind": "discovery"},
+            }
+        )
+
+        self.assertFalse(result["requires_reply"])
+        self.assertTrue(result["draft"].strip())
+
     def test_support_inbox_source_classification(self) -> None:
         self.assertEqual(infer_support_inbox_type({"platform": "pwa"}), "product_feedback")
         self.assertEqual(infer_support_inbox_type({"platform": "devto"}), "purehub_post")

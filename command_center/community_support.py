@@ -195,8 +195,10 @@ def _analyze_message(
             priority = "normal"
         requires_reply = bool(data.get("requires_reply", True))
         draft = str(data.get("draft") or "").strip()
-        if requires_reply and not draft:
-            raise ValueError("AI returned an empty support draft.")
+        if not draft:
+            if previous_draft:
+                raise ValueError("AI returned an empty alternative support draft.")
+            draft = fallback["draft"]
         return {
             "category": category,
             "priority": priority,
