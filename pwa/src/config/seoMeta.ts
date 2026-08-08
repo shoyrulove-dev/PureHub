@@ -285,10 +285,10 @@ export const seoMeta: SeoMetaDictionary = {
   'qr-studio': {
     en: {
       slug: 'qr-studio',
-      title: 'Offline QR Scanner & Generator | PureHub',
+      title: 'Free QR & Barcode Scanner and Generator | PureHub',
       description:
-        'Scan and generate QR codes offline with a privacy-first workflow for mobile and desktop browsers.',
-      keywords: ['offline qr scanner', 'qr code generator', 'privacy qr tool', 'no ads qr studio'],
+        'Scan QR codes and barcodes, inspect links safely, create useful QR codes, and keep a private local history—free and without ads.',
+      keywords: ['free qr scanner', 'barcode scanner', 'offline qr scanner', 'qr code generator', 'privacy qr tool', 'no ads qr studio'],
     },
     vi: {
       slug: 'qr-studio',

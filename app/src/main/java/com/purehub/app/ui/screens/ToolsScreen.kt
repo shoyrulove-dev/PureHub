@@ -153,7 +153,7 @@ private fun toolFriendlySummary(tool: MiniAppId): String = when (tool) {
     MiniAppId.DECIBEL_METER -> "Private estimated sound-level monitoring."
     MiniAppId.SMART_FLASHLIGHT -> "Torch, screen light and safety patterns."
     MiniAppId.UNIT_CONVERTER -> "Fast offline unit conversion."
-    MiniAppId.QR_STUDIO -> "Scan and generate QR codes locally."
+    MiniAppId.QR_STUDIO -> "Scan QR codes and barcodes, create codes, and keep a private local history."
     MiniAppId.DOC_TO_PDF -> "Capture, arrange and export private PDFs."
     MiniAppId.OCR_TEXT -> "Extract and copy text from images offline."
     MiniAppId.COLOR_GRABBER -> "Sample and copy colors from the camera."
