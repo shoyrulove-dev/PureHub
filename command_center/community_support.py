@@ -133,12 +133,18 @@ def _analyze_message(
     guidance: str = "",
 ) -> dict[str, Any]:
     is_opportunity = str((row.get("reply_context") or {}).get("source_kind", "")) == "discovery"
+    fallback_draft = (
+        "That depends on the use case. What matters most to you here: privacy, compatibility, or ease of use? "
+        "I build PureHub, so I am interested in the trade-off rather than pushing a one-size-fits-all answer."
+        if is_opportunity
+        else "Thanks for reaching out. Could you share your PureHub version, device model, and the steps that led to this issue?"
+    )
     fallback = {
         "category": "opportunity" if is_opportunity else "question" if "?" in row.get("content", "") else "feedback",
         "priority": "normal",
         "language": "en",
         "requires_reply": True,
-        "draft": "Thanks for reaching out. Could you share your PureHub version, device model, and the steps that led to this issue?",
+        "draft": fallback_draft,
     }
     try:
         client, model = _ai_client()
@@ -187,12 +193,16 @@ def _analyze_message(
             category = "other"
         if priority not in {"low", "normal", "high", "urgent"}:
             priority = "normal"
+        requires_reply = bool(data.get("requires_reply", True))
+        draft = str(data.get("draft") or "").strip()
+        if requires_reply and not draft:
+            raise ValueError("AI returned an empty support draft.")
         return {
             "category": category,
             "priority": priority,
             "language": str(data.get("language", "en"))[:12],
-            "requires_reply": bool(data.get("requires_reply", True)),
-            "draft": str(data.get("draft", fallback["draft"])).strip(),
+            "requires_reply": requires_reply,
+            "draft": draft,
         }
     except Exception:
         if previous_draft:

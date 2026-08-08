@@ -5,12 +5,32 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from command_center.community_support import _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
+from command_center.community_support import _analyze_message, _looks_like_question, _plain_text, generate_support_draft, ingest_telegram_update
 from command_center.database import delete_support_message, infer_support_inbox_type, list_support_messages, upsert_support_message
-from command_center.main import support_bulk_approve_action, support_bulk_send_action
+from command_center.main import support_bulk_approve_action, support_bulk_send_action, support_complete_manual_action
 
 
 class CommunitySupportTests(unittest.TestCase):
+    @patch("command_center.community_support._ai_client")
+    def test_empty_ai_reply_uses_nonempty_fallback(self, ai_client) -> None:
+        client = MagicMock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content='{"category":"opportunity","priority":"normal","language":"en","requires_reply":true,"draft":""}'))]
+        )
+        ai_client.return_value = (client, "test-model")
+
+        result = _analyze_message(
+            {
+                "platform": "mastodon",
+                "content": "Does anyone want this without Android?",
+                "reply_context": {"source_kind": "discovery"},
+            }
+        )
+
+        self.assertTrue(result["requires_reply"])
+        self.assertTrue(result["draft"].strip())
+        self.assertIn("I build PureHub", result["draft"])
+
     def test_support_inbox_source_classification(self) -> None:
         self.assertEqual(infer_support_inbox_type({"platform": "pwa"}), "product_feedback")
         self.assertEqual(infer_support_inbox_type({"platform": "devto"}), "purehub_post")
@@ -147,6 +167,34 @@ class CommunitySupportTests(unittest.TestCase):
         audit.assert_called_once()
         self.assertEqual(response.status_code, 303)
         self.assertIn("support_page=3", response.headers["location"])
+
+    @patch("command_center.main.record_audit_log")
+    @patch("command_center.main.update_support_message")
+    @patch("command_center.main.get_support_message")
+    @patch("command_center.main.require_admin_role", return_value={"username": "admin"})
+    def test_manual_reply_can_be_marked_completed(self, _role, get_message, update, audit) -> None:
+        get_message.return_value = {
+            "id": "devto-message",
+            "status": "manual_required",
+            "platform": "devto",
+            "source_url": "https://dev.to/example/comment",
+        }
+
+        response = support_complete_manual_action(
+            MagicMock(),
+            "devto-message",
+            return_page=2,
+            return_filter="purehub_post",
+        )
+
+        values = update.call_args.args[1]
+        self.assertEqual(values["status"], "replied")
+        self.assertEqual(values["external_reply_url"], "https://dev.to/example/comment")
+        self.assertIn("manual_completed_at", values)
+        audit.assert_called_once()
+        self.assertEqual(response.status_code, 303)
+        self.assertIn("support_page=2", response.headers["location"])
+        self.assertIn("support_filter=purehub_post", response.headers["location"])
 
     def test_plain_text_removes_platform_html(self) -> None:
         self.assertEqual(_plain_text("<p>Hello <strong>PureHub</strong>!</p>"), "Hello PureHub !")

@@ -1695,6 +1695,54 @@ def support_send_action(
         )
 
 
+@admin_router.post("/support/{message_id}/complete-manual")
+def support_complete_manual_action(
+    request: Request,
+    message_id: str,
+    return_page: int = Form(default=1),
+    return_filter: str = Form(default="all"),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_support_message(message_id)
+    if not row:
+        return _redirect_with_message(
+            "Support message not found.",
+            "error",
+            anchor="support",
+            query=_support_return_query(return_page, return_filter),
+        )
+    if row.get("status") != "manual_required":
+        return _redirect_with_message(
+            "This reply does not require manual completion.",
+            "info",
+            anchor="support",
+            query=_support_return_query(return_page, return_filter),
+        )
+    completed_at = datetime.now(timezone.utc)
+    values: dict[str, Any] = {
+        "status": "replied",
+        "replied_at": completed_at,
+        "manual_completed_at": completed_at,
+        "error_message": "",
+    }
+    if not row.get("external_reply_url") and row.get("source_url"):
+        values["external_reply_url"] = row["source_url"]
+    update_support_message(message_id, values)
+    record_audit_log(
+        actor=actor,
+        action="complete_manual_support_reply",
+        target_type="support_message",
+        target_id=message_id,
+        details={"platform": row.get("platform")},
+    )
+    return _redirect_with_message(
+        "Manual reply marked as completed.",
+        "success",
+        anchor="support",
+        query=_support_return_query(return_page, return_filter),
+    )
+
+
 @admin_router.post("/support/{message_id}/delete")
 def support_delete_action(
     request: Request,
