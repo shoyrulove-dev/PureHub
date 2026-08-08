@@ -331,23 +331,23 @@ export const seoMeta: SeoMetaDictionary = {
   'ocr-text': {
     en: {
       slug: 'ocr-text',
-      title: 'Offline OCR Text Extractor | No Ads',
+      title: 'Private OCR Studio & Document Scanner | No Ads',
       description:
-        'Extract text from images offline using browser-side OCR in PureHub with no ads and privacy-first processing.',
-      keywords: ['offline ocr', 'text extractor pwa', 'image to text no ads', 'browser ocr'],
+        'Scan, clean, edit and export text from documents with PureHub OCR Studio, a private no-ads OCR workflow with a local library.',
+      keywords: ['offline ocr', 'private document scanner', 'image to text no ads', 'browser ocr'],
     },
     vi: {
       slug: 'trich-xuat-van-ban',
-      title: 'OCR Trích Xuất Văn Bản Offline | Không Quảng Cáo',
+      title: 'OCR Studio Riêng Tư | Quét Văn Bản Không Quảng Cáo',
       description:
-        'Nhận diện và trích xuất chữ từ ảnh offline ngay trên trình duyệt, riêng tư và không quảng cáo.',
+        'Quét, làm sạch, chỉnh sửa và xuất văn bản với OCR Studio riêng tư, không quảng cáo và có thư viện lưu cục bộ.',
       keywords: ['ocr offline', 'trich xuat van ban', 'anh sang chu', 'khong quang cao'],
     },
     zh: {
       slug: 'ocr-wen-ben',
-      title: '离线 OCR 文字提取 | 无广告',
+      title: '私密 OCR Studio | 无广告文档扫描',
       description:
-        '通过浏览器端 OCR 离线提取图片文字，PureHub 保持私密处理且无广告。',
+        '使用 PureHub OCR Studio 在本地扫描、清理、编辑和导出文字，无广告并提供私密资料库。',
       keywords: ['离线ocr', '文字提取', '图片转文字', '无广告ocr'],
     },
   },

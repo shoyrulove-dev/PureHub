@@ -24,6 +24,15 @@ export type ExpenseRecord = {
   createdAt: string
 }
 
+export type OcrDocumentRecord = {
+  id: string
+  title: string
+  text: string
+  source: string
+  pageCount: number
+  createdAt: string
+}
+
 interface PureHubSchema extends DBSchema {
   habits: {
     key: string
@@ -48,27 +57,40 @@ interface PureHubSchema extends DBSchema {
       'by-category': string
     }
   }
+  ocrDocuments: {
+    key: string
+    value: OcrDocumentRecord
+    indexes: {
+      'by-created-at': string
+    }
+  }
 }
 
 const DB_NAME = 'purehub-offline-db'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 let databasePromise: Promise<IDBPDatabase<PureHubSchema>> | null = null
 
 export function getPureHubDb() {
   if (!databasePromise) {
     databasePromise = openDB<PureHubSchema>(DB_NAME, DB_VERSION, {
-      upgrade(database) {
-        const habitStore = database.createObjectStore('habits', { keyPath: 'id' })
-        habitStore.createIndex('by-created-at', 'createdAt')
+      upgrade(database, oldVersion) {
+        if (oldVersion < 1) {
+          const habitStore = database.createObjectStore('habits', { keyPath: 'id' })
+          habitStore.createIndex('by-created-at', 'createdAt')
 
-        const checkInStore = database.createObjectStore('habitCheckIns', { keyPath: 'id' })
-        checkInStore.createIndex('by-habit-id', 'habitId')
-        checkInStore.createIndex('by-completed-on', 'completedOn')
+          const checkInStore = database.createObjectStore('habitCheckIns', { keyPath: 'id' })
+          checkInStore.createIndex('by-habit-id', 'habitId')
+          checkInStore.createIndex('by-completed-on', 'completedOn')
 
-        const expenseStore = database.createObjectStore('expenses', { keyPath: 'id' })
-        expenseStore.createIndex('by-created-at', 'createdAt')
-        expenseStore.createIndex('by-category', 'category')
+          const expenseStore = database.createObjectStore('expenses', { keyPath: 'id' })
+          expenseStore.createIndex('by-created-at', 'createdAt')
+          expenseStore.createIndex('by-category', 'category')
+        }
+        if (oldVersion < 2) {
+          const ocrStore = database.createObjectStore('ocrDocuments', { keyPath: 'id' })
+          ocrStore.createIndex('by-created-at', 'createdAt')
+        }
       },
     })
   }
@@ -112,5 +134,21 @@ export const expenseRepository = {
   },
   async remove(expenseId: string) {
     return (await getPureHubDb()).delete('expenses', expenseId)
+  },
+}
+
+export const ocrDocumentRepository = {
+  async list() {
+    const rows = await (await getPureHubDb()).getAllFromIndex('ocrDocuments', 'by-created-at')
+    return rows.reverse()
+  },
+  async put(record: OcrDocumentRecord) {
+    return (await getPureHubDb()).put('ocrDocuments', record)
+  },
+  async remove(id: string) {
+    return (await getPureHubDb()).delete('ocrDocuments', id)
+  },
+  async clear() {
+    return (await getPureHubDb()).clear('ocrDocuments')
   },
 }

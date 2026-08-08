@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 13
+CURRENT_SCHEMA_VERSION = 14
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -199,14 +199,14 @@ MINIAPP_DEFAULTS = [
     },
     {
         "miniapp_id": "ocr-text",
-        "name": "OCR Text",
+        "name": "OCR Studio",
         "tab": "Vision",
         "route_en": "/en/ocr-text",
         "route_vi": "/vi/trich-xuat-van-ban",
         "route_zh": "/zh/ocr-wen-ben",
         "enabled": True,
         "traffic_priority": 8,
-        "notes": "Image-to-text extractor.",
+        "notes": "Flagship private document scanner, OCR editor, export, and local library.",
     },
     {
         "miniapp_id": "color-grabber",
@@ -725,6 +725,7 @@ def run_schema_migrations() -> None:
         (11, "ensure-product-growth-signals", _migration_product_growth_signals),
         (12, "ensure-privacy-growth-funnel", _migration_privacy_growth_funnel),
         (13, "classify-support-inbox-sources", _migration_support_inbox_sources),
+        (14, "promote-ocr-studio-flagship", _migration_promote_ocr_studio),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -790,6 +791,26 @@ def _migration_support_inbox_sources() -> None:
             {"_id": row["_id"]},
             {"$set": {"inbox_type": infer_support_inbox_type(row), "updated_at": utcnow()}},
         )
+
+
+def _migration_promote_ocr_studio() -> None:
+    now = utcnow()
+    collection("miniapps").update_one(
+        {"miniapp_id": "ocr-text"},
+        {
+            "$set": {
+                "name": "OCR Studio",
+                "flagship": True,
+                "traffic_priority": 10,
+                "notes": "Flagship private document scanner, OCR editor, export, and local library.",
+                "updated_at": now,
+            }
+        },
+    )
+    collection("roadmap_options").update_one(
+        {"option_id": "ocr-workflow"},
+        {"$set": {"active": False, "status": "shipped", "completed_at": now, "updated_at": now}},
+    )
 
 
 def _migration_seed_defaults() -> None:
@@ -1362,7 +1383,7 @@ def get_analytics_snapshot() -> dict[str, Any]:
 
 PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
 PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "device_report"}
-FLAGSHIP_MINIAPP_IDS = {"zen-pomodoro", "zen-breath", "qr-studio"}
+FLAGSHIP_MINIAPP_IDS = {"zen-pomodoro", "zen-breath", "qr-studio", "ocr-text"}
 
 
 def record_miniapp_event(miniapp_id: str, event: str) -> None:
@@ -1458,7 +1479,7 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
     flagship_start_day = (utcnow() - timedelta(days=13)).date().isoformat()
     flagship_window = {
         miniapp_id: {item: 0 for item in PUBLIC_MINIAPP_EVENTS}
-        for miniapp_id in ("qr-studio", "zen-pomodoro", "zen-breath")
+        for miniapp_id in ("qr-studio", "ocr-text", "zen-pomodoro", "zen-breath")
     }
     for row in rows:
         miniapp_id = str(row.get("miniapp_id", ""))

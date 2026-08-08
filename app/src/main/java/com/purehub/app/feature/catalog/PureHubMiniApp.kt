@@ -59,7 +59,7 @@ enum class MiniAppId(
 
     QR_STUDIO("QR Studio", MiniAppTab.VISION, Icons.Rounded.QrCode2),
     DOC_TO_PDF("Doc to PDF", MiniAppTab.VISION, Icons.Rounded.PictureAsPdf),
-    OCR_TEXT("OCR Text Extractor", MiniAppTab.VISION, Icons.Rounded.DocumentScanner),
+    OCR_TEXT("OCR Studio", MiniAppTab.VISION, Icons.Rounded.DocumentScanner),
     COLOR_GRABBER("Color Grabber", MiniAppTab.VISION, Icons.Rounded.Colorize),
 
     DEEP_CLEANER("Deep Cleaner", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.DeleteSweep),
