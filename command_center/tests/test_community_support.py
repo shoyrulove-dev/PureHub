@@ -87,7 +87,7 @@ class CommunitySupportTests(unittest.TestCase):
     @patch("command_center.community_support._opportunity_keywords", return_value=["offline app"])
     @patch("command_center.community_support.get_support_sync_state", return_value={})
     @patch("command_center.community_support.get_config_value")
-    def test_daily_discovery_distributes_27_leads_evenly(
+    def test_daily_discovery_prioritizes_direct_reply_platforms(
         self, config, _state, _keywords, bluesky, mastodon, devto, update_state
     ) -> None:
         config.side_effect = lambda key, default="": {
@@ -98,11 +98,11 @@ class CommunitySupportTests(unittest.TestCase):
         result = discover_opportunities()
 
         self.assertEqual(result["target"], 27)
-        self.assertEqual([result["channels"][name]["target"] for name in ("bluesky", "mastodon", "devto")], [9, 9, 9])
+        self.assertEqual([result["channels"][name]["target"] for name in ("bluesky", "mastodon", "devto")], [12, 12, 3])
         self.assertEqual(sum(item["created"] for item in result["channels"].values()), 27)
-        bluesky.assert_called_once_with(["offline app"], 9)
-        mastodon.assert_called_once_with(["offline app"], 9)
-        devto.assert_called_once_with(["offline app"], 9)
+        bluesky.assert_called_once_with(["offline app"], 12)
+        mastodon.assert_called_once_with(["offline app"], 12)
+        devto.assert_called_once_with(["offline app"], 3)
         update_state.assert_called_once()
 
     @patch("command_center.database.collection")

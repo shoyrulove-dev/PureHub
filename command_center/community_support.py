@@ -621,10 +621,12 @@ def discover_opportunities() -> dict[str, Any]:
     keywords = _opportunity_keywords()
     total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "27") or 27), 30))
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
-    base_limit, remainder = divmod(total_limit, len(functions))
+    devto_limit = max(1, round(total_limit * 0.1))
+    social_limit = total_limit - devto_limit
     platform_limits = {
-        platform: base_limit + int(index < remainder)
-        for index, platform in enumerate(functions)
+        "bluesky": (social_limit + 1) // 2,
+        "mastodon": social_limit // 2,
+        "devto": devto_limit,
     }
     result: dict[str, Any] = {"enabled": True, "target": total_limit, "channels": {}}
 
@@ -638,6 +640,22 @@ def discover_opportunities() -> dict[str, Any]:
     with ThreadPoolExecutor(max_workers=len(functions)) as executor:
         for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
             result["channels"][platform] = outcome
+    remaining = max(0, total_limit - sum(int(item.get("created") or 0) for item in result["channels"].values()))
+    for platform in ("bluesky", "mastodon"):
+        if not remaining:
+            break
+        outcome = result["channels"][platform]
+        if not outcome.get("ok"):
+            continue
+        try:
+            extra = functions[platform](keywords, remaining)
+            outcome["created"] = int(outcome.get("created") or 0) + extra
+            outcome["backfilled"] = extra
+            remaining -= extra
+        except Exception as exc:
+            outcome["backfill_error"] = str(exc)[:500]
+    result["created"] = sum(int(item.get("created") or 0) for item in result["channels"].values())
+    result["shortfall"] = max(0, total_limit - result["created"])
     update_support_sync_state("opportunities", {"last_synced_at": datetime.now(timezone.utc), "error_message": ""})
     return result
 
