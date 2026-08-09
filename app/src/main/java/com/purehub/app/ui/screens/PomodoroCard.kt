@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,15 +44,10 @@ fun PomodoroCard(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (!compact) {
-                Text(
-                    text = "Zen Pomodoro",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = "A calm offline focus loop with local timer state and real on-device white-noise playback.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                FlagshipSuiteHeader(
+                    eyebrow = "Zen Suite flagship",
+                    title = "Zen Pomodoro",
+                    description = "Accurate focus timing, quick presets, private weekly progress, and on-device soundscapes.",
                 )
             }
 
@@ -139,7 +133,8 @@ private fun PresetChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    AssistChip(
+    FilterChip(
+        selected = selected,
         onClick = onClick,
         label = { Text(if (selected) "${preset.label} • Active" else preset.label) },
     )

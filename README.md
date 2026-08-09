@@ -34,6 +34,8 @@ PureHub is currently beta software. The web app is available now, and signed And
 
 The flagship lineup now includes the Zen tools, QR Studio, the OCR + PDF Document Suite, Speaker Cleaner, the private Finance Suite, and the Compass + Level + Sound Sensor Suite.
 
+Zen Habit, Zen Pomodoro, and Zen Breath now share a complete Zen Suite experience on web and Android. Pomodoro includes quick/custom focus sessions, private weekly rhythm tracking, and local soundscapes; Breath includes timed goals, accessible motion, optional cues, and private completion history.
+
 ## Try it now
 
 | Destination | Link |

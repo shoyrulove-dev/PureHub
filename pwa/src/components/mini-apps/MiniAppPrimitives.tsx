@@ -1,10 +1,36 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
-import { ShieldCheck, Smartphone } from 'lucide-react'
+import { ShieldCheck, Sparkles, Smartphone } from 'lucide-react'
 
 type PanelProps = {
   title: string
   subtitle?: string
   children: ReactNode
+}
+
+type FlagshipHeroProps = {
+  eyebrow: string
+  title: string
+  description: string
+  children?: ReactNode
+  accent?: 'emerald' | 'violet' | 'amber' | 'sky'
+}
+
+const heroAccent = {
+  emerald: 'from-emerald-100 via-white to-sky-100 text-emerald-800 dark:from-emerald-950/55 dark:via-slate-900 dark:to-sky-950/40 dark:text-emerald-200',
+  violet: 'from-violet-100 via-white to-fuchsia-100 text-violet-800 dark:from-violet-950/55 dark:via-slate-900 dark:to-fuchsia-950/40 dark:text-violet-200',
+  amber: 'from-amber-100 via-white to-orange-100 text-amber-900 dark:from-amber-950/55 dark:via-slate-900 dark:to-orange-950/40 dark:text-amber-200',
+  sky: 'from-sky-100 via-white to-cyan-100 text-sky-900 dark:from-sky-950/55 dark:via-slate-900 dark:to-cyan-950/40 dark:text-sky-200',
+}
+
+export function FlagshipHero({ eyebrow, title, description, children, accent = 'emerald' }: FlagshipHeroProps) {
+  return <section className={`overflow-hidden rounded-[24px] border border-slate-200/80 bg-gradient-to-br p-5 shadow-sm sm:p-6 dark:border-slate-700/70 ${heroAccent[accent]}`}>
+    <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[.2em]"><Sparkles className="size-4" />{eyebrow}</p>
+    <div className="mt-3 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+      <div><h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl dark:text-white">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">{description}</p></div>
+      <div className="flex flex-wrap gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-white/75 px-3 py-1.5 dark:bg-slate-950/45">Offline ready</span><span className="rounded-full bg-white/75 px-3 py-1.5 dark:bg-slate-950/45">Private</span><span className="rounded-full bg-white/75 px-3 py-1.5 dark:bg-slate-950/45">No ads</span></div>
+    </div>
+    {children ? <div className="mt-5">{children}</div> : null}
+  </section>
 }
 
 export function Panel({ title, subtitle, children }: PanelProps) {

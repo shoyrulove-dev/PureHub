@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BarChart3, Coffee, RotateCcw, Timer, Zap } from 'lucide-react'
-import { ActionButton, Panel } from '../MiniAppPrimitives'
+import { BarChart3, CalendarDays, CheckCircle2, Coffee, RotateCcw, Settings2, Target, Timer, Zap } from 'lucide-react'
+import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
 
 const STORAGE_KEY = 'purehub.zen-pomodoro.stats.v1'
 type DayStats = Record<string, { sessions: number; minutes: number }>
@@ -30,12 +30,18 @@ export default function ZenPomodoroSurface() {
   const [stats, setStats] = useState<DayStats>(readStats)
   const [soundscape, setSoundscape] = useState<Soundscape>('white')
   const [volume, setVolume] = useState(0.3)
+  const [customMinutes, setCustomMinutes] = useState(35)
   const completedRef = useRef(false)
   const soundRef = useRef<ActiveSound | null>(null)
   const totalSeconds = minutes * 60
   const elapsed = Math.max(0, totalSeconds - remaining)
   const progress = totalSeconds ? elapsed / totalSeconds : 0
-  const week = useMemo(() => Object.values(stats).slice(-7).reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 }), [stats])
+  const days = useMemo(() => Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(); date.setDate(date.getDate() - (6 - offset))
+    const key = date.toISOString().slice(0, 10)
+    return { key, label: date.toLocaleDateString(undefined, { weekday: 'short' }), ...(stats[key] ?? { sessions: 0, minutes: 0 }) }
+  }), [stats])
+  const week = useMemo(() => days.reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 }), [days])
 
   const stopSound = () => {
     const active = soundRef.current
@@ -128,12 +134,17 @@ export default function ZenPomodoroSurface() {
     }
   }
 
-  return <div className="grid gap-4 xl:grid-cols-[1fr_0.52fr]">
-    <Panel title="Zen Pomodoro" subtitle="A resilient focus timer that stays accurate after tab switches and sleep.">
+  return <div className="space-y-4">
+    <FlagshipHero eyebrow="Zen Suite flagship" title="Zen Pomodoro" description="A calm focus workspace with accurate timing, private progress, quick presets, and locally generated soundscapes." accent="emerald">
+      <div className="grid grid-cols-3 gap-2 sm:max-w-lg"><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><Target className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{week.sessions}</strong><span className="text-xs text-slate-500">sessions</span></div><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><Timer className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{week.minutes}</strong><span className="text-xs text-slate-500">minutes</span></div><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><CheckCircle2 className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{running ? 'Live' : 'Ready'}</strong><span className="text-xs text-slate-500">on device</span></div></div>
+    </FlagshipHero>
+    <div className="grid gap-4 xl:grid-cols-[1fr_0.52fr]">
+    <Panel title="Focus timer" subtitle="Stays accurate after tab switches and device sleep.">
       <div className="flex flex-wrap gap-2">
         {[[15, 'Quick 15'], [25, 'Focus 25'], [50, 'Deep 50']] .map(([value, label]) => <ActionButton key={value} tone={mode === 'focus' && minutes === value ? 'primary' : 'muted'} onClick={() => selectSession('focus', Number(value))}><Zap className="size-4" />{label}</ActionButton>)}
         <ActionButton tone={mode === 'break' ? 'primary' : 'muted'} onClick={() => selectSession('break', 5)}><Coffee className="size-4" />Break 5</ActionButton>
       </div>
+      <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-bold"><Settings2 className="size-4" />Custom focus length</summary><div className="mt-2 flex gap-2"><FormInput aria-label="Custom focus minutes" type="number" min="1" max="180" value={customMinutes} onChange={(event) => setCustomMinutes(Math.max(1, Math.min(180, Number(event.target.value) || 1)))} /><ActionButton onClick={() => selectSession('focus', customMinutes)}>Use {customMinutes} min</ActionButton></div></details>
       <div className="mt-6 flex flex-col items-center text-center">
         <div className="grid size-64 place-items-center rounded-full p-3 shadow-[0_24px_70px_rgba(16,185,129,.16)]" style={{ background: `conic-gradient(${mode === 'focus' ? '#10b981' : '#38bdf8'} ${progress * 360}deg, rgba(148,163,184,.16) 0deg)` }}>
           <div className="grid size-full place-items-center rounded-full bg-white dark:bg-[#111827]">
@@ -141,7 +152,7 @@ export default function ZenPomodoroSurface() {
           </div>
         </div>
         <div className="mt-5 flex gap-2"><ActionButton onClick={toggle}><Timer className="size-4" />{running ? 'Pause' : 'Start'}</ActionButton><ActionButton tone="muted" onClick={() => selectSession(mode, minutes)}><RotateCcw className="size-4" />Reset</ActionButton></div>
-        <div className="mt-5 w-full max-w-md rounded-[18px] border border-slate-500/15 bg-slate-500/5 p-4 text-left">
+        <details className="mt-5 w-full max-w-md rounded-[18px] border border-slate-500/15 bg-slate-500/5 p-4 text-left"><summary className="cursor-pointer list-none text-sm font-bold text-slate-950 dark:text-white">Focus sound <span className="ml-2 text-xs font-normal text-slate-500">{soundscapes.find((item) => item.id === soundscape)?.label}</span></summary>
           <div className="flex items-center justify-between gap-3">
             <div><p className="text-sm font-bold text-slate-950 dark:text-white">Focus sound</p><p className="text-xs text-slate-500">Plays locally while the timer is running.</p></div>
             <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${running ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-slate-500'}`}>{running ? 'Playing' : 'Ready'}</span>
@@ -152,13 +163,15 @@ export default function ZenPomodoroSurface() {
           <label className="mt-3 block text-xs font-semibold text-slate-600 dark:text-slate-300">Volume {Math.round(volume * 100)}%
             <input className="mt-2 w-full accent-emerald-600" type="range" min="0" max="0.7" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
           </label>
-        </div>
+        </details>
         <p className="mt-4 max-w-md text-xs leading-5 text-slate-500">Your timer and weekly totals remain on this device. No account, tracking, or ads.</p>
       </div>
     </Panel>
     <Panel title="This week" subtitle="Private progress stored locally.">
       <div className="grid grid-cols-2 gap-3"><div className="rounded-[18px] bg-emerald-500/10 p-4"><BarChart3 className="size-5 text-emerald-600" /><p className="mt-5 text-3xl font-black text-slate-950 dark:text-white">{week.sessions}</p><p className="text-xs text-slate-500">focus sessions</p></div><div className="rounded-[18px] bg-sky-500/10 p-4"><Timer className="size-5 text-sky-600" /><p className="mt-5 text-3xl font-black text-slate-950 dark:text-white">{week.minutes}</p><p className="text-xs text-slate-500">focused minutes</p></div></div>
-      <div className="mt-4 space-y-2">{Object.entries(stats).slice(-7).reverse().map(([day, value]) => <div key={day} className="flex items-center justify-between rounded-xl border border-slate-500/10 px-3 py-2 text-xs"><span>{day}</span><strong>{value.sessions} · {value.minutes} min</strong></div>)}</div>
+      <div className="mt-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-700"><div className="mb-4 flex items-center gap-2 text-sm font-bold"><CalendarDays className="size-4" />Daily rhythm</div><div className="flex h-28 items-end gap-2">{days.map((day) => <div key={day.key} className="flex min-w-0 flex-1 flex-col items-center gap-1"><span className="text-[10px] font-bold text-slate-500">{day.minutes || ''}</span><div className="w-full rounded-t-lg bg-emerald-500 transition-[height] duration-200" style={{ height: `${Math.max(5, Math.min(88, day.minutes / Math.max(1, ...days.map((item) => item.minutes)) * 88))}px`, opacity: day.minutes ? 1 : .16 }} /><span className="text-[10px] text-slate-500">{day.label}</span></div>)}</div></div>
+      <div className="mt-4 space-y-2">{days.slice().reverse().filter((day) => day.sessions).map((day) => <div key={day.key} className="flex items-center justify-between rounded-xl border border-slate-500/10 px-3 py-2 text-xs"><span>{day.key}</span><strong>{day.sessions} · {day.minutes} min</strong></div>)}</div>
     </Panel>
+    </div>
   </div>
 }

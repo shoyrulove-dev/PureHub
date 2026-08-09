@@ -1,5 +1,14 @@
 # PureHub System Update Report
 
+## Zen Suite flagship and shared polish — beta.10
+
+- Rebuilt Zen Pomodoro as a complete flagship experience on web and Android: shared Zen Suite identity, clearer selected presets, custom web focus lengths, resilient timing, local soundscapes, private weekly totals, and a seven-day focus rhythm chart.
+- Rebuilt Zen Breath as a complete flagship experience on web and Android: 1/3/5-minute goals, Calm/Box/4-7-8 rhythms, goal progress, optional haptic and phase cues, reduced-motion control, private completion totals, and a friendly completion state.
+- Added a reusable flagship hero pattern with consistent privacy, offline, and no-ads trust signals, compact spacing, 44px+ controls, and 150–200ms interaction feedback.
+- Improved the Finance Suite with shared USD/EUR/GBP/VND/JPY display selection and a private monthly budget with remaining-balance feedback.
+- Improved Speaker Cleaner with an explicit completion state and a private recent-run history, and added fullscreen instrument mode across the web Sensor Suite.
+- Verified clean PWA and Android builds, Android unit tests, source lint, and both updated Zen screens on a USB-connected Android device.
+
 Date: 2026-08-10
 
 ## Utility flagship suites — beta.9

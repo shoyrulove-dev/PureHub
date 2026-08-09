@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Activity, Compass, Gauge, Mic, ShieldCheck } from 'lucide-react'
+import { Activity, Compass, Gauge, Maximize2, Mic, ShieldCheck } from 'lucide-react'
 import { ActionButton } from '../MiniAppPrimitives'
 
 type SensorMode = 'compass' | 'level' | 'sound'
 
 export default function SensorSuiteSurface({ mode }: { mode: SensorMode }) {
-  return <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+  const suiteRef = useRef<HTMLElement>(null)
+  return <section ref={suiteRef} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm fullscreen:overflow-auto dark:border-slate-700 dark:bg-slate-900">
     <header className="bg-gradient-to-br from-sky-50 via-white to-violet-50 p-5 dark:from-sky-950/40 dark:via-slate-900 dark:to-violet-950/30">
       <div className="flex items-start gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-sky-600 text-white">{mode === 'compass' ? <Compass /> : mode === 'level' ? <Gauge /> : <Mic />}</span><div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-sky-700 dark:text-sky-300">SENSOR SUITE</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{mode === 'compass' ? 'Compass' : mode === 'level' ? 'Bubble Level' : 'Sound Meter'}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Live device readings with a focused, privacy-first interface.</p></div><ShieldCheck className="hidden size-5 text-emerald-600 sm:block" /></div>
       <nav className="mt-4 grid grid-cols-3 gap-2">{([['compass', 'Compass', Compass], ['level', 'Level', Gauge], ['sound', 'Sound', Mic]] as const).map(([id, label, Icon]) => <a key={id} href={`/en/${id === 'level' ? 'bubble-level' : id === 'sound' ? 'decibel-meter' : 'compass'}`} className={`flex min-h-11 items-center justify-center gap-1 rounded-xl border text-xs font-black ${mode === id ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><Icon className="size-4" />{label}</a>)}</nav>
     </header>
-    <div className="p-4 sm:p-5">{mode === 'compass' ? <CompassPanel /> : mode === 'level' ? <LevelPanel /> : <SoundPanel />}</div>
+    <div className="p-4 sm:p-5"><button onClick={() => void suiteRef.current?.requestFullscreen?.()} className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-sky-200 text-xs font-black text-sky-800 dark:border-sky-800 dark:text-sky-200"><Maximize2 className="size-4" />Fullscreen instrument</button>{mode === 'compass' ? <CompassPanel /> : mode === 'level' ? <LevelPanel /> : <SoundPanel />}</div>
   </section>
 }
 

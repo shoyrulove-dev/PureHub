@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +34,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -47,6 +52,7 @@ private val breathPatterns = linkedMapOf(
 @Composable
 fun ZenBreathCard() {
     val context = LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
     val preferences = remember { context.getSharedPreferences("purehub.zen-breath.v1", 0) }
     var patternId by rememberSaveable { mutableStateOf("calm") }
     var phaseIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -55,11 +61,14 @@ fun ZenBreathCard() {
     var cycles by rememberSaveable { mutableIntStateOf(0) }
     var elapsed by rememberSaveable { mutableIntStateOf(0) }
     var totalSessions by rememberSaveable { mutableIntStateOf(preferences.getInt("sessions", 0)) }
+    var targetMinutes by rememberSaveable { mutableIntStateOf(3) }
+    var haptics by rememberSaveable { mutableStateOf(true) }
+    var reducedMotion by rememberSaveable { mutableStateOf(false) }
     val pattern = breathPatterns.getValue(patternId)
     val phase = pattern.phases[phaseIndex]
     val breathProgress by animateFloatAsState(
         targetValue = phase.scale,
-        animationSpec = tween(durationMillis = phase.seconds * 1_000, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = if (reducedMotion) 0 else phase.seconds * 1_000, easing = FastOutSlowInEasing),
         label = "breath_scale",
     )
     val colorScheme = MaterialTheme.colorScheme
@@ -69,6 +78,13 @@ fun ZenBreathCard() {
         while (running) {
             delay(1_000)
             elapsed += 1
+            if (elapsed >= targetMinutes * 60) {
+                running = false
+                totalSessions += 1
+                preferences.edit().putInt("sessions", totalSessions).apply()
+                if (haptics) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                return@LaunchedEffect
+            }
             if (remaining > 1) {
                 remaining -= 1
             } else {
@@ -76,6 +92,7 @@ fun ZenBreathCard() {
                 if (next == 0) cycles += 1
                 phaseIndex = next
                 remaining = pattern.phases[next].seconds
+                if (haptics) hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 break
             }
         }
@@ -92,8 +109,17 @@ fun ZenBreathCard() {
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Zen Breath", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
-            Text("A private, distraction-free breathing guide with selectable rhythms and local session totals.", style = MaterialTheme.typography.bodyMedium, color = colorScheme.onSurfaceVariant)
+            FlagshipSuiteHeader(
+                eyebrow = "Zen Suite flagship",
+                title = "Zen Breath",
+                description = "A gentle breathing coach with clear pacing, accessible motion, and private session goals.",
+            )
+            Text("Session goal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(1, 3, 5).forEach { minutes ->
+                    FilterChip(selected = targetMinutes == minutes, onClick = { targetMinutes = minutes; reset() }, label = { Text("$minutes min") })
+                }
+            }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 breathPatterns.forEach { (id, item) ->
                     AssistChip(onClick = { reset(id) }, label = { Text(if (id == patternId) "${item.label} - Active" else item.label) })
@@ -123,6 +149,10 @@ fun ZenBreathCard() {
                 }) { Text(if (running) "Pause" else "Start session") }
                 Button(onClick = { reset() }) { Text("Reset") }
             }
+            LinearProgressIndicator(progress = { (elapsed / (targetMinutes * 60f)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+            Text("${((elapsed / (targetMinutes * 60f)).coerceIn(0f, 1f) * 100).toInt()}% of $targetMinutes-minute goal", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Gentle haptics"); Switch(checked = haptics, onCheckedChange = { haptics = it }) }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Reduce motion"); Switch(checked = reducedMotion, onCheckedChange = { reducedMotion = it }) }
             Text("$cycles complete cycles · ${elapsed / 60}:${(elapsed % 60).toString().padStart(2, '0')} elapsed · $totalSessions saved sessions", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
             Text("Breathe comfortably and stop if you feel dizzy or unwell.", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
         }
