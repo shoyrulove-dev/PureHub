@@ -6,13 +6,13 @@ PureHub is a community-built collection of 22 free, ad-free, privacy-first tools
 
 Primary call to action: try one tool, report one issue or idea, and vote on what should improve next.
 
-Current flagship tools: Zen Pomodoro, Zen Breath, and QR Studio. Community content should lead with one of these tools often enough to build recognition, while the remaining catalog continues to receive supporting demos and SEO coverage.
+Current flagship tools: Zen Habit, Zen Pomodoro, Zen Breath, QR Studio, and OCR Studio. Community content should lead with one of these tools often enough to build recognition, while the remaining catalog continues to receive supporting demos and SEO coverage.
 
 ## Privacy-first journey funnel
 
 Admin tracks aggregate daily journey signals for visits, tool opens, downloads, first browser opens, Early Tester joins, and device reports. Source and campaign values are restricted to an allowlist; unknown values become `other` or `none`. No IP address, account, user ID, device ID, free-form referrer, or feedback content is stored in funnel records.
 
-The public Early Testers form sends its voluntary report text to Support Inbox, where it follows the existing human-review workflow. The initial target is 20 useful device reports across the three flagship tools. Never ask testers to submit names, email addresses, phone numbers, serial numbers, or account details.
+The public Early Testers form sends its voluntary report text to Support Inbox, where it follows the existing human-review workflow. The initial target is 20 useful device reports across the flagship set. Never ask testers to submit names, email addresses, phone numbers, serial numbers, or account details.
 
 ## Daily automation schedule
 

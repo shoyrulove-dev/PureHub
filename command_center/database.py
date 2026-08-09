@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 14
+CURRENT_SCHEMA_VERSION = 15
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -95,8 +95,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/thoi-quen-zen",
         "route_zh": "/zh/chan-xi-guan",
         "enabled": True,
-        "traffic_priority": 6,
-        "notes": "Habit tracking and streak use case.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Flagship private habit tracker with weekly insights and local history.",
     },
     {
         "miniapp_id": "zen-pomodoro",
@@ -726,6 +727,7 @@ def run_schema_migrations() -> None:
         (12, "ensure-privacy-growth-funnel", _migration_privacy_growth_funnel),
         (13, "classify-support-inbox-sources", _migration_support_inbox_sources),
         (14, "promote-ocr-studio-flagship", _migration_promote_ocr_studio),
+        (15, "promote-zen-habit-flagship", _migration_promote_zen_habit),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -809,6 +811,25 @@ def _migration_promote_ocr_studio() -> None:
     )
     collection("roadmap_options").update_one(
         {"option_id": "ocr-workflow"},
+        {"$set": {"active": False, "status": "shipped", "completed_at": now, "updated_at": now}},
+    )
+
+
+def _migration_promote_zen_habit() -> None:
+    now = utcnow()
+    collection("miniapps").update_one(
+        {"miniapp_id": "zen-habit"},
+        {
+            "$set": {
+                "flagship": True,
+                "traffic_priority": 10,
+                "notes": "Flagship private habit tracker with weekly insights and local history.",
+                "updated_at": now,
+            }
+        },
+    )
+    collection("roadmap_options").update_one(
+        {"option_id": "focus-insights"},
         {"$set": {"active": False, "status": "shipped", "completed_at": now, "updated_at": now}},
     )
 
@@ -1383,7 +1404,7 @@ def get_analytics_snapshot() -> dict[str, Any]:
 
 PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
 PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "device_report"}
-FLAGSHIP_MINIAPP_IDS = {"zen-pomodoro", "zen-breath", "qr-studio", "ocr-text"}
+FLAGSHIP_MINIAPP_IDS = {"zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text"}
 
 
 def record_miniapp_event(miniapp_id: str, event: str) -> None:

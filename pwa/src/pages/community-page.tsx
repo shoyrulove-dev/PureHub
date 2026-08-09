@@ -113,7 +113,7 @@ export function CommunityPage() {
             <span className="tool-card__icon text-emerald-600 dark:text-emerald-300"><TestTube2 className="size-5" /></span>
             <div>
               <p className="eyebrow text-emerald-700 dark:text-emerald-300">Early Testers</p>
-              <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Help polish our three flagship tools</h2>
+              <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Help polish our flagship tools</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">Test on your real phone and report one thing that worked, felt confusing, or failed. Our first goal is 20 useful device reports.</p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export function CommunityPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.8fr)_auto] sm:items-end">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tool tested
             <select value={testerTool} onChange={(event) => setTesterTool(event.target.value as MiniAppId)} className="mt-2 min-h-11 w-full rounded-[14px] border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-              <option value="zen-pomodoro">Zen Pomodoro</option><option value="zen-breath">Zen Breath</option><option value="qr-studio">QR Studio</option>
+              <option value="zen-habit">Zen Habit</option><option value="ocr-text">OCR Studio</option><option value="zen-pomodoro">Zen Pomodoro</option><option value="zen-breath">Zen Breath</option><option value="qr-studio">QR Studio</option>
             </select>
           </label>
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Device report

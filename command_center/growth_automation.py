@@ -176,7 +176,7 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
             "recent_platform_signals": performance_signals,
             "verified_facts": [
                 "PureHub contains 22 mini-apps and is free, ad-free, open source, and community-built.",
-                "The current flagship tools are Zen Pomodoro, Zen Breath, and QR Studio.",
+                "The current flagship tools are Zen Habit, Zen Pomodoro, Zen Breath, QR Studio, and OCR Studio.",
                 "The Early Testers program asks for anonymous device reports and has an initial goal of 20 useful reports.",
                 "The shared mobile UI has received a clarity, contrast, and one-handed-use pass.",
                 "OCR supports English, Vietnamese, and Simplified Chinese packs loaded on demand.",

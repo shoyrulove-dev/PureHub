@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.combine
 data class HabitSummary(
     val habit: HabitEntity,
     val currentStreak: Int,
+    val bestStreak: Int,
     val completedToday: Boolean,
     val totalCheckIns: Int,
+    val weeklyCheckIns: Int,
+    val completionDates: Set<LocalDate>,
 )
 
 class ZenHabitRepository(
@@ -34,20 +37,31 @@ class ZenHabitRepository(
                 HabitSummary(
                     habit = habit,
                     currentStreak = HabitStreakCalculator.calculateCurrentStreak(dates, today),
+                    bestStreak = calculateBestStreak(dates),
                     completedToday = dates.contains(today),
                     totalCheckIns = dates.size,
+                    weeklyCheckIns = dates.count { !it.isBefore(today.minusDays(6)) && !it.isAfter(today) },
+                    completionDates = dates,
                 )
             }
         }
     }
 
-    suspend fun addHabit(name: String) {
+    suspend fun addHabit(
+        name: String,
+        description: String = "",
+        colorHex: String = "#10B981",
+        targetDaysPerWeek: Int = 7,
+    ) {
         val trimmedName = name.trim()
         if (trimmedName.isBlank()) return
 
         habitDao.upsertHabit(
             HabitEntity(
                 name = trimmedName,
+                description = description.trim(),
+                colorHex = colorHex,
+                targetDaysPerWeek = targetDaysPerWeek.coerceIn(1, 7),
                 createdAtEpochMillis = System.currentTimeMillis(),
             ),
         )
@@ -67,5 +81,30 @@ class ZenHabitRepository(
                 createdAtEpochMillis = System.currentTimeMillis(),
             ),
         )
+    }
+
+    suspend fun toggleDay(habitId: Long, day: LocalDate, completed: Boolean) {
+        toggleToday(habitId = habitId, isCompletedToday = completed, today = day)
+    }
+
+    suspend fun setArchived(habit: HabitEntity, archived: Boolean) {
+        habitDao.updateHabit(habit.copy(isArchived = archived))
+    }
+
+    suspend fun deleteHabit(habit: HabitEntity) {
+        habitDao.deleteHabit(habit)
+    }
+
+    private fun calculateBestStreak(dates: Set<LocalDate>): Int {
+        if (dates.isEmpty()) return 0
+        var best = 0
+        var run = 0
+        var previous: LocalDate? = null
+        dates.sorted().forEach { date ->
+            run = if (previous?.plusDays(1) == date) run + 1 else 1
+            best = maxOf(best, run)
+            previous = date
+        }
+        return best
     }
 }

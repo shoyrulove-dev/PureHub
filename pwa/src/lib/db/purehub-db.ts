@@ -3,7 +3,10 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 export type HabitRecord = {
   id: string
   name: string
+  description?: string
   colorHex: string
+  targetDaysPerWeek?: number
+  category?: string
   createdAt: string
   archivedAt?: string | null
 }
@@ -12,6 +15,7 @@ export type HabitCheckInRecord = {
   id: string
   habitId: string
   completedOn: string
+  note?: string
   createdAt: string
 }
 
@@ -110,6 +114,22 @@ export const habitRepository = {
     const current = await database.get('habits', habitId)
     if (!current) return
     await database.put('habits', { ...current, archivedAt })
+  },
+  async restore(habitId: string) {
+    const database = await getPureHubDb()
+    const current = await database.get('habits', habitId)
+    if (!current) return
+    await database.put('habits', { ...current, archivedAt: null })
+  },
+  async remove(habitId: string) {
+    const database = await getPureHubDb()
+    const checkIns = await database.getAllFromIndex('habitCheckIns', 'by-habit-id', habitId)
+    const transaction = database.transaction(['habits', 'habitCheckIns'], 'readwrite')
+    await Promise.all([
+      transaction.objectStore('habits').delete(habitId),
+      ...checkIns.map((item) => transaction.objectStore('habitCheckIns').delete(item.id)),
+      transaction.done,
+    ])
   },
 }
 

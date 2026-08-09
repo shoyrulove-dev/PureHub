@@ -4,11 +4,7 @@ import type { MiniAppId } from '../../features/catalog/tabs'
 import { ActionButton, FormInput, FormTextArea, Panel } from './MiniAppPrimitives'
 import {
   expenseRepository,
-  habitCheckInRepository,
-  habitRepository,
   type ExpenseRecord,
-  type HabitCheckInRecord,
-  type HabitRecord,
 } from '../../lib/db/purehub-db'
 
 type MiniAppSurfaceProps = {
@@ -20,13 +16,14 @@ const PasswordVaultSurface = lazy(() => import('./surfaces/PasswordVaultSurface'
 const QrStudioSurface = lazy(() => import('./surfaces/QrStudioSurface'))
 const ZenPomodoroSurface = lazy(() => import('./surfaces/ZenPomodoroSurface'))
 const ZenBreathSurface = lazy(() => import('./surfaces/ZenBreathSurface'))
+const ZenHabitSurface = lazy(() => import('./surfaces/ZenHabitSurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
     case 'lunar-calendar':
       return <LunarCalendarSurface />
     case 'zen-habit':
-      return <ZenHabitSurface />
+      return <LazyTool><ZenHabitSurface /></LazyTool>
     case 'zen-pomodoro':
       return <LazyTool><ZenPomodoroSurface /></LazyTool>
     case 'zen-breath':
@@ -374,89 +371,6 @@ function BillSplitterSurface() {
         </div>
       </Panel>
     </div>
-  )
-}
-
-function ZenHabitSurface() {
-  const [habits, setHabits] = useState<HabitRecord[]>([])
-  const [checkIns, setCheckIns] = useState<HabitCheckInRecord[]>([])
-  const [name, setName] = useState('')
-
-  const load = async () => {
-    const [nextHabits, nextCheckIns] = await Promise.all([
-      habitRepository.list(),
-      habitRepository.list().then(async (items) => {
-        const grouped = await Promise.all(items.map((item) => habitCheckInRepository.listByHabit(item.id)))
-        return grouped.flat()
-      }),
-    ])
-    setHabits(nextHabits.filter((item) => !item.archivedAt))
-    setCheckIns(nextCheckIns)
-  }
-
-  useEffect(() => {
-    void load()
-  }, [])
-
-  const today = new Date().toISOString().slice(0, 10)
-
-  return (
-    <Panel title="Zen Habit" subtitle="Track simple streaks offline and keep your rhythm local.">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <FormInput value={name} onChange={(event) => setName(event.target.value)} placeholder="New habit name" />
-        <ActionButton
-          onClick={async () => {
-            if (!name.trim()) return
-            await habitRepository.put({
-              id: createId(),
-              name: name.trim(),
-              colorHex: '#34d399',
-              createdAt: new Date().toISOString(),
-            })
-            setName('')
-            await load()
-          }}
-        >
-          Add habit
-        </ActionButton>
-      </div>
-      <div className="mt-4 space-y-3">
-        {habits.map((habit) => {
-          const habitCheckIns = checkIns.filter((item) => item.habitId === habit.id)
-          const isDoneToday = habitCheckIns.some((item) => item.completedOn === today)
-          const streak = calculateStreak(habitCheckIns.map((item) => item.completedOn))
-          return (
-            <div key={habit.id} className="rounded-[24px] border border-slate-500/15 bg-slate-500/5 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-slate-950 dark:text-white">{habit.name}</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Current streak: {streak} days</p>
-                </div>
-                <ActionButton
-                  tone={isDoneToday ? 'muted' : 'primary'}
-                  onClick={async () => {
-                    const existing = habitCheckIns.find((item) => item.completedOn === today)
-                    if (existing) {
-                      await habitCheckInRepository.remove(existing.id)
-                    } else {
-                      await habitCheckInRepository.upsert({
-                        id: createId(),
-                        habitId: habit.id,
-                        completedOn: today,
-                        createdAt: new Date().toISOString(),
-                      })
-                    }
-                    await load()
-                  }}
-                >
-                  {isDoneToday ? 'Undo today' : 'Complete today'}
-                </ActionButton>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </Panel>
   )
 }
 
@@ -1203,32 +1117,6 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">{value}</p>
     </div>
   )
-}
-
-function calculateStreak(days: string[]) {
-  const sorted = [...new Set(days)].sort().reverse()
-  let streak = 0
-  let cursor = new Date()
-
-  for (const entry of sorted) {
-    const currentDay = cursor.toISOString().slice(0, 10)
-    if (entry === currentDay) {
-      streak += 1
-      cursor.setDate(cursor.getDate() - 1)
-      continue
-    }
-    if (streak === 0) {
-      cursor.setDate(cursor.getDate() - 1)
-      if (entry === cursor.toISOString().slice(0, 10)) {
-        streak += 1
-        cursor.setDate(cursor.getDate() - 1)
-        continue
-      }
-    }
-    break
-  }
-
-  return streak
 }
 
 async function readFileAsDataUrl(file: File) {

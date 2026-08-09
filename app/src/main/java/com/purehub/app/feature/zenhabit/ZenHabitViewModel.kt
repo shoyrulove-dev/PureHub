@@ -10,9 +10,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import com.purehub.app.data.local.entity.HabitEntity
+
+enum class ZenHabitSection { TODAY, INSIGHTS, MANAGE }
 
 data class ZenHabitUiState(
     val draftHabitName: String = "",
+    val draftDescription: String = "",
+    val draftColorHex: String = "#10B981",
+    val draftTargetDays: Int = 7,
+    val section: ZenHabitSection = ZenHabitSection.TODAY,
+    val composerVisible: Boolean = false,
     val saving: Boolean = false,
 )
 
@@ -30,8 +39,18 @@ class ZenHabitViewModel(
     val uiState: StateFlow<ZenHabitUiState> = _uiState.asStateFlow()
 
     fun updateDraftHabitName(value: String) {
-        _uiState.update { it.copy(draftHabitName = value) }
+        _uiState.update { it.copy(draftHabitName = value.take(60)) }
     }
+
+    fun updateDraftDescription(value: String) = _uiState.update { it.copy(draftDescription = value.take(120)) }
+
+    fun updateDraftColor(value: String) = _uiState.update { it.copy(draftColorHex = value) }
+
+    fun updateDraftTarget(value: Int) = _uiState.update { it.copy(draftTargetDays = value.coerceIn(1, 7)) }
+
+    fun selectSection(value: ZenHabitSection) = _uiState.update { it.copy(section = value) }
+
+    fun toggleComposer() = _uiState.update { it.copy(composerVisible = !it.composerVisible) }
 
     fun saveHabit() {
         val draft = _uiState.value.draftHabitName.trim()
@@ -39,14 +58,33 @@ class ZenHabitViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(saving = true) }
-            repository.addHabit(draft)
+            repository.addHabit(
+                name = draft,
+                description = _uiState.value.draftDescription,
+                colorHex = _uiState.value.draftColorHex,
+                targetDaysPerWeek = _uiState.value.draftTargetDays,
+            )
             _uiState.update {
                 it.copy(
                     draftHabitName = "",
+                    draftDescription = "",
+                    composerVisible = false,
                     saving = false,
                 )
             }
         }
+    }
+
+    fun toggleDay(habitId: Long, day: LocalDate, completed: Boolean) {
+        viewModelScope.launch { repository.toggleDay(habitId, day, completed) }
+    }
+
+    fun setArchived(habit: HabitEntity, archived: Boolean) {
+        viewModelScope.launch { repository.setArchived(habit, archived) }
+    }
+
+    fun deleteHabit(habit: HabitEntity) {
+        viewModelScope.launch { repository.deleteHabit(habit) }
     }
 
     fun toggleToday(habitId: Long, isCompletedToday: Boolean) {

@@ -74,15 +74,17 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, default=1)
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--manifest", type=Path, default=MANIFEST)
+    parser.add_argument("--campaign-id", default=CAMPAIGN_ID)
     args = parser.parse_args()
     init_database()
-    items = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    items = json.loads(args.manifest.read_text(encoding="utf-8"))
     for index, item in enumerate(items, start=1):
         if index < args.start or index >= args.start + args.limit:
             continue
         scheduled_at = datetime.fromisoformat(item["publish_at"]).astimezone(timezone.utc)
         row = upsert_growth_post(
-            campaign_id=CAMPAIGN_ID,
+            campaign_id=args.campaign_id,
             day_number=index,
             channel="youtube",
             topic=item["hook"],
@@ -97,13 +99,13 @@ def main() -> None:
         )
         current = get_growth_post(str(row["id"])) or row
         if current.get("status") in {"scheduled", "published"} and current.get("external_id"):
-            print(f"{index:02d}/10 already uploaded: {current.get('external_url')}")
+            print(f"{index:02d}/{len(items)} already uploaded: {current.get('external_url')}")
             continue
         uploaded = upload_item(current, Path(item["file"]))
         verified = verify_schedule(str(uploaded.get("external_id", "")))
         if verified["privacy"] != "private" or not verified["publish_at"]:
             raise ValueError(f"YouTube did not preserve the schedule for item {index}: {verified}")
-        print(f"{index:02d}/10 scheduled {verified['publish_at']}: {uploaded.get('external_url')}")
+        print(f"{index:02d}/{len(items)} scheduled {verified['publish_at']}: {uploaded.get('external_url')}")
 
 
 if __name__ == "__main__":

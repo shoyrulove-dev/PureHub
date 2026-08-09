@@ -183,6 +183,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.zenHabit.title',
     summaryKey: 'miniApps.zenHabit.summary',
     slugs: seoSlugs('zen-habit'),
+    flagship: true,
   },
   {
     id: 'zen-pomodoro',
@@ -270,6 +271,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.ocrText.title',
     summaryKey: 'miniApps.ocrText.summary',
     slugs: seoSlugs('ocr-text'),
+    flagship: true,
   },
   {
     id: 'color-grabber',
