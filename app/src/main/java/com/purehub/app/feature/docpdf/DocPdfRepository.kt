@@ -19,6 +19,7 @@ import java.util.Locale
 data class CapturedDocPage(
     val uri: Uri,
     val file: File,
+    val recognizedText: String = "",
 )
 
 data class ExportedPdf(
@@ -43,7 +44,7 @@ class DocPdfRepository(
         return File(directory, "capture_${timestampFormat.format(Date())}.jpg")
     }
 
-    fun wrapCapturedFile(file: File): CapturedDocPage {
+    fun wrapCapturedFile(file: File, recognizedText: String = ""): CapturedDocPage {
         return CapturedDocPage(
             uri = FileProvider.getUriForFile(
                 context,
@@ -51,7 +52,32 @@ class DocPdfRepository(
                 file,
             ),
             file = file,
+            recognizedText = recognizedText,
         )
+    }
+
+    fun stageOcrPages(pages: List<Pair<Bitmap, String>>): List<CapturedDocPage> {
+        val directory = File(context.cacheDir, "doc_ocr_session").apply {
+            deleteRecursively()
+            mkdirs()
+        }
+        return pages.mapIndexed { index, (bitmap, text) ->
+            val file = File(directory, "ocr_${index + 1}.jpg")
+            FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 94, it) }
+            File(directory, "ocr_${index + 1}.txt").writeText(text, Charsets.UTF_8)
+            wrapCapturedFile(file, text)
+        }
+    }
+
+    fun loadStagedOcrPages(): List<CapturedDocPage> {
+        val directory = File(context.cacheDir, "doc_ocr_session")
+        return directory.listFiles { file -> file.extension.equals("jpg", true) }
+            ?.sortedBy { it.name }
+            ?.map { file ->
+                val text = File(file.parentFile, "${file.nameWithoutExtension}.txt")
+                    .takeIf(File::exists)?.readText(Charsets.UTF_8).orEmpty()
+                wrapCapturedFile(file, text)
+            }.orEmpty()
     }
 
     fun enhancePage(page: CapturedDocPage, crop: CropAdjustments): CapturedDocPage {
@@ -68,7 +94,7 @@ class DocPdfRepository(
         if (trimmed !== rotated) trimmed.recycle()
         enhanced.recycle()
         original.recycle()
-        return wrapCapturedFile(page.file)
+        return wrapCapturedFile(page.file, page.recognizedText)
     }
 
     fun exportPdf(
@@ -95,6 +121,9 @@ class DocPdfRepository(
                 width = pageInfo.pageWidth,
                 height = pageInfo.pageHeight,
             )
+            if (page.recognizedText.isNotBlank()) {
+                drawSearchableTextLayer(pdfPage.canvas, page.recognizedText)
+            }
             document.finishPage(pdfPage)
             sourceBitmap.recycle()
         }
@@ -112,6 +141,18 @@ class DocPdfRepository(
             ),
             file = outputFile,
         )
+    }
+
+    private fun drawSearchableTextLayer(canvas: Canvas, text: String) {
+        // Keep a nearly transparent text layer in the PDF so viewers can search/copy OCR output.
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            alpha = 2
+            textSize = 10f
+        }
+        text.lines().flatMap { it.chunked(110) }.take(120).forEachIndexed { index, line ->
+            canvas.drawText(line, 28f, 30f + index * 12f, paint)
+        }
     }
 
     private fun drawBitmapCentered(

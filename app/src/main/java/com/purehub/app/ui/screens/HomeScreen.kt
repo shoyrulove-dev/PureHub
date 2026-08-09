@@ -45,11 +45,11 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = "FREE · NO ADS · OPEN SOURCE",
                     style = MaterialTheme.typography.labelLarge,
@@ -57,12 +57,12 @@ fun HomeScreen(
                 )
                 Text(
                     text = "PureHub",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = "Useful, private tools for everyday life—built openly with the community.",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -85,8 +85,8 @@ fun HomeScreen(
                 onClick = { onOpenMiniApp(MiniAppId.LUNAR_CALENDAR) },
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = "TODAY",
@@ -95,7 +95,7 @@ fun HomeScreen(
                     )
                     Text(
                         text = today.format(formatter),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
@@ -113,10 +113,10 @@ fun HomeScreen(
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 Text(
                     text = if (favoriteTools.isEmpty()) "Quick access" else "Favorites",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 HomeQuickShortcuts(
@@ -133,8 +133,8 @@ fun HomeScreen(
                 onClick = onOpenSettings,
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
                     Text("Privacy & preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
@@ -160,9 +160,9 @@ private fun PromiseTile(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text(label, style = MaterialTheme.typography.labelLarge)

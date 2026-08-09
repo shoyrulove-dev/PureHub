@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HabitCheckInDao {
+    @Query("SELECT * FROM habit_check_ins ORDER BY id")
+    suspend fun getAllCheckIns(): List<HabitCheckInEntity>
+
+    @Query("DELETE FROM habit_check_ins")
+    suspend fun deleteAllCheckIns()
+
     @Query("SELECT * FROM habit_check_ins ORDER BY completedOn DESC")
     fun observeAllCheckIns(): Flow<List<HabitCheckInEntity>>
 

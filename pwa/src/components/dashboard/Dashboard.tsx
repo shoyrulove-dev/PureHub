@@ -41,9 +41,9 @@ function ToolCard({
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-white">
             {t(tool.titleKey)}
-            {tool.flagship ? <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">Community focus</span> : null}
+            <span title="Flagship mini-app" className="grid size-5 place-items-center rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300"><Sparkles className="size-3" /><span className="sr-only">Flagship</span></span>
           </span>
-          <span className="mt-1 line-clamp-2 block text-sm leading-5 text-slate-500 dark:text-slate-400">
+          <span className="mt-0.5 line-clamp-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">
             {t(tool.summaryKey)}
           </span>
         </span>
@@ -88,23 +88,25 @@ export function Dashboard() {
   const quickTools = quickIds
     .map((id) => MINI_APP_BY_ID.get(id))
     .filter((tool): tool is MiniAppDefinition => Boolean(tool))
-  const flagshipTools = MINI_APP_ITEMS.filter((tool) => tool.flagship)
+  const flagshipTools = quickIds
+    .map((id) => MINI_APP_BY_ID.get(id))
+    .filter((tool): tool is MiniAppDefinition => Boolean(tool))
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <div className="hero-panel">
         <div className="max-w-2xl">
           <span className="eyebrow">
             <Sparkles className="size-3.5" />
             {t('app.phaseShell')}
           </span>
-          <h1 className="mt-5 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-5xl dark:text-white">
+          <h1 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
             PureHub
           </h1>
-          <p className="mt-3 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+          <p className="mt-1.5 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
             {t('app.freePromise')}
           </p>
-          <label className="search-box mt-6">
+          <label className="search-box mt-4">
             <Search className="size-5 text-slate-400" />
             <input
               value={query}
@@ -115,18 +117,18 @@ export function Dashboard() {
           </label>
         </div>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="promise-card">
             <WifiOff className="size-5 text-emerald-600 dark:text-emerald-400" />
-            <div><strong>Offline-first</strong><span>{t('dashboard.offline')}</span></div>
+            <div><strong>Offline</strong><span className="hidden sm:block">{t('dashboard.offline')}</span></div>
           </div>
           <div className="promise-card">
             <ShieldCheck className="size-5 text-sky-600 dark:text-sky-400" />
-            <div><strong>No tracking</strong><span>{t('dashboard.onDevice')}</span></div>
+            <div><strong>Private</strong><span className="hidden sm:block">{t('dashboard.onDevice')}</span></div>
           </div>
           <div className="promise-card">
             <Heart className="size-5 text-rose-500" />
-            <div><strong>Community built</strong><span>Open source</span></div>
+            <div><strong>Open</strong><span className="hidden sm:block">Community built</span></div>
           </div>
         </div>
       </div>
@@ -141,14 +143,14 @@ export function Dashboard() {
       ) : null}
 
       {!query ? (
-        <div className="rounded-[20px] border border-violet-200 bg-violet-50/70 p-4 sm:p-5 dark:border-violet-500/20 dark:bg-violet-500/5">
+        <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-3.5 dark:border-violet-500/20 dark:bg-violet-500/5">
           <p className="eyebrow text-violet-700 dark:text-violet-300">Improve with us</p>
-          <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Flagship tools, shaped by real use</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">Try one, tell us what feels unclear, and help choose the next improvement.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <h2 className="mt-1 text-lg font-bold text-slate-950 dark:text-white">22 flagship tools, shaped by real use</h2>
+          <p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-400">Start with a favorite, then tell us what should feel simpler.</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {flagshipTools.map((tool) => <ToolCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={() => toggleFavorite(tool.id)} />)}
           </div>
-          <Link to={`/${locale}/community#early-testers`} className="text-link mt-4">Join Early Testers <ArrowRight className="size-3.5" /></Link>
+          <Link to={`/${locale}/community#early-testers`} className="text-link mt-3">Join testers <ArrowRight className="size-3.5" /></Link>
         </div>
       ) : null}
 
@@ -200,7 +202,7 @@ export function Dashboard() {
         </div>
 
         {filteredTools.length ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {filteredTools.map((tool) => (
               <ToolCard
                 key={tool.id}
@@ -243,7 +245,7 @@ function ToolSection({
   return (
     <section>
       <h2 className="text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {tools.map((tool) => (
           <ToolCard
             key={tool.id}

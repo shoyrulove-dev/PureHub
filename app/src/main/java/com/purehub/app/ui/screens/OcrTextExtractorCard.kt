@@ -97,6 +97,7 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.purehub.app.ui.LocalSnackbarHostState
+import com.purehub.app.feature.docpdf.DocPdfRepository
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -134,6 +135,7 @@ fun OcrTextExtractorCard(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val preferences = remember { context.getSharedPreferences("purehub.ocr-studio.v2", 0) }
+    val documentRepository = remember { DocPdfRepository(context.applicationContext) }
     var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.Latin) }
     val recognizer = remember(selectedLanguage) {
         when (selectedLanguage) {
@@ -270,7 +272,27 @@ fun OcrTextExtractorCard(
                     shareFile(context, exportOcrText(context, documentTitle, combinedOcrText(pages, extractedText)), "text/plain")
                 },
                 onExportPdf = {
-                    shareFile(context, exportOcrPdf(context, documentTitle, combinedOcrText(pages, extractedText)), "application/pdf")
+                    val pagePairs = pages.mapIndexed { index, page ->
+                        page.bitmap to if (index == pages.lastIndex) extractedText else page.text
+                    }.ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
+                    if (pagePairs.isEmpty()) {
+                        shareFile(context, exportOcrPdf(context, documentTitle, extractedText), "application/pdf")
+                    } else {
+                        val staged = documentRepository.stageOcrPages(pagePairs)
+                        shareFile(context, documentRepository.exportPdf(staged, documentTitle).file, "application/pdf")
+                    }
+                },
+                onSendToDocumentSuite = {
+                    val pagePairs = pages.mapIndexed { index, page ->
+                        page.bitmap to if (index == pages.lastIndex) extractedText else page.text
+                    }.ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
+                    if (pagePairs.isEmpty()) {
+                        status = "This library item has text only. Add its original image before sending to Doc to PDF."
+                    } else {
+                        val staged = documentRepository.stageOcrPages(pagePairs)
+                        status = "${staged.size} searchable page(s) sent to Doc to PDF."
+                        scope.launch { snackbarHostState.showSnackbar("Document Suite is ready with ${staged.size} OCR page(s).") }
+                    }
                 },
                 onSave = ::saveCurrent,
                 onAddPage = { selectedTab = OcrStudioTab.Scan },
@@ -477,6 +499,7 @@ private fun OcrTextContent(
     onShare: () -> Unit,
     onExportText: () -> Unit,
     onExportPdf: () -> Unit,
+    onSendToDocumentSuite: () -> Unit,
     onSave: () -> Unit,
     onAddPage: () -> Unit,
     onClear: () -> Unit,
@@ -519,6 +542,10 @@ private fun OcrTextContent(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onCopy, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.ContentCopy, null); Text(" Copy") }
             FilledTonalButton(onClick = onShare, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.IosShare, null); Text(" Share") }
+        }
+        FilledTonalButton(onClick = onSendToDocumentSuite, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Rounded.DocumentScanner, null)
+            Text(" Continue in Doc to PDF")
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onExportText, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.Description, null); Text(" TXT") }

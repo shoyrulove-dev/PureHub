@@ -144,7 +144,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       strategies: 'generateSW',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-*.png', 'apple-touch-icon.png', 'og-image.png', 'icons/*.svg'],
+      includeAssets: ['favicon.ico', 'favicon-*.png', 'apple-touch-icon.png', 'og-image.png', 'icons/*.png'],
       manifest: false,
       devOptions: {
         enabled: true,

@@ -1,6 +1,8 @@
 package com.purehub.app.ui.screens
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -38,6 +40,7 @@ import com.purehub.app.feature.billsplitter.BillPresetRepository
 import com.purehub.app.feature.billsplitter.BillSplitSummary
 import com.purehub.app.feature.billsplitter.BillSplitterCalculator
 import com.purehub.app.ui.LocalSnackbarHostState
+import com.purehub.app.feature.receipt.recognizeReceipt
 import java.text.DecimalFormat
 import kotlinx.coroutines.launch
 
@@ -62,6 +65,24 @@ fun BillSplitterCard(
             EditableBillItem(1, "Pizza", "18.0", mutableStateListOf(0, 1)),
             EditableBillItem(2, "Drinks", "9.0", mutableStateListOf(1, 2)),
         )
+    }
+    val receiptPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) recognizeReceipt(context, uri) { result ->
+            result.onSuccess { receipt ->
+                receipt.total?.let { totalBill = "%.2f".format(it) }
+                receipt.tax?.let { taxAmount = "%.2f".format(it) }
+                receipt.tip?.let { tipAmount = "%.2f".format(it) }
+                if (receipt.lines.isNotEmpty()) {
+                    items.clear()
+                    receipt.lines.forEachIndexed { index, line ->
+                        items += EditableBillItem(index + 1, line.name, "%.2f".format(line.amount), mutableStateListOf())
+                    }
+                }
+                scope.launch { snackbarHostState.showSnackbar("Receipt recognized locally. Review totals and assignments.") }
+            }.onFailure {
+                scope.launch { snackbarHostState.showSnackbar("Receipt OCR could not read this image.") }
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -102,6 +123,7 @@ fun BillSplitterCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Button(onClick = { receiptPicker.launch("image/*") }) { Text("Scan receipt") }
 
             if (savedPresets.isNotEmpty()) {
                 FlowRow(

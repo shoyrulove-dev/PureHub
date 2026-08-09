@@ -64,6 +64,7 @@ class PomodoroViewModel(
         timerJob = null
         targetElapsedRealtime = null
         audioManager.stop()
+        PomodoroTimerService.command(getApplication(), PomodoroTimerService.ACTION_RESET)
         _uiState.update {
             it.copy(
                 selectedPreset = preset,
@@ -103,6 +104,7 @@ class PomodoroViewModel(
         timerJob = null
         targetElapsedRealtime = null
         audioManager.fadeOutAndStop()
+        PomodoroTimerService.command(getApplication(), PomodoroTimerService.ACTION_RESET)
         _uiState.update {
             it.copy(
                 secondsRemaining = it.selectedPreset.minutes * 60,
@@ -121,6 +123,7 @@ class PomodoroViewModel(
         timerJob?.cancel()
         timerJob = null
         audioManager.fadeOutAndStop()
+        PomodoroTimerService.command(getApplication(), PomodoroTimerService.ACTION_PAUSE)
         _uiState.update {
             it.copy(
                 isRunning = false,
@@ -135,6 +138,12 @@ class PomodoroViewModel(
         }
         timerJob?.cancel()
         targetElapsedRealtime = SystemClock.elapsedRealtime() + (_uiState.value.secondsRemaining * 1_000L)
+        PomodoroTimerService.command(
+            getApplication(),
+            PomodoroTimerService.ACTION_START,
+            _uiState.value.secondsRemaining,
+            _uiState.value.selectedPreset.label,
+        )
         timerJob = viewModelScope.launch {
             _uiState.update {
                 it.copy(

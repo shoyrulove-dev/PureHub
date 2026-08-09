@@ -1,5 +1,7 @@
 package com.purehub.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,10 +25,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.purehub.app.data.local.PureHubDatabaseProvider
 import com.purehub.app.feature.expense.ExpenseTrackerRepository
 import com.purehub.app.feature.expense.ExpenseTrackerViewModel
+import com.purehub.app.feature.receipt.recognizeReceipt
+import com.purehub.app.ui.LocalSnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun ExpenseTrackerCard() {
     val context = LocalContext.current
+    val snackbar = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
     val database = PureHubDatabaseProvider.get(context)
     val viewModel: ExpenseTrackerViewModel = viewModel(
         factory = ExpenseTrackerViewModel.factory(
@@ -35,6 +43,16 @@ fun ExpenseTrackerCard() {
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val expenses by viewModel.expenses.collectAsStateWithLifecycle()
+    val receiptPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) recognizeReceipt(context, uri) { result ->
+            result.onSuccess {
+                viewModel.applyReceipt(it)
+                scope.launch { snackbar.showSnackbar("Receipt recognized locally. Review the fields before saving.") }
+            }.onFailure {
+                scope.launch { snackbar.showSnackbar("Receipt OCR could not read this image.") }
+            }
+        }
+    }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -46,6 +64,7 @@ fun ExpenseTrackerCard() {
                 title = "Expense Tracker",
                 description = "A calm local ledger for everyday spending. Categories, amounts, and notes stay on this device.",
             )
+            Button(onClick = { receiptPicker.launch("image/*") }) { Text("Scan receipt") }
             OutlinedTextField(
                 value = uiState.draftTitle,
                 onValueChange = viewModel::updateDraftTitle,

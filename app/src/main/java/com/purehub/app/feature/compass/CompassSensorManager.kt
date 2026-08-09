@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlin.math.abs
+import kotlin.math.sqrt
+
+data class CompassReading(val heading: Float, val accuracy: Int, val magneticFieldMicroTesla: Float)
 
 class CompassSensorManager(
     context: Context,
@@ -18,7 +21,7 @@ class CompassSensorManager(
     private val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
-    fun azimuthFlow(): Flow<Float> = callbackFlow {
+    fun azimuthFlow(): Flow<CompassReading> = callbackFlow {
         if (accelerometer == null || magnetometer == null) {
             close(IllegalStateException("Required compass sensors are unavailable on this device."))
             return@callbackFlow
@@ -29,6 +32,7 @@ class CompassSensorManager(
         val rotationMatrix = FloatArray(9)
         val orientation = FloatArray(3)
         var lastHeading = 0f
+        var magneticAccuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
 
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
@@ -50,11 +54,14 @@ class CompassSensorManager(
 
                 if (abs(stabilizedHeading - lastHeading) >= 0.5f) {
                     lastHeading = stabilizedHeading
-                    trySend(stabilizedHeading)
+                    val field = sqrt(geomagnetic.sumOf { (it * it).toDouble() }).toFloat()
+                    trySend(CompassReading(stabilizedHeading, magneticAccuracy, field))
                 }
             }
 
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                if (sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) magneticAccuracy = accuracy
+            }
         }
 
         sensorManager.registerListener(

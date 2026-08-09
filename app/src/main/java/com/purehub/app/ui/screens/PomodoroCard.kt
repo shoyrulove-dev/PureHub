@@ -1,5 +1,9 @@
 package com.purehub.app.ui.screens
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -18,6 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,6 +39,8 @@ fun PomodoroCard(
     viewModel: PomodoroViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val soundscapes = listOf("White Noise", "Brown Noise", "Soft Rain")
 
     Card(
@@ -80,7 +89,12 @@ fun PomodoroCard(
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = { viewModel.toggleTimer() }) {
+                Button(onClick = {
+                    if (!uiState.isRunning && Build.VERSION.SDK_INT >= 33 &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    viewModel.toggleTimer()
+                }) {
                     Text(if (uiState.isRunning) "Pause" else "Start")
                 }
                 Button(onClick = { viewModel.reset() }) {

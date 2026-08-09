@@ -61,6 +61,7 @@ fun SettingsScreen(
         )
         Column(modifier = Modifier.padding(top = 12.dp)) {
             ToolVisibilityManagerCard()
+            EncryptedBackupCard()
         }
     }
 }

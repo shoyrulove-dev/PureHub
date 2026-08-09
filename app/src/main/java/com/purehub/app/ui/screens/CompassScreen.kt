@@ -145,6 +145,8 @@ fun CompassScreen(
             text = "Heading: ${((smoothRotation % 360f) + 360f).toInt() % 360} deg ${uiState.cardinalDirection}",
             style = MaterialTheme.typography.titleMedium,
         )
+        Text("Accuracy: ${uiState.accuracyLabel}", color = MaterialTheme.colorScheme.primary)
+        uiState.accuracyWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (!uiState.isSensorAvailable && uiState.errorMessage != null) {
             Text(
                 text = uiState.errorMessage.orEmpty(),

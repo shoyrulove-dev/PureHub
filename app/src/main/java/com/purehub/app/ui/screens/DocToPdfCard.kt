@@ -81,6 +81,16 @@ fun DocToPdfCard(
     var exportMessage by rememberSaveable { mutableStateOf("Capture pages, then export a local PDF.") }
     var exportedPdf by remember { mutableStateOf<ExportedPdf?>(null) }
 
+    LaunchedEffect(Unit) {
+        val staged = repository.loadStagedOcrPages()
+        if (staged.isNotEmpty()) {
+            pages.clear()
+            pages.addAll(staged)
+            selectedPageIndex = pages.lastIndex
+            exportMessage = "Loaded ${pages.size} OCR page(s). Export creates a searchable PDF."
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -148,7 +158,8 @@ fun DocToPdfCard(
                                 exportMessage = "Capture at least one page before export."
                             } else {
                                 exportedPdf = repository.exportPdf(pages, documentTitle)
-                                exportMessage = "Saved PDF to ${exportedPdf?.file?.absolutePath}"
+                                val searchable = pages.count { it.recognizedText.isNotBlank() }
+                                exportMessage = "Saved searchable PDF ($searchable OCR page(s)) to ${exportedPdf?.file?.absolutePath}"
                                 scope.launch { snackbarHostState.showSnackbar("PDF exported locally.") }
                             }
                         },

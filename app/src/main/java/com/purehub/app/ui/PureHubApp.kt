@@ -127,7 +127,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                                         contentDescription = destination.route,
                                     )
                                 },
-                                alwaysShowLabel = true,
+                                alwaysShowLabel = false,
                                 label = { Text(destination.label) },
                             )
                         }
@@ -328,7 +328,7 @@ private fun ScrollHost(
             .fillMaxSize()
             .padding(innerPadding)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) { content() }
     }

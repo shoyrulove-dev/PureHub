@@ -16,6 +16,8 @@ data class CompassUiState(
     val cardinalDirection: String = "N",
     val isSensorAvailable: Boolean = true,
     val errorMessage: String? = null,
+    val accuracyLabel: String = "Calibrating",
+    val accuracyWarning: String? = "Move the phone in a figure-eight pattern before relying on the heading.",
 )
 
 class CompassViewModel(
@@ -40,13 +42,20 @@ class CompassViewModel(
                         )
                     }
                 }
-                .collect { heading ->
+                .collect { reading ->
+                    val warning = when {
+                        reading.accuracy <= android.hardware.SensorManager.SENSOR_STATUS_UNRELIABLE -> "Compass accuracy is unreliable. Move the phone in a figure-eight pattern."
+                        reading.magneticFieldMicroTesla !in 25f..65f -> "Possible magnetic interference (${reading.magneticFieldMicroTesla.toInt()} µT). Move away from metal or magnets."
+                        else -> null
+                    }
                     _uiState.update {
                         it.copy(
-                            heading = heading,
-                            cardinalDirection = cardinalFromHeading(heading),
+                            heading = reading.heading,
+                            cardinalDirection = cardinalFromHeading(reading.heading),
                             isSensorAvailable = true,
                             errorMessage = null,
+                            accuracyLabel = when (reading.accuracy) { 3 -> "High"; 2 -> "Medium"; 1 -> "Low"; else -> "Unreliable" },
+                            accuracyWarning = warning,
                         )
                     }
                 }

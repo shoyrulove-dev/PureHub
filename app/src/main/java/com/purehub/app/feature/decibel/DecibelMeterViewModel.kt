@@ -1,7 +1,8 @@
 package com.purehub.app.feature.decibel
 
+import android.app.Application
 import android.os.SystemClock
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,8 @@ data class DecibelMeterUiState(
     val averageDecibel: Float = 0f,
     val averageWindowSeconds: Int = 5,
     val errorMessage: String? = null,
+    val calibrationOffset: Float = 0f,
+    val accuracyWarning: String = "Relative estimate only. Calibrate against a trusted sound meter for improved readings.",
 )
 
 private data class DecibelSample(
@@ -25,10 +28,12 @@ private data class DecibelSample(
     val value: Float,
 )
 
-class DecibelMeterViewModel(
+class DecibelMeterViewModel @JvmOverloads constructor(
+    application: Application,
     private val meterManager: DecibelMeterManager = DecibelMeterManager(),
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(DecibelMeterUiState())
+) : AndroidViewModel(application) {
+    private val preferences = application.getSharedPreferences("purehub.sensor-calibration.v1", 0)
+    private val _uiState = MutableStateFlow(DecibelMeterUiState(calibrationOffset = preferences.getFloat("decibel_offset", 0f)))
     val uiState: StateFlow<DecibelMeterUiState> = _uiState.asStateFlow()
 
     private var meterJob: Job? = null
@@ -47,7 +52,8 @@ class DecibelMeterViewModel(
                         )
                     }
                 }
-                .collect { decibel ->
+                .collect { rawDecibel ->
+                    val decibel = (rawDecibel + _uiState.value.calibrationOffset).coerceIn(0f, 120f)
                     val now = SystemClock.elapsedRealtime()
                     samples.addLast(DecibelSample(now, decibel))
                     while (samples.firstOrNull()?.capturedAt?.let { it < now - 60_000L } == true) {
@@ -73,6 +79,12 @@ class DecibelMeterViewModel(
 
     fun resetPeak() {
         _uiState.update { it.copy(peakDecibel = it.currentDecibel) }
+    }
+
+    fun setCalibrationOffset(value: Float) {
+        val safe = value.coerceIn(-20f, 20f)
+        preferences.edit().putFloat("decibel_offset", safe).apply()
+        _uiState.update { it.copy(calibrationOffset = safe, accuracyWarning = if (safe == 0f) "Relative estimate only. Calibrate against a trusted sound meter for improved readings." else "Calibration offset ${if (safe >= 0) "+" else ""}${safe.toInt()} dB is active.") }
     }
 
     fun selectAverageWindow(seconds: Int) {

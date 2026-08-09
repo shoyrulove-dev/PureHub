@@ -45,19 +45,19 @@ fun ToolsScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(
                     text = if (showAllTools) "All tools" else MiniAppTab.MEASURE_TOOLS.title,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = "Free, private and ad-free utilities. Search by what you need to do.",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -97,9 +97,9 @@ fun ToolsScreen(
                             onClick = { onOpenMiniApp(tool) },
                         ) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(11.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 Surface(
                                     shape = MaterialTheme.shapes.medium,
@@ -109,7 +109,7 @@ fun ToolsScreen(
                                         imageVector = tool.icon,
                                         contentDescription = null,
                                         tint = tab.accent,
-                                        modifier = Modifier.padding(12.dp).size(22.dp),
+                                        modifier = Modifier.padding(9.dp).size(21.dp),
                                     )
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
@@ -124,7 +124,7 @@ fun ToolsScreen(
                                         text = toolFriendlySummary(tool),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2,
+                                        maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }

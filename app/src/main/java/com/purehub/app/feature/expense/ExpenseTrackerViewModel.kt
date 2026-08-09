@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.purehub.app.data.local.entity.ExpenseEntryEntity
+import com.purehub.app.feature.receipt.ReceiptResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,28 @@ class ExpenseTrackerViewModel(
     fun updateDraftCategory(value: String) = _uiState.update { it.copy(draftCategory = value) }
 
     fun updateDraftNote(value: String) = _uiState.update { it.copy(draftNote = value) }
+
+    fun applyReceipt(receipt: ReceiptResult) {
+        _uiState.update {
+            it.copy(
+                draftTitle = receipt.merchant,
+                draftAmount = receipt.total?.let { value -> "%.2f".format(value) }.orEmpty(),
+                draftCategory = guessCategory(receipt.rawText),
+                draftNote = listOfNotNull(
+                    receipt.date?.let { value -> "Receipt date: $value" },
+                    receipt.tax?.let { value -> "Tax: %.2f".format(value) },
+                    "Imported with on-device Receipt OCR",
+                ).joinToString(" · "),
+            )
+        }
+    }
+
+    private fun guessCategory(text: String): String = when {
+        Regex("restaurant|cafe|coffee|food|pizza|meal", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "Dining"
+        Regex("fuel|gas|petrol", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "Transport"
+        Regex("market|store|shop", RegexOption.IGNORE_CASE).containsMatchIn(text) -> "Shopping"
+        else -> "General"
+    }
 
     fun saveExpense() {
         val state = _uiState.value

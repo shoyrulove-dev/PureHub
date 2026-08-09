@@ -64,6 +64,8 @@ fun BubbleLevelCard(
             Button(onClick = { sensorActive = !sensorActive }) {
                 Text(if (sensorActive) "Pause level sensor" else "Enable level sensor")
             }
+            Button(onClick = viewModel::calibrateZero, enabled = sensorActive) { Text("Calibrate zero") }
+            uiState.accuracyWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

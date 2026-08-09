@@ -64,7 +64,7 @@ private val PureHubShapes = Shapes(
 @SuppressLint("NewApi")
 fun PureHubTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current

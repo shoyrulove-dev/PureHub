@@ -15,6 +15,8 @@ data class BubbleLevelReading(
     val pitch: Float,
     val roll: Float,
     val tiltMagnitude: Float,
+    val accuracy: Int,
+    val gravityMagnitude: Float,
 )
 
 class BubbleLevelSensorManager(
@@ -30,6 +32,7 @@ class BubbleLevelSensorManager(
         }
 
         val gravity = FloatArray(3)
+        var accuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
 
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
@@ -47,11 +50,13 @@ class BubbleLevelSensorManager(
                         pitch = pitch,
                         roll = roll,
                         tiltMagnitude = tiltMagnitude,
+                        accuracy = accuracy,
+                        gravityMagnitude = sqrt(x * x + y * y + z * z),
                     ),
                 )
             }
 
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+            override fun onAccuracyChanged(sensor: Sensor?, value: Int) { accuracy = value }
         }
 
         sensorManager.registerListener(

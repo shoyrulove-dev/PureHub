@@ -59,10 +59,10 @@ export function AppShell() {
   ]
 
   return (
-    <div className="min-h-screen px-3 py-3 text-slate-800 sm:px-5 sm:py-5 dark:text-slate-100">
-      <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-7xl gap-5 xl:items-start">
+    <div className="min-h-screen px-2 py-2 text-slate-800 sm:px-4 sm:py-4 dark:text-slate-100">
+      <div className="mx-auto flex min-h-[calc(100vh-1rem)] w-full max-w-7xl gap-4 xl:items-start">
         <aside className="hidden w-[256px] shrink-0 xl:sticky xl:top-5 xl:block">
-          <div className="app-surface rounded-[24px] p-4">
+          <div className="app-surface rounded-[20px] p-3">
             <Link to={`/${locale}`} className="flex items-center gap-3 rounded-[16px] p-2">
               <span className="grid size-11 place-items-center rounded-[14px] bg-emerald-500 text-white shadow-sm">
                 <Sparkles className="size-5" />
@@ -70,18 +70,18 @@ export function AppShell() {
               <span><strong className="block text-lg text-slate-950 dark:text-white">PureHub</strong><small className="text-slate-500">Community utilities</small></span>
             </Link>
 
-            <nav className="mt-5 space-y-1">
+            <nav className="mt-3 space-y-1">
               {navItems.map(({ label, icon: Icon, path }) => {
                 const active = location.pathname === path || (path !== `/${locale}` && location.pathname.startsWith(path))
                 return (
-                  <Link key={label} to={path} className={`flex min-h-12 items-center gap-3 rounded-[14px] px-3 text-sm font-semibold transition ${active ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-500/8 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>
+                  <Link key={label} to={path} className={`flex min-h-11 items-center gap-3 rounded-[13px] px-3 text-sm font-semibold transition ${active ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-500/8 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>
                     <Icon className="size-5" />{label}
                   </Link>
                 )
               })}
             </nav>
 
-            <div className="mt-6 rounded-[16px] bg-emerald-500/8 p-4">
+            <div className="mt-4 rounded-[14px] bg-emerald-500/8 p-3">
               <p className="text-sm font-bold text-slate-900 dark:text-white">Free forever</p>
               <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">No ads. No mandatory account. Open source with the community.</p>
               <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-link mt-3"><Code2 className="size-4" /> GitHub</a>
@@ -90,8 +90,8 @@ export function AppShell() {
           </div>
         </aside>
 
-        <div className="app-surface relative mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-1 flex-col overflow-hidden rounded-[24px]">
-          <header className="sticky top-0 z-30 border-b border-slate-500/10 bg-white/82 px-4 py-3 backdrop-blur-xl sm:px-6 dark:bg-[#131b26]/86">
+        <div className="app-surface relative mx-auto flex min-h-[calc(100vh-1rem)] w-full max-w-4xl flex-1 flex-col overflow-hidden rounded-[20px]">
+          <header className="sticky top-0 z-30 border-b border-slate-500/10 bg-white/82 px-3 py-2 backdrop-blur-xl sm:px-5 dark:bg-[#131b26]/86">
             <div className="flex items-center justify-between gap-3">
               <Link to={`/${locale}`} className="flex min-w-0 items-center gap-3 xl:hidden">
                 <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-emerald-500 text-white">
@@ -127,9 +127,9 @@ export function AppShell() {
             </div>
           </header>
 
-          <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 sm:pt-6">
+          <main className="flex-1 px-3 pb-24 pt-4 sm:px-5 sm:pt-5">
             <div key={location.pathname} className="page-enter"><Outlet /></div>
-            <footer className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-500/10 pt-5 text-xs text-slate-500">
+            <footer className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-500/10 pt-4 text-xs text-slate-500">
               <Link to={`/${locale}/privacy`} className="hover:text-slate-900 dark:hover:text-white">Privacy</Link>
               <Link to={`/${locale}/terms`} className="hover:text-slate-900 dark:hover:text-white">Terms</Link>
               <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-white">Open source</a>

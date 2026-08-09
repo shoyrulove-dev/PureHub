@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
+    @Query("SELECT * FROM expense_entries ORDER BY id")
+    suspend fun getAllExpenses(): List<ExpenseEntryEntity>
+
+    @Query("DELETE FROM expense_entries")
+    suspend fun deleteAllExpenses()
+
     @Query("SELECT * FROM expense_entries ORDER BY happenedAtEpochMillis DESC, createdAtEpochMillis DESC")
     fun observeExpenses(): Flow<List<ExpenseEntryEntity>>
 

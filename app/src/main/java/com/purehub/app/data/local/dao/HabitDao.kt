@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HabitDao {
+    @Query("SELECT * FROM habits ORDER BY id")
+    suspend fun getAllHabits(): List<HabitEntity>
+
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+
     @Query("SELECT * FROM habits ORDER BY isArchived ASC, createdAtEpochMillis DESC")
     fun observeHabits(): Flow<List<HabitEntity>>
 

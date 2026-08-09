@@ -16,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -141,6 +142,9 @@ fun DecibelMeterCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = colorScheme.onSurfaceVariant,
             )
+            Text("Calibration offset ${if (uiState.calibrationOffset >= 0) "+" else ""}${uiState.calibrationOffset.toInt()} dB")
+            Slider(value = uiState.calibrationOffset, onValueChange = viewModel::setCalibrationOffset, valueRange = -20f..20f, steps = 39)
+            Text(uiState.accuracyWarning, style = MaterialTheme.typography.bodySmall, color = colorScheme.tertiary)
         }
     }
 }

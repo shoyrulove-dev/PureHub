@@ -16,6 +16,8 @@ data class BubbleLevelUiState(
     val roll: Float = 0f,
     val tiltMagnitude: Float = 0f,
     val errorMessage: String? = null,
+    val accuracyWarning: String? = "Place the phone on a known-flat surface, then tap Calibrate zero.",
+    val isCalibrated: Boolean = false,
 )
 
 class BubbleLevelViewModel(
@@ -26,6 +28,16 @@ class BubbleLevelViewModel(
     val uiState: StateFlow<BubbleLevelUiState> = _uiState.asStateFlow()
 
     private var sensorJob: Job? = null
+    private val preferences = application.getSharedPreferences("purehub.sensor-calibration.v1", 0)
+    private var pitchOffset = preferences.getFloat("bubble_pitch", 0f)
+    private var rollOffset = preferences.getFloat("bubble_roll", 0f)
+
+    fun calibrateZero() {
+        pitchOffset += _uiState.value.pitch
+        rollOffset += _uiState.value.roll
+        preferences.edit().putFloat("bubble_pitch", pitchOffset).putFloat("bubble_roll", rollOffset).apply()
+        _uiState.update { it.copy(pitch = 0f, roll = 0f, tiltMagnitude = 0f, isCalibrated = true, accuracyWarning = null) }
+    }
 
     fun start() {
         if (sensorJob != null) return
@@ -37,10 +49,17 @@ class BubbleLevelViewModel(
                 .collect { reading ->
                     _uiState.update {
                         it.copy(
-                            pitch = reading.pitch,
-                            roll = reading.roll,
-                            tiltMagnitude = reading.tiltMagnitude,
+                            pitch = reading.pitch - pitchOffset,
+                            roll = reading.roll - rollOffset,
+                            tiltMagnitude = kotlin.math.sqrt((reading.pitch - pitchOffset) * (reading.pitch - pitchOffset) + (reading.roll - rollOffset) * (reading.roll - rollOffset)),
                             errorMessage = null,
+                            isCalibrated = pitchOffset != 0f || rollOffset != 0f,
+                            accuracyWarning = when {
+                                reading.accuracy <= android.hardware.SensorManager.SENSOR_STATUS_UNRELIABLE -> "Accelerometer accuracy is unreliable. Keep the device still."
+                                reading.gravityMagnitude !in 8.8f..10.8f -> "Device is moving; wait for the reading to settle before calibrating."
+                                pitchOffset == 0f && rollOffset == 0f -> "Calibrate zero on a known-flat surface for best results."
+                                else -> null
+                            },
                         )
                     }
                 }

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Heart, ShieldCheck, Sparkles, Wifi, WifiOff } from 'lucide-react'
+import { ArrowLeft, Heart, HardDrive, ShieldCheck, Sparkles, Wifi, WifiOff } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { lazy, Suspense, useEffect } from 'react'
 import type { MiniAppDefinition, TabDefinition } from '../features/catalog/tabs'
@@ -40,17 +40,17 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   }, [miniApp.id])
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-start gap-4">
-        <div className={`tool-card__icon size-13 ${tab.accentClass}`}>
-          <miniApp.icon className="size-6" strokeWidth={2.1} />
+    <section className="space-y-4">
+      <div className="flex items-start gap-3">
+        <div className={`tool-card__icon size-11 ${tab.accentClass}`}>
+          <miniApp.icon className="size-5" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
           <p className={`eyebrow ${tab.accentClass}`}>{t(tab.labelKey)}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl dark:text-white">
+          <h1 className="mt-0.5 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl dark:text-white">
             {t(miniApp.titleKey)}
           </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">{t(miniApp.summaryKey)}</p>
+          <p className="mt-0.5 line-clamp-2 max-w-2xl text-sm leading-5 text-slate-500 dark:text-slate-400">{t(miniApp.summaryKey)}</p>
         </div>
         <button type="button" className="grid size-11 shrink-0 place-items-center rounded-[14px] border border-slate-500/15" onClick={() => toggleFavorite(miniApp.id)} aria-label="Favorite tool">
           <Heart className={`size-5 ${favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
@@ -63,9 +63,9 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
           { label: 'Private first', icon: ShieldCheck },
           { label: capabilityLabel, icon: CapabilityIcon },
         ].map(({ label, icon: Icon }) => (
-          <div key={label} className="flex min-h-11 items-center justify-center gap-1.5 rounded-[12px] border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <div key={label} title={label} className="flex min-h-10 items-center justify-center gap-1.5 rounded-[11px] border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <Icon className="size-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
-            <span>{label}</span>
+            <span className="sr-only sm:not-sr-only">{label}</span>
           </div>
         ))}
       </div>
@@ -78,22 +78,9 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
 
       <MiniAppEngagement miniAppId={miniApp.id} title={t(miniApp.titleKey)} />
 
-      <div className="app-surface rounded-[18px] p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('app.routeLabel')}</p>
-            <p className="mt-2 break-all rounded-[14px] bg-slate-500/8 px-4 py-3 text-sm text-slate-500 dark:text-slate-300">
-              /{normalizedLocale}/{miniApp.slugs[normalizedLocale]}
-            </p>
-          </div>
-          <Link
-            to={buildTabPath(normalizedLocale, tab.id)}
-            className="text-link"
-          >
-            {t('app.browseTab')}
-          </Link>
-        </div>
-        <p className="mt-3 text-xs text-slate-400">Isolated storage: {runtime.storageNamespace} · {runtime.isolation === 'lazy' ? 'On-demand module' : 'Shared lightweight module'}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-500/10 bg-slate-500/5 p-2.5 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5" title={`Isolated storage: ${runtime.storageNamespace}`}><HardDrive className="size-3.5" /> Local storage</span>
+        <Link to={buildTabPath(normalizedLocale, tab.id)} className="text-link min-h-9"><ArrowLeft className="size-3.5" />{t('app.browseTab')}</Link>
       </div>
     </section>
   )
