@@ -152,7 +152,7 @@ Copy only the environment values you need into `command_center/.env`. Never comm
 
 ## Releases
 
-The latest signed preview is [PureHub 1.0.0-beta.3](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.3). Each Android release provides:
+The latest signed preview is [PureHub 1.0.0-beta.12](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.12). Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
@@ -175,6 +175,8 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, or join 
 ## Current direction
 
 The immediate priorities are reliability on real devices, deeper workflows for the most-used tools, accessibility, honest privacy boundaries, and community feedback. PureHub will remain free, ad-free, and open source.
+
+See the [complete 22-app flagship report](ALL_MINIAPPS_FLAGSHIP_REPORT_2026-08-10.md) for the current catalog, verification results, and video campaign status.
 
 ## License
 
