@@ -81,6 +81,15 @@ Configured announcement channels remain Telegram, DEV Community, Bluesky, and Ma
 - Backend: all automated tests passed; only existing FastAPI lifespan deprecation warnings remain.
 - Media: the YouTube manifest contains 22 existing MP4 files with no missing assets.
 
+## Published release
+
+- Signed preview: [PureHub 1.0.0-beta.12](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.12), versionCode 13
+- Production web: [hub.blissbiovn.com](https://hub.blissbiovn.com)
+- Telegram: [release announcement #27](https://t.me/purehubaaa/27)
+- DEV Community: [22 free, no-ads, privacy-first tools](https://dev.to/purehub/purehub-100-beta12-22-free-no-ads-privacy-first-tools-2jdl)
+- Bluesky: [release post](https://bsky.app/profile/purehub.bsky.social/post/3msoi3ganli25)
+- Mastodon: [release post](https://mastodon.social/@purehub/117067556999782312)
+
 ## Next operating phase
 
 The product phase is now feedback-led rather than another blanket flagship pass. Support Inbox should classify incoming reports by mini-app, measure repeated requests, and prioritize reliability or workflow improvements supported by real usage. Community publishing should use the scheduled demos to ask one focused question per tool instead of repeating generic promotion.
