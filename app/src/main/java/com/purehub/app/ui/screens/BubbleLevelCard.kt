@@ -56,15 +56,10 @@ fun BubbleLevelCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Bubble Level & Ruler",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "Accelerometer readings stay on-device and drive both a calm level bubble and a quick screen ruler.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Sensor Suite",
+                title = "Bubble Level & Ruler",
+                description = "A calm two-axis level and quick ruler powered by private on-device readings.",
             )
             Button(onClick = { sensorActive = !sensorActive }) {
                 Text(if (sensorActive) "Pause level sensor" else "Enable level sensor")

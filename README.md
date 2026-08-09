@@ -32,7 +32,7 @@ Typical uses include scanning or creating a QR code, running a Pomodoro session,
 
 PureHub is currently beta software. The web app is available now, and signed Android preview builds are published through GitHub Releases.
 
-The current community-polished flagship set is Zen Habit, Zen Pomodoro, Zen Breath, QR Studio, and OCR Studio.
+The flagship lineup now includes the Zen tools, QR Studio, the OCR + PDF Document Suite, Speaker Cleaner, the private Finance Suite, and the Compass + Level + Sound Sensor Suite.
 
 ## Try it now
 

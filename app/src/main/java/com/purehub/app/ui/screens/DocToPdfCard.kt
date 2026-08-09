@@ -90,9 +90,10 @@ fun DocToPdfCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = "Doc to PDF",
-                style = MaterialTheme.typography.titleLarge,
+            FlagshipSuiteHeader(
+                eyebrow = "Document Suite",
+                title = "Doc to PDF",
+                description = "Capture, crop, reorder, and export clean PDF pages. Pair it with OCR Studio for searchable text.",
             )
             Text(
                 text = exportMessage,

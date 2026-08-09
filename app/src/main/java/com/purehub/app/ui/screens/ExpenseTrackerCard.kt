@@ -41,15 +41,10 @@ fun ExpenseTrackerCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Expense Tracker",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "A simple local ledger stored in Room. Categories, amounts, and notes stay only on this device.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Private Finance Suite",
+                title = "Expense Tracker",
+                description = "A calm local ledger for everyday spending. Categories, amounts, and notes stay on this device.",
             )
             OutlinedTextField(
                 value = uiState.draftTitle,

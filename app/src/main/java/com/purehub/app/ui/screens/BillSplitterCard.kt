@@ -92,10 +92,10 @@ fun BillSplitterCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Bill Splitter",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
+            FlagshipSuiteHeader(
+                eyebrow = "Private Finance Suite",
+                title = "Bill Splitter",
+                description = "Assign shared items, settle clearly, and save reusable groups without an account.",
             )
             Text(
                 text = "Mix shared charges with item assignments, manage reusable presets locally, and share the final split as plain text.",

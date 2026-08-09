@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -30,16 +32,16 @@ fun SpeakerCleanerCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Speaker Cleaner",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
+            FlagshipSuiteHeader(
+                eyebrow = "Audio Care flagship",
+                title = "Speaker Cleaner",
+                description = "Timed low-frequency presets designed to help move light moisture from a phone speaker.",
             )
-            Text(
-                text = "A local AudioTrack tone may help move residual water from a phone speaker. It cannot repair damaged hardware.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Gentle" to 150f, "Balanced" to 165f, "Deep" to 185f).forEach { (label, value) ->
+                    FilterChip(selected = uiState.frequencyHz == value, onClick = { viewModel.selectPreset(value) }, label = { Text(label) })
+                }
+            }
             Text(
                 text = "Frequency ${uiState.frequencyHz.toInt()} Hz",
                 style = MaterialTheme.typography.titleMedium,
@@ -49,9 +51,18 @@ fun SpeakerCleanerCard(
                 onValueChange = viewModel::updateFrequency,
                 valueRange = 120f..220f,
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(15, 30, 60).forEach { seconds ->
+                    FilterChip(selected = uiState.durationSeconds == seconds, onClick = { viewModel.setDuration(seconds) }, label = { Text("${seconds}s") })
+                }
+            }
+            LinearProgressIndicator(
+                progress = { if (uiState.durationSeconds == 0) 0f else 1f - uiState.remainingSeconds.toFloat() / uiState.durationSeconds },
+                modifier = Modifier.fillMaxWidth(),
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = viewModel::togglePlayback) {
-                    Text(if (uiState.isPlaying) "Stop Tone" else "Play Tone")
+                    Text(if (uiState.isPlaying) "Stop • ${uiState.remainingSeconds}s" else "Start cleaning cycle")
                 }
             }
             Text(

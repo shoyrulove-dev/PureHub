@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 15
+CURRENT_SCHEMA_VERSION = 16
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -130,7 +130,8 @@ MINIAPP_DEFAULTS = [
         "route_zh": "/zh/zhinan-zhen",
         "enabled": True,
         "traffic_priority": 10,
-        "notes": "Strong organic intent target.",
+        "flagship": True,
+        "notes": "Sensor Suite flagship: calibrated compass with private live readings.",
     },
     {
         "miniapp_id": "bubble-level",
@@ -140,8 +141,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/thuoc-thuy",
         "route_zh": "/zh/shui-ping-yi",
         "enabled": True,
-        "traffic_priority": 6,
-        "notes": "Sensor-based utility tool.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Sensor Suite flagship: visual two-axis bubble level.",
     },
     {
         "miniapp_id": "decibel-meter",
@@ -151,8 +153,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/do-on",
         "route_zh": "/zh/fen-bei-yi",
         "enabled": True,
-        "traffic_priority": 7,
-        "notes": "Microphone-powered measurement tool.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Sensor Suite flagship: private estimated sound-level meter.",
     },
     {
         "miniapp_id": "unit-converter",
@@ -196,7 +199,8 @@ MINIAPP_DEFAULTS = [
         "route_zh": "/zh/wen-dang-zhuan-pdf",
         "enabled": True,
         "traffic_priority": 9,
-        "notes": "Document capture to PDF workflow.",
+        "flagship": True,
+        "notes": "Document Suite flagship: reorder, rotate, frame, and export local PDF pages.",
     },
     {
         "miniapp_id": "ocr-text",
@@ -228,8 +232,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/lam-sach-loa",
         "route_zh": "/zh/yang-sheng-qi-qing-jie",
         "enabled": True,
-        "traffic_priority": 8,
-        "notes": "Strong device-fix search intent.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Audio Care flagship with timed presets and safe local playback.",
     },
     {
         "miniapp_id": "deep-cleaner",
@@ -283,8 +288,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/chia-hoa-don",
         "route_zh": "/zh/fen-zhang-qi",
         "enabled": True,
-        "traffic_priority": 8,
-        "notes": "Good travel/group expense intent.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Finance Suite flagship for transparent private group settlement.",
     },
     {
         "miniapp_id": "expense-tracker",
@@ -294,8 +300,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/so-chi-tieu",
         "route_zh": "/zh/ji-zhang-ben",
         "enabled": True,
-        "traffic_priority": 8,
-        "notes": "Budget and personal finance intent.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Finance Suite flagship with local ledger, trends, and CSV export.",
     },
     {
         "miniapp_id": "decision-wheel",
@@ -728,6 +735,7 @@ def run_schema_migrations() -> None:
         (13, "classify-support-inbox-sources", _migration_support_inbox_sources),
         (14, "promote-ocr-studio-flagship", _migration_promote_ocr_studio),
         (15, "promote-zen-habit-flagship", _migration_promote_zen_habit),
+        (16, "promote-utility-suites-flagship", _migration_promote_utility_suites),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -831,6 +839,27 @@ def _migration_promote_zen_habit() -> None:
     collection("roadmap_options").update_one(
         {"option_id": "focus-insights"},
         {"$set": {"active": False, "status": "shipped", "completed_at": now, "updated_at": now}},
+    )
+
+
+def _migration_promote_utility_suites() -> None:
+    notes = {
+        "speaker-cleaner": "Audio Care flagship with timed presets and safe local playback.",
+        "doc-to-pdf": "Document Suite flagship paired with OCR Studio for a private document workflow.",
+        "expense-tracker": "Finance Suite flagship with local ledger, trends, and CSV export.",
+        "bill-splitter": "Finance Suite flagship for transparent private group settlement.",
+        "compass": "Sensor Suite flagship: calibrated compass with private live readings.",
+        "bubble-level": "Sensor Suite flagship: visual two-axis bubble level.",
+        "decibel-meter": "Sensor Suite flagship: private estimated sound-level meter.",
+    }
+    for miniapp_id, description in notes.items():
+        collection("miniapps").update_one(
+            {"miniapp_id": miniapp_id},
+            {"$set": {"traffic_priority": 10, "flagship": True, "notes": description, "updated_at": utcnow()}},
+        )
+    collection("roadmap_options").update_one(
+        {"option_id": "money-tools"},
+        {"$set": {"active": False, "shipped_at": utcnow(), "updated_at": utcnow()}},
     )
 
 
@@ -1404,7 +1433,11 @@ def get_analytics_snapshot() -> dict[str, Any]:
 
 PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
 PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "device_report"}
-FLAGSHIP_MINIAPP_IDS = {"zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text"}
+FLAGSHIP_MINIAPP_IDS = {
+    "zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text",
+    "speaker-cleaner", "doc-to-pdf", "expense-tracker", "bill-splitter",
+    "compass", "bubble-level", "decibel-meter",
+}
 
 
 def record_miniapp_event(miniapp_id: str, event: str) -> None:
@@ -1500,7 +1533,7 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
     flagship_start_day = (utcnow() - timedelta(days=13)).date().isoformat()
     flagship_window = {
         miniapp_id: {item: 0 for item in PUBLIC_MINIAPP_EVENTS}
-        for miniapp_id in ("qr-studio", "ocr-text", "zen-pomodoro", "zen-breath")
+        for miniapp_id in sorted(FLAGSHIP_MINIAPP_IDS)
     }
     for row in rows:
         miniapp_id = str(row.get("miniapp_id", ""))

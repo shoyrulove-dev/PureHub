@@ -59,15 +59,10 @@ fun DecibelMeterCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Decibel Meter",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "AudioRecord captures microphone amplitude on-device only, with no streaming or upload path.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Sensor Suite",
+                title = "Sound Meter",
+                description = "Current, peak, and rolling sound estimates with no streaming or upload path.",
             )
             Text(
                 text = "~${uiState.currentDecibel.toInt()} dB",

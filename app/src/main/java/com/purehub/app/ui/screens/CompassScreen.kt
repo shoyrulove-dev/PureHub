@@ -75,15 +75,10 @@ fun CompassScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (!embedded) {
-            Text(
-                text = "Compass",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "Accelerometer + magnetic field sensors are filtered locally and rendered with spring-smoothed motion for a calmer, non-jittery heading.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Sensor Suite",
+                title = "Compass",
+                description = "A spring-smoothed heading from locally filtered motion and magnetic sensors.",
             )
         }
         Card(modifier = Modifier.fillMaxWidth()) {

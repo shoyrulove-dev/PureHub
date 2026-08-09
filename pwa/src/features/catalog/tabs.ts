@@ -210,6 +210,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.compass.title',
     summaryKey: 'miniApps.compass.summary',
     slugs: seoSlugs('compass'),
+    flagship: true,
   },
   {
     id: 'bubble-level',
@@ -218,6 +219,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.bubbleLevel.title',
     summaryKey: 'miniApps.bubbleLevel.summary',
     slugs: seoSlugs('bubble-level'),
+    flagship: true,
   },
   {
     id: 'decibel-meter',
@@ -226,6 +228,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.decibelMeter.title',
     summaryKey: 'miniApps.decibelMeter.summary',
     slugs: seoSlugs('decibel-meter'),
+    flagship: true,
   },
   {
     id: 'smart-flashlight',
@@ -263,6 +266,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.docToPdf.title',
     summaryKey: 'miniApps.docToPdf.summary',
     slugs: seoSlugs('doc-to-pdf'),
+    flagship: true,
   },
   {
     id: 'ocr-text',
@@ -288,6 +292,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.speakerCleaner.title',
     summaryKey: 'miniApps.speakerCleaner.summary',
     slugs: seoSlugs('speaker-cleaner'),
+    flagship: true,
   },
   {
     id: 'deep-cleaner',
@@ -340,6 +345,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.billSplitter.title',
     summaryKey: 'miniApps.billSplitter.summary',
     slugs: seoSlugs('bill-splitter'),
+    flagship: true,
   },
   {
     id: 'expense-tracker',
@@ -348,6 +354,7 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.expenseTracker.title',
     summaryKey: 'miniApps.expenseTracker.summary',
     slugs: seoSlugs('expense-tracker'),
+    flagship: true,
   },
   {
     id: 'decision-wheel',

@@ -216,9 +216,9 @@ export const seoMeta: SeoMetaDictionary = {
   'decibel-meter': {
     en: {
       slug: 'decibel-meter',
-      title: 'Offline Decibel Meter | Local Sound Level Tool',
+      title: 'Free Sound Meter & Decibel Meter | Private Sensor Suite',
       description:
-        'Measure local sound levels with a browser-based decibel meter using private microphone processing and no ads.',
+        'Check current, peak, and rolling sound estimates with PureHub Sensor Suite. Microphone processing stays local and the tool has no ads.',
       keywords: ['decibel meter offline', 'sound level pwa', 'microphone meter no ads', 'privacy audio tool'],
     },
     vi: {
@@ -308,9 +308,9 @@ export const seoMeta: SeoMetaDictionary = {
   'doc-to-pdf': {
     en: {
       slug: 'doc-to-pdf',
-      title: 'Document to PDF Offline | Camera to PDF Tool',
+      title: 'Free Document Scanner to PDF | Private Document Suite',
       description:
-        'Capture pages and turn them into PDFs offline with PureHub, without uploads, ads, or cloud processing.',
+        'Capture, reorder, rotate, frame, and export document pages to PDF locally. Pair with OCR Studio, with no uploads or ads.',
       keywords: ['document to pdf offline', 'camera to pdf', 'private pdf tool', 'no upload pdf'],
     },
     vi: {
@@ -377,9 +377,9 @@ export const seoMeta: SeoMetaDictionary = {
   'speaker-cleaner': {
     en: {
       slug: 'speaker-cleaner',
-      title: 'Speaker Cleaner Online Offline Safe Tone Tool',
+      title: 'Free Speaker Cleaner | Water Eject Tone, No Ads',
       description:
-        'Play a local speaker tone with PureHub that may help move residual water, with clear safety guidance and no uploads.',
+        'Run timed 150–185 Hz speaker-cleaning presets that may help move light moisture. Local playback, clear safety guidance, and no ads.',
       keywords: ['speaker cleaner', 'tone generator', 'audio cleaning tool', 'offline speaker utility'],
     },
     vi: {
@@ -492,9 +492,9 @@ export const seoMeta: SeoMetaDictionary = {
   'bill-splitter': {
     en: {
       slug: 'bill-splitter',
-      title: 'Bill Splitter Offline | Group Expense Tool',
+      title: 'Free Bill Splitter | Group Expense Calculator, No Ads',
       description:
-        'Split bills, tips, and shared costs instantly with a privacy-first offline bill splitter for groups and trips.',
+        'Split bills, tax, tips, and shared costs instantly with a private group expense calculator that works without sign-up or ads.',
       keywords: ['bill splitter offline', 'group expense tool', 'split bills no ads', 'trip bill calculator'],
     },
     vi: {
@@ -515,9 +515,9 @@ export const seoMeta: SeoMetaDictionary = {
   'expense-tracker': {
     en: {
       slug: 'expense-tracker',
-      title: 'Offline Expense Tracker | Private Budget Ledger',
+      title: 'Free Offline Expense Tracker | Private Budget Ledger',
       description:
-        'Track spending locally with a private expense tracker using IndexedDB, mobile-friendly UX, and no ads.',
+        'Track spending locally, review category trends, and export CSV with a mobile-friendly private expense ledger and no ads.',
       keywords: ['expense tracker offline', 'budget ledger pwa', 'private spending tracker', 'no ads finance tool'],
     },
     vi: {

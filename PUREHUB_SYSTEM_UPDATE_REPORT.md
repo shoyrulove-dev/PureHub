@@ -1,6 +1,17 @@
 # PureHub System Update Report
 
-Date: 2026-08-02
+Date: 2026-08-10
+
+## Utility flagship suites — beta.9
+
+- Promoted Speaker Cleaner into an Audio Care flagship with safe presets, frequency control, 15/30/60-second cycles, progress feedback, and local-only playback.
+- Joined Doc to PDF and OCR Studio into a Document Suite. Web users can import up to 20 pages, reorder, rotate, frame, control image quality, and export locally; Android keeps its camera, crop, page, PDF, share, and OCR workflows.
+- Joined Expense Tracker and Bill Splitter into a private Finance Suite. The web ledger adds monthly/all-time totals, category trends, local persistence and CSV export; Android retains item assignment and reusable split presets.
+- Joined Compass, Bubble Level, and Sound Meter into a Sensor Suite with a shared flagship identity, smoother visual readings, calibration guidance, local microphone processing, and explicit estimate warnings.
+- Promoted all seven utility routes to flagship priority in the catalog and Command Center, closed the shipped money-tools roadmap request, and expanded the 14-day product monitor.
+- Updated English SEO titles/descriptions around high-intent no-ads, private, offline, speaker-water, document-scanner, group-expense, and sensor queries.
+- Built and device-tested the Android debug APK on a connected Xiaomi device. PWA production build, Android compilation, and 43 Command Center tests pass.
+- Created four 13.4-second vertical Shorts from real Android screens and scheduled YouTube publication for 22, 24, 26, and 28 August at 19:30 (UTC+7).
 
 ## Privacy-first growth and Early Testers upgrade
 

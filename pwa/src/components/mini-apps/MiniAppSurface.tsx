@@ -17,6 +17,10 @@ const QrStudioSurface = lazy(() => import('./surfaces/QrStudioSurface'))
 const ZenPomodoroSurface = lazy(() => import('./surfaces/ZenPomodoroSurface'))
 const ZenBreathSurface = lazy(() => import('./surfaces/ZenBreathSurface'))
 const ZenHabitSurface = lazy(() => import('./surfaces/ZenHabitSurface'))
+const SpeakerCleanerFlagship = lazy(() => import('./surfaces/SpeakerCleanerFlagship'))
+const DocumentSuiteSurface = lazy(() => import('./surfaces/DocumentSuiteSurface'))
+const FinanceSuiteSurface = lazy(() => import('./surfaces/FinanceSuiteSurface'))
+const SensorSuiteSurface = lazy(() => import('./surfaces/SensorSuiteSurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -29,11 +33,11 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'zen-breath':
       return <LazyTool><ZenBreathSurface /></LazyTool>
     case 'compass':
-      return <CompassSurface />
+      return <LazyTool><SensorSuiteSurface mode="compass" /></LazyTool>
     case 'bubble-level':
-      return <BubbleLevelSurface />
+      return <LazyTool><SensorSuiteSurface mode="level" /></LazyTool>
     case 'decibel-meter':
-      return <DecibelMeterSurface />
+      return <LazyTool><SensorSuiteSurface mode="sound" /></LazyTool>
     case 'smart-flashlight':
       return <SmartFlashlightSurface />
     case 'unit-converter':
@@ -41,13 +45,13 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'qr-studio':
       return <LazyTool><QrStudioSurface /></LazyTool>
     case 'doc-to-pdf':
-      return <DocToPdfSurface />
+      return <LazyTool><DocumentSuiteSurface /></LazyTool>
     case 'ocr-text':
       return <LazyTool><OcrTextSurface /></LazyTool>
     case 'color-grabber':
       return <ColorGrabberSurface />
     case 'speaker-cleaner':
-      return <SpeakerCleanerSurface />
+      return <LazyTool><SpeakerCleanerFlagship /></LazyTool>
     case 'deep-cleaner':
       return <DeepCleanerSurface />
     case 'wifi-analyzer':
@@ -57,9 +61,9 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'wallpaper-changer':
       return <WallpaperChangerSurface />
     case 'bill-splitter':
-      return <BillSplitterSurface />
+      return <LazyTool><FinanceSuiteSurface mode="split" /></LazyTool>
     case 'expense-tracker':
-      return <ExpenseTrackerSurface />
+      return <LazyTool><FinanceSuiteSurface mode="expenses" /></LazyTool>
     case 'decision-wheel':
       return <DecisionWheelSurface />
     case 'community-pro-unlock':
@@ -156,7 +160,7 @@ function LunarCalendarSurface() {
   )
 }
 
-function CompassSurface() {
+export function CompassSurface() {
   const [heading, setHeading] = useState(0)
   const [permissionState, setPermissionState] = useState<'idle' | 'granted' | 'denied'>('idle')
 
@@ -236,7 +240,7 @@ function CompassSurface() {
   )
 }
 
-function ExpenseTrackerSurface() {
+export function ExpenseTrackerSurface() {
   const [records, setRecords] = useState<ExpenseRecord[]>([])
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
@@ -328,7 +332,7 @@ function ExpenseTrackerSurface() {
   )
 }
 
-function BillSplitterSurface() {
+export function BillSplitterSurface() {
   const [total, setTotal] = useState('0')
   const [tip, setTip] = useState('0')
   const [peopleText, setPeopleText] = useState('Alex, Bao, Chen')
@@ -374,7 +378,7 @@ function BillSplitterSurface() {
   )
 }
 
-function BubbleLevelSurface() {
+export function BubbleLevelSurface() {
   const [tilt, setTilt] = useState({ beta: 0, gamma: 0 })
 
   useEffect(() => {
@@ -422,7 +426,7 @@ function BubbleLevelSurface() {
   )
 }
 
-function DecibelMeterSurface() {
+export function DecibelMeterSurface() {
   const [running, setRunning] = useState(false)
   const [level, setLevel] = useState(0)
   const [peak, setPeak] = useState(0)
@@ -624,7 +628,7 @@ function UnitConverterSurface() {
   )
 }
 
-function DocToPdfSurface() {
+export function DocToPdfSurface() {
   const [images, setImages] = useState<string[]>([])
 
   const handleFiles = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -727,7 +731,7 @@ function ColorGrabberSurface() {
   )
 }
 
-function SpeakerCleanerSurface() {
+export function SpeakerCleanerSurface() {
   const [playing, setPlaying] = useState(false)
   const [frequency, setFrequency] = useState(165)
   const audioContextRef = useRef<AudioContext | null>(null)
