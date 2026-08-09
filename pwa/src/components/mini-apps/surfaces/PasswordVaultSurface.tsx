@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { ActionButton, FormInput, Panel } from '../MiniAppPrimitives'
+import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
 
 type VaultItem = {
   id: string
@@ -78,8 +78,11 @@ export default function PasswordVaultSurface() {
     }
   }
 
+  const strength = passphrase.length >= 20 ? 'Strong' : passphrase.length >= 12 ? 'Acceptable' : 'Needs 12+ characters'
   return (
-    <Panel title="Password Vault" subtitle="Versioned PBKDF2 and AES-GCM encryption protect secret values before local storage.">
+    <div className="space-y-4">
+    <FlagshipHero eyebrow="Security Suite flagship" title="Password Vault" description="Versioned PBKDF2 and AES-GCM protect secrets before local storage, with timed reveal and encrypted backup." accent="emerald" />
+    <Panel title="Encrypted local vault" subtitle="No account, sync server, analytics or plaintext secret storage.">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
         <p role="status" className="text-xs font-semibold text-slate-600 dark:text-slate-300">{notice}</p>
         <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Auto-lock: 5 min</span>
@@ -87,6 +90,7 @@ export default function PasswordVaultSurface() {
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-3">
           <FormInput type="password" autoComplete="current-password" minLength={12} maxLength={256} value={passphrase} onChange={(event) => setPassphrase(event.target.value)} placeholder="Master passphrase (12+ characters)" />
+          <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs dark:bg-slate-950"><span>Passphrase strength</span><strong className={passphrase.length >= 20 ? 'text-emerald-600' : passphrase.length >= 12 ? 'text-amber-600' : 'text-slate-500'}>{strength}</strong></div>
           <FormInput maxLength={120} value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Entry label (not encrypted)" />
           <FormInput type="password" autoComplete="off" maxLength={4096} value={secret} onChange={(event) => setSecret(event.target.value)} placeholder="Secret value" />
           <ActionButton
@@ -144,7 +148,7 @@ export default function PasswordVaultSurface() {
       <p className="mt-4 rounded-[12px] bg-amber-50 p-3 text-xs font-medium leading-5 text-amber-900 dark:bg-amber-950/35 dark:text-amber-100">
         Security boundary: encrypted data is local, but browser extensions, malware, a compromised page, forgotten passphrases, and device loss remain risks. Keep a tested backup and do not use this experimental vault as the only copy of critical credentials before an independent audit.
       </p>
-    </Panel>
+    </Panel></div>
   )
 }
 

@@ -113,15 +113,10 @@ fun CleanerScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (!embedded) {
-                    Text(
-                        text = "Deep Cleaner",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "PureHub scans visible media only, on-device and offline, without MANAGE_EXTERNAL_STORAGE.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    FlagshipSuiteHeader(
+                        eyebrow = "Storage Care flagship",
+                        title = "Deep Cleaner",
+                        description = "Review large and duplicate visible media locally, then choose exactly what Android may remove.",
                     )
                 }
                 Button(

@@ -19,7 +19,7 @@ from command_center.youtube_connector import API_BASE, _access_token, complete_u
 
 ROOT = Path(__file__).resolve().parent
 MANIFEST = ROOT / "output" / "miniapp-shorts" / "youtube-queue.json"
-CAMPAIGN_ID = "youtube-miniapp-shorts-2026-08-v1"
+CAMPAIGN_ID = "youtube-all-flagships-2026-08-v2"
 
 
 def queue_content(item: dict[str, str]) -> str:
@@ -73,7 +73,7 @@ def verify_schedule(video_id: str) -> dict[str, str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, default=1)
-    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--limit", type=int, default=22)
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
     parser.add_argument("--campaign-id", default=CAMPAIGN_ID)
     args = parser.parse_args()

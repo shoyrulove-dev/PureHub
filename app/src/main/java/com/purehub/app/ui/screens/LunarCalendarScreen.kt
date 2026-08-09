@@ -48,15 +48,10 @@ fun LunarCalendarScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (!embedded) {
-            Text(
-                text = "Lunar Calendar",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "The converter works entirely on-device, so month browsing is instant and available without signal.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Calendar Suite flagship",
+                title = "Lunar Calendar",
+                description = "Browse solar and lunar dates instantly with private, on-device conversion that works without a signal.",
             )
         }
 

@@ -62,14 +62,10 @@ fun ColorGrabberCard(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = "Color Grabber",
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Text(
-                text = "CameraX samples the center pixel in real time so you can pick HEX and RGB values without sending frames anywhere.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Creative Suite flagship",
+                title = "Color Grabber",
+                description = "Capture accurate HEX and RGB colors in real time while every camera frame stays on your device.",
             )
             if (hasCameraPermission) {
                 ColorGrabberPreview(

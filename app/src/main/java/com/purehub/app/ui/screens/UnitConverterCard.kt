@@ -42,15 +42,10 @@ fun UnitConverterCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Unit Converter",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "Static zero-latency conversion math keeps daily measurements instant and fully offline.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Everyday Tools flagship",
+                title = "Unit Converter",
+                description = "Fast everyday conversions with zero-latency math, useful categories and complete offline privacy.",
             )
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

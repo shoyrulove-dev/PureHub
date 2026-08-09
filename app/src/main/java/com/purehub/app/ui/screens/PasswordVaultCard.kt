@@ -64,16 +64,12 @@ fun PasswordVaultCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Password Vault",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
+            FlagshipSuiteHeader(
+                eyebrow = "Security Suite flagship",
+                title = "Password Vault",
+                description = "Keep credentials protected with Android-backed encryption, guarded screenshots and sensitive clipboard cleanup.",
             )
-            Text(
-                text = uiState.note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 value = uiState.draftTitle,
                 onValueChange = viewModel::updateDraftTitle,

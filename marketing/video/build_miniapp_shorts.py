@@ -17,16 +17,28 @@ OUTPUT_DIR = ROOT / "output" / "miniapp-shorts"
 WIDTH, HEIGHT = 1080, 1920
 
 SHORTS = (
-    ("01-pomodoro.mp4", "Focus without popups", "A calm offline Pomodoro timer", "PureHub Pomodoro: Focus Without Ads #Shorts"),
-    ("02-zen-breath.mp4", "Take one quiet minute", "Guided breathing, completely offline", "One-Minute Offline Breathing Guide | PureHub #Shorts"),
-    ("03-compass.mp4", "A compass with no tracking", "Live phone sensors, clear and simple", "A Private Offline Compass for Android #Shorts"),
-    ("04-bubble-level.mp4", "Level it with your phone", "Bubble level and ruler in one tool", "Turn Your Phone Into a Bubble Level #Shorts"),
-    ("05-unit-converter.mp4", "Convert units instantly", "Fast, offline, and completely ad-free", "An Offline Unit Converter With Zero Ads #Shorts"),
-    ("06-qr-studio.mp4", "Create QR codes offline", "Generate and scan without cloud uploads", "Create QR Codes Offline With PureHub #Shorts"),
-    ("07-expense-tracker.mp4", "Track spending privately", "Local-first tracking with no account", "Track Expenses Without an Account #Shorts"),
-    ("08-password-vault.mp4", "Keep passwords on-device", "An encrypted local vault with no ads", "A Local Password Vault Inside PureHub #Shorts"),
-    ("09-bill-splitter.mp4", "Split a bill in seconds", "Tax, tip, people, and item assignments", "Split Bills Without Ads or Sign-Up #Shorts"),
-    ("10-decision-wheel.mp4", "Let the wheel decide", "A playful offline decision tool", "Let This Offline Wheel Decide #Shorts"),
+    ("01-lunar-calendar.mp4", "Plan with lunar context", "Solar and lunar dates, always available offline", "A Private Lunar Calendar for Everyday Planning #Shorts"),
+    ("02-zen-habit.mp4", "Build habits without guilt", "Private streaks and gentle weekly progress", "Build Better Habits Without Ads or Accounts #Shorts"),
+    ("03-zen-pomodoro.mp4", "Focus without popups", "A calm offline Pomodoro timer", "PureHub Pomodoro: Focus Without Ads #Shorts"),
+    ("04-zen-breath.mp4", "Take one quiet minute", "Guided breathing, completely offline", "One-Minute Offline Breathing Guide | PureHub #Shorts"),
+    ("05-compass.mp4", "A compass with no tracking", "Live phone sensors, clear and simple", "A Private Offline Compass for Android #Shorts"),
+    ("06-bubble-level.mp4", "Level it with your phone", "Bubble level and ruler in one tool", "Turn Your Phone Into a Bubble Level #Shorts"),
+    ("07-decibel-meter.mp4", "Understand nearby sound", "Private on-device sound estimates and history", "Measure Sound Privately on Android #Shorts"),
+    ("08-unit-converter.mp4", "Convert units instantly", "Fast, offline, and completely ad-free", "An Offline Unit Converter With Zero Ads #Shorts"),
+    ("09-smart-flashlight.mp4", "More than a flashlight", "Torch, SOS and Morse tools in one place", "A Smart Flashlight With SOS and Morse #Shorts"),
+    ("10-qr-studio.mp4", "Create QR codes offline", "Generate and scan without cloud uploads", "Create QR Codes Offline With PureHub #Shorts"),
+    ("11-doc-to-pdf.mp4", "Turn photos into a PDF", "Capture, reorder and export documents privately", "Create PDFs From Photos Without Uploading #Shorts"),
+    ("12-ocr-studio.mp4", "Extract text on-device", "Scan, edit and save a private OCR library", "Private OCR That Works on Your Phone #Shorts"),
+    ("13-color-grabber.mp4", "Capture the exact color", "Live HEX and RGB sampling without cloud frames", "Pick Colors Privately With Your Camera #Shorts"),
+    ("14-speaker-cleaner.mp4", "Clear water from speakers", "Guided tones, presets and safe listening controls", "Try This Speaker Cleaning Tone Safely #Shorts"),
+    ("15-deep-cleaner.mp4", "Review storage safely", "Find large and duplicate media before deleting", "A Storage Cleaner That Never Deletes Silently #Shorts"),
+    ("16-wifi-analyzer.mp4", "Understand your Wi-Fi", "Signal details and nearby networks with clear permissions", "See What Your Wi-Fi Signal Is Doing #Shorts"),
+    ("17-password-vault.mp4", "Keep passwords on-device", "An encrypted local vault with no ads", "A Local Password Vault Inside PureHub #Shorts"),
+    ("18-wallpaper-changer.mp4", "Refresh your home screen", "Private local wallpaper sets and rotation", "Rotate Local Wallpapers Automatically #Shorts"),
+    ("19-bill-splitter.mp4", "Split a bill in seconds", "Tax, tip, people, and item assignments", "Split Bills Without Ads or Sign-Up #Shorts"),
+    ("20-expense-tracker.mp4", "Track spending privately", "Local-first tracking with no account", "Track Expenses Without an Account #Shorts"),
+    ("21-decision-wheel.mp4", "Let the wheel decide", "A playful offline decision tool", "Let This Offline Wheel Decide #Shorts"),
+    ("22-community.mp4", "Help shape free tools", "Open source feedback, support and roadmap", "Join the PureHub Open-Source Community #Shorts"),
 )
 
 

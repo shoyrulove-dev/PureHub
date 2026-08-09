@@ -71,16 +71,12 @@ fun WifiAnalyzerCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "WiFi Analyzer",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
+            FlagshipSuiteHeader(
+                eyebrow = "Connection Care flagship",
+                title = "Wi-Fi Analyzer",
+                description = "Understand signal quality, nearby networks and connection history with transparent Android permissions.",
             )
-            Text(
-                text = uiState.note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onSurfaceVariant,
-            )
+            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
             if (!hasPermission) {
                 Button(
                     onClick = { permissionLauncher.launch(wifiScanPermissions()) },

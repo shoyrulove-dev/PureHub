@@ -64,15 +64,10 @@ fun DecisionWheelCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Decision Wheel",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "A playful offline roulette with smooth springy motion. Separate choices with commas.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Decision Suite flagship",
+                title = "Decision Wheel",
+                description = "Turn any list into a smooth, playful offline wheel and make everyday choices without tracking.",
             )
             OutlinedTextField(
                 value = optionsText,

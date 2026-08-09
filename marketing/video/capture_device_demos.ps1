@@ -1,6 +1,7 @@
 param(
     [string]$OutputDirectory = "marketing/video/raw",
     [int]$DurationSeconds = 9,
+    [string]$PackageName = "com.purehub.app",
     [switch]$Resume
 )
 
@@ -53,9 +54,9 @@ function Tap-Text {
 
 function Open-Tool {
     param([string]$Title)
-    Invoke-Adb shell am force-stop com.purehub.app
-    & adb shell monkey -p com.purehub.app -c android.intent.category.LAUNCHER 1 | Out-Null
-    Start-Sleep -Milliseconds 900
+    Invoke-Adb shell am force-stop $PackageName
+    Invoke-Adb -Arguments @("shell", "am", "start", "-W", "-n", "$PackageName/com.purehub.app.MainActivity")
+    Start-Sleep -Milliseconds 1200
     Invoke-Adb shell input tap 400 2200
     Start-Sleep -Milliseconds 650
 
@@ -73,16 +74,28 @@ function Open-Tool {
 }
 
 $demos = @(
-    @{ File = "01-pomodoro.mp4"; Tool = "Zen Pomodoro"; Actions = @("Start", "Cafe") },
-    @{ File = "02-zen-breath.mp4"; Tool = "Zen Breath"; Actions = @("Start") },
-    @{ File = "03-compass.mp4"; Tool = "Compass"; Actions = @() },
-    @{ File = "04-bubble-level.mp4"; Tool = "Bubble Level & Ruler"; Actions = @() },
-    @{ File = "05-unit-converter.mp4"; Tool = "Unit Converter"; Actions = @() },
-    @{ File = "06-qr-studio.mp4"; Tool = "QR Studio"; Actions = @() },
-    @{ File = "07-expense-tracker.mp4"; Tool = "Expense Tracker"; Actions = @() },
-    @{ File = "08-password-vault.mp4"; Tool = "Password Vault"; Actions = @() },
-    @{ File = "09-bill-splitter.mp4"; Tool = "Bill Splitter"; Actions = @() },
-    @{ File = "10-decision-wheel.mp4"; Tool = "Decision Wheel"; Actions = @("Spin") }
+    @{ File = "01-lunar-calendar.mp4"; Tool = "Lunar Calendar"; Actions = @() },
+    @{ File = "02-zen-habit.mp4"; Tool = "Zen Habit"; Actions = @() },
+    @{ File = "03-zen-pomodoro.mp4"; Tool = "Zen Pomodoro"; Actions = @("Start") },
+    @{ File = "04-zen-breath.mp4"; Tool = "Zen Breath"; Actions = @("Start") },
+    @{ File = "05-compass.mp4"; Tool = "Compass"; Actions = @() },
+    @{ File = "06-bubble-level.mp4"; Tool = "Bubble Level & Ruler"; Actions = @() },
+    @{ File = "07-decibel-meter.mp4"; Tool = "Decibel Meter"; Actions = @() },
+    @{ File = "08-unit-converter.mp4"; Tool = "Unit Converter"; Actions = @() },
+    @{ File = "09-smart-flashlight.mp4"; Tool = "Smart Flashlight"; Actions = @() },
+    @{ File = "10-qr-studio.mp4"; Tool = "QR Studio"; Actions = @() },
+    @{ File = "11-doc-to-pdf.mp4"; Tool = "Doc to PDF"; Actions = @() },
+    @{ File = "12-ocr-studio.mp4"; Tool = "OCR Studio"; Actions = @() },
+    @{ File = "13-color-grabber.mp4"; Tool = "Color Grabber"; Actions = @() },
+    @{ File = "14-speaker-cleaner.mp4"; Tool = "Speaker Cleaner"; Actions = @() },
+    @{ File = "15-deep-cleaner.mp4"; Tool = "Deep Cleaner"; Actions = @() },
+    @{ File = "16-wifi-analyzer.mp4"; Tool = "WiFi Analyzer"; Actions = @() },
+    @{ File = "17-password-vault.mp4"; Tool = "Password Vault"; Actions = @() },
+    @{ File = "18-wallpaper-changer.mp4"; Tool = "Wallpaper Changer"; Actions = @() },
+    @{ File = "19-bill-splitter.mp4"; Tool = "Bill Splitter"; Actions = @() },
+    @{ File = "20-expense-tracker.mp4"; Tool = "Expense Tracker"; Actions = @() },
+    @{ File = "21-decision-wheel.mp4"; Tool = "Decision Wheel"; Actions = @("Spin") },
+    @{ File = "22-community.mp4"; Tool = "PureHub Community"; Actions = @() }
 )
 
 foreach ($demo in $demos) {

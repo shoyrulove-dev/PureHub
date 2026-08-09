@@ -56,20 +56,10 @@ fun CommunityScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (!embedded) {
-            Text(
-                text = "COMMUNITY BUILT",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = "PureHub belongs to everyone",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "No Pro code, no paywall and no ads. Telegram connects people; GitHub keeps the product transparent and open.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Community flagship",
+                title = "PureHub belongs to everyone",
+                description = "Join the conversation, report issues and shape free, no-ad, open-source tools together.",
             )
         }
 

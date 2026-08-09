@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import type { MiniAppId } from '../../features/catalog/tabs'
-import { ActionButton, FormInput, FormTextArea, Panel } from './MiniAppPrimitives'
+import { ActionButton, FlagshipHero, FormInput, FormTextArea, Panel } from './MiniAppPrimitives'
 import {
   expenseRepository,
   type ExpenseRecord,
@@ -21,6 +21,7 @@ const SpeakerCleanerFlagship = lazy(() => import('./surfaces/SpeakerCleanerFlags
 const DocumentSuiteSurface = lazy(() => import('./surfaces/DocumentSuiteSurface'))
 const FinanceSuiteSurface = lazy(() => import('./surfaces/FinanceSuiteSurface'))
 const SensorSuiteSurface = lazy(() => import('./surfaces/SensorSuiteSurface'))
+const EverydayFlagshipSurface = lazy(() => import('./surfaces/EverydayFlagshipSurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -39,9 +40,9 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'decibel-meter':
       return <LazyTool><SensorSuiteSurface mode="sound" /></LazyTool>
     case 'smart-flashlight':
-      return <SmartFlashlightSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="smart-flashlight" /></LazyTool>
     case 'unit-converter':
-      return <UnitConverterSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="unit-converter" /></LazyTool>
     case 'qr-studio':
       return <LazyTool><QrStudioSurface /></LazyTool>
     case 'doc-to-pdf':
@@ -49,25 +50,25 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'ocr-text':
       return <LazyTool><OcrTextSurface /></LazyTool>
     case 'color-grabber':
-      return <ColorGrabberSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="color-grabber" /></LazyTool>
     case 'speaker-cleaner':
       return <LazyTool><SpeakerCleanerFlagship /></LazyTool>
     case 'deep-cleaner':
-      return <DeepCleanerSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="deep-cleaner" /></LazyTool>
     case 'wifi-analyzer':
-      return <WifiAnalyzerSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="wifi-analyzer" /></LazyTool>
     case 'password-vault':
       return <LazyTool><PasswordVaultSurface /></LazyTool>
     case 'wallpaper-changer':
-      return <WallpaperChangerSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="wallpaper-changer" /></LazyTool>
     case 'bill-splitter':
       return <LazyTool><FinanceSuiteSurface mode="split" /></LazyTool>
     case 'expense-tracker':
       return <LazyTool><FinanceSuiteSurface mode="expenses" /></LazyTool>
     case 'decision-wheel':
-      return <DecisionWheelSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="decision-wheel" /></LazyTool>
     case 'community-pro-unlock':
-      return <CommunityUnlockSurface />
+      return <LazyTool><EverydayFlagshipSurface mode="community" /></LazyTool>
     default:
       return null
   }
@@ -87,6 +88,7 @@ function buildMoonDay(date: Date) {
 
 function LunarCalendarSurface() {
   const [cursor, setCursor] = useState(() => new Date())
+  const [selected, setSelected] = useState(() => new Date())
   const today = new Date()
   const monthDays = useMemo(() => {
     const year = cursor.getFullYear()
@@ -107,6 +109,12 @@ function LunarCalendarSurface() {
 
   return (
     <div className="space-y-4">
+      <FlagshipHero eyebrow="Calendar Suite flagship" title="Lunar Calendar" description="A polished Vietnamese solar–lunar calendar with fast month navigation and private on-device conversion." accent="violet" />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Metric label="Selected solar" value={selected.toLocaleDateString()} />
+        <Metric label="Selected lunar" value={`${buildMoonDay(selected).day}/${buildMoonDay(selected).month}/${buildMoonDay(selected).year}${buildMoonDay(selected).leap ? ' leap' : ''}`} />
+        <button className="min-h-16 rounded-[15px] border border-violet-200 bg-violet-50 px-4 text-sm font-black text-violet-900 dark:border-violet-900 dark:bg-violet-950/35 dark:text-violet-100" onClick={() => { const now = new Date(); setCursor(now); setSelected(now) }}>Jump to today</button>
+      </div>
       <Panel
         title={cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         subtitle="Vietnamese solar-to-lunar conversion calculated locally for UTC+7."
@@ -137,10 +145,13 @@ function LunarCalendarSurface() {
               date.getFullYear() === today.getFullYear()
 
             return (
-              <div
+              <button
                 key={date.toISOString()}
+                type="button"
+                onClick={() => setSelected(date)}
                 className={[
-                  'rounded-2xl border p-3 text-left transition',
+                  'rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm',
+                  date.toDateString() === selected.toDateString() ? 'ring-2 ring-violet-500' : '',
                   isToday
                     ? 'border-emerald-300/45 bg-emerald-400/12 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.45)]'
                     : 'border-slate-500/15 bg-slate-500/5',
@@ -151,7 +162,7 @@ function LunarCalendarSurface() {
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                   {lunarDate.day}/{lunarDate.month}{lunarDate.leap ? '*' : ''}
                 </p>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -536,7 +547,7 @@ export function DecibelMeterSurface() {
   )
 }
 
-function SmartFlashlightSurface() {
+export function SmartFlashlightSurface() {
   const [active, setActive] = useState(false)
   const [color, setColor] = useState('#ffffff')
 
@@ -574,7 +585,7 @@ function SmartFlashlightSurface() {
   )
 }
 
-function UnitConverterSurface() {
+export function UnitConverterSurface() {
   const [category, setCategory] = useState<'length' | 'weight' | 'temperature'>('length')
   const [value, setValue] = useState('1')
 
@@ -675,7 +686,7 @@ export function DocToPdfSurface() {
   )
 }
 
-function ColorGrabberSurface() {
+export function ColorGrabberSurface() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [pickedColor, setPickedColor] = useState('#000000')
@@ -779,7 +790,7 @@ export function SpeakerCleanerSurface() {
   )
 }
 
-function DeepCleanerSurface() {
+export function DeepCleanerSurface() {
   const [files, setFiles] = useState<File[]>([])
   const totalBytes = files.reduce((sum, file) => sum + file.size, 0)
   const duplicateNames = new Set(
@@ -818,7 +829,7 @@ function DeepCleanerSurface() {
   )
 }
 
-function WifiAnalyzerSurface() {
+export function WifiAnalyzerSurface() {
   const connection = (navigator as Navigator & {
     connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean }
   }).connection
@@ -839,7 +850,7 @@ function WifiAnalyzerSurface() {
   )
 }
 
-function WallpaperChangerSurface() {
+export function WallpaperChangerSurface() {
   const [images, setImages] = useState<string[]>([])
   const [selected, setSelected] = useState(0)
 
@@ -874,7 +885,7 @@ function WallpaperChangerSurface() {
   )
 }
 
-function DecisionWheelSurface() {
+export function DecisionWheelSurface() {
   const [optionsText, setOptionsText] = useState('Coffee\nTea\nJuice\nWater')
   const [rotation, setRotation] = useState(0)
   const [result, setResult] = useState('')
@@ -949,7 +960,7 @@ function DecisionWheelSurface() {
   )
 }
 
-function CommunityUnlockSurface() {
+export function CommunityUnlockSurface() {
   return (
     <Panel title="PureHub Community" subtitle="Every tool stays free. Join the people building and improving PureHub together.">
       <div className="grid gap-3 sm:grid-cols-2">

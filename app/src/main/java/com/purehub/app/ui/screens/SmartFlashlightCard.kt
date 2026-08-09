@@ -69,15 +69,10 @@ fun SmartFlashlightCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Smart Flashlight",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "Torch control, SOS, and Morse blinking all run directly on-device through Camera APIs.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FlagshipSuiteHeader(
+                eyebrow = "Light Suite flagship",
+                title = "Smart Flashlight",
+                description = "Reliable torch control, emergency SOS and custom Morse patterns, processed entirely on your device.",
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = { withCameraPermission { viewModel.toggleTorch() } }) {

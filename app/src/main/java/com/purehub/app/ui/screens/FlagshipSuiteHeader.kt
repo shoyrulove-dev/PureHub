@@ -27,17 +27,39 @@ fun FlagshipSuiteHeader(
     Surface(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
-                .background(Brush.linearGradient(listOf(accent.copy(alpha = .18f), MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.tertiary.copy(alpha = .10f))))
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            accent.copy(alpha = .18f),
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = .10f),
+                        ),
+                    ),
+                )
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("✦", color = accent, fontWeight = FontWeight.Black)
-                Text(eyebrow.uppercase(), style = MaterialTheme.typography.labelSmall, color = accent, fontWeight = FontWeight.Black)
+                Text(
+                    eyebrow.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = accent,
+                    fontWeight = FontWeight.Black,
+                )
             }
             Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-            Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("OFFLINE • NO ADS • PRIVATE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+            Text(
+                description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "OFFLINE • NO ADS • PRIVATE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }

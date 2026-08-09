@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 17
+CURRENT_SCHEMA_VERSION = 18
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -84,8 +84,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/lich-am",
         "route_zh": "/zh/nong-li",
         "enabled": True,
-        "traffic_priority": 9,
-        "notes": "High-value SEO page for offline calendar intent.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Calendar Suite flagship with private solar-lunar navigation.",
     },
     {
         "miniapp_id": "zen-habit",
@@ -167,8 +168,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/doi-don-vi",
         "route_zh": "/zh/dan-wei-huan-suan",
         "enabled": True,
-        "traffic_priority": 8,
-        "notes": "High-frequency utility search intent.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Everyday Tools flagship with multi-category offline conversions and history.",
     },
     {
         "miniapp_id": "smart-flashlight",
@@ -178,8 +180,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/den-pin-thong-minh",
         "route_zh": "/zh/zhi-neng-shou-dian",
         "enabled": True,
-        "traffic_priority": 5,
-        "notes": "Screen and supported camera-light utility.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Light Suite flagship with dimming, pulse, SOS and capability-safe fallback.",
     },
     {
         "miniapp_id": "qr-studio",
@@ -225,8 +228,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/lay-mau",
         "route_zh": "/zh/qu-se-qi",
         "enabled": True,
-        "traffic_priority": 5,
-        "notes": "Visual utility, more niche traffic.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Creative Suite flagship with palette extraction and contrast guidance.",
     },
     {
         "miniapp_id": "speaker-cleaner",
@@ -248,8 +252,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/don-dep-thiet-bi",
         "route_zh": "/zh/shen-du-qing-li",
         "enabled": True,
-        "traffic_priority": 5,
-        "notes": "Safe cleanup guidance and PureHub local-data controls.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Storage Care flagship with transparent review and recoverable cleanup guidance.",
     },
     {
         "miniapp_id": "wifi-analyzer",
@@ -259,8 +264,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/phan-tich-wifi",
         "route_zh": "/zh/wifi-fen-xi",
         "enabled": True,
-        "traffic_priority": 6,
-        "notes": "Connection and nearby-network diagnostics within platform limits.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Connection Care flagship with honest browser and Android diagnostics.",
     },
     {
         "miniapp_id": "password-vault",
@@ -270,8 +276,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/kho-mat-khau",
         "route_zh": "/zh/mi-ma-bao-xian-ku",
         "enabled": True,
-        "traffic_priority": 7,
-        "notes": "Privacy-first storage utility.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Security Suite flagship with encrypted local storage and timed secret handling.",
     },
     {
         "miniapp_id": "wallpaper-changer",
@@ -281,8 +288,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/doi-hinh-nen",
         "route_zh": "/zh/bi-zhi-geng-huan",
         "enabled": True,
-        "traffic_priority": 4,
-        "notes": "Local wallpaper preview and supported Android apply workflow.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Creative Suite flagship with local preview, framing and Android apply workflow.",
     },
     {
         "miniapp_id": "bill-splitter",
@@ -316,8 +324,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/vong-quay-quyet-dinh",
         "route_zh": "/zh/jue-ce-zhuan-pan",
         "enabled": True,
-        "traffic_priority": 4,
-        "notes": "Fun utility, lower SEO priority.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Decision Suite flagship with reusable lists and private result history.",
     },
     {
         "miniapp_id": "community-pro-unlock",
@@ -327,8 +336,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/mo-khoa-cong-dong",
         "route_zh": "/zh/she-qu-jie-suo",
         "enabled": True,
-        "traffic_priority": 3,
-        "notes": "Telegram, GitHub, contribution and referral bridge. No feature gating.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Community flagship for support, feedback, roadmap and contribution without feature gating.",
     },
 ]
 
@@ -741,6 +751,7 @@ def run_schema_migrations() -> None:
         (15, "promote-zen-habit-flagship", _migration_promote_zen_habit),
         (16, "promote-utility-suites-flagship", _migration_promote_utility_suites),
         (17, "normalize-flagship-priorities", _migration_normalize_flagship_priorities),
+        (18, "promote-complete-catalog-flagship", _migration_promote_complete_catalog),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -873,6 +884,14 @@ def _migration_normalize_flagship_priorities() -> None:
     collection("miniapps").update_many(
         {"miniapp_id": {"$in": sorted(FLAGSHIP_MINIAPP_IDS)}},
         {"$set": {"traffic_priority": 10, "flagship": True, "updated_at": now}},
+    )
+
+
+def _migration_promote_complete_catalog() -> None:
+    now = utcnow()
+    collection("miniapps").update_many(
+        {"miniapp_id": {"$in": sorted(FLAGSHIP_MINIAPP_IDS)}},
+        {"$set": {"flagship": True, "traffic_priority": 10, "updated_at": now}},
     )
     collection("miniapps").update_one(
         {"miniapp_id": "zen-breath"},
@@ -1453,7 +1472,10 @@ PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "devic
 FLAGSHIP_MINIAPP_IDS = {
     "zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text",
     "speaker-cleaner", "doc-to-pdf", "expense-tracker", "bill-splitter",
-    "compass", "bubble-level", "decibel-meter",
+    "compass", "bubble-level", "decibel-meter", "lunar-calendar",
+    "unit-converter", "smart-flashlight", "color-grabber", "deep-cleaner",
+    "wifi-analyzer", "password-vault", "wallpaper-changer", "decision-wheel",
+    "community-pro-unlock",
 }
 
 
@@ -1617,6 +1639,7 @@ def import_control_bundle(bundle: dict[str, Any], mode: str = "merge") -> dict[s
             "route_vi": str(item.get("route_vi", "")).strip(),
             "route_zh": str(item.get("route_zh", "")).strip(),
             "traffic_priority": int(item.get("traffic_priority", 0)),
+            "flagship": bool(item.get("flagship", False)),
             "notes": str(item.get("notes", "")).strip(),
             "enabled": bool(item.get("enabled", True)),
             "updated_at": utcnow(),

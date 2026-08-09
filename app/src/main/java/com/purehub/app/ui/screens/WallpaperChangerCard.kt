@@ -59,16 +59,12 @@ fun WallpaperChangerCard() {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = "Wallpaper Changer",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
+            FlagshipSuiteHeader(
+                eyebrow = "Creative Suite flagship",
+                title = "Wallpaper Studio",
+                description = "Build a private wallpaper rotation from local images and apply a fresh look whenever you choose.",
             )
-            Text(
-                text = uiState.note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(onClick = { pickerLauncher.launch(arrayOf("image/*")) }) {
                 Text("Choose Local Images")
             }
