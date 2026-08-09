@@ -1,8 +1,14 @@
 .git
 .gradle
 .kotlin
+.tools
 .idea
 .vscode
+artifacts
+app
+docs
+gradle
+marketing
 app/build
 **/build
 captures
