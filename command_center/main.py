@@ -459,7 +459,22 @@ def _dashboard_context(
         )
     else:
         active_support_messages = loaded.get("active_support_messages", [])
+    thread_rows: dict[str, list[dict[str, Any]]] = {}
+    for support_item in support_messages:
+        thread_key = f"{support_item.get('platform', '')}:{support_item.get('thread_id') or support_item.get('external_id') or support_item.get('id')}"
+        thread_rows.setdefault(thread_key, []).append(support_item)
+    for support_item in active_support_messages:
+        thread_key = f"{support_item.get('platform', '')}:{support_item.get('thread_id') or support_item.get('external_id') or support_item.get('id')}"
+        conversation = thread_rows.get(thread_key, [support_item])
+        has_previous_reply = any(
+            row.get("id") != support_item.get("id") and row.get("status") in {"replied", "manual_required"}
+            for row in conversation
+        )
+        support_item["conversation_count"] = len(conversation)
+        support_item["conversation_state"] = "reopened" if has_previous_reply else "awaiting_us"
     support_history = [item for item in support_messages if item.get("status") in {"replied", "ignored"}][:12]
+    for support_item in support_history:
+        support_item["conversation_state"] = "awaiting_user" if support_item.get("status") == "replied" else "resolved"
     releases = loaded["releases"]
     current_release_id = str(releases[0].get("release_id", "")) if releases else ""
     release_publications = loaded.get("release_publications", [])

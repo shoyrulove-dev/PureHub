@@ -15,6 +15,7 @@ data class SpeakerCleanerUiState(
     val frequencyHz: Float = 165f,
     val durationSeconds: Int = 30,
     val remainingSeconds: Int = 30,
+    val completed: Boolean = false,
     val note: String = "A centered 165 Hz loop can help shake out light moisture and dust from speaker grills.",
 )
 
@@ -45,22 +46,22 @@ class SpeakerCleanerViewModel(
             stop("Cycle stopped.")
         } else {
             audioManager.play(_uiState.value.frequencyHz.toDouble())
-            _uiState.update { it.copy(isPlaying = true, remainingSeconds = it.durationSeconds, note = "Cleaning cycle is running locally.") }
+            _uiState.update { it.copy(isPlaying = true, completed = false, remainingSeconds = it.durationSeconds, note = "Cleaning cycle is running locally.") }
             timerJob = viewModelScope.launch {
                 while (_uiState.value.remainingSeconds > 0) {
                     delay(1_000)
                     _uiState.update { it.copy(remainingSeconds = (it.remainingSeconds - 1).coerceAtLeast(0)) }
                 }
-                stop("Cycle complete. Check the speaker and repeat once if needed.")
+                stop("Cycle complete. Compare the same familiar audio before repeating.", completed = true)
             }
         }
     }
 
-    private fun stop(note: String) {
+    private fun stop(note: String, completed: Boolean = false) {
         timerJob?.cancel()
         timerJob = null
         audioManager.stop()
-        _uiState.update { it.copy(isPlaying = false, remainingSeconds = it.durationSeconds, note = note) }
+        _uiState.update { it.copy(isPlaying = false, completed = completed, remainingSeconds = it.durationSeconds, note = note) }
     }
 
     override fun onCleared() {

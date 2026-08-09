@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 16
+CURRENT_SCHEMA_VERSION = 17
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -108,6 +108,7 @@ MINIAPP_DEFAULTS = [
         "route_zh": "/zh/chan-fan-qie-zhong",
         "enabled": True,
         "traffic_priority": 10,
+        "flagship": True,
         "notes": "Flagship focus timer with local white noise.",
     },
     {
@@ -118,8 +119,9 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/tho-zen",
         "route_zh": "/zh/chan-hu-xi",
         "enabled": True,
-        "traffic_priority": 9,
-        "notes": "Flagship breathing and calm UX surface.",
+        "traffic_priority": 10,
+        "flagship": True,
+        "notes": "Zen Suite flagship with guided pacing, private goals, haptics, and reduced-motion support.",
     },
     {
         "miniapp_id": "compass",
@@ -187,7 +189,8 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/qr-studio",
         "route_zh": "/zh/er-wei-ma-gong-fang",
         "enabled": True,
-        "traffic_priority": 9,
+        "traffic_priority": 10,
+        "flagship": True,
         "notes": "Flagship tool to scan and generate QR offline.",
     },
     {
@@ -198,7 +201,7 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/tai-lieu-pdf",
         "route_zh": "/zh/wen-dang-zhuan-pdf",
         "enabled": True,
-        "traffic_priority": 9,
+        "traffic_priority": 10,
         "flagship": True,
         "notes": "Document Suite flagship: reorder, rotate, frame, and export local PDF pages.",
     },
@@ -210,7 +213,8 @@ MINIAPP_DEFAULTS = [
         "route_vi": "/vi/trich-xuat-van-ban",
         "route_zh": "/zh/ocr-wen-ben",
         "enabled": True,
-        "traffic_priority": 8,
+        "traffic_priority": 10,
+        "flagship": True,
         "notes": "Flagship private document scanner, OCR editor, export, and local library.",
     },
     {
@@ -736,6 +740,7 @@ def run_schema_migrations() -> None:
         (14, "promote-ocr-studio-flagship", _migration_promote_ocr_studio),
         (15, "promote-zen-habit-flagship", _migration_promote_zen_habit),
         (16, "promote-utility-suites-flagship", _migration_promote_utility_suites),
+        (17, "normalize-flagship-priorities", _migration_normalize_flagship_priorities),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -860,6 +865,18 @@ def _migration_promote_utility_suites() -> None:
     collection("roadmap_options").update_one(
         {"option_id": "money-tools"},
         {"$set": {"active": False, "shipped_at": utcnow(), "updated_at": utcnow()}},
+    )
+
+
+def _migration_normalize_flagship_priorities() -> None:
+    now = utcnow()
+    collection("miniapps").update_many(
+        {"miniapp_id": {"$in": sorted(FLAGSHIP_MINIAPP_IDS)}},
+        {"$set": {"traffic_priority": 10, "flagship": True, "updated_at": now}},
+    )
+    collection("miniapps").update_one(
+        {"miniapp_id": "zen-breath"},
+        {"$set": {"notes": "Zen Suite flagship with guided pacing, private goals, haptics, and reduced-motion support.", "updated_at": now}},
     )
 
 

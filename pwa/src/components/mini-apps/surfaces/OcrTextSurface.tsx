@@ -13,6 +13,7 @@ const OCR_LANGUAGES = [
   { code: 'vie', label: 'Tiếng Việt' },
   { code: 'chi_sim', label: '简体中文' },
 ] as const
+const OCR_PACK_CACHE_KEY = 'purehub.ocr.cached-languages.v1'
 
 type Tab = 'scan' | 'text' | 'library'
 type ScanMode = 'Document' | 'Receipt' | 'Note'
@@ -92,6 +93,10 @@ export default function OcrTextSurface() {
   const [title, setTitle] = useState('My scan')
   const [status, setStatus] = useState('Ready. Capture a page or choose an image.')
   const [running, setRunning] = useState(false)
+  const [packProgress, setPackProgress] = useState(0)
+  const [cachedLanguages, setCachedLanguages] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(OCR_PACK_CACHE_KEY) ?? '[]') as string[] } catch { return [] }
+  })
   const [documents, setDocuments] = useState<OcrDocumentRecord[]>([])
   const [query, setQuery] = useState('')
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -122,9 +127,20 @@ export default function OcrTextSurface() {
     try {
       const prepared = await prepareImage(file, rotation, crop, filter)
       setStatus(`Loading the ${OCR_LANGUAGES.find((item) => item.code === language)?.label} OCR pack...`)
-      const { createWorker } = await import('tesseract.js')
-      const worker = await createWorker(language)
+      setPackProgress(0)
+      const { createWorker, OEM } = await import('tesseract.js')
+      const worker = await createWorker(language, OEM.LSTM_ONLY, {
+        logger: (message) => {
+          if (typeof message.progress === 'number') setPackProgress(Math.round(message.progress * 100))
+          if (message.status) setStatus(`${message.status.replaceAll('_', ' ')} ${Math.round((message.progress ?? 0) * 100)}%`)
+        },
+      })
       try {
+        setCachedLanguages((current) => {
+          const next = current.includes(language) ? current : [...current, language]
+          localStorage.setItem(OCR_PACK_CACHE_KEY, JSON.stringify(next))
+          return next
+        })
         setStatus('Recognizing text on this device...')
         const result = await worker.recognize(prepared.blob)
         const text = cleanText(result.data.text, mode)
@@ -145,6 +161,7 @@ export default function OcrTextSurface() {
       setStatus('OCR could not finish. The selected language pack may need its first download.')
     } finally {
       setRunning(false)
+      setPackProgress(0)
       event.target.value = ''
     }
   }
@@ -231,7 +248,8 @@ export default function OcrTextSurface() {
               <div className="mt-3 flex gap-2 overflow-x-auto">{(['Original', 'Clean', 'B&W'] as ImageFilter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${filter === value ? 'border-emerald-400 bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-300 dark:border-slate-700'}`}>{value}</button>)}</div>
               <label className="mt-3 block text-xs font-bold text-slate-600 dark:text-slate-300">Edge crop {Math.round(crop * 100)}%<input type="range" min="0" max="0.16" step="0.01" value={crop} onChange={(event) => setCrop(Number(event.target.value))} className="mt-2 w-full accent-emerald-600" /></label>
             </div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Recognition language<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Recognition language<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}{cachedLanguages.includes(item.code) ? ' · ready offline' : ' · first download'}</option>)}</select></label>
+            {running && packProgress > 0 ? <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/30"><div className="flex justify-between text-xs font-bold text-emerald-800 dark:text-emerald-200"><span>OCR pack and recognition</span><span>{packProgress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${packProgress}%` }} /></div></div> : null}
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
           </div>
         ) : null}

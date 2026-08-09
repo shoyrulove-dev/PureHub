@@ -70,6 +70,21 @@ fun SpeakerCleanerCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (uiState.completed) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text("Cycle complete", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Play the same familiar audio at a comfortable volume and compare clarity before running another cycle.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
             Text(
                 text = "Start at a comfortable volume, keep the speaker facing down, and stop if the sound distorts.",
                 style = MaterialTheme.typography.bodySmall,

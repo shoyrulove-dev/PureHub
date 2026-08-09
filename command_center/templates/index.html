@@ -341,6 +341,10 @@
       .release-summary { margin: 0.38rem 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
       .badge { display: inline-flex; padding: 0.3rem 0.55rem; border: 1px solid var(--line); border-radius: 999px; color: #475569; background: #ffffff; font-size: 0.63rem; font-weight: 760; text-transform: uppercase; white-space: nowrap; }
       .badge.approved, .badge.published { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
+      .badge.awaiting_us { border-color: #bae6fd; color: #0369a1; background: #f0f9ff; }
+      .badge.reopened { border-color: #ddd6fe; color: #6d28d9; background: #f5f3ff; }
+      .badge.awaiting_user { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
+      .badge.resolved { border-color: #e2e8f0; color: #475569; background: #f8fafc; }
       .badge.draft { color: #6d28d9; background: #f5f3ff; }
       .badge.ready_manual { color: #a16207; background: #fffbeb; }
       .release-actions, .row-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.85rem; }
@@ -843,6 +847,7 @@
             </form>
           </div>
           <div class="support-stats" style="margin-top: 0.9rem">
+            <span class="sync-state" id="supportLiveStatus">Live · waiting</span>
             <span class="badge" title="New messages"><svg class="icon"><use href="#i-inbox"/></svg>&nbsp;{{ support_metrics.new }}<span class="sr-only"> new</span></span>
             <span class="badge draft" title="AI drafts"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ support_metrics.draft_ready }}<span class="sr-only"> drafts</span></span>
             <span class="badge {% if support_metrics.bugs %}ready_manual{% endif %}" title="Open PureHub bug or device reports"><svg class="icon"><use href="#i-bug"/></svg>&nbsp;{{ support_metrics.bugs }}<span class="sr-only"> bug reports</span></span>
@@ -904,6 +909,8 @@
                   <span class="support-author" title="{{ item.author_handle or item.author_name or 'Community member' }}">{{ item.author_name or item.author_handle or 'Community member' }}</span>
                   <span class="support-preview" data-full-text="{{ item.content }}"><span class="support-preview-text">{{ item.content }}</span></span>
                   <span class="support-state">
+                    <span class="badge {{ item.conversation_state }}" title="Conversation state">{% if item.conversation_state == 'reopened' %}follow-up{% elif item.conversation_state == 'awaiting_us' %}awaiting us{% else %}{{ item.conversation_state|replace('_', ' ') }}{% endif %}</span>
+                    {% if item.conversation_count > 1 %}<span class="badge" title="{{ item.conversation_count }} messages in this thread"><svg class="icon"><use href="#i-thread"/></svg>&nbsp;{{ item.conversation_count }}</span>{% endif %}
                     <span class="badge {{ item.status }}" title="{{ item.priority }} · {{ item.received_at[:16]|replace('T', ' ') }}">{{ item.status|replace('_', ' ') }}</span>
                     <span class="support-category {{ item.category }}" title="AI classification: {{ item.category|replace('_', ' ') }}"><svg class="icon"><use href="{% if item.category in ['bug', 'device_report'] %}#i-bug{% elif item.category == 'feature_request' %}#i-spark{% elif item.category == 'opportunity' %}#i-compass{% else %}#i-message{% endif %}"/></svg>{{ item.category|replace('_', ' ') }}</span>
                   </span>
@@ -1322,14 +1329,18 @@
           }
         });
         let previousOpen = Number(openMetric?.textContent || 0);
+        let previousDrafts = Number(draftMetric?.textContent || 0);
+        const liveStatus = document.getElementById("supportLiveStatus");
         const refreshSupportStatus = async (sync = false) => {
           try {
+            let syncPayload = null;
             if (sync) {
-              await fetch("{{ api_prefix }}/support/sync", {
+              const syncResponse = await fetch("{{ api_prefix }}/support/sync", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: { "X-PureHub-Dashboard": "support-monitor" },
               });
+              if (syncResponse.ok) syncPayload = await syncResponse.json();
             }
             const response = await fetch(endpoint, { credentials: "same-origin", cache: "no-store" });
             if (!response.ok) return;
@@ -1341,7 +1352,20 @@
             if (alertCount) alertCount.textContent = String(open);
             if (alert) alert.hidden = open === 0;
             if (open > previousOpen) document.title = `(${open}) PureHub Support`;
+            const created = syncPayload
+              ? Object.values(syncPayload.channels || {}).reduce((sum, item) => sum + Number(item.created || 0), 0)
+              : 0;
+            if (liveStatus) liveStatus.textContent = `Live · checked ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+            const listChanged = created > 0 || open !== previousOpen || drafts !== previousDrafts;
+            const editing = document.querySelector('.support-edit-panel:not([hidden])');
             previousOpen = open;
+            previousDrafts = drafts;
+            if (listChanged && !editing) {
+              window.location.hash = "support";
+              window.location.reload();
+            } else if (listChanged && liveStatus) {
+              liveStatus.textContent = "New replies available · finish editing, then refresh";
+            }
           } catch (_) {
             // Keep the dashboard usable during a transient network failure.
           }
