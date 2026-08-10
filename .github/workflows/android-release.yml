@@ -27,7 +27,10 @@ jobs:
     environment: android-release
     env:
       PUREHUB_VERSION_NAME: ${{ inputs.version_name }}
-      PUREHUB_VERSION_CODE: ${{ inputs.version_code || github.run_number }}
+      # Tag builds use the versionCode committed in app/build.gradle.kts.
+      # Manual runs may override it explicitly; github.run_number is unrelated
+      # to the Android release sequence and can cause downgrade conflicts.
+      PUREHUB_VERSION_CODE: ${{ inputs.version_code }}
       PUREHUB_KEYSTORE_PATH: release-secrets/purehub-release.jks
       PUREHUB_KEYSTORE_PASSWORD: ${{ secrets.PUREHUB_KEYSTORE_PASSWORD }}
       PUREHUB_KEY_ALIAS: ${{ secrets.PUREHUB_KEY_ALIAS }}
