@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from command_center.community_support import (
     _analyze_message,
+    _is_own_social_author,
     _looks_like_question,
     _looks_like_relevant_opportunity,
     _plain_text,
@@ -20,6 +21,12 @@ from command_center.main import support_bulk_approve_action, support_bulk_send_a
 
 
 class CommunitySupportTests(unittest.TestCase):
+    def test_own_social_author_matches_stable_id_or_exact_handle(self) -> None:
+        self.assertTrue(_is_own_social_author({"id": "42", "acct": "purehub"}, own_id="42"))
+        self.assertTrue(_is_own_social_author({"handle": "PureHub.Bsky.Social"}, own_handle="@purehub.bsky.social"))
+        self.assertFalse(_is_own_social_author({"acct": "purehub@another.social"}, own_handle="purehub"))
+        self.assertFalse(_is_own_social_author({"handle": "purehub-fan.bsky.social"}, own_handle="purehub.bsky.social"))
+
     @patch("command_center.database.collection")
     def test_support_metrics_always_returns_dashboard_payload(self, collection) -> None:
         messages = MagicMock()

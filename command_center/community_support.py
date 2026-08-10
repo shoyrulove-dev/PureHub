@@ -63,6 +63,16 @@ def _iso_datetime(value: str | None) -> datetime:
         return datetime.now(timezone.utc)
 
 
+def _is_own_social_author(author: dict[str, Any], *, own_id: str = "", own_handle: str = "") -> bool:
+    author_id = str(author.get("did") or author.get("id") or author.get("user_id") or "").strip()
+    author_handle = str(author.get("handle") or author.get("acct") or author.get("username") or "").strip().lower().lstrip("@")
+    normalized_own_handle = own_handle.strip().lower().lstrip("@")
+    return bool(
+        (own_id and author_id and author_id == own_id)
+        or (normalized_own_handle and author_handle and author_handle == normalized_own_handle)
+    )
+
+
 def ingest_telegram_update(payload: dict[str, Any]) -> dict[str, Any] | None:
     message = payload.get("message") or payload.get("edited_message")
     if not isinstance(message, dict):
@@ -357,6 +367,8 @@ def _bluesky_session() -> dict[str, Any]:
 
 def _sync_bluesky() -> int:
     session = _bluesky_session()
+    own_did = str(session.get("did", ""))
+    own_handle = str(session.get("handle") or get_config_value("bluesky_handle"))
     response = requests.get(
         "https://bsky.social/xrpc/app.bsky.notification.listNotifications",
         headers={"Authorization": f"Bearer {session['accessJwt']}"},
@@ -370,6 +382,8 @@ def _sync_bluesky() -> int:
             continue
         record = notification.get("record") or {}
         author = notification.get("author") or {}
+        if _is_own_social_author(author, own_id=own_did, own_handle=own_handle):
+            continue
         uri = str(notification.get("uri", ""))
         cid = str(notification.get("cid", ""))
         handle = str(author.get("handle", ""))
@@ -405,7 +419,9 @@ def _sync_mastodon() -> int:
     }
     own_account_response = requests.get(f"{base}/api/v1/accounts/verify_credentials", headers=headers, timeout=30)
     own_account_response.raise_for_status()
-    own_account_id = str(own_account_response.json().get("id", ""))
+    own_account = own_account_response.json()
+    own_account_id = str(own_account.get("id", ""))
+    own_account_handle = str(own_account.get("acct") or own_account.get("username", ""))
     response = requests.get(
         f"{base}/api/v1/notifications",
         headers=headers,
@@ -417,6 +433,8 @@ def _sync_mastodon() -> int:
     for notification in response.json():
         status = notification.get("status") or {}
         account = notification.get("account") or {}
+        if _is_own_social_author(account, own_id=own_account_id, own_handle=own_account_handle):
+            continue
         status_id = str(status.get("id", ""))
         if not status_id:
             continue
@@ -486,6 +504,7 @@ def _looks_like_relevant_opportunity(text: str, keyword: str = "") -> bool:
 def _discover_bluesky(keywords: list[str], limit: int) -> int:
     own_handle = get_config_value("bluesky_handle").lower().lstrip("@")
     session = _bluesky_session()
+    own_did = str(session.get("did", ""))
     created = 0
     for keyword in keywords:
         response = requests.get(
@@ -500,7 +519,7 @@ def _discover_bluesky(keywords: list[str], limit: int) -> int:
             text = str(record.get("text", "")).strip()
             author = post.get("author") or {}
             handle = str(author.get("handle", ""))
-            if not text or handle.lower() == own_handle or not _looks_like_relevant_opportunity(text, keyword):
+            if not text or _is_own_social_author(author, own_id=own_did, own_handle=own_handle) or not _looks_like_relevant_opportunity(text, keyword):
                 continue
             uri, cid = str(post.get("uri", "")), str(post.get("cid", ""))
             if not uri or not cid:
@@ -531,6 +550,11 @@ def _discover_bluesky(keywords: list[str], limit: int) -> int:
 def _discover_mastodon(keywords: list[str], limit: int) -> int:
     base = get_config_value("mastodon_base_url").rstrip("/")
     headers = {"Authorization": f"Bearer {get_config_value('mastodon_access_token')}", "user-agent": "PureHub-Opportunity-Monitor/1.0"}
+    own_account_response = requests.get(f"{base}/api/v1/accounts/verify_credentials", headers=headers, timeout=30)
+    own_account_response.raise_for_status()
+    own_account = own_account_response.json()
+    own_account_id = str(own_account.get("id", ""))
+    own_account_handle = str(own_account.get("acct") or own_account.get("username", ""))
     created = 0
     fallback_tags = ("android", "opensource", "foss", "productivity")
     sources: list[tuple[str, list[dict[str, Any]]]] = []
@@ -562,6 +586,8 @@ def _discover_mastodon(keywords: list[str], limit: int) -> int:
     for keyword, statuses in sources:
         for status in statuses:
             account = status.get("account") or {}
+            if _is_own_social_author(account, own_id=own_account_id, own_handle=own_account_handle):
+                continue
             text = _plain_text(str(status.get("content", "")))
             status_id = str(status.get("id", ""))
             if not status_id or not text or not _looks_like_relevant_opportunity(text, keyword):
@@ -590,6 +616,19 @@ def _discover_mastodon(keywords: list[str], limit: int) -> int:
 
 def _discover_devto(keywords: list[str], limit: int) -> int:
     tokens = {part.lower() for keyword in keywords for part in keyword.split() if len(part) >= 4}
+    own_username = ""
+    api_key = get_config_value("devto_api_key")
+    if api_key:
+        try:
+            own_response = requests.get(
+                "https://dev.to/api/users/me",
+                headers={"api-key": api_key, "accept": "application/vnd.forem.api-v1+json"},
+                timeout=30,
+            )
+            own_response.raise_for_status()
+            own_username = str(own_response.json().get("username", ""))
+        except Exception:
+            own_username = ""
     created = 0
     for tag in ("android", "opensource", "productivity", "discuss"):
         response = requests.get(
@@ -607,6 +646,8 @@ def _discover_devto(keywords: list[str], limit: int) -> int:
                 continue
             article_id = str(article.get("id", ""))
             user = article.get("user") or {}
+            if _is_own_social_author(user, own_handle=own_username):
+                continue
             _, inserted = upsert_support_message(
                 {
                     "source_key": f"opportunity:devto:{article_id}",
