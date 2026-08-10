@@ -3,15 +3,17 @@ from __future__ import annotations
 import html
 import json
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import requests
 
 try:
     from .database import (
         get_config_value,
+        count_social_opportunities,
         get_support_sync_state,
         get_support_message,
         list_support_messages,
@@ -24,6 +26,7 @@ try:
 except ImportError:
     from database import (
         get_config_value,
+        count_social_opportunities,
         get_support_sync_state,
         get_support_message,
         list_support_messages,
@@ -629,19 +632,75 @@ def _discover_devto(keywords: list[str], limit: int) -> int:
 def discover_opportunities() -> dict[str, Any]:
     if get_config_value("opportunity_monitor_enabled", "true").lower() != "true":
         return {"enabled": False, "channels": {}}
+    now = datetime.now(timezone.utc)
+    timezone_name = get_config_value("growth_timezone", "Asia/Bangkok") or "Asia/Bangkok"
+    try:
+        local_timezone = ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        local_timezone = ZoneInfo("Asia/Bangkok")
+    local_now = now.astimezone(local_timezone)
+    local_day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_start = local_day_start.astimezone(timezone.utc)
+    day_end = (local_day_start + timedelta(days=1)).astimezone(timezone.utc)
+    daily_created = count_social_opportunities(day_start, day_end)
+
+    daily_minimum = max(1, min(int(get_config_value("opportunity_daily_minimum", "10") or 10), 30))
+    daily_cap = max(daily_minimum, min(int(get_config_value("opportunity_daily_limit", "30") or 30), 30))
+    scan_runs = max(3, min(int(get_config_value("opportunity_scan_runs_per_day", "4") or 4), 5))
+    scan_slot = min(scan_runs - 1, int(local_now.hour * scan_runs / 24))
+    slot_key = f"{local_now.date().isoformat()}:{scan_slot + 1}/{scan_runs}"
     state = get_support_sync_state("opportunities")
-    if state.get("last_synced_at") and _iso_datetime(str(state["last_synced_at"])).date() == datetime.now(timezone.utc).date():
+    if state.get("last_slot_key") == slot_key:
         return {
             "enabled": True,
             "skipped": True,
-            "reason": "Daily discovery already completed.",
+            "reason": "This discovery window has already completed.",
             "target": int(state.get("last_target") or 0),
             "created": int(state.get("last_created") or 0),
             "shortfall": int(state.get("last_shortfall") or 0),
+            "daily_created": daily_created,
+            "daily_minimum": daily_minimum,
+            "daily_cap": daily_cap,
+            "scan_slot": scan_slot + 1,
+            "scan_runs": scan_runs,
             "channels": state.get("last_channels") or {},
         }
+    prior_scan_count = int(state.get("daily_scan_count") or 0) if state.get("daily_date") == local_now.date().isoformat() else 0
+    if daily_created >= daily_cap:
+        result = {
+            "enabled": True,
+            "skipped": True,
+            "reason": "Daily qualified-lead cap reached.",
+            "target": 0,
+            "created": 0,
+            "shortfall": 0,
+            "daily_created": daily_created,
+            "daily_minimum": daily_minimum,
+            "daily_cap": daily_cap,
+            "scan_slot": scan_slot + 1,
+            "scan_runs": scan_runs,
+            "channels": {},
+        }
+        update_support_sync_state(
+            "opportunities",
+            {
+                "last_synced_at": now,
+                "last_slot_key": slot_key,
+                "daily_date": local_now.date().isoformat(),
+                "daily_scan_count": prior_scan_count + 1,
+                "daily_created": daily_created,
+                "daily_minimum": daily_minimum,
+                "daily_cap": daily_cap,
+                "last_target": 0,
+                "last_created": 0,
+                "last_shortfall": 0,
+                "last_channels": {},
+                "error_message": "",
+            },
+        )
+        return result
     keywords = _opportunity_keywords()
-    total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "27") or 27), 30))
+    total_limit = min(10, daily_cap - daily_created)
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
     devto_limit = max(1, round(total_limit * 0.1))
     social_limit = total_limit - devto_limit
@@ -650,7 +709,16 @@ def discover_opportunities() -> dict[str, Any]:
         "mastodon": social_limit // 2,
         "devto": devto_limit,
     }
-    result: dict[str, Any] = {"enabled": True, "target": total_limit, "channels": {}}
+    result: dict[str, Any] = {
+        "enabled": True,
+        "target": total_limit,
+        "daily_created_before": daily_created,
+        "daily_minimum": daily_minimum,
+        "daily_cap": daily_cap,
+        "scan_slot": scan_slot + 1,
+        "scan_runs": scan_runs,
+        "channels": {},
+    }
 
     def run(platform: str, discover: Any) -> tuple[str, dict[str, Any]]:
         try:
@@ -678,11 +746,19 @@ def discover_opportunities() -> dict[str, Any]:
             outcome["backfill_error"] = str(exc)[:500]
     result["created"] = sum(int(item.get("created") or 0) for item in result["channels"].values())
     result["shortfall"] = max(0, total_limit - result["created"])
+    result["daily_created"] = daily_created + result["created"]
+    result["daily_minimum_shortfall"] = max(0, daily_minimum - result["daily_created"])
     failed_channels = [name for name, item in result["channels"].items() if not item.get("ok")]
     update_support_sync_state(
         "opportunities",
         {
             "last_synced_at": datetime.now(timezone.utc),
+            "last_slot_key": slot_key,
+            "daily_date": local_now.date().isoformat(),
+            "daily_scan_count": prior_scan_count + 1,
+            "daily_created": result["daily_created"],
+            "daily_minimum": daily_minimum,
+            "daily_cap": daily_cap,
             "error_message": f"Discovery failed on: {', '.join(failed_channels)}" if failed_channels else "",
             "last_target": total_limit,
             "last_created": result["created"],
@@ -828,7 +904,7 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
         for platform, outcome in executor.map(lambda item: run(*item), functions.items()):
             result["channels"][platform] = outcome
     result["opportunities"] = discover_opportunities()
-    draft_limit = max(8, min(int(get_config_value("opportunity_daily_limit", "27") or 27) + 4, 34))
+    draft_limit = max(8, min(int(get_config_value("opportunity_daily_limit", "30") or 30) + 4, 34))
     result["drafts"] = generate_support_drafts(limit=draft_limit) if generate_drafts else {}
     result["engagement"] = sync_engagement_metrics()
     return result

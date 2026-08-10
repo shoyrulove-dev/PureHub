@@ -27,7 +27,7 @@ All Vercel cron expressions use UTC. The times below use Asia/Bangkok (UTC+7).
 
 Automatic publishing cadence in each repeating 30-day campaign:
 
-- Bluesky and Mastodon: daily.
+- Social opportunity discovery: four evenly spaced scans per Bangkok day (00:15, 06:15, 12:15, and 18:15), targeting at least 10 qualified leads with a hard cap of 30. Each scan can add at most 10 and never bypasses relevance or safety filters.
 - Telegram: three times per seven-day cycle.
 - DEV: four useful technical articles per 30 days.
 - YouTube: ten real-device miniapp Shorts are scheduled natively on YouTube at 19:30 Asia/Bangkok every two days from 2–20 August 2026.

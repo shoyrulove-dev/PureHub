@@ -44,7 +44,9 @@ CONFIG_DEFAULTS = {
     "support_monitor_enabled": "true",
     "opportunity_monitor_enabled": "true",
     "opportunity_keywords": "best offline app,app without ads,privacy first app,open source Android app,offline OCR scanner,QR scanner no ads,simple Pomodoro app,password manager offline,expense tracker offline,unit converter app,habit tracker no ads,note app offline,flashlight app no ads,bubble level app,document scanner offline,wifi analyzer app",
-    "opportunity_daily_limit": "27",
+    "opportunity_daily_minimum": "10",
+    "opportunity_daily_limit": "30",
+    "opportunity_scan_runs_per_day": "4",
     "growth_automation_enabled": "false",
     "growth_auto_publish": "true",
     "growth_campaign_start_date": "",
@@ -69,8 +71,8 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 19
-DEFAULTS_BOOTSTRAP_VERSION = 7
+CURRENT_SCHEMA_VERSION = 20
+DEFAULTS_BOOTSTRAP_VERSION = 8
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 20
@@ -758,6 +760,7 @@ def run_schema_migrations() -> None:
         (17, "normalize-flagship-priorities", _migration_normalize_flagship_priorities),
         (18, "promote-complete-catalog-flagship", _migration_promote_complete_catalog),
         (19, "ensure-distribution-tracker", _migration_distribution_tracker),
+        (20, "schedule-social-discovery-throughout-day", _migration_social_discovery_schedule),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -784,6 +787,20 @@ def get_schema_status() -> dict[str, Any]:
         "applied_version": latest,
         "migrations": items,
     }
+
+
+def _migration_social_discovery_schedule() -> None:
+    values = {
+        "opportunity_daily_minimum": "10",
+        "opportunity_daily_limit": "30",
+        "opportunity_scan_runs_per_day": "4",
+    }
+    for key, value in values.items():
+        collection("config").update_one(
+            {"key": key},
+            {"$set": {"value": value, "updated_at": utcnow()}, "$setOnInsert": {"key": key}},
+            upsert=True,
+        )
 
 
 def _migration_product_growth_signals() -> None:
@@ -2067,6 +2084,15 @@ def get_support_metrics() -> dict[str, Any]:
         platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
         for platform in ("telegram", "devto", "bluesky", "mastodon")
     }
+
+
+def count_social_opportunities(start_at: datetime, end_at: datetime) -> int:
+    return collection("support_messages").count_documents(
+        {
+            "inbox_type": "social_opportunity",
+            "created_at": {"$gte": start_at, "$lt": end_at},
+        }
+    )
     by_inbox_type = {
         inbox_type: messages.count_documents({"inbox_type": inbox_type, "status": {"$in": open_statuses}})
         for inbox_type in SUPPORT_INBOX_TYPES

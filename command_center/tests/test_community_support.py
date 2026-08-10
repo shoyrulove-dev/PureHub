@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -88,24 +89,69 @@ class CommunitySupportTests(unittest.TestCase):
     @patch("command_center.community_support._discover_bluesky", side_effect=lambda _keywords, limit: limit)
     @patch("command_center.community_support._opportunity_keywords", return_value=["offline app"])
     @patch("command_center.community_support.get_support_sync_state", return_value={})
+    @patch("command_center.community_support.count_social_opportunities", return_value=0)
     @patch("command_center.community_support.get_config_value")
     def test_daily_discovery_prioritizes_direct_reply_platforms(
-        self, config, _state, _keywords, bluesky, mastodon, devto, update_state
+        self, config, _daily_count, _state, _keywords, bluesky, mastodon, devto, update_state
     ) -> None:
         config.side_effect = lambda key, default="": {
             "opportunity_monitor_enabled": "true",
-            "opportunity_daily_limit": "27",
+            "opportunity_daily_minimum": "10",
+            "opportunity_daily_limit": "30",
+            "opportunity_scan_runs_per_day": "4",
+            "growth_timezone": "Asia/Bangkok",
         }.get(key, default)
 
         result = discover_opportunities()
 
-        self.assertEqual(result["target"], 27)
-        self.assertEqual([result["channels"][name]["target"] for name in ("bluesky", "mastodon", "devto")], [12, 12, 3])
-        self.assertEqual(sum(item["created"] for item in result["channels"].values()), 27)
-        bluesky.assert_called_once_with(["offline app"], 12)
-        mastodon.assert_called_once_with(["offline app"], 12)
-        devto.assert_called_once_with(["offline app"], 3)
+        self.assertEqual(result["target"], 10)
+        self.assertEqual(result["daily_cap"], 30)
+        self.assertEqual(result["daily_minimum"], 10)
+        self.assertEqual([result["channels"][name]["target"] for name in ("bluesky", "mastodon", "devto")], [5, 4, 1])
+        self.assertEqual(sum(item["created"] for item in result["channels"].values()), 10)
+        bluesky.assert_called_once_with(["offline app"], 5)
+        mastodon.assert_called_once_with(["offline app"], 4)
+        devto.assert_called_once_with(["offline app"], 1)
         update_state.assert_called_once()
+
+    @patch("command_center.community_support.update_support_sync_state")
+    @patch("command_center.community_support.count_social_opportunities", return_value=30)
+    @patch("command_center.community_support.get_support_sync_state", return_value={})
+    @patch("command_center.community_support.get_config_value")
+    def test_discovery_stops_at_daily_cap(self, config, _state, _daily_count, update_state) -> None:
+        config.side_effect = lambda key, default="": {
+            "opportunity_monitor_enabled": "true",
+            "opportunity_daily_minimum": "10",
+            "opportunity_daily_limit": "30",
+            "opportunity_scan_runs_per_day": "4",
+            "growth_timezone": "Asia/Bangkok",
+        }.get(key, default)
+
+        result = discover_opportunities()
+
+        self.assertTrue(result["skipped"])
+        self.assertEqual(result["reason"], "Daily qualified-lead cap reached.")
+        self.assertEqual(result["daily_created"], 30)
+        update_state.assert_called_once()
+
+    @patch("command_center.community_support.count_social_opportunities", return_value=6)
+    @patch("command_center.community_support.get_support_sync_state", return_value={"last_slot_key": "2026-08-10:3/4", "last_target": 10, "last_created": 6})
+    @patch("command_center.community_support.get_config_value")
+    @patch("command_center.community_support.datetime")
+    def test_discovery_does_not_repeat_same_window(self, mocked_datetime, config, _state, _daily_count) -> None:
+        mocked_datetime.now.return_value = datetime(2026, 8, 10, 6, 0, tzinfo=timezone.utc)
+        config.side_effect = lambda key, default="": {
+            "opportunity_monitor_enabled": "true",
+            "opportunity_daily_minimum": "10",
+            "opportunity_daily_limit": "30",
+            "opportunity_scan_runs_per_day": "4",
+            "growth_timezone": "Asia/Bangkok",
+        }.get(key, default)
+
+        result = discover_opportunities()
+
+        self.assertTrue(result["skipped"])
+        self.assertEqual(result["reason"], "This discovery window has already completed.")
 
     @patch("command_center.database.collection")
     def test_support_upsert_does_not_write_source_url_with_conflicting_operators(self, collection) -> None:
