@@ -15,11 +15,24 @@ from command_center.community_support import (
     generate_support_draft,
     ingest_telegram_update,
 )
-from command_center.database import delete_support_message, infer_support_inbox_type, list_support_messages, upsert_support_message
+from command_center.database import delete_support_message, get_support_metrics, infer_support_inbox_type, list_support_messages, upsert_support_message
 from command_center.main import support_bulk_approve_action, support_bulk_send_action, support_complete_manual_action
 
 
 class CommunitySupportTests(unittest.TestCase):
+    @patch("command_center.database.collection")
+    def test_support_metrics_always_returns_dashboard_payload(self, collection) -> None:
+        messages = MagicMock()
+        messages.count_documents.return_value = 0
+        collection.return_value = messages
+
+        metrics = get_support_metrics()
+
+        self.assertIsInstance(metrics, dict)
+        self.assertEqual(metrics["open"], 0)
+        self.assertIn("by_platform", metrics)
+        self.assertIn("by_inbox_type", metrics)
+
     @patch("command_center.community_support._ai_client")
     def test_empty_ai_reply_uses_nonempty_fallback(self, ai_client) -> None:
         client = MagicMock()

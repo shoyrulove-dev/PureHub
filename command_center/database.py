@@ -2084,15 +2084,6 @@ def get_support_metrics() -> dict[str, Any]:
         platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
         for platform in ("telegram", "devto", "bluesky", "mastodon")
     }
-
-
-def count_social_opportunities(start_at: datetime, end_at: datetime) -> int:
-    return collection("support_messages").count_documents(
-        {
-            "inbox_type": "social_opportunity",
-            "created_at": {"$gte": start_at, "$lt": end_at},
-        }
-    )
     by_inbox_type = {
         inbox_type: messages.count_documents({"inbox_type": inbox_type, "status": {"$in": open_statuses}})
         for inbox_type in SUPPORT_INBOX_TYPES
@@ -2115,6 +2106,15 @@ def count_social_opportunities(start_at: datetime, end_at: datetime) -> int:
         "by_platform": by_platform,
         "by_inbox_type": by_inbox_type,
     }
+
+
+def count_social_opportunities(start_at: datetime, end_at: datetime) -> int:
+    return collection("support_messages").count_documents(
+        {
+            "inbox_type": "social_opportunity",
+            "created_at": {"$gte": start_at, "$lt": end_at},
+        }
+    )
 
 
 def get_support_sync_state(platform: str) -> dict[str, Any]:
