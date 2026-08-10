@@ -1,0 +1,7 @@
+PureHub is a free and open-source collection of 22 everyday Android utilities.
+
+The F-Droid build works fully offline and contains no ML Kit, Google Play Services, Firebase, ads, analytics, or tracking. QR scanning uses ZXing and OCR uses Tesseract with bundled English, Vietnamese, and Simplified Chinese language models.
+
+Flagship tools include QR Studio, OCR Studio, Doc to PDF, Zen Pomodoro, Zen Habit, Speaker Cleaner, Expense Tracker, Bill Splitter, Sensor Suite, Password Vault, and more.
+
+Your scans, habits, documents, expenses, and vault data remain on your device unless you explicitly export or share them.

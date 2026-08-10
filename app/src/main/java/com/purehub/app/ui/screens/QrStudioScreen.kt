@@ -1,11 +1,11 @@
 package com.purehub.app.ui.screens
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -75,6 +75,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -94,13 +95,17 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.common.InputImage
+import com.purehub.app.feature.qr.QrDecoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.time.Instant
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.math.min
 
 private enum class QrStudioTab(val label: String) { Scan("Scan"), Create("Create"), Library("Library") }
@@ -125,6 +130,7 @@ fun QrStudioScreen(
 ) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
     val preferences = remember { context.getSharedPreferences("purehub.qr-studio.v2", 0) }
     var selectedTab by rememberSaveable { mutableStateOf(QrStudioTab.Scan) }
     var selectedTemplate by rememberSaveable { mutableStateOf(QrTemplate.Website) }
@@ -158,23 +164,22 @@ fun QrStudioScreen(
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
     }
 
-    val galleryScanner = remember { BarcodeScanning.getClient() }
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        scanStatus = "Reading the selected image locally…"
-        runCatching { InputImage.fromFilePath(context, uri) }
-            .onSuccess { image ->
-                galleryScanner.process(image)
-                    .addOnSuccessListener { codes ->
-                        val value = codes.firstOrNull()?.rawValue.orEmpty()
-                        if (value.isBlank()) scanStatus = "No readable QR or barcode was found in that image."
-                        else acceptScan(value, "Image")
-                    }
-                    .addOnFailureListener { scanStatus = "That image could not be read." }
+        scanStatus = "Reading the selected image locally..."
+        scope.launch {
+            val result = withContext(Dispatchers.Default) {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+                        ?.let(QrDecoder::decode)
+                }
             }
-            .onFailure { scanStatus = "That image could not be opened." }
+            result.onSuccess { value ->
+                if (value.isNullOrBlank()) scanStatus = "No readable QR or barcode was found in that image."
+                else acceptScan(value, "Image")
+            }.onFailure { scanStatus = "That image could not be opened." }
+        }
     }
-    DisposableEffect(Unit) { onDispose { galleryScanner.close() } }
 
     Column(
         modifier = Modifier
@@ -523,7 +528,7 @@ private fun QrCameraPreview(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val barcodeScanner = remember { BarcodeScanning.getClient() }
+    val scannerExecutor = remember { Executors.newSingleThreadExecutor() }
     var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var torchEnabled by rememberSaveable { mutableStateOf(false) }
@@ -584,13 +589,13 @@ private fun QrCameraPreview(
             provider,
             lifecycleOwner,
             { value -> if (currentScanningEnabled) currentOnCodeDetected(value) },
-            barcodeScanner,
+            scannerExecutor,
         )
     }
     DisposableEffect(lifecycleOwner) {
         onDispose {
             cameraProvider?.unbindAll()
-            barcodeScanner.close()
+            scannerExecutor.shutdownNow()
         }
     }
 }
@@ -633,32 +638,34 @@ private fun QrViewfinderOverlay(modifier: Modifier) {
     }
 }
 
-@SuppressLint("UnsafeOptInUsageError")
 private fun bindQrCamera(
     context: Context,
     previewView: PreviewView,
     cameraProvider: ProcessCameraProvider,
     lifecycleOwner: androidx.lifecycle.LifecycleOwner,
     onCodeDetected: (String) -> Unit,
-    scanner: com.google.mlkit.vision.barcode.BarcodeScanner,
+    scannerExecutor: ExecutorService,
 ): Camera {
     val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
     val analyzer = ImageAnalysis.Builder()
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         .build()
         .also { analysis ->
-            analysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy -> processQrFrame(imageProxy, onCodeDetected, scanner) }
+            val mainExecutor = ContextCompat.getMainExecutor(context)
+            analysis.setAnalyzer(scannerExecutor) { imageProxy ->
+                processQrFrame(imageProxy)?.let { value -> mainExecutor.execute { onCodeDetected(value) } }
+            }
         }
     cameraProvider.unbindAll()
     return cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analyzer)
 }
 
-@androidx.camera.core.ExperimentalGetImage
-private fun processQrFrame(imageProxy: ImageProxy, onCodeDetected: (String) -> Unit, scanner: com.google.mlkit.vision.barcode.BarcodeScanner) {
-    val mediaImage = imageProxy.image ?: return imageProxy.close()
-    scanner.process(InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees))
-        .addOnSuccessListener { barcodes -> barcodes.firstOrNull()?.rawValue?.takeIf { it.isNotBlank() }?.let(onCodeDetected) }
-        .addOnCompleteListener { imageProxy.close() }
+private fun processQrFrame(imageProxy: ImageProxy): String? {
+    return try {
+        QrDecoder.decode(imageProxy)
+    } finally {
+        imageProxy.close()
+    }
 }
 
 private fun describeQrPayload(value: String): QrPayloadInfo {

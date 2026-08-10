@@ -1,0 +1,11 @@
+PureHub bundles English, Vietnamese, and Simplified Chinese trained models from
+the Tesseract tessdata_fast repository:
+
+https://github.com/tesseract-ocr/tessdata_fast
+
+The model files are distributed under the Apache License 2.0. The Tesseract OCR
+engine and Tesseract4Android wrapper are also Apache-2.0 licensed. Their notices
+and source are available at:
+
+https://github.com/tesseract-ocr/tesseract
+https://github.com/adaptech-cz/Tesseract4Android

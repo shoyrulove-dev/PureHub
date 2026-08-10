@@ -56,23 +56,37 @@ jobs:
           test -n "${PUREHUB_KEY_PASSWORD}"
           mkdir -p release-secrets
           printf '%s' '${{ secrets.PUREHUB_KEYSTORE_BASE64 }}' | base64 --decode > release-secrets/purehub-release.jks
-      - name: Verify and build split APKs
-        run: ./gradlew testDebugUnitTest lintRelease assembleRelease --stacktrace
+      - name: Verify and build standard plus F-Droid APKs
+        run: ./gradlew testStandardDebugUnitTest testFdroidDebugUnitTest lintStandardRelease lintFdroidRelease assembleStandardRelease assembleFdroidRelease --stacktrace
+      - name: Enforce FLOSS-only F-Droid dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
+          if grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt; then
+            echo "::error::F-Droid flavor contains a prohibited Google dependency"
+            exit 1
+          fi
       - name: Stage split APKs
         shell: bash
         run: |
           mkdir -p release-assets
-          cp app/build/outputs/apk/release/app-universal-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}.apk"
-          cp app/build/outputs/apk/release/app-arm64-v8a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-arm64-v8a.apk"
-          cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-armeabi-v7a.apk"
-          cp app/build/outputs/apk/release/app-x86-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-x86.apk"
-          cp app/build/outputs/apk/release/app-x86_64-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-x86_64.apk"
+          cp app/build/outputs/apk/standard/release/app-standard-universal-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}.apk"
+          cp app/build/outputs/apk/standard/release/app-standard-arm64-v8a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-arm64-v8a.apk"
+          cp app/build/outputs/apk/standard/release/app-standard-armeabi-v7a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-armeabi-v7a.apk"
+          cp app/build/outputs/apk/standard/release/app-standard-x86-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-x86.apk"
+          cp app/build/outputs/apk/standard/release/app-standard-x86_64-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-x86_64.apk"
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-universal-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-fdroid.apk"
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-arm64-v8a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-fdroid-arm64-v8a.apk"
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-armeabi-v7a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-fdroid-armeabi-v7a.apk"
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-x86-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-fdroid-x86.apk"
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-x86_64-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}-fdroid-x86_64.apk"
       - name: Build app bundle without APK splits
-        run: ./gradlew clean bundleRelease --stacktrace
+        run: ./gradlew bundleStandardRelease --stacktrace
       - name: Complete release assets
         shell: bash
         run: |
-          cp app/build/outputs/bundle/release/app-release.aab "release-assets/PureHub-${PUREHUB_VERSION_NAME}.aab"
+          cp app/build/outputs/bundle/standardRelease/app-standard-release.aab "release-assets/PureHub-${PUREHUB_VERSION_NAME}.aab"
           cd release-assets
           sha256sum * > SHA256SUMS.txt
       - name: Enforce offline-only APK

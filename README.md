@@ -83,7 +83,7 @@ Privacy-first does not mean every feature has completed an independent security 
 | Surface | Stack | Purpose |
 | --- | --- | --- |
 | Web/PWA | React 19, TypeScript, Vite, Tailwind CSS | Installable multilingual web experience with offline support |
-| Android | Kotlin, Jetpack Compose, CameraX, Room, ML Kit | Native offline-first app for Android 8.0+ |
+| Android | Kotlin, Jetpack Compose, CameraX, Room, ZXing, ML Kit/Tesseract flavors | Native offline-first app for Android 8.0+ |
 | Command Center | FastAPI, Jinja, MongoDB | Release, community-support, publishing, and aggregate growth operations |
 | Hosting/automation | Vercel, GitHub Actions | Web deployment, CI, signed Android releases, checksums, and privacy gates |
 
@@ -114,16 +114,18 @@ npm run build
 Requirements: JDK 17 and the Android SDK for API 36.
 
 ```bash
-./gradlew test lintDebug assembleDebug
+./gradlew testStandardDebugUnitTest lintStandardDebug assembleStandardDebug
+./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidDebug
 ```
 
 On Windows PowerShell:
 
 ```powershell
-.\gradlew.bat test lintDebug assembleDebug
+.\gradlew.bat testStandardDebugUnitTest lintStandardDebug assembleStandardDebug
+.\gradlew.bat testFdroidDebugUnitTest lintFdroidDebug assembleFdroidDebug
 ```
 
-The debug APK is written under `app/build/outputs/apk/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
+The standard flavor keeps ML Kit OCR for recognition quality. The `fdroid` flavor uses ZXing and Tesseract and its runtime dependency graph contains no ML Kit, Google Play Services, or Firebase. See the [F-Droid flavor architecture and verification guide](docs/FDROID_FLAVOR.md). APKs are written under `app/build/outputs/apk/<flavor>/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
 
 ### Command Center
 
@@ -152,7 +154,7 @@ Copy only the environment values you need into `command_center/.env`. Never comm
 
 ## Releases
 
-The latest signed preview is [PureHub 1.0.0-beta.12](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.12). Each Android release provides:
+The latest signed preview is [PureHub 1.0.0-beta.17](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.17). Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

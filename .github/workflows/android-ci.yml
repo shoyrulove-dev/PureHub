@@ -20,13 +20,22 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
+      - run: ./gradlew testStandardDebugUnitTest testFdroidDebugUnitTest lintStandardDebug lintFdroidDebug assembleStandardDebug assembleFdroidDebug --stacktrace
+      - name: Enforce FLOSS-only F-Droid dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
+          if grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt; then
+            echo "::error::F-Droid flavor contains a prohibited Google dependency"
+            exit 1
+          fi
       - name: Enforce offline-only APK
         shell: bash
         run: |
           set -euo pipefail
           AAPT="$(find "${ANDROID_HOME}/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          PERMISSIONS="$("${AAPT}" dump permissions app/build/outputs/apk/debug/app-debug.apk)"
+          PERMISSIONS="$("${AAPT}" dump permissions app/build/outputs/apk/fdroid/debug/app-fdroid-universal-debug.apk)"
           printf '%s\n' "${PERMISSIONS}"
           if grep -q 'android.permission.INTERNET' <<<"${PERMISSIONS}"; then
             echo "::error::Offline-only privacy gate failed: APK requests android.permission.INTERNET"
@@ -35,5 +44,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: purehub-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/standard/debug/*.apk
+            app/build/outputs/apk/fdroid/debug/*.apk
           if-no-files-found: error

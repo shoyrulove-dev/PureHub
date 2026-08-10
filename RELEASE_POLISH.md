@@ -3,17 +3,17 @@
 ## Current State
 
 - 5 bottom tabs are wired to live feature screens.
-- `assembleDebug`, `testDebugUnitTest`, and `assembleRelease` should be the minimum pre-release checks.
+- Both `standard` and `fdroid` variants must pass unit tests, lint, and assembly before release.
 - The app remains fully offline-first and intentionally omits `INTERNET`.
 
 ## Final Release Checklist
 
 1. Verify `AndroidManifest.xml` still omits `android.permission.INTERNET`.
 2. Run:
-   - `.\gradlew.bat :app:assembleDebug`
+   - `.\gradlew.bat :app:assembleStandardDebug :app:assembleFdroidDebug`
    - `.\gradlew.bat :app:testDebugUnitTest`
-   - `.\gradlew.bat :app:assembleDebugAndroidTest`
-   - `.\gradlew.bat :app:assembleRelease`
+   - `.\gradlew.bat :app:assembleStandardDebugAndroidTest :app:assembleFdroidDebugAndroidTest`
+   - `.\gradlew.bat :app:assembleStandardRelease :app:assembleFdroidRelease`
 3. Smoke test on-device:
    - Tab 1: lunar calendar, habit add/check, pomodoro sound, breath animation
    - Tab 2: compass, bubble level, mic meter, torch, converter

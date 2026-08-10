@@ -44,7 +44,7 @@ npm run build
 Android checks:
 
 ```bash
-./gradlew test lintDebug assembleDebug
+./gradlew testStandardDebugUnitTest testFdroidDebugUnitTest lintStandardDebug lintFdroidDebug assembleStandardDebug assembleFdroidDebug
 ```
 
 Command Center checks:
@@ -70,4 +70,3 @@ Contributions should preserve these boundaries:
 Small pull requests are easier to review. Describe the user-visible outcome, test evidence, privacy or permission impact, screenshots for UI changes, and any migration or release considerations.
 
 By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-

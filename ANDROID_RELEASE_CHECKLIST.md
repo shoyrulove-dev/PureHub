@@ -27,8 +27,9 @@ Never publish a debug APK or rotate the signing key casually. The same app-signi
 ## Every release
 
 1. Update and test release notes.
-2. Run unit tests, lint, release APK and AAB builds.
-3. Verify the APK signature and SHA-256 checksum.
-4. Install the release APK on at least one physical Android device.
-5. Publish a GitHub prerelease first, then promote it after community validation.
-6. Add the final asset URLs and checksum to Release Hub, generate channel drafts, review them, and approve only the English API posts you intend to publish.
+2. Run unit tests, lint, and release builds for both `standard` and `fdroid`; build the AAB from `standard`.
+3. Confirm `fdroidReleaseRuntimeClasspath` contains no ML Kit, Play Services, or Firebase dependencies.
+4. Verify APK signatures and SHA-256 checksums, including the F-Droid artifact.
+5. Install a release APK on at least one physical Android device and run the offline QR/OCR instrumented tests.
+6. Publish a GitHub prerelease first, then promote it after community validation.
+7. Add the final asset URLs and checksum to Release Hub, generate channel drafts, review them, and approve only the English API posts you intend to publish.

@@ -313,6 +313,10 @@
       .support-edit-panel { padding: .25rem .65rem .7rem; border-top: 1px solid #e2e8f0; }
       .support-edit-panel[hidden] { display: none; }
       .support-edit-panel textarea { min-height: 6rem; margin-top: .55rem; }
+      .support-context { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .55rem; padding-top: .55rem; }
+      .support-context-card { min-width: 0; padding: .58rem .68rem; border: 1px solid var(--line); border-radius: .68rem; background: #fff; }
+      .support-context-card strong { display: block; margin-bottom: .22rem; color: #64748b; font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }
+      .support-context-card span { display: -webkit-box; overflow: hidden; color: #1e293b; font-size: .68rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
       .support-regenerate { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .55rem; align-items: center; margin-top: .55rem; }
       .support-regenerate input { min-width: 0; }
       .support-submeta { margin: 0.28rem 0 0; color: var(--muted); font-size: 0.67rem; }
@@ -449,6 +453,7 @@
         .queue-label { align-items: flex-start; flex-direction: column; }
         .support-row-head { grid-template-columns: auto minmax(0,1fr) auto; gap: .4rem; }
         .support-regenerate { grid-template-columns: 1fr; }
+        .support-context { grid-template-columns: 1fr; }
         .support-source .support-platform { display: none; }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -937,6 +942,10 @@
                 </div>
                 {% if item.status in ['draft_ready', 'failed', 'approved', 'manual_required'] %}
                 <div class="support-edit-panel" id="supportEdit{{ item.id }}" hidden>
+                  <div class="support-context">
+                    <div class="support-context-card"><strong>Message being answered</strong><span title="{{ item.content }}">{{ item.content }}</span></div>
+                    {% if item.previous_reply_text %}<div class="support-context-card"><strong>Previous PureHub reply</strong><span title="{{ item.previous_reply_text }}">{{ item.previous_reply_text }}</span></div>{% endif %}
+                  </div>
                   <form action="{{ admin_prefix }}/support/{{ item.id }}/review" method="post">
                     <input type="hidden" name="return_page" value="{{ support_page }}" />
                     <input type="hidden" name="return_filter" value="{{ support_filter }}" />

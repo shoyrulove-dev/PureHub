@@ -469,13 +469,37 @@ def _dashboard_context(
         thread_rows.setdefault(thread_key, []).append(support_item)
     for support_item in active_support_messages:
         thread_key = f"{support_item.get('platform', '')}:{support_item.get('thread_id') or support_item.get('external_id') or support_item.get('id')}"
-        conversation = thread_rows.get(thread_key, [support_item])
+        parent_external_id = str(support_item.get("parent_external_id") or "")
+        conversation = list(thread_rows.get(thread_key, [support_item]))
+        for candidate in support_messages:
+            if candidate.get("id") == support_item.get("id"):
+                continue
+            candidate_ids = {
+                str(candidate.get("external_id") or ""),
+                str(candidate.get("external_reply_id") or ""),
+                str(candidate.get("parent_external_id") or ""),
+                str(candidate.get("thread_id") or ""),
+            }
+            if parent_external_id and parent_external_id in candidate_ids and candidate not in conversation:
+                conversation.append(candidate)
         has_previous_reply = any(
             row.get("id") != support_item.get("id") and row.get("status") in {"replied", "manual_required"}
             for row in conversation
         )
         support_item["conversation_count"] = len(conversation)
         support_item["conversation_state"] = "reopened" if has_previous_reply else "awaiting_us"
+        previous_reply = next(
+            (
+                row for row in conversation
+                if parent_external_id
+                and str(row.get("external_reply_id") or "") == parent_external_id
+                and (row.get("reply_text") or row.get("ai_draft"))
+            ),
+            None,
+        )
+        support_item["previous_reply_text"] = (
+            str(previous_reply.get("reply_text") or previous_reply.get("ai_draft") or "") if previous_reply else ""
+        )
     support_history = [item for item in support_messages if item.get("status") in {"replied", "ignored"}][:12]
     for support_item in support_history:
         support_item["conversation_state"] = "awaiting_user" if support_item.get("status") == "replied" else "resolved"

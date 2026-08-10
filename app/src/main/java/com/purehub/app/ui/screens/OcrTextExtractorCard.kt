@@ -92,10 +92,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.purehub.app.feature.ocr.OcrEngineFactory
+import com.purehub.app.feature.ocr.OcrScript
 import com.purehub.app.ui.LocalSnackbarHostState
 import com.purehub.app.feature.docpdf.DocPdfRepository
 import kotlinx.coroutines.launch
@@ -138,10 +136,10 @@ fun OcrTextExtractorCard(
     val documentRepository = remember { DocPdfRepository(context.applicationContext) }
     var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.Latin) }
     val recognizer = remember(selectedLanguage) {
-        when (selectedLanguage) {
-            OcrLanguage.Latin -> TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-            OcrLanguage.Chinese -> TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
-        }
+        OcrEngineFactory.create(
+            context.applicationContext,
+            if (selectedLanguage == OcrLanguage.Chinese) OcrScript.CHINESE else OcrScript.LATIN,
+        )
     }
     val cameraExecutor = remember { ContextCompat.getMainExecutor(context) }
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }
@@ -169,9 +167,9 @@ fun OcrTextExtractorCard(
     fun recognize(bitmap: Bitmap, source: String) {
         processing = true
         status = "Recognizing text on this device..."
-        recognizer.process(InputImage.fromBitmap(bitmap, 0))
-            .addOnSuccessListener { result ->
-                val text = cleanOcrText(result.text, selectedMode)
+        recognizer.recognize(bitmap) { result ->
+            result.onSuccess { rawText ->
+                val text = cleanOcrText(rawText, selectedMode)
                 currentBitmap = bitmap
                 extractedText = text
                 if (text.isBlank()) {
@@ -181,9 +179,9 @@ fun OcrTextExtractorCard(
                     status = "${pages.size} page(s) captured privately. Review the text before export."
                     selectedTab = OcrStudioTab.Text
                 }
-            }
-            .addOnFailureListener { status = "OCR could not process this image." }
-            .addOnCompleteListener { processing = false }
+            }.onFailure { status = "OCR could not process this image." }
+            processing = false
+        }
     }
 
     fun prepareAndRecognize(bitmap: Bitmap, source: String) {

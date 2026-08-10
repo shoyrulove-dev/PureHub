@@ -1,0 +1,1 @@
+Added a fully FLOSS F-Droid flavor with ZXing QR scanning and offline Tesseract OCR. The standard build keeps ML Kit OCR for users who prefer its recognition quality. Improved support-thread context in Command Center.
