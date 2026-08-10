@@ -20,8 +20,8 @@ android {
         applicationId = "com.purehub.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 15
-        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.14"
+        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 16
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
@@ -93,6 +93,16 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    splits {
+        abi {
+            val bundleRequested = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
+            isEnable = !bundleRequested
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 }

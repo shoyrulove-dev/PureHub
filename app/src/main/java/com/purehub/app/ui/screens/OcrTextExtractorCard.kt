@@ -538,7 +538,7 @@ private fun OcrTextContent(
             maxLines = 12,
             modifier = Modifier.fillMaxWidth(),
         )
-        detectedActions(text)
+        DetectedActions(text)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onCopy, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.ContentCopy, null); Text(" Copy") }
             FilledTonalButton(onClick = onShare, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.IosShare, null); Text(" Share") }
@@ -561,7 +561,7 @@ private fun OcrTextContent(
 }
 
 @Composable
-private fun detectedActions(text: String) {
+private fun DetectedActions(text: String) {
     val context = LocalContext.current
     val url = Regex("https?://\\S+", RegexOption.IGNORE_CASE).find(text)?.value?.trimEnd('.', ',', ')')
     val email = Regex("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}", RegexOption.IGNORE_CASE).find(text)?.value

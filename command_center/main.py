@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
+from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from html import escape
@@ -263,10 +264,18 @@ admin_router = APIRouter()
 admin_api_router = APIRouter(prefix="/api")
 public_api_router = APIRouter()
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_database()
+    yield
+
+
 app = FastAPI(
     title="PureHub Command Center",
     summary="Admin panel and automation control surface for PureHub growth systems.",
     version="0.5.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -292,11 +301,6 @@ def get_client_ip(request: Request) -> str:
     if forwarded_for.strip():
         return forwarded_for.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    init_database()
 
 
 @app.get("/", include_in_schema=False)

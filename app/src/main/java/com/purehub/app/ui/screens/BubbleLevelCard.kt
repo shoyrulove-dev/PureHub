@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +39,7 @@ fun BubbleLevelCard(
     viewModel: BubbleLevelViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val metrics = LocalContext.current.resources.displayMetrics
+    val metrics = LocalResources.current.displayMetrics
     var rulerCentimeters by remember { mutableFloatStateOf(8f) }
     var sensorActive by rememberSaveable { mutableStateOf(false) }
     val colorScheme = MaterialTheme.colorScheme
