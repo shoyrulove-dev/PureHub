@@ -516,6 +516,7 @@ def _dashboard_context(
     distribution_completed = sum(
         1 for item in distribution_submissions if item.get("status") in completed_distribution_statuses
     )
+    distribution_notice_count = sum(1 for item in distribution_submissions if item.get("has_notice"))
     release_publications = loaded.get("release_publications", [])
     actionable_publications = [
         item
@@ -598,6 +599,7 @@ def _dashboard_context(
         "distribution_submissions": distribution_submissions,
         "distribution_statuses": DISTRIBUTION_STATUSES,
         "distribution_completed": distribution_completed,
+        "distribution_notice_count": distribution_notice_count,
         "release_publications": release_publications,
         "actionable_publications": actionable_publications,
         "reddit_publication": reddit_publication,

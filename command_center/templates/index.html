@@ -269,6 +269,8 @@
       .distribution-form input, .distribution-form select { padding: .55rem .62rem; font-size: .7rem; }
       .distribution-form .button { min-height: 2.2rem; }
       .distribution-next { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: .66rem; line-height: 1.45; }
+      .distribution-notice { grid-column: 1 / -1; margin: 0; padding: .55rem .65rem; border: 1px solid #fdba74; border-radius: .65rem; color: #9a3412; background: #fff7ed; font-size: .68rem; line-height: 1.45; }
+      .distribution-remote { grid-column: 1 / -1; margin: 0; color: #475569; font-size: .64rem; line-height: 1.45; }
       .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
       .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
       .support-filters { display: flex; gap: .4rem; margin-top: .7rem; overflow-x: auto; padding-bottom: .1rem; scrollbar-width: none; }
@@ -1031,7 +1033,7 @@
         <details class="distribution-tracker" id="distribution">
           <summary class="disclosure-summary" style="padding:.9rem 0 .75rem">
             <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-package"/></svg></span><span><strong>FOSS distribution</strong><span class="panel-copy" style="display:block;margin-top:.15rem">{{ releases[0].release_id }} · IzzyOnDroid first, then official F-Droid</span></span></span>
-            <span class="badge {% if distribution_completed == distribution_submissions|length %}listed{% endif %}">{{ distribution_completed }}/{{ distribution_submissions|length }}</span>
+            <span class="badge {% if distribution_notice_count %}changes_requested{% elif distribution_completed == distribution_submissions|length %}listed{% endif %}">{% if distribution_notice_count %}{{ distribution_notice_count }} update{% else %}{{ distribution_completed }}/{{ distribution_submissions|length }}{% endif %}</span>
           </summary>
           <div>
             <div class="distribution-progress">
@@ -1044,7 +1046,7 @@
                 <summary>
                   <span class="distribution-step">{{ loop.index }}</span>
                   <span class="distribution-name">{{ item.title }}</span>
-                  <span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span>
+                  <span class="badge {{ item.status }}"{% if item.has_notice %} title="New reviewer update"{% endif %}>{{ item.status|replace('_', ' ') }}{% if item.has_notice %} · update{% endif %}</span>
                   {% if item.url %}<a class="button icon-button" href="{{ item.url }}" target="_blank" rel="noreferrer" title="Open stage link" aria-label="Open {{ item.title }}"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
                 </summary>
                 <form class="distribution-form" action="{{ admin_prefix }}/releases/{{ item.release_id }}/distribution/{{ item.stage }}" method="post">
@@ -1053,6 +1055,9 @@
                   <input class="distribution-note" name="note" value="{{ item.note }}" placeholder="Scanner result, blocker, or reviewer note" aria-label="Notes for {{ item.title }}" />
                   <button class="button primary icon-button" type="submit" title="Save stage" aria-label="Save {{ item.title }}"><svg class="icon"><use href="#i-check"/></svg></button>
                   <p class="distribution-next"><strong>Next:</strong> {{ item.next_action }}</p>
+                  {% if item.has_notice and item.remote_notice %}<p class="distribution-notice"><strong>Reviewer notice:</strong> {{ item.remote_notice }}</p>{% endif %}
+                  {% if item.remote_state %}<p class="distribution-remote"><strong>Codeberg:</strong> {{ item.remote_state|title }} · {{ item.remote_reviewer_comment_count or 0 }} reviewer replies{% if item.remote_labels %} · {{ item.remote_labels|join(', ') }}{% endif %}</p>{% endif %}
+                  {% if item.remote_error %}<p class="distribution-notice"><strong>Monitor error:</strong> {{ item.remote_error }}</p>{% endif %}
                 </form>
               </details>
               {% endfor %}

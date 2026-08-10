@@ -1925,7 +1925,25 @@ def update_distribution_submission(
     list_distribution_submissions(release_id)
     collection("distribution_submissions").update_one(
         {"release_id": release_id, "stage": stage},
-        {"$set": {"status": status, "url": url.strip(), "note": note.strip(), "updated_at": utcnow()}},
+        {"$set": {"status": status, "url": url.strip(), "note": note.strip(), "has_notice": False, "updated_at": utcnow()}},
+    )
+
+
+def list_distribution_issue_monitors() -> list[dict[str, Any]]:
+    rows = collection("distribution_submissions").find(
+        {
+            "stage": "izzy_request",
+            "url": {"$regex": r"^https://codeberg\.org/IzzyOnDroid/repodata/issues/\d+/?$", "$options": "i"},
+            "status": {"$nin": ["listed", "not_applicable"]},
+        }
+    )
+    return [_serialize(item) for item in rows]
+
+
+def update_distribution_remote_state(release_id: str, stage: str, values: dict[str, Any]) -> None:
+    collection("distribution_submissions").update_one(
+        {"release_id": release_id, "stage": stage},
+        {"$set": {**values, "updated_at": utcnow()}},
     )
 
 

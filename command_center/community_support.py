@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
@@ -16,8 +17,10 @@ try:
         count_social_opportunities,
         get_support_sync_state,
         get_support_message,
+        list_distribution_issue_monitors,
         list_support_messages,
         update_support_message,
+        update_distribution_remote_state,
         update_support_sync_state,
         upsert_community_metrics,
         upsert_support_message,
@@ -29,8 +32,10 @@ except ImportError:
         count_social_opportunities,
         get_support_sync_state,
         get_support_message,
+        list_distribution_issue_monitors,
         list_support_messages,
         update_support_message,
+        update_distribution_remote_state,
         update_support_sync_state,
         upsert_community_metrics,
         upsert_support_message,
@@ -818,6 +823,86 @@ def discover_opportunities() -> dict[str, Any]:
     return result
 
 
+def sync_distribution_issues() -> dict[str, Any]:
+    result: dict[str, Any] = {"checked": 0, "changed": 0, "issues": []}
+    for row in list_distribution_issue_monitors():
+        match = re.search(r"/issues/(\d+)/?$", str(row.get("url", "")))
+        if not match:
+            continue
+        issue_number = match.group(1)
+        api_url = f"https://codeberg.org/api/v1/repos/IzzyOnDroid/repodata/issues/{issue_number}"
+        try:
+            issue_response = requests.get(api_url, headers={"user-agent": "PureHub-Distribution-Monitor/1.0"}, timeout=30)
+            issue_response.raise_for_status()
+            issue = issue_response.json()
+            comments_response = requests.get(f"{api_url}/comments", headers={"user-agent": "PureHub-Distribution-Monitor/1.0"}, timeout=30)
+            comments_response.raise_for_status()
+            comments = comments_response.json()
+        except Exception as exc:
+            update_distribution_remote_state(
+                str(row.get("release_id", "")),
+                str(row.get("stage", "izzy_request")),
+                {"remote_error": str(exc)[:300], "remote_checked_at": datetime.now(timezone.utc)},
+            )
+            result["issues"].append({"number": issue_number, "ok": False, "error": str(exc)[:200]})
+            continue
+
+        author = str((issue.get("user") or {}).get("login", ""))
+        reviewer_comments = [item for item in comments if str((item.get("user") or {}).get("login", "")) != author]
+        labels = sorted(str(item.get("name", "")) for item in issue.get("labels", []) if item.get("name"))
+        remote_state = str(issue.get("state", "open"))
+        reviewer_count = len(reviewer_comments)
+        previous_state = str(row.get("remote_state", ""))
+        previous_labels = sorted(str(item) for item in (row.get("remote_labels") or []))
+        previous_reviewer_count = int(row.get("remote_reviewer_comment_count") or 0)
+        initialized = bool(row.get("remote_checked_at"))
+        changed = initialized and (
+            remote_state != previous_state
+            or labels != previous_labels
+            or reviewer_count > previous_reviewer_count
+        )
+
+        latest_reviewer = reviewer_comments[-1] if reviewer_comments else {}
+        latest_body = _plain_text(str(latest_reviewer.get("body", "")))[:500]
+        notice = ""
+        next_status = str(row.get("status") or "submitted")
+        if remote_state == "closed" and str(row.get("status")) != "listed":
+            next_status = "changes_requested"
+            notice = f"IzzyOnDroid issue #{issue_number} was closed. Review the latest reviewer response."
+        elif reviewer_count:
+            next_status = "in_review"
+            if reviewer_count > previous_reviewer_count:
+                reviewer = str((latest_reviewer.get("user") or {}).get("login", "reviewer"))
+                notice = f"New IzzyOnDroid reply from {reviewer}: {latest_body}"[:650]
+        elif next_status in {"pending", "ready", "changes_requested", "blocked"}:
+            next_status = "submitted"
+        if labels != previous_labels and initialized and not notice:
+            notice = f"IzzyOnDroid labels changed: {', '.join(labels) or 'none'}."
+
+        update_distribution_remote_state(
+            str(row.get("release_id", "")),
+            str(row.get("stage", "izzy_request")),
+            {
+                "status": next_status,
+                "remote_state": remote_state,
+                "remote_labels": labels,
+                "remote_comment_count": len(comments),
+                "remote_reviewer_comment_count": reviewer_count,
+                "remote_updated_at": str(issue.get("updated_at", "")),
+                "remote_checked_at": datetime.now(timezone.utc),
+                "remote_error": "",
+                "remote_notice": notice if changed else str(row.get("remote_notice") or ""),
+                "has_notice": bool(changed) or bool(row.get("has_notice")),
+            },
+        )
+        result["checked"] += 1
+        result["changed"] += int(changed)
+        result["issues"].append(
+            {"number": issue_number, "ok": True, "state": remote_state, "labels": labels, "reviewer_comments": reviewer_count, "changed": changed}
+        )
+    return result
+
+
 def _sync_telegram_metrics() -> dict[str, int]:
     response = requests.get(
         f"https://api.telegram.org/bot{get_config_value('telegram_bot_token')}/getChatMemberCount",
@@ -927,7 +1012,7 @@ def sync_engagement_metrics() -> dict[str, Any]:
 
 def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
     if get_config_value("support_monitor_enabled", "true").lower() != "true":
-        return {"enabled": False, "channels": {}, "drafts": {}, "engagement": sync_engagement_metrics()}
+        return {"enabled": False, "channels": {}, "drafts": {}, "distribution": sync_distribution_issues(), "engagement": sync_engagement_metrics()}
     functions = {"devto": _sync_devto, "bluesky": _sync_bluesky, "mastodon": _sync_mastodon}
     result: dict[str, Any] = {"enabled": True, "channels": {}}
 
@@ -947,6 +1032,7 @@ def sync_support_channels(generate_drafts: bool = True) -> dict[str, Any]:
     result["opportunities"] = discover_opportunities()
     draft_limit = max(8, min(int(get_config_value("opportunity_daily_limit", "30") or 30) + 4, 34))
     result["drafts"] = generate_support_drafts(limit=draft_limit) if generate_drafts else {}
+    result["distribution"] = sync_distribution_issues()
     result["engagement"] = sync_engagement_metrics()
     return result
 

@@ -15,12 +15,76 @@ from command_center.community_support import (
     discover_opportunities,
     generate_support_draft,
     ingest_telegram_update,
+    sync_distribution_issues,
 )
 from command_center.database import delete_support_message, get_support_metrics, infer_support_inbox_type, list_support_messages, upsert_support_message
 from command_center.main import support_bulk_approve_action, support_bulk_send_action, support_complete_manual_action
 
 
 class CommunitySupportTests(unittest.TestCase):
+    @patch("command_center.community_support.update_distribution_remote_state")
+    @patch("command_center.community_support.requests.get")
+    @patch("command_center.community_support.list_distribution_issue_monitors")
+    def test_distribution_monitor_initializes_without_notice(self, monitors, get, update) -> None:
+        monitors.return_value = [{
+            "release_id": "v1.0.0-beta.17",
+            "stage": "izzy_request",
+            "url": "https://codeberg.org/IzzyOnDroid/repodata/issues/446",
+            "status": "submitted",
+        }]
+        issue_response = MagicMock()
+        issue_response.json.return_value = {
+            "state": "open",
+            "updated_at": "2026-08-10T18:31:42+02:00",
+            "user": {"login": "shoyrulove"},
+            "labels": [{"name": "app-request"}, {"name": "needs/apk-scan"}],
+        }
+        comments_response = MagicMock()
+        comments_response.json.return_value = []
+        get.side_effect = [issue_response, comments_response]
+
+        result = sync_distribution_issues()
+
+        self.assertEqual(result["checked"], 1)
+        self.assertEqual(result["changed"], 0)
+        values = update.call_args.args[2]
+        self.assertEqual(values["status"], "submitted")
+        self.assertFalse(values["has_notice"])
+        self.assertEqual(values["remote_state"], "open")
+
+    @patch("command_center.community_support.update_distribution_remote_state")
+    @patch("command_center.community_support.requests.get")
+    @patch("command_center.community_support.list_distribution_issue_monitors")
+    def test_distribution_monitor_notices_new_reviewer_reply(self, monitors, get, update) -> None:
+        monitors.return_value = [{
+            "release_id": "v1.0.0-beta.17",
+            "stage": "izzy_request",
+            "url": "https://codeberg.org/IzzyOnDroid/repodata/issues/446",
+            "status": "submitted",
+            "remote_checked_at": datetime.now(timezone.utc),
+            "remote_state": "open",
+            "remote_labels": ["app-request", "needs/apk-scan"],
+            "remote_reviewer_comment_count": 0,
+        }]
+        issue_response = MagicMock()
+        issue_response.json.return_value = {
+            "state": "open",
+            "updated_at": "2026-08-10T20:00:00+02:00",
+            "user": {"login": "shoyrulove"},
+            "labels": [{"name": "app-request"}, {"name": "needs/apk-scan"}],
+        }
+        comments_response = MagicMock()
+        comments_response.json.return_value = [{"user": {"login": "bene64"}, "body": "APK scan started."}]
+        get.side_effect = [issue_response, comments_response]
+
+        result = sync_distribution_issues()
+
+        self.assertEqual(result["changed"], 1)
+        values = update.call_args.args[2]
+        self.assertEqual(values["status"], "in_review")
+        self.assertTrue(values["has_notice"])
+        self.assertIn("bene64", values["remote_notice"])
+
     def test_own_social_author_matches_stable_id_or_exact_handle(self) -> None:
         self.assertTrue(_is_own_social_author({"id": "42", "acct": "purehub"}, own_id="42"))
         self.assertTrue(_is_own_social_author({"handle": "PureHub.Bsky.Social"}, own_handle="@purehub.bsky.social"))
