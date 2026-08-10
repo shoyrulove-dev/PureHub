@@ -18,10 +18,26 @@ object ReceiptParser {
     private val taxWords = Regex("\\b(tax|vat|thuế)\\b", RegexOption.IGNORE_CASE)
     private val tipWords = Regex("\\b(tip|gratuity|service charge)\\b", RegexOption.IGNORE_CASE)
     private val datePattern = Regex("\\b(?:\\d{1,2}[-/.]){2}\\d{2,4}\\b")
+    private val referenceWords = Regex("\\b(receipt|invoice|order|reference|ref)\\b", RegexOption.IGNORE_CASE)
 
     fun parse(text: String): ReceiptResult {
         val cleanLines = text.lines().map(String::trim).filter(String::isNotBlank)
-        val priced = cleanLines.mapNotNull { line -> parseAmount(line)?.let { line to it } }
+        val inlinePriced = cleanLines.mapNotNull { line ->
+            val value = parseAmount(line) ?: return@mapNotNull null
+            val label = line.replace(amount, "").trim(' ', '-', ':')
+            if (
+                label.isBlank() ||
+                datePattern.containsMatchIn(line) ||
+                '#' in line ||
+                referenceWords.containsMatchIn(label)
+            ) {
+                null
+            } else {
+                line to value
+            }
+        }
+        val columnPriced = pairSplitColumns(cleanLines)
+        val priced = if (columnPriced.any { totalWords.containsMatchIn(it.first) }) columnPriced else inlinePriced
         val total = priced.lastOrNull { totalWords.containsMatchIn(it.first) }?.second
             ?: priced.maxOfOrNull { it.second }
         val tax = priced.lastOrNull { taxWords.containsMatchIn(it.first) }?.second
@@ -43,6 +59,27 @@ object ReceiptParser {
             lines = lines,
             rawText = text,
         )
+    }
+
+    /**
+     * ML Kit can return a receipt's left text column first and its right price column second.
+     * Rebuild those rows when the document ends with a contiguous block of standalone prices.
+     */
+    private fun pairSplitColumns(lines: List<String>): List<Pair<String, Double>> {
+        val trailingAmounts = lines.asReversed()
+            .takeWhile { line ->
+                val value = parseAmount(line)
+                value != null && line.replace(amount, "").isBlank()
+            }
+            .asReversed()
+            .mapNotNull(::parseAmount)
+        if (trailingAmounts.size < 2) return emptyList()
+
+        val labelsEnd = lines.size - trailingAmounts.size
+        if (labelsEnd < trailingAmounts.size) return emptyList()
+        val labels = lines.subList(labelsEnd - trailingAmounts.size, labelsEnd)
+        if (labels.any { it.isBlank() || datePattern.containsMatchIn(it) || parseAmount(it) != null }) return emptyList()
+        return labels.zip(trailingAmounts)
     }
 
     private fun parseAmount(line: String): Double? {

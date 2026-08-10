@@ -27,4 +27,30 @@ class ReceiptParserTest {
         assertEquals(125000.0, result.total ?: 0.0, 0.001)
         assertTrue(result.rawText.contains("Tổng cộng"))
     }
+
+    @Test
+    fun pairsSplitOcrColumnsAndIgnoresReceiptReference() {
+        val result = ReceiptParser.parse("""
+            PUREHUB TEST STORE
+            Receipt #BETA15
+            2026-08-10
+            Coffee
+            Notebook
+            USB Cable
+            Subtotal
+            Tax
+            TOTAL
+            4.50
+            12.00
+            8.00
+            24.50
+            2.45
+            26.95
+        """.trimIndent())
+
+        assertEquals(26.95, result.total ?: 0.0, 0.001)
+        assertEquals(2.45, result.tax ?: 0.0, 0.001)
+        assertEquals(listOf("Coffee", "Notebook", "USB Cable", "Subtotal"), result.lines.map { it.name })
+        assertEquals(listOf(4.50, 12.00, 8.00, 24.50), result.lines.map { it.amount })
+    }
 }
