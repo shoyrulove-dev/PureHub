@@ -1841,8 +1841,8 @@ DISTRIBUTION_STAGES = (
     {
         "stage": "izzy_request",
         "title": "IzzyOnDroid request",
-        "next_action": "Open one app-inclusion issue in IzzyOnDroid/repodata and paste the prepared dossier.",
-        "default_url": "https://codeberg.org/IzzyOnDroid/repodata/issues/new",
+        "next_action": "Create a new issue using the required App Inclusion Request form; disclose AI assistance accurately and save the new issue URL.",
+        "default_url": "https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose",
     },
     {
         "stage": "izzy_listing",

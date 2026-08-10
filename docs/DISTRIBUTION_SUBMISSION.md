@@ -29,7 +29,42 @@ Command Center stores these stages under **Release & system operations → FOSS 
 
 The `fdroid` flavor uses ZXing and Tesseract with bundled English, Vietnamese, and Simplified Chinese models. Its release manifest has no Internet permission, and its runtime graph contains no ML Kit, Google Play Services, Firebase, ads, analytics, or trackers.
 
-## Copy-ready IzzyOnDroid request
+## IzzyOnDroid App Inclusion Request form
+
+Use the required **App Inclusion Request** form at:
+
+<https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose>
+
+Do not open a blank issue. IzzyOnDroid closes requests that do not use this form. Fill the form with the source URL, MIT license, categories, summary, description, CLI build instructions, and an accurate AI-assistance disclosure. PureHub has used OpenAI Codex throughout architecture, implementation, UI work, debugging, tests, documentation, and release automation; select `Dominant` if most submitted code/content was AI-generated. Only check the human-review and manual-verification accountability boxes when they are fully true.
+
+Suggested categories: `Office`, `System`, `Time`, `Money`, and `Security`.
+
+Suggested summary:
+
+```text
+22 private, offline Android utilities with no ads, analytics, or trackers.
+```
+
+Suggested build instructions:
+
+```text
+Requirements: Git, JDK 17, and Android SDK API 36.
+
+git clone https://github.com/shoyrulove-dev/PureHub.git
+cd PureHub
+git checkout v1.0.0-beta.17
+./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidRelease
+./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
+! grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt
+
+The APK is generated under app/build/outputs/apk/fdroid/release/.
+```
+
+### Previous free-form request
+
+Issue #445 was closed because it did not use the required form. Keep it only as historical context; the replacement issue URL becomes the tracked IzzyOnDroid request.
+
+### Legacy copy-ready request
 
 Suggested title:
 
