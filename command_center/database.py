@@ -2060,7 +2060,9 @@ def delete_support_message(message_id: str) -> bool:
 def get_support_metrics() -> dict[str, Any]:
     messages = collection("support_messages")
     open_statuses = ["new", "draft_ready", "approved", "failed", "manual_required"]
-    month_start = utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    now = utcnow()
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     by_platform = {
         platform: messages.count_documents({"platform": platform, "status": {"$in": open_statuses}})
         for platform in ("telegram", "devto", "bluesky", "mastodon")
@@ -2081,6 +2083,8 @@ def get_support_metrics() -> dict[str, Any]:
         "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
         "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "created_at": {"$gte": month_start}}),
         "social_replied_month": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": month_start}}),
+        "social_leads_today": messages.count_documents({"inbox_type": "social_opportunity", "created_at": {"$gte": day_start}}),
+        "social_replied_today": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": day_start}}),
         "bugs": messages.count_documents({"category": {"$in": ["bug", "device_report"]}, "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
         "by_inbox_type": by_inbox_type,

@@ -566,6 +566,11 @@ def _dashboard_context(
         support_metrics=loaded.get("support_metrics", {}),
         reddit_connected=reddit_connection["connected"],
     ) if view == "overview" else {}
+    support_sync_states = loaded.get("support_sync_states", [])
+    opportunity_sync_state = next(
+        (item for item in support_sync_states if item.get("platform") == "opportunities"),
+        {},
+    )
     return {
         "config": config,
         "defaults": CONFIG_DEFAULTS,
@@ -605,7 +610,8 @@ def _dashboard_context(
         "support_filter": support_filter,
         "support_history": support_history,
         "support_metrics": loaded.get("support_metrics", {}),
-        "support_sync_states": loaded.get("support_sync_states", []),
+        "support_sync_states": support_sync_states,
+        "opportunity_sync_state": opportunity_sync_state,
         "community_metrics": {item["platform"]: item for item in loaded.get("community_metrics_list", [])},
         "growth_posts": loaded.get("growth_posts", []),
         "growth_summary": loaded.get("growth_summary", {}),

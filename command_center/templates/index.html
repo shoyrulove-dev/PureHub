@@ -880,12 +880,13 @@
             <span class="badge draft" title="AI drafts"><svg class="icon"><use href="#i-file"/></svg>&nbsp;{{ support_metrics.draft_ready }}<span class="sr-only"> drafts</span></span>
             <span class="badge {% if support_metrics.bugs %}ready_manual{% endif %}" title="Open PureHub bug or device reports"><svg class="icon"><use href="#i-bug"/></svg>&nbsp;{{ support_metrics.bugs }}<span class="sr-only"> bug reports</span></span>
             <span class="badge draft" title="Replies to PureHub posts"><svg class="icon"><use href="#i-thread"/></svg>&nbsp;{{ support_metrics.by_inbox_type.get('purehub_post', 0) }}<span class="sr-only"> PureHub post replies</span></span>
-            <span class="badge ready_manual" title="Relevant public social opportunities"><svg class="icon"><use href="#i-compass"/></svg>&nbsp;{{ support_metrics.by_inbox_type.get('social_opportunity', 0) }}<span class="sr-only"> social opportunities</span></span>
+            <span class="badge ready_manual" title="Social discovery today: {{ support_metrics.social_leads_today }} found, {{ support_metrics.social_replied_today }} replied; daily setting is a maximum, not a guaranteed quota"><svg class="icon"><use href="#i-compass"/></svg>&nbsp;{{ support_metrics.social_leads_today }}/{{ config.get('opportunity_daily_limit', '27') }} today<span class="sr-only"> social opportunities scanned today</span></span>
+            <span class="badge published" title="Social leads replied today"><svg class="icon"><use href="#i-send"/></svg>&nbsp;{{ support_metrics.social_replied_today }} today<span class="sr-only"> social leads replied today</span></span>
             <span class="badge approved" title="Approved"><svg class="icon"><use href="#i-check"/></svg>&nbsp;{{ support_metrics.approved }}<span class="sr-only"> approved</span></span>
             <span class="badge published" title="Replied"><svg class="icon"><use href="#i-send"/></svg>&nbsp;{{ support_metrics.replied }}<span class="sr-only"> replied</span></span>
             <span class="badge ready_manual" title="Manual actions"><svg class="icon"><use href="#i-external"/></svg>&nbsp;{{ support_metrics.manual_required }}<span class="sr-only"> manual</span></span>
             {% for state in support_sync_states %}
-              <span class="sync-state {% if state.error_message %}error{% endif %}">{{ state.platform|upper }}{% if state.error_message %} error{% else %} synced{% endif %}</span>
+              <span class="sync-state {% if state.error_message %}error{% endif %}" {% if state.platform == 'opportunities' %}title="Last scan found {{ state.last_created or support_metrics.social_leads_today }} of a {{ state.last_target or config.get('opportunity_daily_limit', '27') }} maximum"{% endif %}>{{ state.platform|upper }}{% if state.platform == 'opportunities' and (state.last_target or opportunity_sync_state.last_target) %} {{ state.last_created or 0 }}/{{ state.last_target }}{% elif state.error_message %} error{% else %} synced{% endif %}</span>
             {% endfor %}
           </div>
           <nav class="support-filters" aria-label="Filter support inbox">
@@ -895,7 +896,7 @@
             <a class="support-filter {% if support_filter == 'product_feedback' %}active{% endif %}" href="?support_filter=product_feedback#support"><svg class="icon"><use href="#i-package"/></svg>App feedback {{ support_metrics.by_inbox_type.get('product_feedback', 0) }}</a>
             <a class="support-filter {% if support_filter == 'direct_support' %}active{% endif %}" href="?support_filter=direct_support#support"><svg class="icon"><use href="#i-message"/></svg>Direct support {{ support_metrics.by_inbox_type.get('direct_support', 0) }}</a>
             <a class="support-filter {% if support_filter == 'social_mention' %}active{% endif %}" href="?support_filter=social_mention#support"><svg class="icon"><use href="#i-spark"/></svg>Mentions {{ support_metrics.by_inbox_type.get('social_mention', 0) }}</a>
-            <a class="support-filter {% if support_filter == 'social_opportunity' %}active{% endif %}" href="?support_filter=social_opportunity#support"><svg class="icon"><use href="#i-compass"/></svg>Social leads {{ support_metrics.by_inbox_type.get('social_opportunity', 0) }}</a>
+            <a class="support-filter {% if support_filter == 'social_opportunity' %}active{% endif %}" href="?support_filter=social_opportunity#support"><svg class="icon"><use href="#i-compass"/></svg>Social leads {{ support_metrics.by_inbox_type.get('social_opportunity', 0) }} open · {{ support_metrics.social_leads_today }} today</a>
           </nav>
           {% if active_support_messages %}
           <form class="support-bulkbar" id="supportBulkForm" action="{{ admin_prefix }}/support/bulk-approve" method="post">

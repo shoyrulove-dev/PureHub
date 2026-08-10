@@ -617,7 +617,15 @@ def discover_opportunities() -> dict[str, Any]:
         return {"enabled": False, "channels": {}}
     state = get_support_sync_state("opportunities")
     if state.get("last_synced_at") and _iso_datetime(str(state["last_synced_at"])).date() == datetime.now(timezone.utc).date():
-        return {"enabled": True, "skipped": True, "reason": "Daily discovery already completed.", "channels": {}}
+        return {
+            "enabled": True,
+            "skipped": True,
+            "reason": "Daily discovery already completed.",
+            "target": int(state.get("last_target") or 0),
+            "created": int(state.get("last_created") or 0),
+            "shortfall": int(state.get("last_shortfall") or 0),
+            "channels": state.get("last_channels") or {},
+        }
     keywords = _opportunity_keywords()
     total_limit = max(1, min(int(get_config_value("opportunity_daily_limit", "27") or 27), 30))
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
@@ -656,7 +664,26 @@ def discover_opportunities() -> dict[str, Any]:
             outcome["backfill_error"] = str(exc)[:500]
     result["created"] = sum(int(item.get("created") or 0) for item in result["channels"].values())
     result["shortfall"] = max(0, total_limit - result["created"])
-    update_support_sync_state("opportunities", {"last_synced_at": datetime.now(timezone.utc), "error_message": ""})
+    failed_channels = [name for name, item in result["channels"].items() if not item.get("ok")]
+    update_support_sync_state(
+        "opportunities",
+        {
+            "last_synced_at": datetime.now(timezone.utc),
+            "error_message": f"Discovery failed on: {', '.join(failed_channels)}" if failed_channels else "",
+            "last_target": total_limit,
+            "last_created": result["created"],
+            "last_shortfall": result["shortfall"],
+            "last_channels": {
+                name: {
+                    "ok": bool(item.get("ok")),
+                    "target": int(item.get("target") or 0),
+                    "created": int(item.get("created") or 0),
+                    "error": str(item.get("error") or "")[:200],
+                }
+                for name, item in result["channels"].items()
+            },
+        },
+    )
     return result
 
 
