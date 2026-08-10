@@ -2098,9 +2098,9 @@ def get_support_metrics() -> dict[str, Any]:
         "manual_required": messages.count_documents({"status": "manual_required"}),
         "failed": messages.count_documents({"status": "failed"}),
         "opportunities": messages.count_documents({"category": "opportunity", "status": {"$in": open_statuses}}),
-        "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "created_at": {"$gte": month_start}}),
+        "social_leads_month": messages.count_documents({"inbox_type": "social_opportunity", "status": {"$ne": "ignored"}, "created_at": {"$gte": month_start}}),
         "social_replied_month": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": month_start}}),
-        "social_leads_today": messages.count_documents({"inbox_type": "social_opportunity", "created_at": {"$gte": day_start}}),
+        "social_leads_today": messages.count_documents({"inbox_type": "social_opportunity", "status": {"$ne": "ignored"}, "created_at": {"$gte": day_start}}),
         "social_replied_today": messages.count_documents({"inbox_type": "social_opportunity", "status": "replied", "replied_at": {"$gte": day_start}}),
         "bugs": messages.count_documents({"category": {"$in": ["bug", "device_report"]}, "status": {"$in": open_statuses}}),
         "by_platform": by_platform,
@@ -2112,6 +2112,7 @@ def count_social_opportunities(start_at: datetime, end_at: datetime) -> int:
     return collection("support_messages").count_documents(
         {
             "inbox_type": "social_opportunity",
+            "status": {"$ne": "ignored"},
             "created_at": {"$gte": start_at, "$lt": end_at},
         }
     )
