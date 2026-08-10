@@ -69,7 +69,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 18
+CURRENT_SCHEMA_VERSION = 19
 DEFAULTS_BOOTSTRAP_VERSION = 7
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -628,6 +628,11 @@ def init_database() -> None:
         unique=True,
     )
     db.release_publications.create_index([("updated_at", DESCENDING)])
+    db.distribution_submissions.create_index(
+        [("release_id", ASCENDING), ("stage", ASCENDING)],
+        unique=True,
+    )
+    db.distribution_submissions.create_index([("updated_at", DESCENDING)])
     db.support_messages.create_index([("source_key", ASCENDING)], unique=True)
     db.support_messages.create_index([("status", ASCENDING), ("received_at", DESCENDING)])
     db.support_messages.create_index([("platform", ASCENDING), ("received_at", DESCENDING)])
@@ -752,6 +757,7 @@ def run_schema_migrations() -> None:
         (16, "promote-utility-suites-flagship", _migration_promote_utility_suites),
         (17, "normalize-flagship-priorities", _migration_normalize_flagship_priorities),
         (18, "promote-complete-catalog-flagship", _migration_promote_complete_catalog),
+        (19, "ensure-distribution-tracker", _migration_distribution_tracker),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -929,6 +935,14 @@ def _migration_release_hub() -> None:
         [("release_id", ASCENDING), ("channel", ASCENDING), ("language", ASCENDING)],
         unique=True,
     )
+
+
+def _migration_distribution_tracker() -> None:
+    collection("distribution_submissions").create_index(
+        [("release_id", ASCENDING), ("stage", ASCENDING)],
+        unique=True,
+    )
+    collection("distribution_submissions").create_index([("updated_at", DESCENDING)])
 
 
 def _migration_community_support() -> None:
@@ -1798,6 +1812,104 @@ def list_release_publications(release_id: str = "", limit: int = 100) -> list[di
     filters = {"release_id": release_id} if release_id else {}
     rows = collection("release_publications").find(filters).sort("updated_at", DESCENDING).limit(limit)
     return [_serialize(item) for item in rows]
+
+
+DISTRIBUTION_STAGES = (
+    {
+        "stage": "github_release",
+        "title": "GitHub release",
+        "next_action": "Keep the signed F-Droid APK, source tag, checksums, and metadata public.",
+        "default_url": "",
+    },
+    {
+        "stage": "izzy_request",
+        "title": "IzzyOnDroid request",
+        "next_action": "Open one app-inclusion issue in IzzyOnDroid/repodata and paste the prepared dossier.",
+        "default_url": "https://codeberg.org/IzzyOnDroid/repodata/issues/new",
+    },
+    {
+        "stage": "izzy_listing",
+        "title": "Izzy review & listing",
+        "next_action": "Record scanner findings, resolve blockers, and save the public listing URL.",
+        "default_url": "https://apt.izzysoft.de/fdroid/index/apk/com.purehub.app",
+    },
+    {
+        "stage": "fdroid_submission",
+        "title": "F-Droid submission",
+        "next_action": "After Izzy feedback is clear, open an RFP or submit metadata to fdroiddata.",
+        "default_url": "https://gitlab.com/fdroid/rfp/-/issues/new",
+    },
+    {
+        "stage": "fdroid_listing",
+        "title": "F-Droid review & listing",
+        "next_action": "Track the RFP/MR, build logs, reviewer feedback, and final package page.",
+        "default_url": "https://f-droid.org/packages/com.purehub.app/",
+    },
+)
+
+DISTRIBUTION_STATUSES = (
+    "pending",
+    "ready",
+    "submitted",
+    "in_review",
+    "changes_requested",
+    "listed",
+    "blocked",
+    "not_applicable",
+)
+
+
+def list_distribution_submissions(release_id: str) -> list[dict[str, Any]]:
+    normalized_release_id = release_id.strip()
+    if not normalized_release_id:
+        return []
+    release = get_release(normalized_release_id) or {}
+    now = utcnow()
+    for index, definition in enumerate(DISTRIBUTION_STAGES):
+        status = "pending"
+        url = definition["default_url"]
+        if definition["stage"] == "github_release":
+            status = "listed" if release.get("github_url") else "ready"
+            url = str(release.get("github_url") or "")
+        key = {"release_id": normalized_release_id, "stage": definition["stage"]}
+        collection("distribution_submissions").update_one(
+            key,
+            {
+                "$setOnInsert": {
+                    **key,
+                    "title": definition["title"],
+                    "position": index,
+                    "status": status,
+                    "url": url,
+                    "note": "",
+                    "next_action": definition["next_action"],
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            },
+            upsert=True,
+        )
+    rows = collection("distribution_submissions").find({"release_id": normalized_release_id}).sort("position", ASCENDING)
+    return [_serialize(item) for item in rows]
+
+
+def update_distribution_submission(
+    release_id: str,
+    stage: str,
+    *,
+    status: str,
+    url: str = "",
+    note: str = "",
+) -> None:
+    if stage not in {item["stage"] for item in DISTRIBUTION_STAGES}:
+        raise ValueError("Unknown distribution stage.")
+    if status not in DISTRIBUTION_STATUSES:
+        raise ValueError("Unknown distribution status.")
+    list_distribution_submissions(release_id)
+    collection("distribution_submissions").update_one(
+        {"release_id": release_id, "stage": stage},
+        {"$set": {"status": status, "url": url.strip(), "note": note.strip(), "updated_at": utcnow()}},
+    )
 
 
 SUPPORT_INBOX_TYPES = ("purehub_post", "product_feedback", "direct_support", "social_mention", "social_opportunity")

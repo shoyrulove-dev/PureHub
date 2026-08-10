@@ -127,6 +127,8 @@ On Windows PowerShell:
 
 The standard flavor keeps ML Kit OCR for recognition quality. The `fdroid` flavor uses ZXing and Tesseract and its runtime dependency graph contains no ML Kit, Google Play Services, or Firebase. See the [F-Droid flavor architecture and verification guide](docs/FDROID_FLAVOR.md). APKs are written under `app/build/outputs/apk/<flavor>/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
 
+FOSS store distribution is being introduced in stages: signed developer builds go to IzzyOnDroid review first, followed by an official F-Droid source-build submission after scanner feedback is resolved. See the [distribution status and copy-ready submission dossier](docs/DISTRIBUTION_SUBMISSION.md). PureHub does not claim an IzzyOnDroid or F-Droid listing until a public package page exists.
+
 ### Command Center
 
 Requirements: Python 3.12+ and MongoDB.

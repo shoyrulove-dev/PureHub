@@ -118,9 +118,12 @@ try:
         claim_release_publication,
         create_release,
         get_release,
+        list_distribution_submissions,
         list_release_publications,
         list_releases,
+        DISTRIBUTION_STATUSES,
         update_release,
+        update_distribution_submission,
         update_release_publication,
         upsert_release_publication,
     )
@@ -137,9 +140,12 @@ except ImportError:
         claim_release_publication,
         create_release,
         get_release,
+        list_distribution_submissions,
         list_release_publications,
         list_releases,
+        DISTRIBUTION_STATUSES,
         update_release,
+        update_distribution_submission,
         update_release_publication,
         upsert_release_publication,
     )
@@ -505,6 +511,11 @@ def _dashboard_context(
         support_item["conversation_state"] = "awaiting_user" if support_item.get("status") == "replied" else "resolved"
     releases = loaded["releases"]
     current_release_id = str(releases[0].get("release_id", "")) if releases else ""
+    distribution_submissions = list_distribution_submissions(current_release_id) if current_release_id else []
+    completed_distribution_statuses = {"listed", "not_applicable"}
+    distribution_completed = sum(
+        1 for item in distribution_submissions if item.get("status") in completed_distribution_statuses
+    )
     release_publications = loaded.get("release_publications", [])
     actionable_publications = [
         item
@@ -579,6 +590,9 @@ def _dashboard_context(
         "admin_username": admin_username,
         "admin_profile": loaded.get("admin_profile", {}),
         "releases": releases,
+        "distribution_submissions": distribution_submissions,
+        "distribution_statuses": DISTRIBUTION_STATUSES,
+        "distribution_completed": distribution_completed,
         "release_publications": release_publications,
         "actionable_publications": actionable_publications,
         "reddit_publication": reddit_publication,
@@ -1311,6 +1325,32 @@ def update_release_action(
     )
     record_audit_log(actor=actor, action="update_release", target_type="release", target_id=release_id)
     return _redirect_with_message(f"Updated {release_id}.", "success")
+
+
+@admin_router.post("/releases/{release_id}/distribution/{stage}")
+def update_distribution_action(
+    request: Request,
+    release_id: str,
+    stage: str,
+    status: str = Form(...),
+    url: str = Form(default=""),
+    note: str = Form(default=""),
+) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    if not get_release(release_id):
+        return _redirect_with_message("Release not found.", "error")
+    try:
+        update_distribution_submission(release_id, stage, status=status, url=url, note=note)
+        record_audit_log(
+            actor=actor,
+            action="update_distribution_submission",
+            target_type="distribution_submission",
+            target_id=f"{release_id}:{stage}",
+            details={"status": status, "url": url.strip()},
+        )
+        return _redirect_with_message(f"Distribution stage updated to {status}.", "success", anchor="distribution")
+    except ValueError as exc:
+        return _redirect_with_message(str(exc), "error", anchor="distribution")
 
 
 @admin_router.post("/releases/{release_id}/publish")

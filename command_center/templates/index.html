@@ -255,6 +255,20 @@
       .status.ready::before { background: var(--emerald); box-shadow: 0 0 0 0.2rem rgba(52, 211, 153, 0.1); }
 
       .release-list, .queue { display: grid; gap: 0.75rem; }
+      .distribution-progress { display: flex; align-items: center; gap: .65rem; margin-top: .65rem; }
+      .distribution-progress-track { height: .42rem; flex: 1; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
+      .distribution-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg,#10b981,#06b6d4); }
+      .distribution-list { display: grid; gap: .48rem; margin-top: .8rem; }
+      .distribution-item { border: 1px solid var(--line); border-radius: .82rem; background: #f8fafc; }
+      .distribution-item > summary { display: grid; grid-template-columns: 1.7rem minmax(0,1fr) auto auto; align-items: center; gap: .55rem; padding: .62rem .7rem; cursor: pointer; list-style: none; }
+      .distribution-item > summary::-webkit-details-marker { display: none; }
+      .distribution-step { display: grid; width: 1.7rem; height: 1.7rem; place-items: center; border-radius: .5rem; color: #475569; background: #e2e8f0; font-size: .65rem; font-weight: 850; }
+      .distribution-item:has(.badge.listed) .distribution-step { color: #047857; background: #d1fae5; }
+      .distribution-name { overflow: hidden; font-size: .74rem; font-weight: 780; text-overflow: ellipsis; white-space: nowrap; }
+      .distribution-form { display: grid; grid-template-columns: 9rem minmax(10rem,1fr) minmax(12rem,1.25fr) auto; gap: .55rem; padding: .65rem; border-top: 1px solid var(--line); }
+      .distribution-form input, .distribution-form select { padding: .55rem .62rem; font-size: .7rem; }
+      .distribution-form .button { min-height: 2.2rem; }
+      .distribution-next { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: .66rem; line-height: 1.45; }
       .support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem; }
       .support-stats { display: flex; flex-wrap: wrap; gap: 0.5rem; }
       .support-filters { display: flex; gap: .4rem; margin-top: .7rem; overflow-x: auto; padding-bottom: .1rem; scrollbar-width: none; }
@@ -345,6 +359,9 @@
       .release-summary { margin: 0.38rem 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
       .badge { display: inline-flex; padding: 0.3rem 0.55rem; border: 1px solid var(--line); border-radius: 999px; color: #475569; background: #ffffff; font-size: 0.63rem; font-weight: 760; text-transform: uppercase; white-space: nowrap; }
       .badge.approved, .badge.published { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
+      .badge.listed { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
+      .badge.ready, .badge.submitted, .badge.in_review { border-color: #bae6fd; color: #0369a1; background: #f0f9ff; }
+      .badge.changes_requested, .badge.blocked { border-color: #fecdd3; color: #be123c; background: #fff1f2; }
       .badge.awaiting_us { border-color: #bae6fd; color: #0369a1; background: #f0f9ff; }
       .badge.reopened { border-color: #ddd6fe; color: #6d28d9; background: #f5f3ff; }
       .badge.awaiting_user { border-color: #a7f3d0; color: #047857; background: #ecfdf5; }
@@ -408,6 +425,8 @@
         .channels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .reach-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .grid-two { grid-template-columns: 1fr; }
+        .distribution-form { grid-template-columns: 8rem minmax(0,1fr); }
+        .distribution-form input, .distribution-form .distribution-note { grid-column: 1 / -1; }
         .goal-roadmap { grid-template-columns: repeat(2,minmax(0,1fr)); }
         .product-signals { grid-template-columns: repeat(3,minmax(0,1fr)); }
       }
@@ -448,6 +467,10 @@
         .tiktok-compose, .tiktok-actionbar, .tiktok-option-grid { grid-template-columns: 1fr; }
         .tiktok-actionbar .button { width: 100%; margin-top: 0; }
         .panel-head, .release-top { display: block; }
+        .distribution-item > summary { grid-template-columns: 1.7rem minmax(0,1fr) auto; }
+        .distribution-item > summary > .button { display: none; }
+        .distribution-form { grid-template-columns: 1fr; }
+        .distribution-form input, .distribution-form .distribution-note { grid-column: auto; }
         .panel-head .button, .release-top .badge { margin-top: 0.7rem; }
         details.queue-item summary { align-items: flex-start; }
         .queue-label { align-items: flex-start; flex-direction: column; }
@@ -1003,6 +1026,39 @@
             <svg class="icon disclosure-chevron"><use href="#i-chevron"/></svg>
           </summary>
           <div class="disclosure-content">
+        {% if releases %}
+        <details class="distribution-tracker" id="distribution">
+          <summary class="disclosure-summary" style="padding:.9rem 0 .75rem">
+            <span class="disclosure-title"><span class="disclosure-icon"><svg class="icon"><use href="#i-package"/></svg></span><span><strong>FOSS distribution</strong><span class="panel-copy" style="display:block;margin-top:.15rem">{{ releases[0].release_id }} · IzzyOnDroid first, then official F-Droid</span></span></span>
+            <span class="badge {% if distribution_completed == distribution_submissions|length %}listed{% endif %}">{{ distribution_completed }}/{{ distribution_submissions|length }}</span>
+          </summary>
+          <div>
+            <div class="distribution-progress">
+              <div class="distribution-progress-track" role="progressbar" aria-valuenow="{{ distribution_completed }}" aria-valuemin="0" aria-valuemax="{{ distribution_submissions|length }}"><div class="distribution-progress-fill" style="width:{{ distribution_completed * 20 }}%"></div></div>
+              <a class="link" href="https://github.com/shoyrulove-dev/PureHub/blob/main/docs/DISTRIBUTION_SUBMISSION.md" target="_blank" rel="noreferrer">Submission dossier</a>
+            </div>
+            <div class="distribution-list">
+              {% for item in distribution_submissions %}
+              <details class="distribution-item">
+                <summary>
+                  <span class="distribution-step">{{ loop.index }}</span>
+                  <span class="distribution-name">{{ item.title }}</span>
+                  <span class="badge {{ item.status }}">{{ item.status|replace('_', ' ') }}</span>
+                  {% if item.url %}<a class="button icon-button" href="{{ item.url }}" target="_blank" rel="noreferrer" title="Open stage link" aria-label="Open {{ item.title }}"><svg class="icon"><use href="#i-external"/></svg></a>{% endif %}
+                </summary>
+                <form class="distribution-form" action="{{ admin_prefix }}/releases/{{ item.release_id }}/distribution/{{ item.stage }}" method="post">
+                  <select name="status" aria-label="Status for {{ item.title }}">{% for status in distribution_statuses %}<option value="{{ status }}" {% if status == item.status %}selected{% endif %}>{{ status|replace('_', ' ')|title }}</option>{% endfor %}</select>
+                  <input type="url" name="url" value="{{ item.url }}" placeholder="Issue, review, or listing URL" aria-label="URL for {{ item.title }}" />
+                  <input class="distribution-note" name="note" value="{{ item.note }}" placeholder="Scanner result, blocker, or reviewer note" aria-label="Notes for {{ item.title }}" />
+                  <button class="button primary icon-button" type="submit" title="Save stage" aria-label="Save {{ item.title }}"><svg class="icon"><use href="#i-check"/></svg></button>
+                  <p class="distribution-next"><strong>Next:</strong> {{ item.next_action }}</p>
+                </form>
+              </details>
+              {% endfor %}
+            </div>
+          </div>
+        </details>
+        {% endif %}
         <div class="grid-two" style="padding-top:1rem">
           <section class="panel" id="releases">
             <div class="panel-head">
