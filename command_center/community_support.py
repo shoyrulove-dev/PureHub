@@ -220,7 +220,13 @@ def generate_support_drafts(limit: int = 20) -> dict[str, int]:
         analyses = list(executor.map(_analyze_message, rows))
     for row, analysis in zip(rows, analyses):
         asks_question = _looks_like_question(str(row.get("content") or ""))
-        requires_reply = analysis["category"] != "spam" and (analysis["requires_reply"] or asks_question)
+        is_discovery = str((row.get("reply_context") or {}).get("source_kind", "")) == "discovery"
+        allowed_discovery_category = analysis["category"] in {"opportunity", "question"}
+        requires_reply = (
+            analysis["category"] != "spam"
+            and (analysis["requires_reply"] or asks_question)
+            and (not is_discovery or allowed_discovery_category)
+        )
         category = "question" if asks_question and analysis["category"] == "praise" else analysis["category"]
         status = "draft_ready" if requires_reply else "ignored"
         update_support_message(
@@ -255,7 +261,13 @@ def generate_support_draft(
         guidance=guidance.strip()[:500],
     )
     asks_question = _looks_like_question(str(row.get("content") or ""))
-    requires_reply = analysis["category"] != "spam" and (analysis["requires_reply"] or asks_question)
+    is_discovery = str((row.get("reply_context") or {}).get("source_kind", "")) == "discovery"
+    allowed_discovery_category = analysis["category"] in {"opportunity", "question"}
+    requires_reply = (
+        analysis["category"] != "spam"
+        and (analysis["requires_reply"] or asks_question)
+        and (not is_discovery or allowed_discovery_category)
+    )
     category = "question" if asks_question and analysis["category"] == "praise" else analysis["category"]
     update_support_message(
         message_id,
@@ -458,12 +470,14 @@ def _looks_like_relevant_opportunity(text: str, keyword: str = "") -> bool:
         " app", " tool", "utility", "scanner", "ocr", "qr code", "pomodoro", "password",
         "expense", "converter", "habit", "notes", "timer", "calculator",
     )
-    if any(signal in value for signal in intent_signals):
-        return True
+    has_intent = any(signal in value for signal in intent_signals)
+    has_utility = any(signal in value for signal in utility_signals)
+    if not has_intent or not has_utility:
+        return False
     if keyword.startswith("#"):
-        return any(signal in value for signal in utility_signals)
+        return True
     keyword_tokens = [token.lower() for token in keyword.split() if len(token) >= 4]
-    return any(signal in value for signal in utility_signals) and any(token in value for token in keyword_tokens)
+    return any(token in value for token in keyword_tokens)
 
 
 def _discover_bluesky(keywords: list[str], limit: int) -> int:

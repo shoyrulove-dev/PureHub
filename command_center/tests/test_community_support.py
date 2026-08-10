@@ -78,6 +78,8 @@ class CommunitySupportTests(unittest.TestCase):
 
     def test_opportunity_relevance_rejects_broad_android_chatter(self) -> None:
         self.assertFalse(_looks_like_relevant_opportunity("Does anyone want a TV stick without Android?", "#android"))
+        self.assertFalse(_looks_like_relevant_opportunity("What is the climate benefit of replacing a car early?", "#opensource"))
+        self.assertFalse(_looks_like_relevant_opportunity("Looking for an alternative school housing policy", "#android"))
         self.assertTrue(_looks_like_relevant_opportunity("Any offline QR scanner without ads?", "#android"))
 
     @patch("command_center.community_support.update_support_sync_state")
