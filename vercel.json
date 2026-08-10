@@ -12,7 +12,19 @@
   "crons": [
     {
       "path": "/public-api/support-sync",
-      "schedule": "15 5,11,17,23 * * *"
+      "schedule": "15 5 * * *"
+    },
+    {
+      "path": "/public-api/support-sync",
+      "schedule": "15 11 * * *"
+    },
+    {
+      "path": "/public-api/support-sync",
+      "schedule": "15 17 * * *"
+    },
+    {
+      "path": "/public-api/support-sync",
+      "schedule": "15 23 * * *"
     },
     {
       "path": "/public-api/growth-automation",
