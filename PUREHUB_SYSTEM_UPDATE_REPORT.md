@@ -1,5 +1,16 @@
 # PureHub System Update Report
 
+## Production and community publication verification - 2026-08-11
+
+- Production deployment: `https://hub.blissbiovn.com`
+- GitHub implementation: `https://github.com/shoyrulove-dev/PureHub/commit/c0f8c35`
+- Telegram update: `https://t.me/purehubaaa/32`
+- DEV article: `https://dev.to/purehub/from-qr-scan-to-searchable-pdf-a-practical-purehub-workflow-update-c3k`
+- Bluesky update: `https://bsky.app/profile/purehub.bsky.social/post/3mssv27ndgc2g`
+- Mastodon update: `https://mastodon.social/@purehub/117077478516506084`
+- All four public post URLs and the production QR Studio route returned HTTP 200 after publication.
+- Channel copy is differentiated: Telegram is a compact release summary, DEV is a technical workflow article with AI-assistance disclosure, Bluesky leads with QR link safety, and Mastodon emphasizes the open-source local-first workflow.
+
 ## Workflow, analytics, SEO, and growth quality pass — 2026-08-11
 
 - Upgraded QR Studio on web and Android with multi-image batch scanning, safer destination inspection, clearer risk reasons, and a more useful local library. The web creator now warns about low-contrast codes and exports library data as CSV.
