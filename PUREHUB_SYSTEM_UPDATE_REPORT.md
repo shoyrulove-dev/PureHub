@@ -7,7 +7,18 @@
 - Kept CSV export as a portable non-sensitive option while making encrypted `.purehub` backup the primary complete-history workflow.
 - Synchronized PWA and Android release versions to `1.0.0-beta.18`; Android uses monotonic `versionCode 19`, with Standard and F-Droid release metadata aligned.
 - Verification: PWA production build, TypeScript, lint, and five prerender checks pass; Android Standard/F-Droid unit tests, release lint, and debug assembly pass; all 49 Command Center tests pass.
-- Physical Android smoke test: beta.18 debug installed and launched successfully on a Xiaomi M1906G7G, reported versionCode 19, produced no AndroidRuntime crash, and the temporary debug package was removed afterward so the phone retains only the signed release package.
+- Physical Android verification: the SHA-256-verified, signed beta.18 arm64 APK was installed over beta.17 on a Xiaomi M1906G7G. The device reports `versionName 1.0.0-beta.18` and `versionCode 19`; launch produced no AndroidRuntime crash, app data was preserved by the in-place upgrade, and only `com.purehub.app` remains installed.
+
+## Beta.18 release and community publication verification - 2026-08-11
+
+- Production PWA: `https://hub.blissbiovn.com`
+- GitHub implementation: `https://github.com/shoyrulove-dev/PureHub/commit/5828f3e86f690baf9fdd4fff1e8a085c32a82ae3`
+- Signed Android release: `https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.18`
+- Telegram update: `https://t.me/purehubaaa/33`
+- DEV article: `https://dev.to/purehub/purehub-beta18-encrypted-backups-and-local-receipt-ocr-jo9`
+- Bluesky update: `https://bsky.app/profile/purehub.bsky.social/post/3msszga6ceu25`
+- Mastodon update: `https://mastodon.social/@purehub/117077784237195550`
+- GitHub Actions published signed Standard and fully FOSS APK splits, a universal APK, an Android App Bundle, SHA-256 checksums, and build provenance. All four configured community channels report `published` with no API error.
 
 ## Production and community publication verification - 2026-08-11
 
