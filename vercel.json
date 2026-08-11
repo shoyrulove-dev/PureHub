@@ -47,10 +47,6 @@
     {
       "source": "/assets/:path*",
       "destination": "/api/index?__purehub_path=/assets/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }

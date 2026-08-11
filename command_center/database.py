@@ -1498,8 +1498,8 @@ def get_analytics_snapshot() -> dict[str, Any]:
     }
 
 
-PUBLIC_MINIAPP_EVENTS = {"open", "helpful", "share", "feedback"}
-PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "tester_join", "device_report"}
+PUBLIC_MINIAPP_EVENTS = {"open", "complete", "helpful", "share", "feedback"}
+PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "installed_open", "tester_join", "device_report"}
 FLAGSHIP_MINIAPP_IDS = {
     "zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text",
     "speaker-cleaner", "doc-to-pdf", "expense-tracker", "bill-splitter",
@@ -1613,6 +1613,7 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
     return {
         "days": safe_days,
         "totals": totals,
+        "completion_rate": round((totals["complete"] / totals["open"]) * 100, 1) if totals["open"] else 0.0,
         "helpful_rate": round((totals["helpful"] / totals["open"]) * 100, 1) if totals["open"] else 0.0,
         "top_tools": top_tools,
         "roadmap": roadmap,
@@ -1621,7 +1622,7 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
         "funnel_rates": {
             "tool_open": round((totals["open"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
             "download": round((funnel["download"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
-            "first_open": round((funnel["first_open"] / funnel["download"]) * 100, 1) if funnel["download"] else 0.0,
+            "first_open": round((funnel["installed_open"] / funnel["download"]) * 100, 1) if funnel["download"] else 0.0,
         },
         "top_sources": [
             {"source": source, "visits": visits}
@@ -1632,7 +1633,7 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
             "days": 14,
             "start_day": flagship_start_day,
             "tools": [{"miniapp_id": miniapp_id, **values} for miniapp_id, values in flagship_window.items()],
-            "selection_rule": "Highest useful-use score: opens + 3x helpful + 2x shares after 14 days.",
+            "selection_rule": "Highest useful-use score: completions + 3x helpful + 2x shares after 14 days.",
         },
     }
 

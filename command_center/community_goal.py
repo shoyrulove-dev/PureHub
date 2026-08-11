@@ -74,7 +74,6 @@ def build_august_growth_goal(
         + mastodon.get("favourites", 0)
         + mastodon.get("boosts", 0)
         + mastodon.get("replies", 0)
-        + int(support_metrics.get("replied_month", 0) or 0)
     )
 
     actionable_categories = {"question", "bug", "feature_request", "feedback", "device_report", "privacy", "installation"}
@@ -129,7 +128,7 @@ def build_august_growth_goal(
     notes = {
         "audience": "Telegram members + Bluesky and Mastodon followers",
         "views": "DEV, Telegram and YouTube views returned by connected APIs",
-        "engagement": "Likes, reactions, comments, reposts and handled conversations",
+        "engagement": "Audience likes, reactions, comments and reposts (outbound replies are excluded)",
         "feedback": "Questions, device reports, bugs, installation, privacy and feature requests in August",
         "videos": "YouTube Shorts published or scheduled during August",
         "leads": "Relevant public questions discovered for helpful, human-approved replies",

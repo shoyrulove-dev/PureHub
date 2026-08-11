@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Camera, Download, FileImage, FileText, ImagePlus, ScanText, ShieldCheck, Trash2 } from 'lucide-react'
 import { ActionButton, FormInput } from '../MiniAppPrimitives'
+import { trackProductEvent } from '../../../lib/community-api'
 
-type Page = { id: string; file: File; url: string; rotation: number; fit: 'contain' | 'cover'; crop: number }
+type Page = { id: string; file: File; url: string; rotation: number; fit: 'contain' | 'cover'; crop: number; recognizedText?: string }
+const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
 
 function safeName(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'purehub-document' }
 
@@ -18,6 +20,22 @@ export default function DocumentSuiteSurface() {
   const pagesRef = useRef<Page[]>([])
   useEffect(() => { pagesRef.current = pages }, [pages])
   useEffect(() => () => pagesRef.current.forEach((page) => URL.revokeObjectURL(page.url)), [])
+  useEffect(() => {
+    const raw = localStorage.getItem(DOCUMENT_HANDOFF_KEY)
+    if (!raw) return
+    localStorage.removeItem(DOCUMENT_HANDOFF_KEY)
+    void (async () => {
+      try {
+        const handoff = JSON.parse(raw) as { title?: string; pages?: Array<{ dataUrl: string; text: string }> }
+        const imported = await Promise.all((handoff.pages ?? []).slice(0, 20).map(async (item, index) => {
+          const blob = await (await fetch(item.dataUrl)).blob()
+          const file = new File([blob], `ocr-page-${index + 1}.jpg`, { type: blob.type || 'image/jpeg' })
+          return { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), rotation: 0, fit: 'contain' as const, crop: 0, recognizedText: item.text }
+        }))
+        if (imported.length) { setPages(imported); setTitle(handoff.title || 'Searchable document'); setStatus(`${imported.length} OCR page(s) imported. Searchable text will be embedded in the PDF.`) }
+      } catch { setStatus('The OCR handoff could not be restored. Add images manually.') }
+    })()
+  }, [])
 
   const addFiles = (files: FileList | null) => {
     const accepted = Array.from(files ?? []).filter((file) => file.type.startsWith('image/')).slice(0, 20 - pages.length)
@@ -57,8 +75,14 @@ export default function DocumentSuiteSurface() {
         const ratio = page.fit === 'cover' ? Math.max(width / canvas.width, height / canvas.height) : Math.min(width / canvas.width, height / canvas.height)
         const drawWidth = canvas.width * ratio; const drawHeight = canvas.height * ratio
         pdf.addImage(data, 'JPEG', (pdf.internal.pageSize.getWidth() - drawWidth) / 2, (pdf.internal.pageSize.getHeight() - drawHeight) / 2, drawWidth, drawHeight)
+        if (page.recognizedText) {
+          pdf.setFontSize(1); pdf.setTextColor(255, 255, 255)
+          const searchableLines = pdf.splitTextToSize(page.recognizedText, pdf.internal.pageSize.getWidth() - 48) as string[]
+          pdf.text(searchableLines.slice(0, 500), 24, 24)
+          pdf.setTextColor(0, 0, 0)
+        }
       }
-      pdf.setProperties({ title, creator: 'PureHub Document Suite' }); pdf.save(`${safeName(title)}.pdf`); setStatus('PDF exported. No document was uploaded.')
+      pdf.setProperties({ title, creator: 'PureHub Document Suite' }); pdf.save(`${safeName(title)}.pdf`); setStatus('PDF exported. No document was uploaded.'); void trackProductEvent('doc-to-pdf', 'complete')
     } catch { setStatus('The PDF could not be created. Try fewer or smaller images.') } finally { setBusy(false) }
   }
 

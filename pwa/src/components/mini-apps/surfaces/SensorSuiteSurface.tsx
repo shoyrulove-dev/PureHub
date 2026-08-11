@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, Compass, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck } from 'lucide-react'
+import { Activity, Compass, Download, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck } from 'lucide-react'
 import { ActionButton } from '../MiniAppPrimitives'
 
 type SensorMode = 'compass' | 'level' | 'sound'
@@ -8,6 +8,7 @@ type PermissionState = 'idle' | 'active' | 'denied' | 'unsupported'
 export default function SensorSuiteSurface({ mode }: { mode: SensorMode }) {
   const suiteRef = useRef<HTMLElement>(null)
   const title = mode === 'compass' ? 'Compass' : mode === 'level' ? 'Bubble Level' : 'Sound Meter'
+  const locale = window.location.pathname.split('/')[1] || 'en'
 
   return <section ref={suiteRef} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm fullscreen:overflow-auto dark:border-slate-700 dark:bg-slate-900">
     <header className="bg-gradient-to-br from-sky-50 via-white to-violet-50 p-5 dark:from-sky-950/40 dark:via-slate-900 dark:to-violet-950/30">
@@ -16,7 +17,7 @@ export default function SensorSuiteSurface({ mode }: { mode: SensorMode }) {
         <div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-sky-700 dark:text-sky-300">SENSOR SUITE</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{title}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Clear live readings, local calibration, and private on-device processing.</p></div>
         <ShieldCheck className="hidden size-5 text-emerald-600 sm:block" />
       </div>
-      <nav className="mt-4 grid grid-cols-3 gap-2">{([['compass', 'Compass', Compass], ['level', 'Level', Gauge], ['sound', 'Sound', Mic]] as const).map(([id, label, Icon]) => <a key={id} href={`/en/${id === 'level' ? 'bubble-level' : id === 'sound' ? 'decibel-meter' : 'compass'}`} className={`flex min-h-11 items-center justify-center gap-1 rounded-xl border text-xs font-black ${mode === id ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><Icon className="size-4" />{label}</a>)}</nav>
+      <nav className="mt-4 grid grid-cols-3 gap-2">{([['compass', 'Compass', Compass], ['level', 'Level', Gauge], ['sound', 'Sound', Mic]] as const).map(([id, label, Icon]) => <a key={id} href={`/${locale}/${id === 'level' ? 'bubble-level' : id === 'sound' ? 'decibel-meter' : 'compass'}`} className={`flex min-h-11 items-center justify-center gap-1 rounded-xl border text-xs font-black ${mode === id ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><Icon className="size-4" />{label}</a>)}</nav>
     </header>
     <div className="p-4 sm:p-5">
       <button onClick={() => void suiteRef.current?.requestFullscreen?.()} className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-sky-200 text-xs font-black text-sky-800 dark:border-sky-800 dark:text-sky-200"><Maximize2 className="size-4" />Fullscreen instrument</button>
@@ -27,7 +28,9 @@ export default function SensorSuiteSurface({ mode }: { mode: SensorMode }) {
 
 function CompassPanel() {
   const [rawHeading, setRawHeading] = useState<number | null>(null)
-  const [offset, setOffset] = useState(0)
+  const [offset, setOffset] = useState(() => Number(localStorage.getItem('purehub.compass.offset.v1') || 0))
+  const [accuracy, setAccuracy] = useState<'stable' | 'check'>('stable')
+  const previousRef = useRef<{ value: number; at: number } | null>(null)
   const [held, setHeld] = useState<number | null>(null)
   const [permission, setPermission] = useState<PermissionState>('idle')
   const heading = held ?? (rawHeading == null ? null : (rawHeading + offset + 360) % 360)
@@ -36,7 +39,13 @@ function CompassPanel() {
     if (permission !== 'active') return
     const listener = (event: DeviceOrientationEvent & { webkitCompassHeading?: number }) => {
       const value = typeof event.webkitCompassHeading === 'number' ? event.webkitCompassHeading : event.alpha == null ? null : 360 - event.alpha
-      setRawHeading(value == null ? null : Math.round((value + 360) % 360))
+      const normalized = value == null ? null : Math.round((value + 360) % 360)
+      if (normalized != null && previousRef.current) {
+        const delta = Math.abs(normalized - previousRef.current.value); const shortest = Math.min(delta, 360 - delta)
+        setAccuracy(shortest > 55 && Date.now() - previousRef.current.at < 500 ? 'check' : 'stable')
+      }
+      if (normalized != null) previousRef.current = { value: normalized, at: Date.now() }
+      setRawHeading(normalized)
     }
     window.addEventListener('deviceorientation', listener as EventListener, { passive: true })
     return () => window.removeEventListener('deviceorientation', listener as EventListener)
@@ -55,15 +64,16 @@ function CompassPanel() {
   return <div className="text-center">
     <div className="relative mx-auto grid size-64 place-items-center rounded-full border-[10px] border-slate-100 bg-slate-950 shadow-inner dark:border-slate-800"><span className="absolute top-3 font-black text-rose-400">N</span><div className="text-white transition-transform duration-300" style={{ transform: `rotate(${-(heading ?? 0)}deg)` }}><Compass className="size-32 stroke-[1] text-sky-300" /></div><div className="absolute"><strong className="block text-4xl text-white">{heading == null ? '—' : `${Math.round(heading)}°`}</strong><span className="text-sm font-black text-sky-300">{label}</span></div></div>
     <PermissionNotice state={permission} />
+    {permission === 'active' ? <p className={`mt-3 rounded-xl px-3 py-2 text-xs font-bold ${accuracy === 'stable' ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/15 text-amber-800'}`}>{accuracy === 'stable' ? 'Reading stable · estimated accuracy' : 'Magnetic jump detected · move away from metal and recalibrate'}</p> : null}
     <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Compass active' : 'Enable compass'}</ActionButton><ActionButton tone="muted" disabled={heading == null} onClick={() => setHeld((value) => value == null ? heading : null)}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
-    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={rawHeading == null} onClick={() => setOffset(rawHeading == null ? 0 : -rawHeading)}>Set current as North</ActionButton><ActionButton tone="muted" onClick={() => setOffset(0)}><RotateCcw className="mr-1 inline size-4" />Reset calibration</ActionButton></div>
+    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={rawHeading == null} onClick={() => { const next = rawHeading == null ? 0 : -rawHeading; setOffset(next); localStorage.setItem('purehub.compass.offset.v1', String(next)) }}>Set current as North</ActionButton><ActionButton tone="muted" onClick={() => { setOffset(0); localStorage.removeItem('purehub.compass.offset.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset calibration</ActionButton></div>
     <p className="mt-3 text-xs text-slate-500">Move the phone in a figure-eight before use. Magnetic readings are estimates and may be affected by cases or nearby metal.</p>
   </div>
 }
 
 function LevelPanel() {
   const [raw, setRaw] = useState({ x: 0, y: 0 })
-  const [zero, setZero] = useState({ x: 0, y: 0 })
+  const [zero, setZero] = useState(() => { try { return JSON.parse(localStorage.getItem('purehub.level.zero.v1') ?? '{"x":0,"y":0}') as { x: number; y: number } } catch { return { x: 0, y: 0 } } })
   const [held, setHeld] = useState<{ x: number; y: number } | null>(null)
   const [permission, setPermission] = useState<PermissionState>('idle')
   const angles = held ?? { x: Math.round((raw.x - zero.x) * 10) / 10, y: Math.round((raw.y - zero.y) * 10) / 10 }
@@ -90,7 +100,7 @@ function LevelPanel() {
     <PermissionNotice state={permission} />
     <div className="mt-4 grid grid-cols-2 gap-2 text-center"><Metric label="Left / right" value={`${angles.x}°`} /><Metric label="Front / back" value={`${angles.y}°`} /></div>
     <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Level active' : 'Enable level'}</ActionButton><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => setHeld((value) => value == null ? angles : null)}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
-    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => setZero(raw)}>Set current as zero</ActionButton><ActionButton tone="muted" onClick={() => setZero({ x: 0, y: 0 })}><RotateCcw className="mr-1 inline size-4" />Reset zero</ActionButton></div>
+    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => { setZero(raw); localStorage.setItem('purehub.level.zero.v1', JSON.stringify(raw)) }}>Save current zero</ActionButton><ActionButton tone="muted" onClick={() => { setZero({ x: 0, y: 0 }); localStorage.removeItem('purehub.level.zero.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset zero</ActionButton></div>
   </div>
 }
 
@@ -99,6 +109,7 @@ function SoundPanel() {
   const [level, setLevel] = useState(0)
   const [samples, setSamples] = useState<number[]>([])
   const [permission, setPermission] = useState<PermissionState>('idle')
+  const [calibration, setCalibration] = useState(() => Number(localStorage.getItem('purehub.sound.calibration.v1') || 0))
   const stream = useRef<MediaStream | null>(null)
   const frame = useRef(0)
   const context = useRef<AudioContext | null>(null)
@@ -115,7 +126,7 @@ function SoundPanel() {
       const audio = new AudioContext(); const analyser = audio.createAnalyser(); analyser.fftSize = 1024
       audio.createMediaStreamSource(media).connect(analyser); stream.current = media; context.current = audio; setActive(true); setPermission('active'); setSamples([])
       const data = new Uint8Array(analyser.fftSize)
-      const tick = () => { analyser.getByteTimeDomainData(data); const rms = Math.sqrt(data.reduce((sum, value) => sum + ((value - 128) / 128) ** 2, 0) / data.length); const estimate = Math.max(0, Math.min(100, Math.round(20 * Math.log10(Math.max(rms, .0001)) + 94))); setLevel(estimate); setSamples((values) => [...values.slice(-59), estimate]); frame.current = requestAnimationFrame(tick) }
+      const tick = () => { analyser.getByteTimeDomainData(data); const rms = Math.sqrt(data.reduce((sum, value) => sum + ((value - 128) / 128) ** 2, 0) / data.length); const estimate = Math.max(0, Math.min(120, Math.round(20 * Math.log10(Math.max(rms, .0001)) + 94 + calibration))); setLevel(estimate); setSamples((values) => [...values.slice(-59), estimate]); frame.current = requestAnimationFrame(tick) }
       tick()
     } catch { setPermission('denied'); stop() }
   }
@@ -126,6 +137,7 @@ function SoundPanel() {
     <PermissionNotice state={permission} />
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"><Metric label="Current" value={`${level} dB`} /><Metric label="Average" value={`${average} dB`} /><Metric label="Minimum" value={`${minimum} dB`} /><Metric label="Peak" value={`${peak} dB`} /></div>
     <ActionButton className="mt-4 w-full" onClick={() => active ? stop() : void start()}>{active ? 'Stop listening' : 'Start sound meter'}</ActionButton>
+    <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">Calibration & export</summary><label className="mt-3 block text-xs font-semibold">Reference offset {calibration > 0 ? '+' : ''}{calibration} dB<input className="mt-2 w-full accent-violet-600" type="range" min="-20" max="20" value={calibration} onChange={(event) => { const next = Number(event.target.value); setCalibration(next); localStorage.setItem('purehub.sound.calibration.v1', String(next)) }} /></label><ActionButton tone="muted" className="mt-3 w-full" disabled={!samples.length} onClick={() => { const blob = new Blob([`sample,estimated_db\n${samples.map((value, index) => `${index + 1},${value}`).join('\n')}`], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'purehub-sound-readings.csv'; anchor.click(); URL.revokeObjectURL(url) }}><Download className="size-4" />Export CSV</ActionButton></details>
     <p className="mt-3 text-xs text-slate-500">Microphone samples stay in this browser and are discarded when you stop. Values are estimates, not certified safety measurements.</p>
   </div>
 }

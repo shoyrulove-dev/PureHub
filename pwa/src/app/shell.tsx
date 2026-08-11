@@ -31,9 +31,10 @@ export function AppShell() {
       window.localStorage.setItem('purehub-visit-day', today)
       void trackJourneyEvent('visit')
     }
-    if (!window.localStorage.getItem('purehub-first-open')) {
-      window.localStorage.setItem('purehub-first-open', today)
-      void trackJourneyEvent('first_open')
+    const installed = window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+    if (installed && !window.localStorage.getItem('purehub-installed-open-v1')) {
+      window.localStorage.setItem('purehub-installed-open-v1', today)
+      void trackJourneyEvent('installed_open')
     }
   }, [])
 

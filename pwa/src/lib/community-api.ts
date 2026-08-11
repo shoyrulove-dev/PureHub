@@ -1,9 +1,9 @@
 import type { MiniAppId } from '../features/catalog/tabs'
 import { anonymousMetricsEnabled } from './preferences'
 
-export type ProductEvent = 'open' | 'helpful' | 'share' | 'feedback'
+export type ProductEvent = 'open' | 'complete' | 'helpful' | 'share' | 'feedback'
 export type FeedbackCategory = 'feedback' | 'bug' | 'feature_request' | 'device_report'
-export type JourneyStage = 'visit' | 'download' | 'first_open' | 'tester_join'
+export type JourneyStage = 'visit' | 'download' | 'installed_open' | 'tester_join'
 
 export type RoadmapOption = {
   option_id: string

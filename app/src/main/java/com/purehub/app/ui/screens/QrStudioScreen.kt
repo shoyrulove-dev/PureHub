@@ -180,6 +180,20 @@ fun QrStudioScreen(
             }.onFailure { scanStatus = "That image could not be opened." }
         }
     }
+    val batchPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        scanStatus = "Reading ${uris.take(20).size} images locally..."
+        scope.launch {
+            var found = 0
+            uris.take(20).forEach { uri ->
+                val value = withContext(Dispatchers.Default) {
+                    runCatching { context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)?.let(QrDecoder::decode) }.getOrNull()
+                }
+                if (!value.isNullOrBlank()) { acceptScan(value, "Batch"); found += 1 }
+            }
+            scanStatus = "$found QR or barcode result(s) found in ${uris.take(20).size} images and saved locally."
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -195,6 +209,7 @@ fun QrStudioScreen(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = onRequestCameraPermission,
                 onChooseImage = { imagePicker.launch("image/*") },
+                onChooseBatch = { batchPicker.launch(arrayOf("image/*")) },
                 latestScan = latestScan,
                 scanSource = scanSource,
                 scanStatus = scanStatus,
@@ -296,6 +311,7 @@ private fun QrScannerContent(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
     onChooseImage: () -> Unit,
+    onChooseBatch: () -> Unit,
     latestScan: String,
     scanSource: String,
     scanStatus: String,
@@ -330,8 +346,15 @@ private fun QrScannerContent(
                     Spacer(Modifier.size(7.dp))
                     Text("Scan image")
                 }
-                if (latestScan.isNotBlank()) {
-                    FilledTonalButton(onClick = onClearResult, modifier = Modifier.weight(1f)) { Text("Scan another") }
+                OutlinedButton(onClick = onChooseBatch, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(7.dp))
+                    Text("Batch")
+                }
+            }
+            if (latestScan.isNotBlank()) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    FilledTonalButton(onClick = onClearResult, modifier = Modifier.fillMaxWidth()) { Text("Scan another") }
                 }
             }
             Text(scanStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -674,7 +697,15 @@ private fun describeQrPayload(value: String): QrPayloadInfo {
         return runCatching {
             val uri = Uri.parse(trimmed)
             val host = uri.host.orEmpty()
-            val warning = if (uri.scheme != "https" || host.startsWith("xn--") || host.matches(Regex("\\d{1,3}(\\.\\d{1,3}){3}"))) "Check this address carefully before opening it." else ""
+            val risks = buildList {
+                if (uri.scheme != "https") add("The link is not encrypted (HTTP).")
+                if (host.startsWith("xn--")) add("The domain uses an internationalized/punycode name.")
+                if (host.matches(Regex("\\d{1,3}(\\.\\d{1,3}){3}"))) add("The destination uses a raw IP address.")
+                if (!uri.userInfo.isNullOrBlank()) add("The link embeds sign-in information.")
+                if (uri.port !in listOf(-1, 80, 443)) add("The link uses unusual port ${uri.port}.")
+                if (trimmed.length > 500) add("The destination is unusually long.")
+            }
+            val warning = risks.joinToString(" ")
             QrPayloadInfo("Website", "Open website", trimmed, warning)
         }.getOrElse { QrPayloadInfo("Invalid link", warning = "This web address is not valid.") }
     }

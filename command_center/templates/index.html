@@ -621,8 +621,9 @@
           <div class="product-signals" aria-label="Anonymous product signals for the last 30 days">
             <div class="product-signal"><span>Visits</span><strong>{{ funnel.get('visit', 0) }}</strong></div>
             <div class="product-signal"><span>Tool opens</span><strong>{{ product_totals.get('open', 0) }} · {{ funnel_rates.get('tool_open', 0) }}%</strong></div>
+            <div class="product-signal"><span>Completed results</span><strong>{{ product_totals.get('complete', 0) }} · {{ product_growth.get('completion_rate', 0) }}%</strong></div>
             <div class="product-signal"><span>Downloads</span><strong>{{ funnel.get('download', 0) }} · {{ funnel_rates.get('download', 0) }}%</strong></div>
-            <div class="product-signal"><span>First opens</span><strong>{{ funnel.get('first_open', 0) }}</strong></div>
+            <div class="product-signal"><span>Installed opens</span><strong>{{ funnel.get('installed_open', 0) }}</strong></div>
             <div class="product-signal"><span>Tester reports</span><strong>{{ funnel.get('device_report', 0) }}/20</strong></div>
             <div class="product-signal"><span>Flagship leader</span><strong>{{ flagship_leader.miniapp_id if flagship_leader else 'Waiting for signals' }}</strong></div>
             <div class="product-signal"><span>Top source</span><strong>{{ top_source.source if top_source else 'Waiting for signals' }}</strong></div>

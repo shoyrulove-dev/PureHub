@@ -1,5 +1,19 @@
 # PureHub System Update Report
 
+## Workflow, analytics, SEO, and growth quality pass — 2026-08-11
+
+- Upgraded QR Studio on web and Android with multi-image batch scanning, safer destination inspection, clearer risk reasons, and a more useful local library. The web creator now warns about low-contrast codes and exports library data as CSV.
+- Connected OCR Studio directly to Doc to PDF. OCR now exposes page confidence, transfers processed pages and recognized text locally, and produces image-first PDFs with a searchable text layer.
+- Made web Pomodoro sessions resumable across reloads, added task context, optional completion notifications, honest completion analytics, and shareable weekly result cards.
+- Persisted Compass and Bubble Level calibration, added magnetic-jump guidance, and added Sound Meter calibration plus local CSV export. Android Standard and F-Droid flavors retain their existing foreground timer, receipt OCR, encrypted export/import, and searchable PDF implementations.
+- Replaced inflated analytics semantics: mini-app opens are deduplicated daily, completed results are counted separately, first installed opens only come from standalone PWA use, and PureHub's own support replies no longer inflate audience engagement.
+- Added reusable 1200×630 privacy-first share cards that use native file sharing when supported and save/copy a fallback on desktop.
+- Preserved generated route-level SEO pages by removing the Vercel catch-all that previously replaced every route with generic homepage metadata. The production build now validates QR, OCR, PDF, Vietnamese, and Chinese prerender outputs.
+- Reworked the 30-day automation calendar around concrete search problems and measurable results. Social posts now deep-link to the matching mini-app; DEV fallback articles include an AI-assistance disclosure; future Shorts lead with a problem/result rather than a generic product intro.
+- Verification: PWA production build and lint pass; five prerender routes pass metadata validation; Android Standard and F-Droid Kotlin compilation pass; all 49 Command Center tests pass.
+
+Date: 2026-08-11
+
 ## Zen Suite flagship and shared polish — beta.10
 
 - Rebuilt Zen Pomodoro as a complete flagship experience on web and Android: shared Zen Suite identity, clearer selected presets, custom web focus lengths, resilient timing, local soundscapes, private weekly totals, and a seven-day focus rhythm chart.

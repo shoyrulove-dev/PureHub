@@ -19,16 +19,16 @@ WIDTH, HEIGHT = 1080, 1920
 SHORTS = (
     ("01-lunar-calendar.mp4", "Plan with lunar context", "Solar and lunar dates, always available offline", "A Private Lunar Calendar for Everyday Planning #Shorts"),
     ("02-zen-habit.mp4", "Build habits without guilt", "Private streaks and gentle weekly progress", "Build Better Habits Without Ads or Accounts #Shorts"),
-    ("03-zen-pomodoro.mp4", "Focus without popups", "A calm offline Pomodoro timer", "PureHub Pomodoro: Focus Without Ads #Shorts"),
+    ("03-zen-pomodoro.mp4", "Reloaded the page? Timer kept going", "Resumable focus sessions with local completion alerts", "A Pomodoro Timer That Survives Page Reloads #Shorts"),
     ("04-zen-breath.mp4", "Take one quiet minute", "Guided breathing, completely offline", "One-Minute Offline Breathing Guide | PureHub #Shorts"),
-    ("05-compass.mp4", "A compass with no tracking", "Live phone sensors, clear and simple", "A Private Offline Compass for Android #Shorts"),
-    ("06-bubble-level.mp4", "Level it with your phone", "Bubble level and ruler in one tool", "Turn Your Phone Into a Bubble Level #Shorts"),
-    ("07-decibel-meter.mp4", "Understand nearby sound", "Private on-device sound estimates and history", "Measure Sound Privately on Android #Shorts"),
+    ("05-compass.mp4", "Compass jumping near metal?", "Visible accuracy warnings and saved local calibration", "Calibrate a Private Offline Compass #Shorts"),
+    ("06-bubble-level.mp4", "Save this surface as zero", "Persistent two-axis calibration with no account", "Calibrate Your Phone as a Bubble Level #Shorts"),
+    ("07-decibel-meter.mp4", "Your phone is not a certified meter", "Calibrated estimates with local CSV export", "Measure and Export Sound Estimates Privately #Shorts"),
     ("08-unit-converter.mp4", "Convert units instantly", "Fast, offline, and completely ad-free", "An Offline Unit Converter With Zero Ads #Shorts"),
     ("09-smart-flashlight.mp4", "More than a flashlight", "Torch, SOS and Morse tools in one place", "A Smart Flashlight With SOS and Morse #Shorts"),
-    ("10-qr-studio.mp4", "Create QR codes offline", "Generate and scan without cloud uploads", "Create QR Codes Offline With PureHub #Shorts"),
-    ("11-doc-to-pdf.mp4", "Turn photos into a PDF", "Capture, reorder and export documents privately", "Create PDFs From Photos Without Uploading #Shorts"),
-    ("12-ocr-studio.mp4", "Extract text on-device", "Scan, edit and save a private OCR library", "Private OCR That Works on Your Phone #Shorts"),
+    ("10-qr-studio.mp4", "Inspect a QR link before opening it", "Batch scan, risk checks, contrast-safe creation", "Scan Suspicious QR Links Without Opening Them #Shorts"),
+    ("11-doc-to-pdf.mp4", "Turn OCR pages into one PDF", "Keep image layout and searchable text together", "Create a Searchable PDF Without Uploading #Shorts"),
+    ("12-ocr-studio.mp4", "Extract text and see confidence", "On-device OCR flowing directly into searchable PDF", "Private OCR to Searchable PDF Workflow #Shorts"),
     ("13-color-grabber.mp4", "Capture the exact color", "Live HEX and RGB sampling without cloud frames", "Pick Colors Privately With Your Camera #Shorts"),
     ("14-speaker-cleaner.mp4", "Clear water from speakers", "Guided tones, presets and safe listening controls", "Try This Speaker Cleaning Tone Safely #Shorts"),
     ("15-deep-cleaner.mp4", "Review storage safely", "Find large and duplicate media before deleting", "A Storage Cleaner That Never Deletes Silently #Shorts"),
@@ -111,9 +111,9 @@ def render_one(raw_name: str, hook: str, benefit: str, title: str) -> dict[str, 
     ]
     subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     description = (
-        f"{benefit}. PureHub is a free, ad-free, open-source collection of useful Android tools.\n\n"
-        "Try PureHub from the link on this channel profile and tell us what to improve next.\n\n"
-        "#PureHub #OpenSource #AndroidApps #NoAds #Privacy #Shorts"
+        f"{hook}. {benefit}. PureHub is free, ad-free, open source, and designed for local-first use.\n\n"
+        "Try the exact workflow from the link on this channel profile. What result or limit should the next test cover?\n\n"
+        "#PureHub #OpenSource #AndroidApps #Privacy #Shorts"
     )
     return {"file": str(output), "title": title, "description": description, "hook": hook, "benefit": benefit}
 

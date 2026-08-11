@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { ocrDocumentRepository, type OcrDocumentRecord } from '../../../lib/db/purehub-db'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
+import { trackProductEvent } from '../../../lib/community-api'
 
 const OCR_LANGUAGES = [
   { code: 'eng', label: 'English' },
@@ -14,11 +15,12 @@ const OCR_LANGUAGES = [
   { code: 'chi_sim', label: '简体中文' },
 ] as const
 const OCR_PACK_CACHE_KEY = 'purehub.ocr.cached-languages.v1'
+const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
 
 type Tab = 'scan' | 'text' | 'library'
 type ScanMode = 'Document' | 'Receipt' | 'Note'
 type ImageFilter = 'Original' | 'Clean' | 'B&W'
-type OcrPage = { id: string; text: string; previewUrl: string; source: string }
+type OcrPage = { id: string; text: string; previewUrl: string; source: string; confidence: number }
 
 function cleanText(value: string, mode: ScanMode) {
   const lines = value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
@@ -148,11 +150,12 @@ export default function OcrTextSurface() {
           URL.revokeObjectURL(prepared.previewUrl)
           setStatus('No readable text found. Try better light or a tighter crop.')
         } else {
-          const nextPage = { id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source }
+          const nextPage = { id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source, confidence: Math.round(result.data.confidence ?? 0) }
           setPages((current) => [...current, nextPage])
           setOcrText(text)
           setStatus('Text extracted privately. Review it before export.')
           setTab('text')
+          void trackProductEvent('ocr-text', 'complete')
         }
       } finally {
         await worker.terminate()
@@ -192,6 +195,19 @@ export default function OcrTextSurface() {
       pdf.text(line, 42, y); y += 15
     })
     pdf.save(`${safeName(title)}.pdf`)
+    void trackProductEvent('ocr-text', 'complete')
+  }
+
+  const sendToDocumentSuite = async () => {
+    if (!pages.length) return
+    const handoffPages = await Promise.all(pages.map(async (page) => {
+      const blob = await (await fetch(page.previewUrl)).blob()
+      const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob) })
+      return { dataUrl, text: page.text, confidence: page.confidence }
+    }))
+    localStorage.setItem(DOCUMENT_HANDOFF_KEY, JSON.stringify({ title, pages: handoffPages, createdAt: new Date().toISOString() }))
+    const locale = window.location.pathname.split('/')[1] || 'en'
+    window.location.href = `/${locale}/doc-to-pdf`
   }
 
   const shareText = async () => {
@@ -257,12 +273,13 @@ export default function OcrTextSurface() {
         {tab === 'text' ? (
           ocrText ? <div className="space-y-3">
             {currentPreview ? <img src={currentPreview} alt="Scanned page" className="h-44 w-full rounded-2xl bg-slate-100 object-contain dark:bg-slate-950" /> : null}
-            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">On-device</span></div>
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className={`rounded-full px-2.5 py-1 ${(pages.at(-1)?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{pages.at(-1)?.confidence ?? 0}% confidence</span></div>
             <FormInput value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
             <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => setOcrText(event.target.value)} aria-label="Recognized text" />
             {detectedUrl || detectedEmail || detectedPhone ? <div className="flex flex-wrap gap-2 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/30"><span className="w-full text-xs font-black text-sky-900 dark:text-sky-200">QUICK ACTIONS</span>{detectedUrl ? <a className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={detectedUrl} target="_blank" rel="noreferrer">Open link</a> : null}{detectedEmail ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`mailto:${detectedEmail}`}><Mail className="size-3" />Email</a> : null}{detectedPhone ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`tel:${detectedPhone.replace(/[^+\d]/g, '')}`}><Phone className="size-3" />Call</a> : null}</div> : null}
             <div className="grid grid-cols-2 gap-2"><ActionButton onClick={() => void navigator.clipboard.writeText(ocrText)}><Clipboard className="mr-2 inline size-4" />Copy</ActionButton><ActionButton tone="muted" onClick={() => void shareText()}><Share2 className="mr-2 inline size-4" />Share</ActionButton></div>
             <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => downloadBlob(new Blob([allText], { type: 'text/plain;charset=utf-8' }), `${safeName(title)}.txt`)}><Download className="mr-1 inline size-4" />TXT</ActionButton><ActionButton tone="muted" onClick={() => void exportPdf()}><FileText className="mr-1 inline size-4" />PDF</ActionButton><ActionButton tone="muted" onClick={() => void saveDocument()}><History className="mr-1 inline size-4" />Save</ActionButton></div>
+            <ActionButton className="w-full justify-center" onClick={() => void sendToDocumentSuite()}><ScanText className="size-4" />Continue in Doc to PDF</ActionButton>
             <div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" onClick={() => setTab('scan')}>Add page</ActionButton><ActionButton tone="danger" onClick={resetDocument}>New document</ActionButton></div>
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
           </div> : <div className="py-12 text-center"><FileText className="mx-auto size-12 text-emerald-600" /><h3 className="mt-3 text-lg font-black">No text yet</h3><p className="mt-1 text-sm text-slate-500">Capture a page or choose an image to begin.</p><ActionButton className="mt-4" onClick={() => setTab('scan')}>Start scanning</ActionButton></div>

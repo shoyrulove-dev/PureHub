@@ -43,37 +43,60 @@ except ImportError:
 CAMPAIGN_ID = "community-foundation-30d-v1"
 AUTO_CHANNELS = {"telegram", "devto", "bluesky", "mastodon"}
 TOPICS = (
-    "Meet PureHub: 22 useful tools with no ads",
-    "Zen Breath: a calm offline reset with no account or ads",
-    "QR Studio: create and scan useful codes without a tracking layer",
-    "A clean Pomodoro flow without subscriptions or popups",
-    "Engineering lesson: load OCR language data only when requested",
-    "Community poll: which mini-app should be improved next?",
-    "Week one flagship report and an invitation for Early Testers",
-    "Password generation and safer Vault defaults",
-    "Why automatic locking and timed password reveals matter",
-    "Early Testers: try one flagship tool on a real Android phone",
-    "Bubble Level: turn a phone sensor into a useful everyday check",
-    "Testing navigation and security contracts across all 22 Android tools",
-    "Behind the scenes of building a community-owned utility hub",
-    "Two-week feedback report and roadmap checkpoint",
-    "Start a seven-day PureHub mini-tool challenge",
-    "QR scanning with a privacy-first product mindset",
-    "Thank the first testers and explain how feedback becomes work",
-    "Open community Q&A: ask about the app, roadmap, or source code",
-    "What no-ads software changes about product and interface design",
-    "Before-and-after: a calmer shared interface for 22 tools",
-    "Three-week transparency report: shipped, learned, and still open",
-    "Wi-Fi information made easier to understand",
-    "Community roadmap vote for the next deep mini-app upgrade",
-    "Build log: bugs, UX findings, and fixes in progress",
-    "How route-level code splitting keeps a multi-tool web app responsive",
-    "Community spotlight and contributor recognition",
-    "Preview the tool selected by the community roadmap vote",
-    "Open-source mini AMA and invitation to GitHub Discussions",
-    "What the first month of community feedback taught us",
-    "Thirty-day transparency report and next-month roadmap",
+    "Scan a suspicious QR code without opening the link first",
+    "Turn 12 screenshots into a private QR library in one batch",
+    "Create a QR code that stays readable after changing its colors",
+    "Extract Vietnamese text from a receipt entirely on-device",
+    "Move OCR pages into one searchable PDF without a cloud account",
+    "Fix low-confidence OCR with crop, cleanup, and language selection",
+    "Keep a Pomodoro session accurate after locking or reloading the phone",
+    "Share a weekly focus result without sharing private task data",
+    "Calibrate a phone compass when nearby metal distorts the reading",
+    "Save a Bubble Level zero point for a real surface",
+    "Calibrate estimated sound readings and export a local CSV",
+    "Split a receipt after OCR instead of typing every line",
+    "Move receipt totals into a private expense record",
+    "Export encrypted Habit, Expense, and Vault data before changing phones",
+    "Clean a wet phone speaker with a controlled local tone",
+    "Build a PDF from camera pages while keeping searchable OCR text",
+    "Generate a strong password and reveal it only when needed",
+    "Run a seven-day habit experiment without an account",
+    "Use breathing pace controls for a short offline reset",
+    "Compare 22 utility tools without ads or surprise paywalls",
+    "What an F-Droid-ready QR and OCR build must remove",
+    "Why PureHub records anonymous completions instead of repeat page opens",
+    "How prerendered utility pages improve search previews and accessibility",
+    "A before-and-after mobile workflow from scan to useful result",
+    "One real tester question that changed a PureHub workflow",
+    "The limits of phone sensors and how PureHub communicates accuracy",
+    "Choose the next flagship workflow from actual usage signals",
+    "Review the latest Android beta on a physical phone",
+    "Open-source utility design: one action, one result, one clear limit",
+    "Monthly proof report: shipped workflows, measured use, and next fixes",
 )
+
+
+def _topic_path(topic: str) -> str:
+    lowered = topic.lower()
+    routes = (
+        (("qr",), "/en/qr-studio"),
+        (("ocr", "receipt"), "/en/ocr-text"),
+        (("pdf",), "/en/doc-to-pdf"),
+        (("pomodoro", "focus"), "/en/zen-pomodoro"),
+        (("compass",), "/en/compass"),
+        (("bubble", "level"), "/en/bubble-level"),
+        (("sound", "decibel"), "/en/decibel-meter"),
+        (("expense",), "/en/expense-tracker"),
+        (("split",), "/en/bill-splitter"),
+        (("speaker",), "/en/speaker-cleaner"),
+        (("password", "vault"), "/en/password-vault"),
+        (("habit",), "/en/zen-habit"),
+        (("breath",), "/en/zen-breath"),
+    )
+    for keywords, path in routes:
+        if any(keyword in lowered for keyword in keywords):
+            return path
+    return "/en/tools"
 
 
 def _channels_for_day(day_number: int) -> list[str]:
@@ -115,7 +138,7 @@ def _campaign_url(channel: str, path: str = "/en/tools") -> str:
 
 
 def _fallback_content(channel: str, topic: str, day_number: int) -> str:
-    tools_url = _campaign_url(channel)
+    tools_url = _campaign_url(channel, _topic_path(topic))
     if channel == "telegram":
         return (
             f"🛠️ PureHub community build — day {day_number}\n\n{topic}.\n\n"
@@ -140,7 +163,8 @@ def _fallback_content(channel: str, topic: str, day_number: int) -> str:
             "This article shares a practical engineering lesson from the project rather than a product pitch.\n\n"
             "## What we changed\n\nWe focused on clearer mobile interaction, local-first behavior, and measurable loading or testing improvements.\n\n"
             "## What we learned\n\nSmall utility features become easier to trust when their limits and data behavior are visible.\n\n"
-            f"Explore the implementation and share feedback: {tools_url}"
+            f"Explore the implementation and share feedback: {tools_url}\n\n"
+            "_Disclosure: this article was prepared with AI assistance and reviewed by the PureHub maintainer before publication._"
         )
     if channel == "youtube":
         return (
@@ -165,7 +189,7 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
             for row in list_community_metrics()
             if row.get("platform") in channels
         }
-        channel_urls = {channel: _campaign_url(channel) for channel in channels if channel != "youtube"}
+        channel_urls = {channel: _campaign_url(channel, _topic_path(topic)) for channel in channels if channel != "youtube"}
         client, model = _ai_client()
         prompt = {
             "task": "Create channel-specific community content for one day of PureHub's build-in-public campaign.",
@@ -188,11 +212,12 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
                 "Return a JSON object whose keys exactly match the requested channels.",
                 "English first. Do not invent users, metrics, reviews, features, audits, or release dates.",
                 "Use recent platform signals only to improve format and topic emphasis; never quote private or low metrics in public copy.",
-                "At this early stage, lead with one concrete utility result and ask one specific product-feedback question.",
+                "Lead with the concrete problem and result in the first sentence. Include one verifiable workflow detail and ask one specific feedback question.",
+                "Use exactly one primary call to action. Do not write a generic build-in-public status when a practical demo can be shown.",
                 "Write genuinely different content for each channel.",
                 "Use the exact matching channel URL supplied in channel_urls; do not alter or remove its campaign parameters.",
                 "Bluesky must be at most 300 characters; Mastodon at most 500 characters.",
-                "Telegram should be compact and scannable; DEV should teach a useful engineering lesson in Markdown.",
+                "Telegram should be compact and scannable; DEV should teach a useful engineering lesson in Markdown and end with an AI-assistance disclosure.",
                 "YouTube must contain Title, Description without an external URL, and a 12–22 second shot script.",
                 "Reddit is a manual-review draft with maker disclosure and no subreddit recommendation.",
                 "Use at most a few relevant emoji and hashtags. Avoid hype, urgency, engagement bait, and repeated calls to action.",

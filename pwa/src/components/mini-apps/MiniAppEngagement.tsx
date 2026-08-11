@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Check, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
 import type { MiniAppId } from '../../features/catalog/tabs'
 import { submitProductFeedback, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
+import { shareCard } from '../../lib/share-card'
 
 type MiniAppEngagementProps = {
   miniAppId: MiniAppId
@@ -18,6 +19,10 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [shareStatus, setShareStatus] = useState('')
 
   useEffect(() => {
+    const day = new Date().toISOString().slice(0, 10)
+    const openKey = `purehub-open-${miniAppId}-${day}`
+    if (window.localStorage.getItem(openKey)) return
+    window.localStorage.setItem(openKey, 'true')
     void trackProductEvent(miniAppId, 'open')
   }, [miniAppId])
 
@@ -29,16 +34,9 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   }
 
   const shareTool = async () => {
-    const shareData = {
-      title: `${title} · PureHub`,
-      text: `I used ${title} on PureHub — free, ad-free, and privacy-first.`,
-      url: window.location.href,
-    }
     try {
-      const nativeShare = (navigator as unknown as { share?: (data: ShareData) => Promise<void> }).share
-      if (nativeShare) await nativeShare.call(navigator, shareData)
-      else await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`)
-      setShareStatus(nativeShare ? 'Shared' : 'Link copied')
+      const result = await shareCard({ title, headline: `A useful result from ${title}`, detail: 'Works without ads, tracking walls, or surprise paywalls.' })
+      setShareStatus(result)
       void trackProductEvent(miniAppId, 'share')
       window.setTimeout(() => setShareStatus(''), 1800)
     } catch (error) {

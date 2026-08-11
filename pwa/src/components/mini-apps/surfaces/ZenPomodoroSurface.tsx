@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, Coffee, RotateCcw, Settings2, Target, Timer, Zap } from 'lucide-react'
+import { BarChart3, Bell, CalendarDays, CheckCircle2, Coffee, RotateCcw, Settings2, Share2, Target, Timer, Zap } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
+import { trackProductEvent } from '../../../lib/community-api'
+import { shareCard } from '../../../lib/share-card'
 
 const STORAGE_KEY = 'purehub.zen-pomodoro.stats.v1'
+const ACTIVE_KEY = 'purehub.zen-pomodoro.active.v1'
 type DayStats = Record<string, { sessions: number; minutes: number }>
 type Soundscape = 'white' | 'brown' | 'rain'
 type ActiveSound = { context: AudioContext; source: AudioBufferSourceNode; gain: GainNode }
@@ -31,6 +34,8 @@ export default function ZenPomodoroSurface() {
   const [soundscape, setSoundscape] = useState<Soundscape>('white')
   const [volume, setVolume] = useState(0.3)
   const [customMinutes, setCustomMinutes] = useState(35)
+  const [task, setTask] = useState('')
+  const [notice, setNotice] = useState('')
   const completedRef = useRef(false)
   const soundRef = useRef<ActiveSound | null>(null)
   const totalSeconds = minutes * 60
@@ -88,6 +93,19 @@ export default function ZenPomodoroSurface() {
   useEffect(() => () => stopSound(), [])
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ACTIVE_KEY) ?? 'null') as { mode: 'focus' | 'break'; minutes: number; targetAt: number; task?: string } | null
+      if (!saved?.targetAt || saved.targetAt <= Date.now()) return
+      setMode(saved.mode); setMinutes(saved.minutes); setRemaining(Math.ceil((saved.targetAt - Date.now()) / 1000)); setTargetAt(saved.targetAt); setTask(saved.task ?? ''); setRunning(true)
+    } catch { localStorage.removeItem(ACTIVE_KEY) }
+  }, [])
+
+  useEffect(() => {
+    if (running && targetAt) localStorage.setItem(ACTIVE_KEY, JSON.stringify({ mode, minutes, targetAt, task }))
+    else localStorage.removeItem(ACTIVE_KEY)
+  }, [mode, minutes, running, targetAt, task])
+
+  useEffect(() => {
     const active = soundRef.current
     if (active) active.gain.gain.setTargetAtTime(volume, active.context.currentTime, 0.04)
   }, [volume])
@@ -114,6 +132,8 @@ export default function ZenPomodoroSurface() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStats)); return nextStats
           })
           if ('vibrate' in navigator) navigator.vibrate([160, 80, 160])
+          if ('Notification' in window && Notification.permission === 'granted') new Notification('Focus session complete', { body: task ? `${task} · ${minutes} focused minutes` : `${minutes} focused minutes completed`, icon: '/icons/pwa-192x192.png' })
+          void trackProductEvent('zen-pomodoro', 'complete')
         }
       }
     }
@@ -121,7 +141,7 @@ export default function ZenPomodoroSurface() {
     const id = window.setInterval(update, 250)
     document.addEventListener('visibilitychange', update)
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', update) }
-  }, [mode, minutes, running, targetAt])
+  }, [mode, minutes, running, targetAt, task])
 
   const toggle = async () => {
     if (remaining <= 0) { setRemaining(totalSeconds); completedRef.current = false }
@@ -134,12 +154,26 @@ export default function ZenPomodoroSurface() {
     }
   }
 
+  const enableNotifications = async () => {
+    if (!('Notification' in window)) { setNotice('Notifications are not supported in this browser.'); return }
+    const permission = await Notification.requestPermission()
+    setNotice(permission === 'granted' ? 'Completion notifications enabled.' : 'Notification permission was not granted.')
+  }
+
+  const shareWeek = async () => {
+    try {
+      setNotice(await shareCard({ title: 'Zen Pomodoro', headline: `${week.sessions} focus sessions · ${week.minutes} minutes this week`, detail: 'A private focus rhythm, stored only on this device.', accent: '#059669' }))
+      void trackProductEvent('zen-pomodoro', 'share')
+    } catch (error) { if (!(error instanceof DOMException && error.name === 'AbortError')) setNotice('Could not create the progress card.') }
+  }
+
   return <div className="space-y-4">
     <FlagshipHero eyebrow="Zen Suite flagship" title="Zen Pomodoro" description="A calm focus workspace with accurate timing, private progress, quick presets, and locally generated soundscapes." accent="emerald">
       <div className="grid grid-cols-3 gap-2 sm:max-w-lg"><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><Target className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{week.sessions}</strong><span className="text-xs text-slate-500">sessions</span></div><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><Timer className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{week.minutes}</strong><span className="text-xs text-slate-500">minutes</span></div><div className="rounded-2xl bg-white/75 p-3 dark:bg-slate-950/45"><CheckCircle2 className="size-4" /><strong className="mt-2 block text-xl text-slate-950 dark:text-white">{running ? 'Live' : 'Ready'}</strong><span className="text-xs text-slate-500">on device</span></div></div>
     </FlagshipHero>
     <div className="grid gap-4 xl:grid-cols-[1fr_0.52fr]">
     <Panel title="Focus timer" subtitle="Stays accurate after tab switches and device sleep.">
+      <FormInput value={task} onChange={(event) => setTask(event.target.value)} maxLength={80} placeholder="What are you focusing on? (optional)" aria-label="Focus task" />
       <div className="flex flex-wrap gap-2">
         {[[15, 'Quick 15'], [25, 'Focus 25'], [50, 'Deep 50']] .map(([value, label]) => <ActionButton key={value} tone={mode === 'focus' && minutes === value ? 'primary' : 'muted'} onClick={() => selectSession('focus', Number(value))}><Zap className="size-4" />{label}</ActionButton>)}
         <ActionButton tone={mode === 'break' ? 'primary' : 'muted'} onClick={() => selectSession('break', 5)}><Coffee className="size-4" />Break 5</ActionButton>
@@ -152,6 +186,8 @@ export default function ZenPomodoroSurface() {
           </div>
         </div>
         <div className="mt-5 flex gap-2"><ActionButton onClick={toggle}><Timer className="size-4" />{running ? 'Pause' : 'Start'}</ActionButton><ActionButton tone="muted" onClick={() => selectSession(mode, minutes)}><RotateCcw className="size-4" />Reset</ActionButton></div>
+        <div className="mt-2 flex flex-wrap justify-center gap-2"><ActionButton tone="muted" onClick={() => void enableNotifications()}><Bell className="size-4" />Notify me</ActionButton><ActionButton tone="muted" onClick={() => void shareWeek()}><Share2 className="size-4" />Share week</ActionButton></div>
+        {notice ? <p role="status" className="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{notice}</p> : null}
         <details className="mt-5 w-full max-w-md rounded-[18px] border border-slate-500/15 bg-slate-500/5 p-4 text-left"><summary className="cursor-pointer list-none text-sm font-bold text-slate-950 dark:text-white">Focus sound <span className="ml-2 text-xs font-normal text-slate-500">{soundscapes.find((item) => item.id === soundscape)?.label}</span></summary>
           <div className="flex items-center justify-between gap-3">
             <div><p className="text-sm font-bold text-slate-950 dark:text-white">Focus sound</p><p className="text-xs text-slate-500">Plays locally while the timer is running.</p></div>
