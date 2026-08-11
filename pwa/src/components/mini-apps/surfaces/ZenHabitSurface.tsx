@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
-import { Archive, CalendarDays, Check, Download, Flame, Leaf, Plus, RotateCcw, Sparkles, Target, Trash2 } from 'lucide-react'
+import type { ChangeEvent, ReactNode } from 'react'
+import { Archive, CalendarDays, Check, Download, Flame, Leaf, LockKeyhole, Plus, RotateCcw, Sparkles, Target, Trash2, Upload } from 'lucide-react'
 import {
   habitCheckInRepository,
   habitRepository,
   type HabitCheckInRecord,
   type HabitRecord,
 } from '../../../lib/db/purehub-db'
+import { decryptBackup, downloadBackup, encryptBackup } from '../../../lib/encrypted-backup'
 
 type View = 'today' | 'insights' | 'manage'
 
@@ -83,6 +84,9 @@ export default function ZenHabitSurface() {
   const [category, setCategory] = useState(CATEGORIES[0])
   const [colorHex, setColorHex] = useState(COLORS[0])
   const [targetDaysPerWeek, setTargetDaysPerWeek] = useState(7)
+  const [backupPassphrase, setBackupPassphrase] = useState('')
+  const [backupNotice, setBackupNotice] = useState('')
+  const [backupBusy, setBackupBusy] = useState(false)
 
   const load = async () => {
     const nextHabits = await habitRepository.list()
@@ -127,14 +131,39 @@ export default function ZenHabitSurface() {
     await load()
   }
 
-  const exportBackup = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), habits, checkIns }, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `purehub-zen-habit-${today}.json`
-    anchor.click()
-    URL.revokeObjectURL(url)
+  const exportBackup = async () => {
+    setBackupBusy(true)
+    try {
+      const contents = await encryptBackup('zen-habit', { habits, checkIns }, backupPassphrase)
+      downloadBackup(contents, `purehub-zen-habit-${today}.purehub`)
+      setBackupNotice('Encrypted backup saved. Keep its passphrase separately.')
+    } catch (error) {
+      setBackupNotice(error instanceof Error ? error.message : 'Could not create the backup.')
+    } finally {
+      setBackupBusy(false)
+    }
+  }
+
+  const importBackup = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setBackupBusy(true)
+    try {
+      const payload = await decryptBackup<{ habits: HabitRecord[]; checkIns: HabitCheckInRecord[] }>(await file.text(), 'zen-habit', backupPassphrase)
+      if (!Array.isArray(payload.habits) || !Array.isArray(payload.checkIns) || payload.habits.some((item) => !item.id || !item.name || !item.createdAt)) {
+        throw new Error('The habit backup is malformed.')
+      }
+      const habitIds = new Set(payload.habits.map((item) => item.id))
+      const safeCheckIns = payload.checkIns.filter((item) => item.id && item.completedOn && habitIds.has(item.habitId))
+      await habitRepository.importBackup(payload.habits, safeCheckIns)
+      await load()
+      setBackupNotice(`Imported ${payload.habits.length} habits and ${safeCheckIns.length} check-ins.`)
+    } catch (error) {
+      setBackupNotice(error instanceof Error ? error.message : 'Could not decrypt this backup.')
+    } finally {
+      setBackupBusy(false)
+    }
   }
 
   return (
@@ -214,7 +243,16 @@ export default function ZenHabitSurface() {
 
         {view === 'manage' ? (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">Private data</p><h3 className="mt-1 text-xl font-black text-slate-950 dark:text-white">Manage your habits</h3></div><button type="button" onClick={exportBackup} className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200"><Download className="size-4" /> Export</button></div>
+            <div><p className="text-xs font-black uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">Private data</p><h3 className="mt-1 text-xl font-black text-slate-950 dark:text-white">Manage your habits</h3></div>
+            <details className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3 dark:border-sky-900 dark:bg-sky-950/20">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-black"><LockKeyhole className="size-4 text-sky-700" />Encrypted backup</summary>
+              <div className="mt-3 space-y-3">
+                <input type="password" autoComplete="new-password" minLength={12} maxLength={256} value={backupPassphrase} onChange={(event) => setBackupPassphrase(event.target.value)} placeholder="Backup passphrase (12+ characters)" className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium outline-none focus:border-sky-600 dark:border-slate-700 dark:bg-slate-900" />
+                <div className="grid grid-cols-2 gap-2"><button type="button" disabled={backupBusy || backupPassphrase.length < 12} onClick={() => void exportBackup()} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-sky-700 px-3 text-sm font-bold text-white disabled:opacity-40"><Download className="size-4" />Export</button><label className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 text-sm font-bold dark:border-slate-700 ${backupBusy || backupPassphrase.length < 12 ? 'pointer-events-none opacity-40' : 'cursor-pointer'}`}><Upload className="size-4" />Import<input type="file" accept=".purehub,application/json" className="sr-only" onChange={(event) => void importBackup(event)} /></label></div>
+                <p className="text-xs leading-5 text-slate-500">AES-GCM encryption runs on this device. Existing records with matching IDs are updated; unrelated records stay intact.</p>
+                {backupNotice ? <p className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">{backupNotice}</p> : null}
+              </div>
+            </details>
             {[...active, ...archived].map((habit) => <div key={habit.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-800"><span className="size-3 rounded-full" style={{ backgroundColor: habit.colorHex }} /><div className="min-w-0 flex-1"><p className="truncate font-bold text-slate-950 dark:text-white">{habit.name}</p><p className="text-xs text-slate-500">{habit.archivedAt ? 'Archived' : `${habit.targetDaysPerWeek ?? 7} days per week`}</p></div><button type="button" onClick={async () => { if (habit.archivedAt) await habitRepository.restore(habit.id); else await habitRepository.archive(habit.id, new Date().toISOString()); await load() }} className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-500 dark:border-slate-700" aria-label={habit.archivedAt ? 'Restore habit' : 'Archive habit'}>{habit.archivedAt ? <RotateCcw className="size-4" /> : <Archive className="size-4" />}</button><button type="button" onClick={async () => { if (!window.confirm(`Delete ${habit.name} and its check-ins?`)) return; await habitRepository.remove(habit.id); await load() }} className="grid size-10 place-items-center rounded-xl border border-rose-200 text-rose-600 dark:border-rose-900" aria-label="Delete habit"><Trash2 className="size-4" /></button></div>)}
           </div>
         ) : null}

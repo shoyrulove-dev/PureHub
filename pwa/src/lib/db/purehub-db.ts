@@ -131,6 +131,15 @@ export const habitRepository = {
       transaction.done,
     ])
   },
+  async importBackup(habits: HabitRecord[], checkIns: HabitCheckInRecord[]) {
+    const database = await getPureHubDb()
+    const transaction = database.transaction(['habits', 'habitCheckIns'], 'readwrite')
+    await Promise.all([
+      ...habits.map((item) => transaction.objectStore('habits').put(item)),
+      ...checkIns.map((item) => transaction.objectStore('habitCheckIns').put(item)),
+      transaction.done,
+    ])
+  },
 }
 
 export const habitCheckInRepository = {
@@ -154,6 +163,14 @@ export const expenseRepository = {
   },
   async remove(expenseId: string) {
     return (await getPureHubDb()).delete('expenses', expenseId)
+  },
+  async importBackup(expenses: ExpenseRecord[]) {
+    const database = await getPureHubDb()
+    const transaction = database.transaction('expenses', 'readwrite')
+    await Promise.all([
+      ...expenses.map((item) => transaction.store.put(item)),
+      transaction.done,
+    ])
   },
 }
 

@@ -20,8 +20,8 @@ android {
         applicationId = "com.purehub.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 18
-        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.17"
+        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 19
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"

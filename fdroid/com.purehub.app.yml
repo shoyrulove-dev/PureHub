@@ -13,14 +13,14 @@ RepoType: git
 Repo: https://github.com/shoyrulove-dev/PureHub.git
 
 Builds:
-  - versionName: 1.0.0-beta.17
-    versionCode: 18
-    commit: v1.0.0-beta.17
+  - versionName: 1.0.0-beta.18
+    versionCode: 19
+    commit: v1.0.0-beta.18
     subdir: app
     gradle:
       - fdroid
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.0-beta.17
-CurrentVersionCode: 18
+CurrentVersion: 1.0.0-beta.18
+CurrentVersionCode: 19

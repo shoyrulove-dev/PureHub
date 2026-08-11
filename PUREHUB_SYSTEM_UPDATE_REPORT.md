@@ -1,5 +1,14 @@
 # PureHub System Update Report
 
+## Beta.18 cross-platform parity release - 2026-08-11
+
+- Added passphrase-protected AES-GCM backup and restore to Zen Habit and Expense Tracker on the PWA. PBKDF2 uses a random salt and 310,000 SHA-256 iterations; imports validate the tool type and record shape before merging.
+- Added local receipt OCR to the PWA Expense Tracker and Bill Splitter. A receipt image is processed on-device with Tesseract, likely merchant/total/tax/item fields are prefilled, and the user must review them before saving or sharing.
+- Kept CSV export as a portable non-sensitive option while making encrypted `.purehub` backup the primary complete-history workflow.
+- Synchronized PWA and Android release versions to `1.0.0-beta.18`; Android uses monotonic `versionCode 19`, with Standard and F-Droid release metadata aligned.
+- Verification: PWA production build, TypeScript, lint, and five prerender checks pass; Android Standard/F-Droid unit tests, release lint, and debug assembly pass; all 49 Command Center tests pass.
+- Physical Android smoke test: beta.18 debug installed and launched successfully on a Xiaomi M1906G7G, reported versionCode 19, produced no AndroidRuntime crash, and the temporary debug package was removed afterward so the phone retains only the signed release package.
+
 ## Production and community publication verification - 2026-08-11
 
 - Production deployment: `https://hub.blissbiovn.com`

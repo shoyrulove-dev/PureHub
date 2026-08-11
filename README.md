@@ -156,7 +156,7 @@ Copy only the environment values you need into `command_center/.env`. Never comm
 
 ## Releases
 
-The latest signed preview is [PureHub 1.0.0-beta.17](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.17). Each Android release provides:
+The latest signed preview is [PureHub 1.0.0-beta.18](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.18). Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
