@@ -8,15 +8,18 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
 import android.media.MediaRecorder
+import android.media.MediaScannerConnection
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.os.Environment
 import android.os.IBinder
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import java.io.File
 import java.io.FileDescriptor
 
 class ScreenRecorderService : Service() {
@@ -24,6 +27,7 @@ class ScreenRecorderService : Service() {
     private var projection: MediaProjection? = null
     private var descriptor: android.os.ParcelFileDescriptor? = null
     private var outputUri: android.net.Uri? = null
+    private var legacyOutputFile: File? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -58,23 +62,32 @@ class ScreenRecorderService : Service() {
         val metrics = resources.displayMetrics
         val width = (metrics.widthPixels / 2) * 2
         val height = (metrics.heightPixels / 2) * 2
-        val values = android.content.ContentValues().apply {
-            put(MediaStore.Video.Media.DISPLAY_NAME, "PureHub-${System.currentTimeMillis()}.mp4")
-            put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/PureHub")
-            put(MediaStore.Video.Media.IS_PENDING, 1)
+        val displayName = "PureHub-${System.currentTimeMillis()}.mp4"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = android.content.ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, displayName)
+                put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/PureHub")
+                put(MediaStore.Video.Media.IS_PENDING, 1)
+            }
+            outputUri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+            descriptor = outputUri?.let { contentResolver.openFileDescriptor(it, "w") }
+        } else {
+            val directory = File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "PureHub").apply { mkdirs() }
+            legacyOutputFile = File(directory, displayName)
         }
-        outputUri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
-        descriptor = outputUri?.let { contentResolver.openFileDescriptor(it, "w") }
-        val fileDescriptor: FileDescriptor = descriptor?.fileDescriptor ?: return stopSelf()
-        recorder = MediaRecorder(this).apply {
+        val fileDescriptor: FileDescriptor? = descriptor?.fileDescriptor
+        val outputFile = legacyOutputFile
+        if (fileDescriptor == null && outputFile == null) return stopSelf()
+        recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(this) else @Suppress("DEPRECATION") MediaRecorder()
+        recorder?.apply {
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setVideoEncodingBitRate(6_000_000)
             setVideoFrameRate(30)
             setVideoSize(width, height)
-            setOutputFile(fileDescriptor)
+            if (fileDescriptor != null) setOutputFile(fileDescriptor) else setOutputFile(outputFile!!.absolutePath)
             prepare()
         }
         projection?.createVirtualDisplay("PureHubRecorder", width, height, metrics.densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, recorder?.surface, null, null)
@@ -83,7 +96,11 @@ class ScreenRecorderService : Service() {
 
     private fun stopRecording() {
         runCatching { recorder?.stop() }
-        outputUri?.let { uri -> contentResolver.update(uri, android.content.ContentValues().apply { put(MediaStore.Video.Media.IS_PENDING, 0) }, null, null) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            outputUri?.let { uri -> contentResolver.update(uri, android.content.ContentValues().apply { put(MediaStore.Video.Media.IS_PENDING, 0) }, null, null) }
+        } else {
+            legacyOutputFile?.let { file -> MediaScannerConnection.scanFile(this, arrayOf(file.absolutePath), arrayOf("video/mp4"), null) }
+        }
         release()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -93,6 +110,7 @@ class ScreenRecorderService : Service() {
         runCatching { recorder?.release() }; recorder = null
         runCatching { projection?.stop() }; projection = null
         runCatching { descriptor?.close() }; descriptor = null
+        legacyOutputFile = null
     }
 
     override fun onDestroy() { release(); super.onDestroy() }
