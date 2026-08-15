@@ -23,6 +23,6 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-UpdateCheckData: 'app/build.gradle.kts|versionCode.*?:\s*(\d+)|.|versionName.*?:\s*"([^"]+)"'
+UpdateCheckData: app/build.gradle.kts|versionCode.*?:\s*(\d+)|.|versionName.*?:\s*"([^"]+)"
 CurrentVersion: 1.0.0-beta.21
 CurrentVersionCode: 22
