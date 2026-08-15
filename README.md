@@ -148,7 +148,7 @@ FOSS store distribution is being introduced in stages: signed developer builds g
 
 ## Releases
 
-The current development source is PureHub 1.0.0-beta.21. The latest published preview remains beta.20 until beta.21 passes CI and physical-device verification. Signed Android artifacts are attached to each GitHub release after verification. Each Android release provides:
+The latest verified preview is PureHub 1.0.0-beta.21. Its PWA is deployed to production, and signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
