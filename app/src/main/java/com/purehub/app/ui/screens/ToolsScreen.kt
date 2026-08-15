@@ -157,6 +157,7 @@ private fun toolFriendlySummary(tool: MiniAppId): String = when (tool) {
     MiniAppId.DOC_TO_PDF -> "Capture, arrange and export private PDFs."
     MiniAppId.OCR_TEXT -> "Scan, clean, edit and export private documents offline."
     MiniAppId.COLOR_GRABBER -> "Sample and copy colors from the camera."
+    MiniAppId.PHOTO_PRIVACY -> "Create share-ready photos without GPS or EXIF metadata."
     MiniAppId.DEEP_CLEANER -> "Review reclaimable files before deleting."
     MiniAppId.SPEAKER_CLEANER -> "Play a controlled tone for residual water."
     MiniAppId.WIFI_ANALYZER -> "Inspect nearby signals and Wi-Fi channels."

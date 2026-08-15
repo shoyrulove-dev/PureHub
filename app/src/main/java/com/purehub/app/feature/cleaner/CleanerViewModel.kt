@@ -18,9 +18,18 @@ data class CleanerUiState(
     val errorMessage: String? = null,
 ) {
     val totalReclaimableBytes: Long
-        get() = largeFiles.sumOf { it.sizeBytes } + duplicateGroups.sumOf { group ->
-            group.files.drop(1).sumOf { it.sizeBytes }
-        }
+        get() = (largeFiles + duplicateGroups.flatMap { it.files.drop(1) })
+            .distinctBy { it.id }
+            .sumOf { it.sizeBytes }
+
+    val selectedBytes: Long
+        get() = selectedFiles.sumOf { it.sizeBytes }
+
+    val exactDuplicateBytes: Long
+        get() = duplicateGroups
+            .flatMap { it.files.drop(1) }
+            .distinctBy { it.id }
+            .sumOf { it.sizeBytes }
 
     val selectedFiles: List<CleanerFileItem>
         get() {
@@ -93,6 +102,22 @@ class CleanerViewModel(
 
     fun clearSelection() {
         _uiState.update { it.copy(selectedFileIds = emptySet()) }
+    }
+
+    fun selectExactDuplicates() {
+        _uiState.update { state ->
+            state.copy(
+                selectedFileIds = state.duplicateGroups
+                    .flatMap { it.files.drop(1) }
+                    .mapTo(mutableSetOf()) { it.id },
+            )
+        }
+    }
+
+    fun selectAllLargeFiles() {
+        _uiState.update { state ->
+            state.copy(selectedFileIds = state.largeFiles.mapTo(mutableSetOf()) { it.id })
+        }
     }
 
     fun deleteSelectedFiles() {

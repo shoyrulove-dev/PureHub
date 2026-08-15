@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.FlashlightOn
 import androidx.compose.material.icons.rounded.FolderZip
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Password
 import androidx.compose.material.icons.rounded.Palette
@@ -64,6 +65,7 @@ enum class MiniAppId(
     DOC_TO_PDF("Doc to PDF", MiniAppTab.VISION, Icons.Rounded.PictureAsPdf),
     OCR_TEXT("OCR Studio", MiniAppTab.VISION, Icons.Rounded.DocumentScanner),
     COLOR_GRABBER("Color Grabber", MiniAppTab.VISION, Icons.Rounded.Colorize),
+    PHOTO_PRIVACY("Photo Privacy", MiniAppTab.VISION, Icons.Rounded.Image),
 
     DEEP_CLEANER("Deep Cleaner", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.DeleteSweep),
     SPEAKER_CLEANER("Speaker Cleaner", MiniAppTab.SYSTEM_SECURITY, Icons.AutoMirrored.Rounded.VolumeUp),

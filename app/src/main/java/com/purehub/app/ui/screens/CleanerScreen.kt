@@ -5,29 +5,24 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,8 +36,10 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+
+private enum class CleanerView(val label: String) {
+    OVERVIEW("Overview"), LARGE_FILES("Large files"), DUPLICATES("Duplicates"),
+}
 
 @Composable
 fun CleanerScreen(
@@ -52,336 +49,257 @@ fun CleanerScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = LocalSnackbarHostState.current
+    val snackbar = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     var permissionMessage by remember { mutableStateOf<String?>(null) }
+    var activeView by remember { mutableStateOf(CleanerView.OVERVIEW) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) { result ->
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         if (result.values.all { it }) {
             permissionMessage = null
             viewModel.startScan()
-            scope.launch { snackbarHostState.showSnackbar("Media permissions granted for local cleaner scan.") }
-        } else {
-            permissionMessage = "Media permissions are needed to scan large files and detect duplicate images locally."
-            scope.launch { snackbarHostState.showSnackbar("Cleaner scan skipped because media permission was declined.") }
-        }
+            scope.launch { snackbar.showSnackbar("Media access granted. Scan stays on this device.") }
+        } else permissionMessage = "Allow visible media access to review large files and exact duplicate images."
     }
-
-    val deleteLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-    ) { result ->
+    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             viewModel.clearSelection()
             viewModel.startScan()
-            scope.launch { snackbarHostState.showSnackbar("Selected files deleted.") }
+            scope.launch { snackbar.showSnackbar("Android removed the files you approved.") }
         }
     }
 
     fun launchScan() {
         val permissions = cleanerPermissions()
-        val allGranted = permissions.all { permission ->
-            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-        }
-        if (allGranted) {
+        if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
             permissionMessage = null
             viewModel.startScan()
-        } else {
-            permissionLauncher.launch(permissions.toTypedArray())
-        }
+        } else permissionLauncher.launch(permissions.toTypedArray())
     }
-
-    fun requestDelete() {
-        val selectedUris = uiState.selectedFiles.map { it.contentUri }
-        if (selectedUris.isEmpty()) return
-
+    fun deleteApprovedFiles() {
+        val uris = uiState.selectedFiles.map { it.contentUri }
+        if (uris.isEmpty()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, selectedUris)
-            deleteLauncher.launch(IntentSenderRequest.Builder(pendingIntent.intentSender).build())
+            val request = MediaStore.createDeleteRequest(context.contentResolver, uris)
+            deleteLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
         } else {
             viewModel.deleteSelectedFiles()
+            scope.launch { snackbar.showSnackbar("Approved files were submitted for deletion.") }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .then(if (embedded) Modifier.fillMaxSize() else Modifier.fillMaxSize())
-            .padding(innerPadding)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (!embedded) {
-                    FlagshipSuiteHeader(
-                        eyebrow = "Storage Care flagship",
-                        title = "Deep Cleaner",
-                        description = "Review large and duplicate visible media locally, then choose exactly what Android may remove.",
-                    )
-                }
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = ::launchScan,
-                ) {
-                    Text(if (uiState.isScanning) "Scanning..." else "Start Offline Scan")
-                }
-                if (uiState.isScanning) {
-                    CircularProgressIndicator()
-                }
-                Text(
-                    text = "Status: ${uiState.statusMessage}",
-                    style = MaterialTheme.typography.bodyMedium,
+    if (confirmDelete) AlertDialog(
+        onDismissRequest = { confirmDelete = false },
+        icon = { Icon(Icons.Rounded.AutoDelete, null) },
+        title = { Text("Remove ${uiState.selectedFiles.size} reviewed files?") },
+        text = { Text("This can free ${formatBytes(uiState.selectedBytes)}. Android may show one more confirmation. PureHub never selects personal files silently.") },
+        confirmButton = { Button(onClick = { confirmDelete = false; deleteApprovedFiles() }) { Text("Continue") } },
+        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Keep files") } },
+    )
+
+    Column(Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp)) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (!embedded) item {
+                FlagshipSuiteHeader(
+                    eyebrow = "Storage Care flagship",
+                    title = "Deep Cleaner",
+                    description = "Scan visible media locally, review exact evidence, and approve every deletion yourself.",
                 )
-                permissionMessage?.let { message ->
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                uiState.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                if (!uiState.isScanning) {
-                    Text(
-                        text = "Potential review size: ${formatBytes(uiState.totalReclaimableBytes)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    if (uiState.selectedFiles.isNotEmpty()) {
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = ::requestDelete,
-                        ) {
-                            Text("Delete Selected (${uiState.selectedFiles.size})")
-                        }
+            }
+            item {
+                CleanerDashboard(
+                    uiState.isScanning, uiState.statusMessage, uiState.totalReclaimableBytes,
+                    uiState.exactDuplicateBytes, uiState.duplicateGroups.size, uiState.largeFiles.size, ::launchScan,
+                )
+            }
+            permissionMessage?.let { item { NoticeCard(it) } }
+            uiState.errorMessage?.let { item { NoticeCard(it) } }
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CleanerView.entries.forEach { view ->
+                        FilterChip(activeView == view, { activeView = view }, { Text(view.label) })
                     }
                 }
             }
+
+            if (!uiState.isScanning && uiState.largeFiles.isEmpty() && uiState.duplicateGroups.isEmpty()) item {
+                EmptyCleanerCard("Ready for a private scan", "PureHub only reads media Android lets you see. It does not inspect app data, messages, passwords, or system files.")
+            }
+
+            if (activeView != CleanerView.LARGE_FILES && uiState.duplicateGroups.isNotEmpty()) {
+                item {
+                    ReviewSectionHeader(
+                        "Exact duplicates",
+                        "${uiState.duplicateGroups.size} groups · ${formatBytes(uiState.exactDuplicateBytes)} safely reviewable",
+                        "Select copies",
+                        viewModel::selectExactDuplicates,
+                    )
+                }
+                items(uiState.duplicateGroups, key = { "duplicate-${it.hash}" }) { group ->
+                    DuplicateGroupCard(group, uiState.selectedFileIds, viewModel::toggleSelection)
+                }
+            }
+            if (activeView != CleanerView.DUPLICATES && uiState.largeFiles.isNotEmpty()) {
+                item { ReviewSectionHeader("Large media", "${uiState.largeFiles.size} files at least 100 MB", "Select all", viewModel::selectAllLargeFiles) }
+                items(uiState.largeFiles, key = { "large-${it.id}" }) { file ->
+                    CleanerFileCard(file, file.id in uiState.selectedFileIds) { viewModel.toggleSelection(file) }
+                }
+            }
+            if (!uiState.isScanning && activeView == CleanerView.DUPLICATES && uiState.duplicateGroups.isEmpty()) item {
+                EmptyCleanerCard("No exact copies", "No byte-for-byte duplicate images were found in visible media.")
+            }
+            if (!uiState.isScanning && activeView == CleanerView.LARGE_FILES && uiState.largeFiles.isEmpty()) item {
+                EmptyCleanerCard("No large media", "No visible photo, video, or audio file is currently above 100 MB.")
+            }
         }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        if (uiState.selectedFiles.isNotEmpty()) Surface(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            shape = RoundedCornerShape(20.dp), tonalElevation = 4.dp, shadowElevation = 6.dp,
         ) {
-            item { PhotoPrivacyCard() }
-            item {
-                SectionHeader(
-                    title = "Large Files",
-                    subtitle = "${uiState.largeFiles.size} items",
-                )
-            }
-            if (uiState.largeFiles.isEmpty()) {
-                item {
-                    EmptyCleanerCard("No large media files found. Try another scan after adding more photos, videos, or audio.")
+            Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${uiState.selectedFiles.size} reviewed", style = MaterialTheme.typography.labelMedium)
+                    Text(formatBytes(uiState.selectedBytes), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
-            } else {
-                items(uiState.largeFiles, key = { it.id }) { file ->
-                    CleanerFileCard(
-                        file = file,
-                        isSelected = file.id in uiState.selectedFileIds,
-                        onToggleSelection = { viewModel.toggleSelection(file) },
-                    )
-                }
-            }
-
-            item {
-                SectionHeader(
-                    title = "Duplicate Images",
-                    subtitle = "${uiState.duplicateGroups.size} groups",
-                )
-            }
-            if (uiState.duplicateGroups.isEmpty()) {
-                item {
-                    EmptyCleanerCard("No duplicate image groups found. Your photo library already looks pretty lean.")
-                }
-            } else {
-                items(uiState.duplicateGroups, key = { it.hash }) { group ->
-                    DuplicateGroupCard(
-                        group = group,
-                        selectedIds = uiState.selectedFileIds,
-                        onToggleSelection = { viewModel.toggleSelection(it) },
-                    )
-                }
+                OutlinedButton(onClick = viewModel::clearSelection) { Text("Clear") }
+                Button(onClick = { confirmDelete = true }) { Icon(Icons.Rounded.DeleteSweep, null); Text(" Remove") }
             }
         }
     }
 }
 
 @Composable
-private fun PhotoPrivacyCard() {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var selected by remember { mutableStateOf<android.net.Uri?>(null) }
-    var status by remember { mutableStateOf("Create a fresh JPEG without GPS, camera or author EXIF metadata.") }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> selected = uri; if (uri != null) status = "Photo selected. The original will remain unchanged." }
-    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/jpeg")) { destination ->
-        val source = selected
-        if (destination != null && source != null) scope.launch {
-            status = "Creating metadata-free copy..."
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    val bitmap = context.contentResolver.openInputStream(source)?.use(BitmapFactory::decodeStream)
-                        ?: error("The selected image could not be decoded")
-                    context.contentResolver.openOutputStream(destination)?.use { output -> bitmap.compress(Bitmap.CompressFormat.JPEG, 92, output) }
-                        ?: error("Output is unavailable")
-                }
-            }
-            status = if (result.isSuccess) "Privacy-clean JPEG saved. Embedded EXIF fields were not copied." else "Could not export this photo."
-        }
-    }
+private fun CleanerDashboard(
+    scanning: Boolean, status: String, reviewBytes: Long, duplicateBytes: Long,
+    duplicateGroups: Int, largeFiles: Int, onScan: () -> Unit,
+) {
     Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Photo Privacy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { picker.launch(arrayOf("image/*")) }) { Text("Choose photo") }
-                androidx.compose.material3.OutlinedButton(onClick = { exporter.launch("purehub-privacy-clean.jpg") }, enabled = selected != null) { Text("Strip metadata") }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionHeader(
-    title: String,
-    subtitle: String,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun EmptyCleanerCard(
-    text: String,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            modifier = Modifier.padding(16.dp),
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun CleanerFileCard(
-    file: CleanerFileItem,
-    isSelected: Boolean,
-    onToggleSelection: () -> Unit,
-) {
-    val formatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = { onToggleSelection() },
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    text = file.name.ifBlank { "Unnamed file" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = "${formatBytes(file.sizeBytes)} • ${file.mimeType.ifBlank { "Unknown type" }}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    text = "Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DuplicateGroupCard(
-    group: DuplicateImageGroup,
-    selectedIds: Set<Long>,
-    onToggleSelection: (CleanerFileItem) -> Unit,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = "${group.files.size} matching images",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = "Keep one, review ${formatBytes(group.files.drop(1).sumOf { it.sizeBytes })} reclaimable",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            group.files.forEachIndexed { index, file ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    Modifier.size(54.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(18.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Checkbox(
-                        checked = file.id in selectedIds,
-                        onCheckedChange = { if (index != 0) onToggleSelection(file) },
-                        enabled = index != 0,
-                    )
-                    Text(
-                        text = buildString {
-                            append(file.name.ifBlank { "Unnamed" })
-                            if (index == 0) append(" • suggested keep")
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    if (scanning) CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
+                    else Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(if (reviewBytes > 0) formatBytes(reviewBytes) else "Storage review", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    Text(if (scanning) status else "Potential space · nothing auto-selected", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Button(enabled = !scanning, onClick = onScan) { Icon(Icons.Rounded.Refresh, null); Text(if (scanning) " Scanning" else " Scan") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                DashboardMetric(Modifier.weight(1f), Icons.Rounded.FileCopy, "$duplicateGroups", "Duplicate groups", formatBytes(duplicateBytes))
+                DashboardMetric(Modifier.weight(1f), Icons.Rounded.Folder, "$largeFiles", "Large files", "100 MB+")
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Rounded.Security, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                Text("Offline SHA-256 matching · Android confirms deletion", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardMetric(modifier: Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector, value: String, label: String, detail: String) {
+    Surface(modifier, RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .5f)) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+            Text(label, style = MaterialTheme.typography.labelSmall)
+            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ReviewSectionHeader(title: String, subtitle: String, action: String, onAction: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        TextButton(onClick = onAction) { Text(action) }
+    }
+}
+
+@Composable private fun NoticeCard(message: String) {
+    Surface(Modifier.fillMaxWidth(), RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.errorContainer) {
+        Text(message, Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable private fun EmptyCleanerCard(title: String, text: String) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp)); Text(title, fontWeight = FontWeight.Bold)
+            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun CleanerFileCard(file: CleanerFileItem, selected: Boolean, toggle: () -> Unit) {
+    val formatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
+    Card(Modifier.fillMaxWidth().clickable(onClick = toggle)) {
+        Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(selected, { toggle() })
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(file.name.ifBlank { "Unnamed file" }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("${formatBytes(file.sizeBytes)} · ${friendlyType(file.mimeType)}", style = MaterialTheme.typography.bodySmall)
+                Text("Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DuplicateGroupCard(group: DuplicateImageGroup, selectedIds: Set<Long>, toggle: (CleanerFileItem) -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${group.files.size} byte-for-byte matches", fontWeight = FontWeight.Bold)
+                    Text("Review ${formatBytes(group.files.drop(1).sumOf { it.sizeBytes })} after keeping the newest", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                    Text("SHA-256", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                }
+            }
+            group.files.forEachIndexed { index, file ->
+                Row(Modifier.fillMaxWidth().clickable(enabled = index != 0) { toggle(file) }, verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(file.id in selectedIds, { if (index != 0) toggle(file) }, enabled = index != 0)
+                    Column(Modifier.weight(1f)) {
+                        Text(file.name.ifBlank { "Unnamed image" }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(formatBytes(file.sizeBytes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (index == 0) Text("KEEP", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
                 }
             }
         }
     }
 }
 
-private fun cleanerPermissions(): List<String> {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        listOf(
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.READ_MEDIA_AUDIO,
-        )
-    } else {
-        listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-    }
+private fun cleanerPermissions() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO)
+} else listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+
+private fun friendlyType(mime: String) = when {
+    mime.startsWith("image/") -> "Image"; mime.startsWith("video/") -> "Video"; mime.startsWith("audio/") -> "Audio"
+    mime.isBlank() -> "Unknown type"; else -> mime
 }
 
 private fun formatBytes(size: Long): String {
     if (size <= 0) return "0 B"
     val units = listOf("B", "KB", "MB", "GB", "TB")
-    val digitGroups = (kotlin.math.log10(size.toDouble()) / kotlin.math.log10(1024.0)).toInt()
-    val value = size / Math.pow(1024.0, digitGroups.toDouble())
-    return "${DecimalFormat("#,##0.#").format(value)} ${units[digitGroups]}"
+    val group = (kotlin.math.log10(size.toDouble()) / kotlin.math.log10(1024.0)).toInt().coerceIn(units.indices)
+    return "${DecimalFormat("#,##0.#").format(size / Math.pow(1024.0, group.toDouble()))} ${units[group]}"
 }

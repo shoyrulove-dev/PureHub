@@ -1,52 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"],
-  "installCommand": "cd pwa && npm install && cd .. && python3 -m pip install --break-system-packages -r requirements.txt",
+  "installCommand": "cd pwa && npm ci",
   "buildCommand": "cd pwa && npm run build",
   "outputDirectory": "pwa/dist",
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60
-    }
-  },
-  "crons": [
-    {
-      "path": "/public-api/support-sync",
-      "schedule": "15 5 * * *"
-    },
-    {
-      "path": "/public-api/support-sync",
-      "schedule": "15 11 * * *"
-    },
-    {
-      "path": "/public-api/support-sync",
-      "schedule": "15 17 * * *"
-    },
-    {
-      "path": "/public-api/support-sync",
-      "schedule": "15 23 * * *"
-    },
-    {
-      "path": "/public-api/growth-automation",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/public-api/growth-metrics",
-      "schedule": "0 14 * * *"
-    }
-  ],
   "rewrites": [
     {
+      "source": "/admin-advanced.css",
+      "destination": "https://purehub-command-center.vercel.app/admin-advanced.css"
+    },
+    {
       "source": "/public-api/:path*",
-      "destination": "/api/index?__purehub_path=/public-api/:path*"
+      "destination": "https://purehub-command-center.vercel.app/public-api/:path*"
     },
     {
       "source": "/admin/:path*",
-      "destination": "/api/index?__purehub_path=/admin/:path*"
-    },
-    {
-      "source": "/assets/:path*",
-      "destination": "/api/index?__purehub_path=/assets/:path*"
+      "destination": "https://purehub-command-center.vercel.app/admin/:path*"
     }
   ]
 }

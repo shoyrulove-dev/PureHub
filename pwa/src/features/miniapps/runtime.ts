@@ -10,8 +10,8 @@ export type MiniAppRuntime = {
 const cameraTools = new Set<MiniAppId>(['qr-studio', 'ocr-text', 'color-grabber', 'smart-flashlight'])
 const microphoneTools = new Set<MiniAppId>(['decibel-meter', 'speaker-cleaner'])
 const motionTools = new Set<MiniAppId>(['compass', 'bubble-level'])
-const fileTools = new Set<MiniAppId>(['doc-to-pdf', 'ocr-text', 'color-grabber', 'wallpaper-changer'])
-const lazyTools = new Set<MiniAppId>(['qr-studio', 'zen-pomodoro', 'zen-breath', 'ocr-text', 'password-vault'])
+const fileTools = new Set<MiniAppId>(['doc-to-pdf', 'ocr-text', 'color-grabber', 'photo-privacy', 'deep-cleaner', 'file-studio', 'screen-recorder', 'wallpaper-changer'])
+const lazyTools = new Set<MiniAppId>(['qr-studio', 'zen-pomodoro', 'zen-breath', 'ocr-text', 'photo-privacy', 'deep-cleaner', 'password-vault'])
 
 export function getMiniAppRuntime(id: MiniAppId): MiniAppRuntime {
   const capabilities: MiniAppRuntime['capabilities'] = ['local-storage']

@@ -49,3 +49,5 @@ marketing/tiktok-review/
 .tools/
 artifacts/
 .tmp/
+
+.env*

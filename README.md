@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 25 free, ad-free mini apps. Private by default, open source, community built." />
+  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 26 free, ad-free mini apps. Private by default, open source, community built." />
 </p>
 
 <h1 align="center">PureHub</h1>
@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-command-center-ci.yml"><img alt="Web and Command Center CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-command-center-ci.yml/badge.svg" /></a>
+  <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml"><img alt="Web CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml/badge.svg" /></a>
   <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/android-ci.yml"><img alt="Android CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/android-ci.yml/badge.svg" /></a>
   <a href="https://github.com/shoyrulove-dev/PureHub/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/shoyrulove-dev/PureHub?include_prereleases&sort=semver" /></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-0f766e.svg" /></a>
@@ -26,7 +26,7 @@
 
 ## What is PureHub?
 
-PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 24 practical tools plus one community hub in a consistent interface.
+PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 25 practical tools plus one community hub in a consistent interface.
 
 Typical uses include scanning or creating a QR code, running a Pomodoro session, extracting text from an image, converting units, checking a level or compass, splitting a bill, tracking expenses, and following a guided breathing exercise.
 
@@ -53,13 +53,13 @@ Start with the highest-demand workflows:
 | Changelog | [hub.blissbiovn.com/en/changelog](https://hub.blissbiovn.com/en/changelog) |
 | Community and feedback | [hub.blissbiovn.com/en/community](https://hub.blissbiovn.com/en/community) |
 
-## The 25 mini-app experiences
+## The 26 mini-app experiences
 
 | Category | Included tools |
 | --- | --- |
 | Zen & Time | Lunar Calendar, Zen Habit, Zen Pomodoro, Zen Breath |
 | Measure & Tools | Compass, Bubble Level, Decibel Meter, Smart Flashlight, Unit Converter |
-| Vision & Documents | QR Studio, Doc to PDF, OCR Studio, Color Grabber |
+| Vision & Documents | QR Studio, Doc to PDF, OCR Studio, Color Grabber, Photo Privacy |
 | Security & Audio | Speaker Cleaner, Deep Cleaner, Wi-Fi Analyzer, Password Vault, Wallpaper Changer |
 | Files & Creator | Authenticator Vault, File Studio, Screen Recorder |
 | Finance & Community | Bill Splitter, Expense Tracker, Decision Wheel, PureHub Community |
@@ -92,10 +92,9 @@ Privacy-first does not mean every feature has completed an independent security 
 | --- | --- | --- |
 | Web/PWA | React 19, TypeScript, Vite, Tailwind CSS | Installable multilingual web experience with offline support |
 | Android | Kotlin, Jetpack Compose, CameraX, Room, ZXing, ML Kit/Tesseract flavors | Native offline-first app for Android 8.0+ |
-| Command Center | FastAPI, Jinja, MongoDB | Release, community-support, publishing, and aggregate growth operations |
 | Hosting/automation | Vercel, GitHub Actions | Web deployment, CI, signed Android releases, checksums, and privacy gates |
 
-The public app supports English, Vietnamese, and Chinese routes. User content is stored locally for tools designed around private on-device workflows. The optional Command Center is an operator service and is not required to use the mini apps.
+The public app supports English, Vietnamese, and Chinese routes. User content is stored locally for tools designed around private on-device workflows. The operator backend is deployed separately from a private repository and is not required to use the mini apps.
 
 ## Run locally
 
@@ -137,34 +136,19 @@ The standard flavor keeps ML Kit OCR for recognition quality. The `fdroid` flavo
 
 FOSS store distribution is being introduced in stages: signed developer builds go to IzzyOnDroid review first, followed by an official F-Droid source-build submission after scanner feedback is resolved. See the [distribution status and copy-ready submission dossier](docs/DISTRIBUTION_SUBMISSION.md). PureHub does not claim an IzzyOnDroid or F-Droid listing until a public package page exists.
 
-### Command Center
-
-Requirements: Python 3.12+ and MongoDB.
-
-```bash
-python -m venv .venv
-# Activate the virtual environment for your shell, then:
-pip install -r requirements.txt
-uvicorn command_center.main:app --reload
-```
-
-Copy only the environment values you need into `command_center/.env`. Never commit API keys, signing files, passwords, or refresh tokens.
-
 ## Repository map
 
 | Path | Contents |
 | --- | --- |
 | [`pwa/`](pwa/) | React PWA, mini-app surfaces, localization, SEO, and public pages |
 | [`app/`](app/) | Native Android application |
-| [`command_center/`](command_center/) | Admin dashboard, release hub, support monitor, and automation |
-| [`api/`](api/) | Vercel serverless entry point |
-| [`.github/workflows/`](.github/workflows/) | Web, backend, Android CI, and signed release pipelines |
+| [`.github/workflows/`](.github/workflows/) | Web and Android CI plus signed release pipelines |
 | [`docs/`](docs/) | Security and community-operation documentation |
 | [`marketing/`](marketing/) | Brand assets, screenshots, and reproducible demo-video tooling |
 
 ## Releases
 
-The latest source candidate is PureHub 1.0.0-beta.20. Signed Android artifacts are attached to its GitHub release after CI and physical-device verification. Each Android release provides:
+The current development source is PureHub 1.0.0-beta.21. The latest published preview remains beta.20 until beta.21 passes CI and physical-device verification. Signed Android artifacts are attached to each GitHub release after verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

@@ -31,7 +31,7 @@ export function SiteSeoHelmet({ lang, pageId }: SiteSeoHelmetProps) {
       <meta property="og:image" content={`${SITE_ORIGIN}/og-image.png`} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:image:alt" content="PureHub – 25 free, ad-free mini apps" />
+      <meta property="og:image:alt" content="PureHub – 26 free, ad-free mini apps" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />

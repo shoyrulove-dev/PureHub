@@ -69,6 +69,7 @@ import com.purehub.app.ui.screens.HomeScreen
 import com.purehub.app.ui.screens.LunarCalendarScreen
 import com.purehub.app.ui.screens.OcrTextExtractorCard
 import com.purehub.app.ui.screens.PasswordVaultCard
+import com.purehub.app.ui.screens.PhotoPrivacyScreen
 import com.purehub.app.ui.screens.AuthenticatorVaultCard
 import com.purehub.app.ui.screens.FileStudioCard
 import com.purehub.app.ui.screens.PomodoroCard
@@ -309,6 +310,7 @@ private fun MiniAppScreen(
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
             )
         }
+        MiniAppId.PHOTO_PRIVACY -> PhotoPrivacyScreen(innerPadding = innerPadding)
         MiniAppId.DEEP_CLEANER -> CleanerScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.SPEAKER_CLEANER -> ScrollHost(innerPadding) { SpeakerCleanerCard() }
         MiniAppId.WIFI_ANALYZER -> ScrollHost(innerPadding) { WifiAnalyzerCard() }

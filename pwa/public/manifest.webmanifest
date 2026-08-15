@@ -1,7 +1,7 @@
 {
   "name": "PureHub",
   "short_name": "PureHub",
-  "description": "25 free, ad-free, privacy-first mini apps that work offline.",
+  "description": "26 free, ad-free, privacy-first mini apps that work offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

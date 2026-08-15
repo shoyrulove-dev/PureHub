@@ -1,13 +1,12 @@
 {
   "name": "purehub-pwa",
   "private": true,
-  "version": "1.0.0-beta.20",
+  "version": "1.0.0-beta.21",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:admin && tsc -b && vite build && node scripts/validate-prerender.mjs",
-    "build:admin": "tailwindcss -i src/admin-advanced.css -o public/admin-advanced.css --minify",
+    "build": "tsc -b && vite build && node scripts/validate-prerender.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

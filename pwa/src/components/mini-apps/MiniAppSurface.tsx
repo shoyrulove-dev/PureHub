@@ -25,7 +25,8 @@ const EverydayFlagshipSurface = lazy(() => import('./surfaces/EverydayFlagshipSu
 const AuthenticatorVaultSurface = lazy(() => import('./surfaces/AuthenticatorVaultSurface'))
 const FileStudioSurface = lazy(() => import('./surfaces/FileStudioSurface'))
 const ScreenRecorderSurface = lazy(() => import('./surfaces/ScreenRecorderSurface'))
-const StoragePrivacySurface = lazy(() => import('./surfaces/StoragePrivacySurface'))
+const DeepCleanerFlagship = lazy(() => import('./surfaces/DeepCleanerFlagship'))
+const PhotoPrivacySurface = lazy(() => import('./surfaces/PhotoPrivacySurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -58,7 +59,9 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'speaker-cleaner':
       return <LazyTool><SpeakerCleanerFlagship /></LazyTool>
     case 'deep-cleaner':
-      return <LazyTool><StoragePrivacySurface /></LazyTool>
+      return <LazyTool><DeepCleanerFlagship /></LazyTool>
+    case 'photo-privacy':
+      return <LazyTool><PhotoPrivacySurface /></LazyTool>
     case 'wifi-analyzer':
       return <LazyTool><EverydayFlagshipSurface mode="wifi-analyzer" /></LazyTool>
     case 'password-vault':

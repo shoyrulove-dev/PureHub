@@ -11,6 +11,7 @@ import {
   FolderArchive,
   Flashlight,
   Gauge,
+  Images,
   KeyRound,
   MonitorUp,
   Palette,
@@ -54,6 +55,7 @@ export type MiniAppId =
   | 'color-grabber'
   | 'speaker-cleaner'
   | 'deep-cleaner'
+  | 'photo-privacy'
   | 'wifi-analyzer'
   | 'password-vault'
   | 'wallpaper-changer'
@@ -286,6 +288,15 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     titleKey: 'miniApps.colorGrabber.title',
     summaryKey: 'miniApps.colorGrabber.summary',
     slugs: seoSlugs('color-grabber'),
+  },
+  {
+    id: 'photo-privacy',
+    tabId: 'vision',
+    icon: Images,
+    titleKey: 'miniApps.photoPrivacy.title',
+    summaryKey: 'miniApps.photoPrivacy.summary',
+    slugs: seoSlugs('photo-privacy'),
+    flagship: true,
   },
   {
     id: 'speaker-cleaner',
