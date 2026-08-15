@@ -13,6 +13,10 @@
       "destination": "https://purehub-command-center.vercel.app/public-api/:path*"
     },
     {
+      "source": "/admin",
+      "destination": "https://purehub-command-center.vercel.app/admin"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "https://purehub-command-center.vercel.app/admin/:path*"
     }
