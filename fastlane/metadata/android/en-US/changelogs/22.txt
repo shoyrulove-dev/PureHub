@@ -1,0 +1,1 @@
+Deep Cleaner now has a flagship cleanup workflow across Android and the PWA. Photo Privacy is a separate local metadata-removal tool, bringing the synchronized catalog to 26 mini apps. Android also receives the Aurora Phoenix launch splash, while release and distribution metadata are aligned with beta21.
