@@ -54,7 +54,7 @@ export function DownloadPage() {
           PureHub for Android
         </h1>
         <p className="mt-3 max-w-2xl leading-7 text-slate-600 dark:text-slate-300">
-          Free, ad-free, and open source. Downloads are published through GitHub with a SHA-256 checksum so every build can be verified.
+          Free, ad-free, and open source. Share this page as the stable download link; it always shows the current signed GitHub build and its SHA-256 checksum.
         </p>
       </div>
 
