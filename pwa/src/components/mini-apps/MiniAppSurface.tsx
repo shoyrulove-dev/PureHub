@@ -22,6 +22,10 @@ const DocumentSuiteSurface = lazy(() => import('./surfaces/DocumentSuiteSurface'
 const FinanceSuiteSurface = lazy(() => import('./surfaces/FinanceSuiteSurface'))
 const SensorSuiteSurface = lazy(() => import('./surfaces/SensorSuiteSurface'))
 const EverydayFlagshipSurface = lazy(() => import('./surfaces/EverydayFlagshipSurface'))
+const AuthenticatorVaultSurface = lazy(() => import('./surfaces/AuthenticatorVaultSurface'))
+const FileStudioSurface = lazy(() => import('./surfaces/FileStudioSurface'))
+const ScreenRecorderSurface = lazy(() => import('./surfaces/ScreenRecorderSurface'))
+const StoragePrivacySurface = lazy(() => import('./surfaces/StoragePrivacySurface'))
 
 export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
   switch (miniAppId) {
@@ -54,11 +58,15 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
     case 'speaker-cleaner':
       return <LazyTool><SpeakerCleanerFlagship /></LazyTool>
     case 'deep-cleaner':
-      return <LazyTool><EverydayFlagshipSurface mode="deep-cleaner" /></LazyTool>
+      return <LazyTool><StoragePrivacySurface /></LazyTool>
     case 'wifi-analyzer':
       return <LazyTool><EverydayFlagshipSurface mode="wifi-analyzer" /></LazyTool>
     case 'password-vault':
       return <LazyTool><PasswordVaultSurface /></LazyTool>
+    case 'authenticator-vault':
+      return <LazyTool><AuthenticatorVaultSurface /></LazyTool>
+    case 'file-studio':
+      return <LazyTool><FileStudioSurface /></LazyTool>
     case 'wallpaper-changer':
       return <LazyTool><EverydayFlagshipSurface mode="wallpaper-changer" /></LazyTool>
     case 'bill-splitter':
@@ -69,6 +77,8 @@ export function MiniAppSurface({ miniAppId }: MiniAppSurfaceProps) {
       return <LazyTool><EverydayFlagshipSurface mode="decision-wheel" /></LazyTool>
     case 'community-pro-unlock':
       return <LazyTool><EverydayFlagshipSurface mode="community" /></LazyTool>
+    case 'screen-recorder':
+      return <LazyTool><ScreenRecorderSurface /></LazyTool>
     default:
       return null
   }

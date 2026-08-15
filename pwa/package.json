@@ -1,7 +1,7 @@
 {
   "name": "purehub-pwa",
   "private": true,
-  "version": "1.0.0-beta.19",
+  "version": "1.0.0-beta.20",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
+    "fflate": "^0.8.2",
     "i18next": "^26.3.6",
     "i18next-browser-languagedetector": "^8.2.1",
     "idb": "^8.0.3",

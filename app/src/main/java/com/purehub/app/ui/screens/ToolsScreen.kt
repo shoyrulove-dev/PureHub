@@ -161,9 +161,12 @@ private fun toolFriendlySummary(tool: MiniAppId): String = when (tool) {
     MiniAppId.SPEAKER_CLEANER -> "Play a controlled tone for residual water."
     MiniAppId.WIFI_ANALYZER -> "Inspect nearby signals and Wi-Fi channels."
     MiniAppId.PASSWORD_VAULT -> "Encrypted local credentials with device protection."
+    MiniAppId.AUTHENTICATOR_VAULT -> "Offline 2FA codes protected by your device lock."
+    MiniAppId.FILE_STUDIO -> "Hash, archive and share local files privately."
     MiniAppId.WALLPAPER_CHANGER -> "Local wallpaper preview and rotation."
     MiniAppId.BILL_SPLITTER -> "Split items, tax and tips for a group."
     MiniAppId.EXPENSE_TRACKER -> "Private offline expense ledger."
     MiniAppId.DECISION_WHEEL -> "A fair local picker for quick choices."
     MiniAppId.COMMUNITY_UNLOCK -> "Telegram, GitHub and the PureHub roadmap."
+    MiniAppId.SCREEN_RECORDER -> "Record a local MP4 with Android's consent flow."
 }

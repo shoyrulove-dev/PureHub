@@ -11,9 +11,11 @@ import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.FlashlightOn
+import androidx.compose.material.icons.rounded.FolderZip
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Password
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Payments
 import androidx.compose.material.icons.rounded.PictureAsPdf
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
@@ -66,12 +69,15 @@ enum class MiniAppId(
     SPEAKER_CLEANER("Speaker Cleaner", MiniAppTab.SYSTEM_SECURITY, Icons.AutoMirrored.Rounded.VolumeUp),
     WIFI_ANALYZER("WiFi Analyzer", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.SignalWifi4Bar),
     PASSWORD_VAULT("Password Vault", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.Lock),
+    AUTHENTICATOR_VAULT("Authenticator Vault", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.Password),
+    FILE_STUDIO("File Studio", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.FolderZip),
     WALLPAPER_CHANGER("Wallpaper Changer", MiniAppTab.SYSTEM_SECURITY, Icons.Rounded.Wallpaper),
 
     BILL_SPLITTER("Bill Splitter", MiniAppTab.FINANCE_FUN, Icons.Rounded.Payments),
     EXPENSE_TRACKER("Expense Tracker", MiniAppTab.FINANCE_FUN, Icons.Rounded.AccountBalanceWallet),
     DECISION_WHEEL("Decision Wheel", MiniAppTab.FINANCE_FUN, Icons.Rounded.Casino),
     COMMUNITY_UNLOCK("PureHub Community", MiniAppTab.FINANCE_FUN, Icons.Rounded.Groups),
+    SCREEN_RECORDER("Screen Recorder", MiniAppTab.VISION, Icons.Rounded.Videocam),
 }
 
 val miniAppsByTab: Map<MiniAppTab, List<MiniAppId>> = MiniAppId.entries.groupBy { it.tab }

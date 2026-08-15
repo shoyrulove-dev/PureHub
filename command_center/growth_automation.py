@@ -159,7 +159,7 @@ def _fallback_content(channel: str, topic: str, day_number: int) -> str:
     if channel == "devto":
         return (
             f"# {topic}\n\n"
-            "PureHub is a free, ad-free, open-source collection of 22 utility tools. "
+            "PureHub is a free, ad-free, open-source collection of 25 utility tools. "
             "This article shares a practical engineering lesson from the project rather than a product pitch.\n\n"
             "## What we changed\n\nWe focused on clearer mobile interaction, local-first behavior, and measurable loading or testing improvements.\n\n"
             "## What we learned\n\nSmall utility features become easier to trust when their limits and data behavior are visible.\n\n"
@@ -169,7 +169,7 @@ def _fallback_content(channel: str, topic: str, day_number: int) -> str:
     if channel == "youtube":
         return (
             f"Title: {topic} | PureHub\n\n"
-            "Description:\nPureHub brings 22 free, ad-free mini tools into one privacy-first, open-source project. "
+            "Description:\nPureHub brings 25 free, ad-free mini tools into one privacy-first, open-source project. "
             "Find the project through the link on this channel profile.\n\n#PureHub #OpenSource #AndroidApps\n\n"
             "Short script:\n0–1s: Show the result.\n1–4s: State the problem.\n4–14s: Demonstrate the tool.\n"
             "14–19s: Free • No ads • Open source.\n19–22s: Ask which tool should improve next."
@@ -199,7 +199,7 @@ def _generate_bundle(topic: str, day_number: int, channels: list[str]) -> dict[s
             "channel_urls": channel_urls,
             "recent_platform_signals": performance_signals,
             "verified_facts": [
-                "PureHub contains 22 mini-apps and is free, ad-free, open source, and community-built.",
+                "PureHub contains 25 mini-apps and is free, ad-free, open source, and community-built.",
                 "PureHub's flagship lineup includes the Zen tools, QR Studio, the OCR + PDF Document Suite, Speaker Cleaner, the private Finance Suite, and the Sensor Suite.",
                 "The Early Testers program asks for anonymous device reports and has an initial goal of 20 useful reports.",
                 "The shared mobile UI has received a clarity, contrast, and one-handed-use pass.",

@@ -38,7 +38,7 @@ RELEASE_ANNOUNCEMENT = (
     "<b>PureHub has a new major update</b>\n\n"
     "- A cleaner, faster, and more friendly interface\n"
     "- Home, Tools, Community, and Settings navigation\n"
-    "- 22 mini apps with improved usability\n"
+    "- 25 mini apps with improved usability\n"
     "- Search, favorites, recent tools, and light/dark themes\n"
     "- Free for everyone, no ads, and open source\n\n"
     f"Try PureHub: {PUREHUB_URL}\n"
@@ -128,7 +128,7 @@ class TelegramBotManager:
         )
         bot.set_my_short_description("Free, no-ads, open-source everyday tools.")
         bot.set_my_description(
-            "PureHub is a community-built collection of 22 useful tools. Free for everyone, "
+            "PureHub is a community-built collection of 25 useful tools. Free for everyone, "
             "with no ads, no surprise paywalls, and open-source development on GitHub."
         )
         message = bot.send_message(chat_id, RELEASE_ANNOUNCEMENT, disable_web_page_preview=True)

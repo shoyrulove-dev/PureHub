@@ -172,7 +172,7 @@ def _analyze_message(
                 {
                     "role": "system",
                     "content": (
-                        "You triage support for PureHub, a free, no-ads, privacy-first, open-source collection of 22 tools. "
+                        "You triage support for PureHub, a free, no-ads, privacy-first, open-source collection of 25 tools. "
                         "Return JSON only with category, priority, language, requires_reply, and draft. Categories: question, "
                         "bug, feature_request, privacy, installation, opportunity, praise, spam, other. Priorities: low, normal, high, urgent. "
                         "Reply in the user's language, keep it friendly and concise, never invent a shipped fix, never request "

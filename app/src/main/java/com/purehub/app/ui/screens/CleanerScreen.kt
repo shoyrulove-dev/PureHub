@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +41,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun CleanerScreen(
@@ -168,6 +172,7 @@ fun CleanerScreen(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item { PhotoPrivacyCard() }
             item {
                 SectionHeader(
                     title = "Large Files",
@@ -206,6 +211,39 @@ fun CleanerScreen(
                         onToggleSelection = { viewModel.toggleSelection(it) },
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoPrivacyCard() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var selected by remember { mutableStateOf<android.net.Uri?>(null) }
+    var status by remember { mutableStateOf("Create a fresh JPEG without GPS, camera or author EXIF metadata.") }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> selected = uri; if (uri != null) status = "Photo selected. The original will remain unchanged." }
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/jpeg")) { destination ->
+        val source = selected
+        if (destination != null && source != null) scope.launch {
+            status = "Creating metadata-free copy..."
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, source))
+                    context.contentResolver.openOutputStream(destination)?.use { output -> bitmap.compress(Bitmap.CompressFormat.JPEG, 92, output) }
+                        ?: error("Output is unavailable")
+                }
+            }
+            status = if (result.isSuccess) "Privacy-clean JPEG saved. Embedded EXIF fields were not copied." else "Could not export this photo."
+        }
+    }
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Photo Privacy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { picker.launch(arrayOf("image/*")) }) { Text("Choose photo") }
+                androidx.compose.material3.OutlinedButton(onClick = { exporter.launch("purehub-privacy-clean.jpg") }, enabled = selected != null) { Text("Strip metadata") }
             }
         }
     }

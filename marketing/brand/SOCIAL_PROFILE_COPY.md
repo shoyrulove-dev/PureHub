@@ -11,11 +11,11 @@
 
 ## Short bio
 
-`22 free, ad-free, privacy-first mini tools. Open source and community-built.`
+`25 free, ad-free, privacy-first mini tools. Open source and community-built.`
 
 ## Full profile description
 
-`22 free, ad-free, privacy-first mini tools for Android and the web. Open source and community-built. Explore the tools, test releases, and help shape the roadmap.`
+`25 free, ad-free, privacy-first mini tools for Android and the web. Open source and community-built. Explore the tools, test releases, and help shape the roadmap.`
 
 ## YouTube profile
 
@@ -24,7 +24,7 @@
 - Description:
 
 ```text
-PureHub brings 22 free, ad-free, privacy-first mini tools to Android and the web.
+PureHub brings 25 free, ad-free, privacy-first mini tools to Android and the web.
 
 No mandatory account. No tracking-driven product design. Open source and built with the community.
 
@@ -42,7 +42,7 @@ Explore PureHub and help choose what we improve next.
 - Display name: `PureHub · Free Tools`
 - Preferred username: `@purehubapp`
 - Username fallbacks: `@purehubtools`, then `@purehubofficial`
-- Bio: `22 free tools · No ads · Privacy-first · Open source · Android + Web`
+- Bio: `25 free tools · No ads · Privacy-first · Open source · Android + Web`
 - Website: `https://hub.blissbiovn.com/en`
 - Avatar: `purehub-social-avatar-1024.png`
 - Category, when available: `Software` or `Science & Technology`
@@ -54,7 +54,7 @@ plain domain `hub.blissbiovn.com` in the bio until the account is eligible.
 ## Mastodon profile
 
 ```text
-22 free, ad-free, privacy-first mini tools for Android and the web. Open source and community-built.
+25 free, ad-free, privacy-first mini tools for Android and the web. Open source and community-built.
 
 Explore: https://hub.blissbiovn.com
 Source: https://github.com/shoyrulove-dev/PureHub
@@ -70,6 +70,6 @@ Enable profile discoverability and public search indexing.
 ## DEV profile
 
 - Name: `PureHub`
-- Summary: `Building 22 free, ad-free, privacy-first mini tools in public.`
+- Summary: `Building 25 free, ad-free, privacy-first mini tools in public.`
 - Website: `https://hub.blissbiovn.com`
 - Location: `Open source, community-built`

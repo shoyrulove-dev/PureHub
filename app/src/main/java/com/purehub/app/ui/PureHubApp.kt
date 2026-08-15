@@ -69,9 +69,12 @@ import com.purehub.app.ui.screens.HomeScreen
 import com.purehub.app.ui.screens.LunarCalendarScreen
 import com.purehub.app.ui.screens.OcrTextExtractorCard
 import com.purehub.app.ui.screens.PasswordVaultCard
+import com.purehub.app.ui.screens.AuthenticatorVaultCard
+import com.purehub.app.ui.screens.FileStudioCard
 import com.purehub.app.ui.screens.PomodoroCard
 import com.purehub.app.ui.screens.QrStudioScreen
 import com.purehub.app.ui.screens.ScanScreen
+import com.purehub.app.ui.screens.ScreenRecorderCard
 import com.purehub.app.ui.screens.SettingsScreen
 import com.purehub.app.ui.screens.SmartFlashlightCard
 import com.purehub.app.ui.screens.SpeakerCleanerCard
@@ -310,11 +313,14 @@ private fun MiniAppScreen(
         MiniAppId.SPEAKER_CLEANER -> ScrollHost(innerPadding) { SpeakerCleanerCard() }
         MiniAppId.WIFI_ANALYZER -> ScrollHost(innerPadding) { WifiAnalyzerCard() }
         MiniAppId.PASSWORD_VAULT -> ScrollHost(innerPadding) { PasswordVaultCard() }
+        MiniAppId.AUTHENTICATOR_VAULT -> ScrollHost(innerPadding) { AuthenticatorVaultCard() }
+        MiniAppId.FILE_STUDIO -> ScrollHost(innerPadding) { FileStudioCard() }
         MiniAppId.WALLPAPER_CHANGER -> ScrollHost(innerPadding) { WallpaperChangerCard() }
         MiniAppId.BILL_SPLITTER -> ScrollHost(innerPadding) { BillSplitterCard() }
         MiniAppId.EXPENSE_TRACKER -> ScrollHost(innerPadding) { ExpenseTrackerCard() }
         MiniAppId.DECISION_WHEEL -> ScrollHost(innerPadding) { DecisionWheelCard() }
         MiniAppId.COMMUNITY_UNLOCK -> CommunityScreen(innerPadding = innerPadding, embedded = false)
+        MiniAppId.SCREEN_RECORDER -> ScrollHost(innerPadding) { ScreenRecorderCard() }
     }
 }
 

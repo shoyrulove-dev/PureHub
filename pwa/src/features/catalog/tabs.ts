@@ -8,9 +8,11 @@ import {
   Compass,
   CreditCard,
   FileText,
+  FolderArchive,
   Flashlight,
   Gauge,
   KeyRound,
+  MonitorUp,
   Palette,
   QrCode,
   ShieldCheck,
@@ -59,6 +61,9 @@ export type MiniAppId =
   | 'expense-tracker'
   | 'decision-wheel'
   | 'community-pro-unlock'
+  | 'authenticator-vault'
+  | 'file-studio'
+  | 'screen-recorder'
 
 export type TabDefinition = {
   id: TabId
@@ -81,10 +86,7 @@ export type MiniAppDefinition = {
   flagship?: boolean
 }
 
-type SeoBackedMiniAppId = Exclude<
-  MiniAppId,
-  'community-pro-unlock' | 'smart-flashlight' | 'deep-cleaner' | 'wifi-analyzer' | 'wallpaper-changer'
->
+type SeoBackedMiniAppId = Exclude<MiniAppId, never>
 
 function seoSlugs(id: SeoBackedMiniAppId): Record<SeoLanguage, string> {
   return {
@@ -327,6 +329,24 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     slugs: seoSlugs('password-vault'),
   },
   {
+    id: 'authenticator-vault',
+    tabId: 'security-audio',
+    icon: KeyRound,
+    titleKey: 'miniApps.authenticatorVault.title',
+    summaryKey: 'miniApps.authenticatorVault.summary',
+    slugs: seoSlugs('authenticator-vault'),
+    flagship: true,
+  },
+  {
+    id: 'file-studio',
+    tabId: 'security-audio',
+    icon: FolderArchive,
+    titleKey: 'miniApps.fileStudio.title',
+    summaryKey: 'miniApps.fileStudio.summary',
+    slugs: seoSlugs('file-studio'),
+    flagship: true,
+  },
+  {
     id: 'wallpaper-changer',
     tabId: 'security-audio',
     icon: Wallpaper,
@@ -370,11 +390,16 @@ export const MINI_APP_ITEMS: MiniAppDefinition[] = [
     icon: ShieldCheck,
     titleKey: 'miniApps.communityUnlock.title',
     summaryKey: 'miniApps.communityUnlock.summary',
-    slugs: {
-      en: 'community-pro-unlock',
-      vi: 'mo-khoa-cong-dong',
-      zh: 'she-qu-jie-suo',
-    },
+    slugs: seoSlugs('community-pro-unlock'),
+  },
+  {
+    id: 'screen-recorder',
+    tabId: 'vision',
+    icon: MonitorUp,
+    titleKey: 'miniApps.screenRecorder.title',
+    summaryKey: 'miniApps.screenRecorder.summary',
+    slugs: seoSlugs('screen-recorder'),
+    flagship: true,
   },
 ]
 

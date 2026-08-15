@@ -145,7 +145,7 @@ export function Dashboard() {
       {!query ? (
         <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-3.5 dark:border-violet-500/20 dark:bg-violet-500/5">
           <p className="eyebrow text-violet-700 dark:text-violet-300">Improve with us</p>
-          <h2 className="mt-1 text-lg font-bold text-slate-950 dark:text-white">22 flagship tools, shaped by real use</h2>
+          <h2 className="mt-1 text-lg font-bold text-slate-950 dark:text-white">25 flagship tools, shaped by real use</h2>
           <p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-400">Start with a favorite, then tell us what should feel simpler.</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {flagshipTools.map((tool) => <ToolCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={() => toggleFavorite(tool.id)} />)}

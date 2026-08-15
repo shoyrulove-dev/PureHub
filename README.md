@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 22 free, ad-free mini apps. Private by default, open source, community built." />
+  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 25 free, ad-free mini apps. Private by default, open source, community built." />
 </p>
 
 <h1 align="center">PureHub</h1>
@@ -26,7 +26,7 @@
 
 ## What is PureHub?
 
-PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 21 practical tools plus one community hub in a consistent interface.
+PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 24 practical tools plus one community hub in a consistent interface.
 
 Typical uses include scanning or creating a QR code, running a Pomodoro session, extracting text from an image, converting units, checking a level or compass, splitting a bill, tracking expenses, and following a guided breathing exercise.
 
@@ -53,7 +53,7 @@ Start with the highest-demand workflows:
 | Changelog | [hub.blissbiovn.com/en/changelog](https://hub.blissbiovn.com/en/changelog) |
 | Community and feedback | [hub.blissbiovn.com/en/community](https://hub.blissbiovn.com/en/community) |
 
-## The 22 mini-app experiences
+## The 25 mini-app experiences
 
 | Category | Included tools |
 | --- | --- |
@@ -61,6 +61,7 @@ Start with the highest-demand workflows:
 | Measure & Tools | Compass, Bubble Level, Decibel Meter, Smart Flashlight, Unit Converter |
 | Vision & Documents | QR Studio, Doc to PDF, OCR Studio, Color Grabber |
 | Security & Audio | Speaker Cleaner, Deep Cleaner, Wi-Fi Analyzer, Password Vault, Wallpaper Changer |
+| Files & Creator | Authenticator Vault, File Studio, Screen Recorder |
 | Finance & Community | Bill Splitter, Expense Tracker, Decision Wheel, PureHub Community |
 
 Some tools depend on device capabilities such as a camera, microphone, motion sensor, storage access, or location permission. Availability and precision can differ by browser and device.
@@ -163,7 +164,7 @@ Copy only the environment values you need into `command_center/.env`. Never comm
 
 ## Releases
 
-The latest source candidate is PureHub 1.0.0-beta.19. Signed Android artifacts are attached to its GitHub release after CI and physical-device verification. Each Android release provides:
+The latest source candidate is PureHub 1.0.0-beta.20. Signed Android artifacts are attached to its GitHub release after CI and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
@@ -187,7 +188,7 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, or join 
 
 The immediate priorities are reliability on real devices, deeper workflows for the most-used tools, accessibility, honest privacy boundaries, and community feedback. PureHub will remain free, ad-free, and open source.
 
-See the [complete 22-app flagship report](ALL_MINIAPPS_FLAGSHIP_REPORT_2026-08-10.md) for the current catalog, verification results, and video campaign status.
+See the [original 22-app flagship report](ALL_MINIAPPS_FLAGSHIP_REPORT_2026-08-10.md) for the previous catalog milestone, verification results, and video campaign status.
 
 ## License
 

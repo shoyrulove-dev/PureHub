@@ -27,6 +27,9 @@ export const SEO_MINI_APP_IDS = [
   'expense-tracker',
   'decision-wheel',
   'community-pro-unlock',
+  'authenticator-vault',
+  'file-studio',
+  'screen-recorder',
 ] as const
 
 export type SeoMiniAppId = (typeof SEO_MINI_APP_IDS)[number]
@@ -48,14 +51,14 @@ export type SeoSiteMetaEntry = SeoMetaEntry & { segment: string }
 
 export const seoSiteMeta: Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaEntry>> = {
   home: {
-    en: { segment: '', slug: '', title: 'PureHub – 22 Free Offline Mini Apps, No Ads', description: 'Use 22 free, ad-free mini apps for focus, measurement, scanning, privacy, finance and more. PureHub works offline and keeps data on your device.', keywords: ['free mini apps', 'offline tools', 'no ads apps', 'privacy-first PWA'] },
-    vi: { segment: '', slug: '', title: 'PureHub – 22 Mini App Miễn Phí, Offline, Không Quảng Cáo', description: 'Dùng 22 mini app miễn phí cho tập trung, đo lường, quét tài liệu, bảo mật và tài chính. PureHub chạy offline và giữ dữ liệu trên thiết bị.', keywords: ['mini app mien phi', 'cong cu offline', 'khong quang cao', 'PWA rieng tu'] },
-    zh: { segment: '', slug: '', title: 'PureHub – 22 个免费离线迷你应用，无广告', description: '使用 22 个免费迷你应用完成专注、测量、扫描、隐私和财务任务。PureHub 支持离线运行，数据保留在设备中。', keywords: ['免费迷你应用', '离线工具', '无广告应用', '隐私PWA'] },
+    en: { segment: '', slug: '', title: 'PureHub – 25 Free Offline Mini Apps, No Ads', description: 'Use 25 free, ad-free mini apps for focus, files, scanning, privacy, finance and more. PureHub works offline and keeps data on your device.', keywords: ['free mini apps', 'offline tools', 'no ads apps', 'privacy-first PWA'] },
+    vi: { segment: '', slug: '', title: 'PureHub – 25 Mini App Miễn Phí, Offline, Không Quảng Cáo', description: 'Dùng 25 mini app miễn phí cho tập trung, tệp, quét tài liệu, bảo mật và tài chính. PureHub chạy offline và giữ dữ liệu trên thiết bị.', keywords: ['mini app mien phi', 'cong cu offline', 'khong quang cao', 'PWA rieng tu'] },
+    zh: { segment: '', slug: '', title: 'PureHub – 25 个免费离线迷你应用，无广告', description: '使用 25 个免费迷你应用完成专注、文件、扫描、隐私和财务任务。PureHub 支持离线运行，数据保留在设备中。', keywords: ['免费迷你应用', '离线工具', '无广告应用', '隐私PWA'] },
   },
   tools: {
-    en: { segment: 'tools', slug: 'tools', title: 'All 22 Free Offline Tools | PureHub', description: 'Explore all 22 PureHub mini apps for focus, measurement, vision, security, audio, and finance—free, private, offline, and without ads.', keywords: ['free online tools', 'offline utility apps', 'privacy tools', 'no ads mini apps'] },
-    vi: { segment: 'tools', slug: 'tools', title: 'Tất Cả 22 Công Cụ Offline Miễn Phí | PureHub', description: 'Khám phá 22 mini app PureHub cho tập trung, đo lường, hình ảnh, bảo mật, âm thanh và tài chính—miễn phí, riêng tư, không quảng cáo.', keywords: ['cong cu online mien phi', 'mini app offline', 'cong cu rieng tu', 'khong quang cao'] },
-    zh: { segment: 'tools', slug: 'tools', title: '全部 22 个免费离线工具 | PureHub', description: '探索 PureHub 的 22 个专注、测量、视觉、安全、音频和财务工具，免费、私密、离线且无广告。', keywords: ['免费在线工具', '离线应用', '隐私工具', '无广告迷你应用'] },
+    en: { segment: 'tools', slug: 'tools', title: 'All 25 Free Offline Tools | PureHub', description: 'Explore all 25 PureHub mini apps for focus, files, vision, security, audio, and finance—free, private, offline, and without ads.', keywords: ['free online tools', 'offline utility apps', 'privacy tools', 'no ads mini apps'] },
+    vi: { segment: 'tools', slug: 'tools', title: 'Tất Cả 25 Công Cụ Offline Miễn Phí | PureHub', description: 'Khám phá 25 mini app PureHub cho tập trung, tệp, hình ảnh, bảo mật, âm thanh và tài chính—miễn phí, riêng tư, không quảng cáo.', keywords: ['cong cu online mien phi', 'mini app offline', 'cong cu rieng tu', 'khong quang cao'] },
+    zh: { segment: 'tools', slug: 'tools', title: '全部 25 个免费离线工具 | PureHub', description: '探索 PureHub 的 25 个专注、文件、视觉、安全、音频和财务工具，免费、私密、离线且无广告。', keywords: ['免费在线工具', '离线应用', '隐私工具', '无广告迷你应用'] },
   },
   community: {
     en: { segment: 'community', slug: 'community', title: 'PureHub Open-Source Community', description: 'Join the PureHub community to get support, suggest mini apps, report issues, and help build useful tools that remain free and ad-free.', keywords: ['PureHub community', 'open source community', 'suggest mini app', 'free no ads tools'] },
@@ -63,9 +66,9 @@ export const seoSiteMeta: Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaE
     zh: { segment: 'community', slug: 'community', title: 'PureHub 开源社区', description: '加入 PureHub 社区，获取支持、提出迷你应用建议、报告问题，并共同打造始终免费且无广告的实用工具。', keywords: ['PureHub社区', '开源社区', '迷你应用建议', '免费工具'] },
   },
   download: {
-    en: { segment: 'download', slug: 'download', title: 'Download PureHub for Android | Free, No Ads', description: 'Download the signed PureHub Android app or install the PWA to access 22 private, ad-free mini apps with strong offline support.', keywords: ['download PureHub Android', 'free no ads APK', 'offline PWA', 'signed Android app'] },
-    vi: { segment: 'download', slug: 'download', title: 'Tải PureHub Cho Android | Miễn Phí, Không Quảng Cáo', description: 'Tải ứng dụng Android PureHub đã ký hoặc cài PWA để dùng 22 mini app riêng tư, không quảng cáo và hỗ trợ offline mạnh.', keywords: ['tai PureHub Android', 'APK mien phi', 'PWA offline', 'khong quang cao'] },
-    zh: { segment: 'download', slug: 'download', title: '下载 PureHub Android 版 | 免费无广告', description: '下载已签名的 PureHub Android 应用或安装 PWA，使用 22 个私密、无广告且支持离线的迷你应用。', keywords: ['下载PureHub', '免费Android应用', '离线PWA', '无广告APK'] },
+    en: { segment: 'download', slug: 'download', title: 'Download PureHub for Android | Free, No Ads', description: 'Download the signed PureHub Android app or install the PWA to access 25 private, ad-free mini apps with strong offline support.', keywords: ['download PureHub Android', 'free no ads APK', 'offline PWA', 'signed Android app'] },
+    vi: { segment: 'download', slug: 'download', title: 'Tải PureHub Cho Android | Miễn Phí, Không Quảng Cáo', description: 'Tải ứng dụng Android PureHub đã ký hoặc cài PWA để dùng 25 mini app riêng tư, không quảng cáo và hỗ trợ offline mạnh.', keywords: ['tai PureHub Android', 'APK mien phi', 'PWA offline', 'khong quang cao'] },
+    zh: { segment: 'download', slug: 'download', title: '下载 PureHub Android 版 | 免费无广告', description: '下载已签名的 PureHub Android 应用或安装 PWA，使用 25 个私密、无广告且支持离线的迷你应用。', keywords: ['下载PureHub', '免费Android应用', '离线PWA', '无广告APK'] },
   },
   changelog: {
     en: { segment: 'changelog', slug: 'changelog', title: 'PureHub Changelog & Release Notes', description: 'Follow PureHub releases, UX improvements, bug fixes, and new mini apps across the free, ad-free, open-source utility platform.', keywords: ['PureHub changelog', 'release notes', 'mini app updates', 'open source releases'] },
@@ -580,6 +583,21 @@ export const seoMeta: SeoMetaDictionary = {
         '加入 PureHub 社区，提出应用建议、报告问题，并共同维护免费、开源、无广告的私密日常工具。',
       keywords: ['PureHub社区', '开源迷你应用', '免费无广告工具', '社区共建应用'],
     },
+  },
+  'authenticator-vault': {
+    en: { slug: 'authenticator-vault', title: 'Offline Authenticator App | Encrypted 2FA Vault', description: 'Generate TOTP two-factor authentication codes offline with encrypted on-device secrets, no account, no ads, and no tracking.', keywords: ['offline authenticator', 'TOTP generator', 'encrypted 2FA vault', 'authenticator no ads'] },
+    vi: { slug: 'kho-xac-thuc', title: 'Trình Xác Thực Offline | Kho 2FA Mã Hóa', description: 'Tạo mã TOTP offline với khóa 2FA được mã hóa ngay trên thiết bị, không tài khoản, không quảng cáo và không theo dõi.', keywords: ['trinh xac thuc offline', 'ma TOTP', 'kho 2FA ma hoa', 'xac thuc khong quang cao'] },
+    zh: { slug: 'yan-zheng-qi-bao-xian-ku', title: '离线验证器 | 加密 2FA 保险库', description: '离线生成 TOTP 双重验证码，密钥仅加密保存在设备上，无账户、无广告、无跟踪。', keywords: ['离线验证器', 'TOTP生成器', '加密2FA', '无广告验证器'] },
+  },
+  'file-studio': {
+    en: { slug: 'file-studio', title: 'Private File Studio | ZIP, SHA-256 and Local Share', description: 'Hash, archive, extract and share local files without uploading them to a cloud service. Free, private and ad-free.', keywords: ['local zip tool', 'SHA-256 file hash', 'private file share', 'offline file utility'] },
+    vi: { slug: 'xuong-tep', title: 'Xưởng Tệp Riêng Tư | ZIP, SHA-256 và Chia Sẻ', description: 'Băm, nén, giải nén và chia sẻ tệp cục bộ mà không tải chúng lên dịch vụ đám mây.', keywords: ['nen zip offline', 'bam tep SHA-256', 'chia se tep rieng tu', 'cong cu tep'] },
+    zh: { slug: 'wen-jian-gong-zuo-shi', title: '私密文件工作室 | ZIP、SHA-256 与本地分享', description: '无需上传云端即可在本地计算哈希、压缩、解压和分享文件。', keywords: ['本地ZIP工具', 'SHA-256文件哈希', '私密文件分享', '离线文件工具'] },
+  },
+  'screen-recorder': {
+    en: { slug: 'screen-recorder', title: 'Free Private Screen Recorder | No Uploads', description: 'Record a browser tab, window or screen with explicit permission, then preview and download locally without cloud uploads.', keywords: ['free screen recorder', 'browser screen recorder', 'private screen capture', 'screen recorder no ads'] },
+    vi: { slug: 'quay-man-hinh', title: 'Quay Màn Hình Miễn Phí | Không Tải Lên Cloud', description: 'Quay tab, cửa sổ hoặc màn hình với quyền rõ ràng rồi xem trước và tải cục bộ, không tải lên cloud.', keywords: ['quay man hinh mien phi', 'quay man hinh trinh duyet', 'quay rieng tu', 'khong quang cao'] },
+    zh: { slug: 'ping-mu-lu-zhi', title: '免费私密屏幕录制 | 不上传云端', description: '经明确授权录制浏览器标签页、窗口或屏幕，并在本地预览和下载。', keywords: ['免费屏幕录制', '浏览器录屏', '私密屏幕捕获', '无广告录屏'] },
   },
 }
 

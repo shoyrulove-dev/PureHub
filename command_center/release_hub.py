@@ -129,7 +129,7 @@ def _fallback_bundle(release: dict[str, Any]) -> dict[str, str]:
         "bluesky_en": short[:300],
         "mastodon_en": short[:500],
         "reddit_en": f"PureHub {version}: free, no-ads, open-source Android utilities\n\n{summary}\n\n{url}",
-        "hackernews_en": f"Show HN: PureHub {version} - 22 free, no-ads utility tools\n{url}",
+        "hackernews_en": f"Show HN: PureHub {version} - 25 free, no-ads utility tools\n{url}",
         "producthunt_en": f"PureHub {version} - 22 useful tools, free forever, no ads.",
         "linkedin_en": short,
         "facebook_en": short,
@@ -145,7 +145,7 @@ def generate_release_bundle(release_id: str) -> list[dict[str, Any]]:
         client, model = _ai_client()
         prompt = {
             "task": "Create an English-first launch content bundle for PureHub. Vietnamese and Chinese are secondary.",
-            "product": "PureHub - 22 free, no-ads, privacy-first, open-source utility tools",
+            "product": "PureHub - 25 free, no-ads, privacy-first, open-source utility tools",
             "release": release,
             "requirements": {
                 "json_only": True,
@@ -213,7 +213,7 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
         raise ValueError("Release not found.")
     fallback_title = f"I built PureHub {release['version']}: free, ad-free, open-source everyday tools"
     fallback_body = (
-        f"Hi everyone — I’m building PureHub, a community-driven collection of 22 privacy-first utility tools.\n\n"
+        f"Hi everyone — I’m building PureHub, a community-driven collection of 25 privacy-first utility tools.\n\n"
         f"{release.get('summary') or 'The project is free to use, contains no ads, and is open source.'}\n\n"
         "I’d value honest feedback on the mobile experience, which tools feel genuinely useful, and what should be simplified.\n\n"
         f"Source and release: {release.get('github_url') or f'https://github.com/{get_config_value("github_repo")}'}"
@@ -241,7 +241,7 @@ def generate_reddit_draft(release_id: str) -> dict[str, Any]:
                     "role": "user",
                     "content": json.dumps(
                         {
-                            "product": "PureHub — 22 free, no-ads, privacy-first, open-source utility tools",
+                            "product": "PureHub — 25 free, no-ads, privacy-first, open-source utility tools",
                             "release": release,
                             "requirements": {
                                 "title_max_characters": 150,

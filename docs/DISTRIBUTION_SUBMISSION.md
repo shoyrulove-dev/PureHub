@@ -16,13 +16,13 @@ Command Center stores these stages under **Release & system operations → FOSS 
 
 - App: PureHub
 - Application ID: `com.purehub.app`
-- Version: `1.0.0-beta.19`
+- Version: `1.0.0-beta.20`
 - Version code: `20`
 - License: MIT
 - Source: <https://github.com/shoyrulove-dev/PureHub>
-- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.19>
-- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid.apk>
-- F-Droid arm64 APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid-arm64-v8a.apk>
+- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.20>
+- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.20/PureHub-1.0.0-beta.20-fdroid.apk>
+- F-Droid arm64 APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.20/PureHub-1.0.0-beta.20-fdroid-arm64-v8a.apk>
 - Checksums: `SHA256SUMS.txt` attached to the same release.
 - Website: <https://hub.blissbiovn.com/en>
 - Issue tracker: <https://github.com/shoyrulove-dev/PureHub/issues>
@@ -42,7 +42,7 @@ Suggested categories: `Office`, `System`, `Time`, `Money`, and `Security`.
 Suggested summary:
 
 ```text
-22 private, offline Android utilities with no ads, analytics, or trackers.
+25 private, offline Android utilities with no ads, analytics, or trackers.
 ```
 
 Suggested build instructions:
@@ -52,7 +52,7 @@ Requirements: Git, JDK 17, and Android SDK API 36.
 
 git clone https://github.com/shoyrulove-dev/PureHub.git
 cd PureHub
-git checkout v1.0.0-beta.19
+git checkout v1.0.0-beta.20
 ./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidRelease
 ./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
 ! grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt
@@ -79,10 +79,10 @@ App name: PureHub
 Package ID: com.purehub.app
 License: MIT
 Source code: https://github.com/shoyrulove-dev/PureHub
-Latest release: https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.19
-APK: https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid.apk
+Latest release: https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.20
+APK: https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.20/PureHub-1.0.0-beta.20-fdroid.apk
 
-PureHub is a free, ad-free, offline-first collection of 22 Android utilities for scanning, OCR/PDF workflows, focus, measurement, finance, audio care, and privacy.
+PureHub is a free, ad-free, offline-first collection of 25 Android utilities for scanning, OCR/PDF workflows, focus, measurement, finance, audio care, files, creation, and privacy.
 
 Please use the APK whose filename ends in -fdroid.apk. This flavor uses ZXing and Tesseract, has no INTERNET permission, and has no ML Kit, Google Play Services, Firebase, ads, analytics, or trackers. English, Vietnamese, and Simplified Chinese OCR models are bundled for offline use.
 
