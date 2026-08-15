@@ -187,8 +187,9 @@ class CommunitySupportTests(unittest.TestCase):
         metrics = _sync_github_metrics()
 
         self.assertEqual(metrics["apk_downloads"], 11)
-        self.assertEqual(metrics["latest_downloads"], 9)
+        self.assertEqual(metrics["latest_downloads"], 7)
         response.raise_for_status.assert_called_once()
+        self.assertEqual(get.call_args.kwargs["params"], {"per_page": 100})
 
     @patch("command_center.community_support.update_support_sync_state")
     @patch("command_center.community_support._discover_devto", side_effect=lambda _keywords, limit: limit)

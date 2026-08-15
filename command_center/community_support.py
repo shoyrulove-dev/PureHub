@@ -1015,7 +1015,10 @@ def _sync_github_metrics() -> dict[str, int]:
     response = requests.get(
         f"https://api.github.com/repos/{repo}/releases",
         headers={"Accept": "application/vnd.github+json", "User-Agent": "PureHub-Community-Metrics/1.0"},
-        params={"per_page": 10},
+        # This is a cumulative product signal. Limiting the query to the ten
+        # newest releases made the displayed total decrease whenever a new
+        # release pushed an older one out of the window.
+        params={"per_page": 100},
         timeout=30,
     )
     response.raise_for_status()
@@ -1023,10 +1026,14 @@ def _sync_github_metrics() -> dict[str, int]:
     assets = [asset for release in releases for asset in (release.get("assets") or [])]
     apk_assets = [asset for asset in assets if str(asset.get("name") or "").lower().endswith(".apk")]
     latest_assets = (releases[0].get("assets") or []) if releases else []
+    latest_apk_assets = [
+        asset for asset in latest_assets
+        if str(asset.get("name") or "").lower().endswith(".apk")
+    ]
     return {
         "releases": len(releases),
         "apk_downloads": sum(int(asset.get("download_count") or 0) for asset in apk_assets),
-        "latest_downloads": sum(int(asset.get("download_count") or 0) for asset in latest_assets),
+        "latest_downloads": sum(int(asset.get("download_count") or 0) for asset in latest_apk_assets),
     }
 
 

@@ -622,8 +622,8 @@
             <div class="product-signal"><span>Visits</span><strong>{{ funnel.get('visit', 0) }}</strong></div>
             <div class="product-signal"><span>Tool opens</span><strong>{{ product_totals.get('open', 0) }} · {{ funnel_rates.get('tools_per_100_visits', 0) }}/100 visits</strong></div>
             <div class="product-signal"><span>Completed results</span><strong>{{ product_totals.get('complete', 0) }} · {{ product_growth.get('completion_rate', 0) }}%</strong></div>
-            <div class="product-signal"><span>APK download clicks</span><strong>{{ funnel.get('apk_download_click', 0) }} · {{ funnel_rates.get('apk_download', 0) }}%</strong></div>
-            <div class="product-signal"><span>GitHub APK downloads</span><strong>{{ community_metrics.get('github', {}).get('metrics', {}).get('apk_downloads', 0) }}</strong></div>
+            <div class="product-signal" title="Clicks on Download signed APK inside the PureHub website. Direct visits and downloads on GitHub are not included."><span>Website → GitHub APK clicks</span><strong>{{ funnel.get('apk_download_click', 0) }} · {{ funnel_rates.get('apk_download', 0) }}%</strong></div>
+            <div class="product-signal" title="Cumulative APK asset downloads across public GitHub Releases. A download is not proof that the app was installed."><span>GitHub APK asset downloads</span><strong>{{ community_metrics.get('github', {}).get('metrics', {}).get('apk_downloads', 0) }}</strong></div>
             <div class="product-signal"><span>PWA installs accepted</span><strong>{{ funnel.get('pwa_install_accepted', 0) }} · {{ funnel_rates.get('pwa_accept', 0) }}%</strong></div>
             <div class="product-signal"><span>PWA standalone opens</span><strong>{{ funnel.get('installed_open', 0) }} · {{ funnel_rates.get('pwa_open', 0) }}%</strong></div>
             <div class="product-signal"><span>Legacy mixed downloads</span><strong>{{ funnel.get('download', 0) }}</strong></div>

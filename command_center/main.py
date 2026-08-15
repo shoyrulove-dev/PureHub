@@ -424,6 +424,10 @@ def _dashboard_context(
         "stats": get_user_stats,
         "release_publications": list_release_publications,
         "support_messages": lambda: list_support_messages(limit=100),
+        # Keep the visible inbox/thread loader compact, but give the monthly
+        # goal its complete data set. Reusing the first 100 messages and first
+        # 40 posts made older August feedback, views and Shorts disappear.
+        "goal_support_messages": lambda: list_support_messages(limit=2000),
         "active_support_messages": lambda: list_support_messages(
             statuses=active_support_statuses,
             limit=support_page_size,
@@ -435,6 +439,7 @@ def _dashboard_context(
         "support_sync_states": list_support_sync_states,
         "community_metrics_list": list_community_metrics,
         "growth_posts": lambda: list_growth_posts(40),
+        "goal_growth_posts": lambda: list_growth_posts(500),
         "growth_summary": get_growth_summary,
         "product_growth": get_product_growth_snapshot,
     }
@@ -562,8 +567,8 @@ def _dashboard_context(
     august_goal = build_august_growth_goal(
         config=config,
         community_metrics=loaded.get("community_metrics_list", []),
-        growth_posts=loaded.get("growth_posts", []),
-        support_messages=support_messages,
+        growth_posts=loaded.get("goal_growth_posts", []),
+        support_messages=loaded.get("goal_support_messages", []),
         support_metrics=loaded.get("support_metrics", {}),
         product_growth=loaded.get("product_growth", {}),
         reddit_connected=reddit_connection["connected"],
