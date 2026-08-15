@@ -1962,6 +1962,33 @@ def growth_reddit_publish_action(
         return _redirect_with_message(f"Reddit publishing failed: {exc}", "error")
 
 
+@admin_router.post("/growth/{post_id}/tiktok/complete")
+def growth_tiktok_complete_action(request: Request, post_id: str) -> RedirectResponse:
+    actor = require_admin_role(request, "superadmin", "editor")["username"]
+    row = get_growth_post(post_id)
+    if not row or row.get("channel") != "tiktok":
+        return _redirect_with_message("TikTok reminder not found.", "error")
+    if row.get("status") == "published":
+        return _redirect_with_message("This TikTok reminder is already marked as posted.", "info")
+    update_growth_post(
+        post_id,
+        {
+            "status": "published",
+            "external_url": "https://www.tiktok.com/@purehubapp",
+            "error_message": "",
+            "published_at": datetime.now(timezone.utc),
+        },
+    )
+    record_audit_log(
+        actor=actor,
+        action="complete_manual_tiktok_post",
+        target_type="growth_post",
+        target_id=post_id,
+        details={"topic": str(row.get("topic", ""))},
+    )
+    return _redirect_with_message("TikTok manual post marked as completed.", "success")
+
+
 @admin_router.get("/reddit/connect")
 def reddit_connect_action(request: Request) -> RedirectResponse:
     require_admin_role(request, "superadmin")

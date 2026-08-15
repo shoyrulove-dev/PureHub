@@ -781,6 +781,7 @@
               <div class="queue-body">
                 <textarea rows="7" readonly>{{ item.content }}</textarea>
                 {% if item.channel == 'youtube' and item.scheduled_at %}<p class="panel-copy" style="margin-top:.6rem">YouTube publish time: {{ item.scheduled_at }}</p>{% endif %}
+                {% if item.channel == 'tiktok' and item.scheduled_at %}<p class="panel-copy" style="margin-top:.6rem">TikTok manual reminder: {{ item.scheduled_at }}</p>{% endif %}
                 {% set post_metrics = item.metadata.get('metrics', {}) %}
                 {% if post_metrics %}<div class="support-stats" style="margin-top:.7rem">{% for name, value in post_metrics.items() %}<span class="badge">{{ name }} {{ value }}</span>{% endfor %}</div>{% endif %}
                 {% if item.error_message %}<p class="release-summary" style="color:var(--rose);margin-top:.7rem">{{ item.error_message }}</p>{% endif %}
@@ -791,6 +792,11 @@
                   {% endif %}
                   {% if item.channel == 'reddit' and item.status in ['ready_manual','failed'] %}
                     {% if reddit_connection.connected %}<form action="{{ admin_prefix }}/growth/{{ item.id }}/reddit/publish" method="post" class="row-actions" onsubmit="return confirm('Publish this reviewed post to Reddit now?');"><input name="subreddit" value="{{ reddit_connection.default_subreddit }}" aria-label="Subreddit" required /><button class="button primary" type="submit">Publish Reddit</button></form>{% else %}<a class="button" href="{{ admin_prefix }}/advanced#growth-autopilot-settings">Connect Reddit OAuth</a>{% endif %}
+                  {% endif %}
+                  {% if item.channel == 'tiktok' and item.status == 'ready_manual' %}
+                    <a class="button" href="{{ item.metadata.get('prepared_video_url', '#') }}" target="_blank" rel="noreferrer" download><svg class="icon"><use href="#i-file"/></svg>&nbsp;Video</a>
+                    <a class="button primary" href="https://www.tiktok.com/tiktokstudio/upload?lang=en" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-external"/></svg>&nbsp;TikTok Studio</a>
+                    <form action="{{ admin_prefix }}/growth/{{ item.id }}/tiktok/complete" method="post" onsubmit="return confirm('Mark this TikTok reminder as posted?');"><button class="button violet" type="submit"><svg class="icon"><use href="#i-check"/></svg>&nbsp;Posted</button></form>
                   {% endif %}
                 </div>
               </div>

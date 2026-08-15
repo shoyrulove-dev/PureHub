@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -229,7 +229,8 @@ private fun PhotoPrivacyCard() {
             status = "Creating metadata-free copy..."
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, source))
+                    val bitmap = context.contentResolver.openInputStream(source)?.use(BitmapFactory::decodeStream)
+                        ?: error("The selected image could not be decoded")
                     context.contentResolver.openOutputStream(destination)?.use { output -> bitmap.compress(Bitmap.CompressFormat.JPEG, 92, output) }
                         ?: error("Output is unavailable")
                 }
