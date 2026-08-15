@@ -708,8 +708,15 @@ def discover_opportunities() -> dict[str, Any]:
     scan_runs = max(3, min(int(get_config_value("opportunity_scan_runs_per_day", "4") or 4), 5))
     scan_slot = min(scan_runs - 1, int(local_now.hour * scan_runs / 24))
     slot_key = f"{local_now.date().isoformat()}:{scan_slot + 1}/{scan_runs}"
+    local_date = local_now.date().isoformat()
     state = get_support_sync_state("opportunities")
-    if state.get("last_slot_key") == slot_key:
+    recovery_run = (
+        state.get("last_slot_key") == slot_key
+        and scan_slot == scan_runs - 1
+        and daily_created < daily_minimum
+        and state.get("last_recovery_date") != local_date
+    )
+    if state.get("last_slot_key") == slot_key and not recovery_run:
         return {
             "enabled": True,
             "skipped": True,
@@ -724,7 +731,7 @@ def discover_opportunities() -> dict[str, Any]:
             "scan_runs": scan_runs,
             "channels": state.get("last_channels") or {},
         }
-    prior_scan_count = int(state.get("daily_scan_count") or 0) if state.get("daily_date") == local_now.date().isoformat() else 0
+    prior_scan_count = int(state.get("daily_scan_count") or 0) if state.get("daily_date") == local_date else 0
     if daily_created >= daily_cap:
         result = {
             "enabled": True,
@@ -745,7 +752,7 @@ def discover_opportunities() -> dict[str, Any]:
             {
                 "last_synced_at": now,
                 "last_slot_key": slot_key,
-                "daily_date": local_now.date().isoformat(),
+                "daily_date": local_date,
                 "daily_scan_count": prior_scan_count + 1,
                 "daily_created": daily_created,
                 "daily_minimum": daily_minimum,
@@ -759,7 +766,10 @@ def discover_opportunities() -> dict[str, Any]:
         )
         return result
     keywords = _opportunity_keywords()
-    total_limit = min(10, daily_cap - daily_created)
+    total_limit = min(
+        daily_minimum - daily_created if recovery_run else 10,
+        daily_cap - daily_created,
+    )
     functions = {"bluesky": _discover_bluesky, "mastodon": _discover_mastodon, "devto": _discover_devto}
     devto_limit = max(1, round(total_limit * 0.1))
     social_limit = total_limit - devto_limit
@@ -776,6 +786,7 @@ def discover_opportunities() -> dict[str, Any]:
         "daily_cap": daily_cap,
         "scan_slot": scan_slot + 1,
         "scan_runs": scan_runs,
+        "recovery_run": recovery_run,
         "channels": {},
     }
 
@@ -813,8 +824,9 @@ def discover_opportunities() -> dict[str, Any]:
         {
             "last_synced_at": datetime.now(timezone.utc),
             "last_slot_key": slot_key,
-            "daily_date": local_now.date().isoformat(),
+            "daily_date": local_date,
             "daily_scan_count": prior_scan_count + 1,
+            "last_recovery_date": local_date if recovery_run else state.get("last_recovery_date", ""),
             "daily_created": result["daily_created"],
             "daily_minimum": daily_minimum,
             "daily_cap": daily_cap,

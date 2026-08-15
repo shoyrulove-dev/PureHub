@@ -260,6 +260,60 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertTrue(result["skipped"])
         self.assertEqual(result["reason"], "This discovery window has already completed.")
 
+    @patch("command_center.community_support.update_support_sync_state")
+    @patch("command_center.community_support._discover_devto", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._discover_mastodon", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._discover_bluesky", side_effect=lambda _keywords, limit: limit)
+    @patch("command_center.community_support._opportunity_keywords", return_value=["offline app"])
+    @patch(
+        "command_center.community_support.get_support_sync_state",
+        return_value={"last_slot_key": "2026-08-10:4/4", "daily_date": "2026-08-10", "daily_scan_count": 4},
+    )
+    @patch("command_center.community_support.count_social_opportunities", return_value=7)
+    @patch("command_center.community_support.get_config_value")
+    @patch("command_center.community_support.datetime")
+    def test_final_window_runs_one_minimum_recovery(
+        self, mocked_datetime, config, _daily_count, _state, _keywords, bluesky, mastodon, devto, update_state
+    ) -> None:
+        mocked_datetime.now.return_value = datetime(2026, 8, 10, 15, 0, tzinfo=timezone.utc)
+        config.side_effect = lambda key, default="": {
+            "opportunity_monitor_enabled": "true",
+            "opportunity_daily_minimum": "10",
+            "opportunity_daily_limit": "30",
+            "opportunity_scan_runs_per_day": "4",
+            "growth_timezone": "Asia/Bangkok",
+        }.get(key, default)
+
+        result = discover_opportunities()
+
+        self.assertTrue(result["recovery_run"])
+        self.assertEqual(result["target"], 3)
+        self.assertEqual(result["daily_created"], 10)
+        saved_state = update_state.call_args.args[1]
+        self.assertEqual(saved_state["last_recovery_date"], "2026-08-10")
+
+    @patch("command_center.community_support.count_social_opportunities", return_value=7)
+    @patch(
+        "command_center.community_support.get_support_sync_state",
+        return_value={"last_slot_key": "2026-08-10:4/4", "last_recovery_date": "2026-08-10"},
+    )
+    @patch("command_center.community_support.get_config_value")
+    @patch("command_center.community_support.datetime")
+    def test_final_window_recovery_only_runs_once(self, mocked_datetime, config, _state, _daily_count) -> None:
+        mocked_datetime.now.return_value = datetime(2026, 8, 10, 15, 0, tzinfo=timezone.utc)
+        config.side_effect = lambda key, default="": {
+            "opportunity_monitor_enabled": "true",
+            "opportunity_daily_minimum": "10",
+            "opportunity_daily_limit": "30",
+            "opportunity_scan_runs_per_day": "4",
+            "growth_timezone": "Asia/Bangkok",
+        }.get(key, default)
+
+        result = discover_opportunities()
+
+        self.assertTrue(result["skipped"])
+        self.assertEqual(result["reason"], "This discovery window has already completed.")
+
     @patch("command_center.database.collection")
     def test_support_upsert_does_not_write_source_url_with_conflicting_operators(self, collection) -> None:
         support_messages = MagicMock()
