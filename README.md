@@ -38,6 +38,13 @@ Zen Habit, Zen Pomodoro, and Zen Breath now share a complete Zen Suite experienc
 
 ## Try it now
 
+Start with the highest-demand workflows:
+
+- [Bubble Level](https://hub.blissbiovn.com/en/bubble-level) — flat and edge modes, local zero calibration, adjustable tolerance, and private sensor readings.
+- [QR Studio](https://hub.blissbiovn.com/en/qr-studio) — inspect, scan, create, and keep useful codes locally.
+- [OCR Studio](https://hub.blissbiovn.com/en/ocr-text) — turn camera pages into editable text and searchable PDF without a cloud account.
+- [Download Android](https://hub.blissbiovn.com/en/download) — signed APKs, checksums, and architecture-specific builds.
+
 | Destination | Link |
 | --- | --- |
 | Homepage | [hub.blissbiovn.com/en](https://hub.blissbiovn.com/en) |
@@ -156,7 +163,7 @@ Copy only the environment values you need into `command_center/.env`. Never comm
 
 ## Releases
 
-The latest signed preview is [PureHub 1.0.0-beta.18](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.18). Each Android release provides:
+The latest source candidate is PureHub 1.0.0-beta.19. Signed Android artifacts are attached to its GitHub release after CI and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

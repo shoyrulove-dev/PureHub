@@ -195,8 +195,8 @@ export const seoMeta: SeoMetaDictionary = {
       slug: 'bubble-level',
       title: 'Offline Bubble Level | Fast Alignment Tool',
       description:
-        'Level surfaces quickly with an offline bubble level powered by device motion and private on-device logic.',
-      keywords: ['bubble level offline', 'alignment tool pwa', 'device motion level', 'no ads level app'],
+        'Use a free offline bubble level with flat and edge modes, saved zero calibration, adjustable tolerance, and no ads or tracking.',
+      keywords: ['bubble level offline', 'free bubble level no ads', 'phone spirit level', 'surface alignment tool', 'private sensor app'],
     },
     vi: {
       slug: 'thuoc-thuy',

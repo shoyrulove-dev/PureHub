@@ -565,6 +565,7 @@ def _dashboard_context(
         growth_posts=loaded.get("growth_posts", []),
         support_messages=support_messages,
         support_metrics=loaded.get("support_metrics", {}),
+        product_growth=loaded.get("product_growth", {}),
         reddit_connected=reddit_connection["connected"],
     ) if view == "overview" else {}
     support_sync_states = loaded.get("support_sync_states", [])

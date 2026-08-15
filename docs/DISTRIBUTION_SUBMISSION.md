@@ -16,14 +16,14 @@ Command Center stores these stages under **Release & system operations → FOSS 
 
 - App: PureHub
 - Application ID: `com.purehub.app`
-- Version: `1.0.0-beta.18`
-- Version code: `18`
+- Version: `1.0.0-beta.19`
+- Version code: `20`
 - License: MIT
 - Source: <https://github.com/shoyrulove-dev/PureHub>
-- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.18>
-- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.18/PureHub-1.0.0-beta.18-fdroid.apk>
-- F-Droid arm64 APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.18/PureHub-1.0.0-beta.18-fdroid-arm64-v8a.apk>
-- Universal APK SHA-256: `3193981a5a2325d6108c1836928ce97d879d962b89ed1a9e0c18bbeec5eae396`
+- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.19>
+- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid.apk>
+- F-Droid arm64 APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid-arm64-v8a.apk>
+- Checksums: `SHA256SUMS.txt` attached to the same release.
 - Website: <https://hub.blissbiovn.com/en>
 - Issue tracker: <https://github.com/shoyrulove-dev/PureHub/issues>
 
@@ -52,7 +52,7 @@ Requirements: Git, JDK 17, and Android SDK API 36.
 
 git clone https://github.com/shoyrulove-dev/PureHub.git
 cd PureHub
-git checkout v1.0.0-beta.18
+git checkout v1.0.0-beta.19
 ./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidRelease
 ./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
 ! grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt
@@ -79,15 +79,14 @@ App name: PureHub
 Package ID: com.purehub.app
 License: MIT
 Source code: https://github.com/shoyrulove-dev/PureHub
-Latest release: https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.18
-APK: https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.18/PureHub-1.0.0-beta.18-fdroid.apk
+Latest release: https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.19
+APK: https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.19/PureHub-1.0.0-beta.19-fdroid.apk
 
 PureHub is a free, ad-free, offline-first collection of 22 Android utilities for scanning, OCR/PDF workflows, focus, measurement, finance, audio care, and privacy.
 
 Please use the APK whose filename ends in -fdroid.apk. This flavor uses ZXing and Tesseract, has no INTERNET permission, and has no ML Kit, Google Play Services, Firebase, ads, analytics, or trackers. English, Vietnamese, and Simplified Chinese OCR models are bundled for offline use.
 
-The universal APK SHA-256 is:
-3193981a5a2325d6108c1836928ce97d879d962b89ed1a9e0c18bbeec5eae396
+Verify the universal APK against `SHA256SUMS.txt` attached to the release.
 
 FOSS flavor details and verification commands:
 https://github.com/shoyrulove-dev/PureHub/blob/main/docs/FDROID_FLAVOR.md

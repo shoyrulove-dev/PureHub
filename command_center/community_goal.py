@@ -11,7 +11,7 @@ AUGUST_2026_GOALS = {
     "engagement": 120,
     "feedback": 20,
     "videos": 12,
-    "leads": 600,
+    "completions": 100,
 }
 
 
@@ -43,6 +43,7 @@ def build_august_growth_goal(
     growth_posts: list[dict[str, Any]],
     support_messages: list[dict[str, Any]],
     support_metrics: dict[str, Any],
+    product_growth: dict[str, Any] | None = None,
     reddit_connected: bool,
     now: datetime | None = None,
 ) -> dict[str, Any]:
@@ -109,13 +110,14 @@ def build_august_growth_goal(
         if item.get("channel") == "youtube" and item.get("status") == "ready_upload" and metadata.get("purpose") != "oauth-upload-test":
             ready_video_uploads += 1
 
+    product_totals = (product_growth or {}).get("totals") or {}
     values = {
         "audience": audience,
         "views": views,
         "engagement": engagement,
         "feedback": feedback,
         "videos": videos,
-        "leads": int(support_metrics.get("social_leads_month", 0) or 0),
+        "completions": max(0, int(product_totals.get("complete", 0) or 0)),
     }
     labels = {
         "audience": "Community",
@@ -123,7 +125,7 @@ def build_august_growth_goal(
         "engagement": "Interactions",
         "feedback": "Useful feedback",
         "videos": "Short demos",
-        "leads": "Qualified social leads",
+        "completions": "Useful results",
     }
     notes = {
         "audience": "Telegram members + Bluesky and Mastodon followers",
@@ -131,7 +133,7 @@ def build_august_growth_goal(
         "engagement": "Audience likes, reactions, comments and reposts (outbound replies are excluded)",
         "feedback": "Questions, device reports, bugs, installation, privacy and feature requests in August",
         "videos": "YouTube Shorts published or scheduled during August",
-        "leads": "Relevant public questions discovered for helpful, human-approved replies",
+        "completions": "Core mini-app workflows completed anonymously",
     }
     milestones = [
         {
@@ -144,7 +146,7 @@ def build_august_growth_goal(
         }
         for key, target in AUGUST_2026_GOALS.items()
     ]
-    weights = {"audience": 0.25, "views": 0.20, "engagement": 0.20, "feedback": 0.10, "videos": 0.10, "leads": 0.15}
+    weights = {"audience": 0.25, "views": 0.20, "engagement": 0.15, "feedback": 0.15, "videos": 0.10, "completions": 0.15}
     outcome_percent = round(sum(item["percent"] * weights[item["key"]] for item in milestones))
 
     campaign_start_raw = str(config.get("growth_campaign_start_date") or "2026-08-02")
@@ -186,7 +188,7 @@ def build_august_growth_goal(
 
     return {
         "label": "August 2026",
-        "headline": "Reach 100 real members through 600 qualified conversations, useful demos, and visible product improvements.",
+        "headline": "Reach 100 community members through useful tools, honest demos, and visible product improvements.",
         "timeline_percent": timeline_percent,
         "elapsed_days": elapsed_days,
         "days_total": 31,
@@ -198,8 +200,10 @@ def build_august_growth_goal(
         "actions": actions,
         "weeks": weeks,
         "automation": [
-            {"time": "07:00", "label": "Discover up to 27 qualified questions"},
-            {"time": "12:00", "label": "Review the best 8-12 replies"},
+            {"time": "00:15", "label": "Discover useful public questions (run 1/4)"},
+            {"time": "06:15", "label": "Refresh discovery without lowering relevance"},
+            {"time": "12:15", "label": "Review the best human-approved replies"},
+            {"time": "18:15", "label": "Final discovery run (daily cap 30)"},
             {"time": "19:00", "label": "Generate & publish"},
             {"time": "21:00", "label": "Refresh metrics"},
         ],

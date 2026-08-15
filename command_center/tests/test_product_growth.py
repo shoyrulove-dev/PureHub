@@ -43,6 +43,9 @@ class ProductGrowthTests(unittest.TestCase):
         funnel_collection.find.return_value = [
             {"day": "2026-08-02", "stage": "visit", "source": "telegram", "campaign": "august", "count": 10},
             {"day": "2026-08-02", "stage": "download", "source": "telegram", "campaign": "august", "count": 2},
+            {"day": "2026-08-02", "stage": "apk_download_click", "source": "telegram", "campaign": "august", "count": 3},
+            {"day": "2026-08-02", "stage": "pwa_install_accepted", "source": "telegram", "campaign": "august", "count": 2},
+            {"day": "2026-08-02", "stage": "installed_open", "source": "telegram", "campaign": "august", "count": 1},
             {"day": "2026-08-02", "stage": "device_report", "source": "early-testers", "campaign": "zen-pomodoro", "count": 1},
         ]
         with patch("command_center.database.collection", side_effect=lambda name: funnel_collection if name == "growth_funnel_daily" else miniapp_collection), patch(
@@ -53,6 +56,9 @@ class ProductGrowthTests(unittest.TestCase):
         self.assertEqual(snapshot["funnel"]["visit"], 10)
         self.assertEqual(snapshot["funnel"]["device_report"], 1)
         self.assertEqual(snapshot["funnel_rates"]["download"], 20.0)
+        self.assertEqual(snapshot["funnel_rates"]["apk_download"], 30.0)
+        self.assertEqual(snapshot["funnel_rates"]["pwa_accept"], 20.0)
+        self.assertEqual(snapshot["funnel_rates"]["pwa_open"], 50.0)
         self.assertEqual(snapshot["top_sources"], [{"source": "telegram", "visits": 10}])
         self.assertEqual(snapshot["flagship"][0]["miniapp_id"], "zen-pomodoro")
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
+import { Check, Download, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
 import type { MiniAppId } from '../../features/catalog/tabs'
 import { submitProductFeedback, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
 import { shareCard } from '../../lib/share-card'
@@ -17,6 +17,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [shareStatus, setShareStatus] = useState('')
+  const [completed, setCompleted] = useState(() => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true')
 
   useEffect(() => {
     const day = new Date().toISOString().slice(0, 10)
@@ -24,6 +25,15 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
     if (window.localStorage.getItem(openKey)) return
     window.localStorage.setItem(openKey, 'true')
     void trackProductEvent(miniAppId, 'open')
+  }, [miniAppId])
+
+  useEffect(() => {
+    const onComplete = (event: Event) => {
+      const detail = (event as CustomEvent<{ miniAppId: MiniAppId }>).detail
+      if (detail?.miniAppId === miniAppId) setCompleted(true)
+    }
+    window.addEventListener('purehub:product-complete', onComplete)
+    return () => window.removeEventListener('purehub:product-complete', onComplete)
   }, [miniAppId])
 
   const markHelpful = () => {
@@ -58,6 +68,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
 
   return (
     <section className="app-surface rounded-[18px] p-4" aria-label="Help improve this mini app">
+      {completed ? <a href={`/${window.location.pathname.split('/')[1] || 'en'}/download?utm_source=completed_tool&utm_campaign=useful_result`} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span>Keep this workflow offline on Android</span><Download className="size-5 shrink-0" /></a> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-950 dark:text-white">Did this tool help?</h2>

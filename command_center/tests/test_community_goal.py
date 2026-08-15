@@ -35,6 +35,7 @@ class CommunityGoalTests(unittest.TestCase):
                 {"category": "spam", "received_at": "2026-08-02T02:00:00+00:00"},
             ],
             support_metrics={"open": 0, "replied": 2},
+            product_growth={"totals": {"complete": 9}},
             reddit_connected=False,
             now=datetime(2026, 8, 2, 4, 0, tzinfo=timezone.utc),
         )
@@ -44,6 +45,7 @@ class CommunityGoalTests(unittest.TestCase):
         self.assertEqual(milestones["views"]["value"], 50)
         self.assertEqual(milestones["feedback"]["value"], 1)
         self.assertEqual(milestones["videos"]["value"], 1)
+        self.assertEqual(milestones["completions"]["value"], 9)
         self.assertEqual(goal["campaign_day"], 1)
         self.assertEqual(goal["weeks"][0]["status"], "active")
         self.assertIn("Reddit API approval pending", " ".join(item["label"] for item in goal["actions"]))

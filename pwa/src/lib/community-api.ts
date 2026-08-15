@@ -3,7 +3,13 @@ import { anonymousMetricsEnabled } from './preferences'
 
 export type ProductEvent = 'open' | 'complete' | 'helpful' | 'share' | 'feedback'
 export type FeedbackCategory = 'feedback' | 'bug' | 'feature_request' | 'device_report'
-export type JourneyStage = 'visit' | 'download' | 'installed_open' | 'tester_join'
+export type JourneyStage =
+  | 'visit'
+  | 'download'
+  | 'apk_download_click'
+  | 'pwa_install_accepted'
+  | 'installed_open'
+  | 'tester_join'
 
 export type RoadmapOption = {
   option_id: string
@@ -28,6 +34,10 @@ async function postJson(path: string, payload: Record<string, unknown>) {
 }
 
 export function trackProductEvent(miniAppId: MiniAppId, event: ProductEvent) {
+  if (event === 'complete' && typeof window !== 'undefined') {
+    window.localStorage.setItem(`purehub-completed-${miniAppId}`, 'true')
+    window.dispatchEvent(new CustomEvent('purehub:product-complete', { detail: { miniAppId } }))
+  }
   if (!anonymousMetricsEnabled()) return Promise.resolve()
   return postJson('/public-api/product-event', { miniapp_id: miniAppId, event }).then(() => undefined).catch(() => undefined)
 }

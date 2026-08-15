@@ -306,6 +306,17 @@ def _publish_telegram(content: str) -> tuple[str, str]:
 
 def _publish_devto(content: str, release: dict[str, Any]) -> tuple[str, str]:
     content = validate_social_content(content)
+    article = {
+        "title": _markdown_title(content, release["title"]),
+        "body_markdown": content,
+        "published": get_config_value("devto_publish_as_draft", "true").lower() != "true",
+        "tags": ["android", "opensource", "productivity", "privacy"],
+    }
+    # Campaign articles are original DEV posts, so they must not all reuse the
+    # same canonical URL. DEV rejects duplicate canonical URLs with HTTP 422.
+    canonical_url = str(release.get("canonical_url") or "").strip()
+    if canonical_url:
+        article["canonical_url"] = canonical_url
     response = requests.post(
         "https://dev.to/api/articles",
         headers={
@@ -314,15 +325,7 @@ def _publish_devto(content: str, release: dict[str, Any]) -> tuple[str, str]:
             "content-type": "application/json",
             "user-agent": "PureHub-Release-Hub/1.0",
         },
-        json={
-            "article": {
-                "title": _markdown_title(content, release["title"]),
-                "body_markdown": content,
-                "published": get_config_value("devto_publish_as_draft", "true").lower() != "true",
-                "tags": ["android", "opensource", "productivity", "privacy"],
-                "canonical_url": release.get("github_url") or get_config_value("site_url"),
-            }
-        },
+        json={"article": article},
         timeout=45,
     )
     response.raise_for_status()

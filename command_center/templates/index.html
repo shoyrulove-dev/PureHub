@@ -620,11 +620,13 @@
           {% set top_source = product_growth.get('top_sources', [])|first %}
           <div class="product-signals" aria-label="Anonymous product signals for the last 30 days">
             <div class="product-signal"><span>Visits</span><strong>{{ funnel.get('visit', 0) }}</strong></div>
-            <div class="product-signal"><span>Tool opens</span><strong>{{ product_totals.get('open', 0) }} · {{ funnel_rates.get('tool_open', 0) }}%</strong></div>
+            <div class="product-signal"><span>Tool opens</span><strong>{{ product_totals.get('open', 0) }} · {{ funnel_rates.get('tools_per_100_visits', 0) }}/100 visits</strong></div>
             <div class="product-signal"><span>Completed results</span><strong>{{ product_totals.get('complete', 0) }} · {{ product_growth.get('completion_rate', 0) }}%</strong></div>
-            <div class="product-signal"><span>Downloads</span><strong>{{ funnel.get('download', 0) }} · {{ funnel_rates.get('download', 0) }}%</strong></div>
-            <div class="product-signal"><span>Installed opens</span><strong>{{ funnel.get('installed_open', 0) }}</strong></div>
-            <div class="product-signal"><span>Tester reports</span><strong>{{ funnel.get('device_report', 0) }}/20</strong></div>
+            <div class="product-signal"><span>APK download clicks</span><strong>{{ funnel.get('apk_download_click', 0) }} · {{ funnel_rates.get('apk_download', 0) }}%</strong></div>
+            <div class="product-signal"><span>GitHub APK downloads</span><strong>{{ community_metrics.get('github', {}).get('metrics', {}).get('apk_downloads', 0) }}</strong></div>
+            <div class="product-signal"><span>PWA installs accepted</span><strong>{{ funnel.get('pwa_install_accepted', 0) }} · {{ funnel_rates.get('pwa_accept', 0) }}%</strong></div>
+            <div class="product-signal"><span>PWA standalone opens</span><strong>{{ funnel.get('installed_open', 0) }} · {{ funnel_rates.get('pwa_open', 0) }}%</strong></div>
+            <div class="product-signal"><span>Legacy mixed downloads</span><strong>{{ funnel.get('download', 0) }}</strong></div>
             <div class="product-signal"><span>Flagship leader</span><strong>{{ flagship_leader.miniapp_id if flagship_leader else 'Waiting for signals' }}</strong></div>
             <div class="product-signal"><span>Top source</span><strong>{{ top_source.source if top_source else 'Waiting for signals' }}</strong></div>
             <div class="product-signal"><span>Helpful</span><strong>{{ product_totals.get('helpful', 0) }} · {{ product_growth.get('helpful_rate', 0) }}%</strong></div>
@@ -633,7 +635,7 @@
             {% set has_roadmap_votes = product_growth.get('roadmap_votes', 0) > 0 %}
             <div class="product-signal"><span>Leading request</span><strong title="{{ roadmap_leader.title if has_roadmap_votes and roadmap_leader else 'No votes yet' }}">{{ roadmap_leader.title if has_roadmap_votes and roadmap_leader else 'No votes yet' }}</strong></div>
           </div>
-          <p class="panel-copy" style="margin-top:.65rem">Journey signals are anonymous daily event totals. No user ID, device ID, account, or IP address is stored.</p>
+          <p class="panel-copy" style="margin-top:.65rem">Journey signals are anonymous daily event totals. APK clicks are download requests, not confirmed installs. No user ID, device ID, account, or IP address is stored.</p>
           {% set flagship_monitor = product_growth.get('flagship_monitor', {}) %}
           <details class="section panel disclosure" style="margin-top:.75rem">
             <summary class="disclosure-summary">
@@ -690,6 +692,12 @@
             <article class="reach-card">
               <div class="reach-title"><span>Mastodon</span><span class="platform-icon mastodon" title="Mastodon"><svg class="icon"><use href="#i-message"/></svg></span></div>
               {% if mastodon_values %}<div class="reach-values"><div class="reach-value" title="Followers"><span class="stat-icon"><svg class="icon"><use href="#i-users"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('followers', 0)) }}</strong><span class="sr-only">followers</span></div><div class="reach-value" title="Recent likes"><span class="stat-icon"><svg class="icon"><use href="#i-heart"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('favourites', 0)) }}</strong><span class="sr-only">recent likes</span></div><div class="reach-value" title="Recent boosts"><span class="stat-icon"><svg class="icon"><use href="#i-repeat"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('boosts', 0)) }}</strong><span class="sr-only">recent boosts</span></div><div class="reach-value" title="Recent replies"><span class="stat-icon"><svg class="icon"><use href="#i-message"/></svg></span><strong>{{ "{:,}".format(mastodon_values.get('replies', 0)) }}</strong><span class="sr-only">recent replies</span></div></div>{% else %}<p class="reach-error">{{ mastodon_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
+            </article>
+            {% set github_reach = community_metrics.get('github', {}) %}
+            {% set github_values = github_reach.get('metrics', {}) %}
+            <article class="reach-card">
+              <div class="reach-title"><span>GitHub releases</span><span class="platform-icon" title="GitHub"><svg class="icon"><use href="#i-code"/></svg></span></div>
+              {% if github_values %}<div class="reach-values"><div class="reach-value" title="APK asset downloads across recent releases"><span class="stat-icon"><svg class="icon"><use href="#i-package"/></svg></span><strong>{{ "{:,}".format(github_values.get('apk_downloads', 0)) }}</strong><span class="sr-only">APK downloads</span></div><div class="reach-value" title="All assets downloaded from the latest release"><span class="stat-icon"><svg class="icon"><use href="#i-eye"/></svg></span><strong>{{ "{:,}".format(github_values.get('latest_downloads', 0)) }}</strong><span class="sr-only">latest release asset downloads</span></div></div>{% else %}<p class="reach-error">{{ github_reach.get('error_message') or 'Refresh to load' }}</p>{% endif %}
             </article>
           </div>
           </div>

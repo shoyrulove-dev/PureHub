@@ -100,7 +100,7 @@ export function DownloadPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {latest.apk_url ? (
-              <a className="primary-button justify-center" href={latest.apk_url} onClick={() => void trackJourneyEvent('download')}>
+              <a className="primary-button justify-center" href={latest.apk_url} onClick={() => void trackJourneyEvent('apk_download_click')}>
                 <Download className="size-4" /> Download signed APK
               </a>
             ) : (

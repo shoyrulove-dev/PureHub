@@ -71,7 +71,7 @@ CONFIG_DEFAULTS = {
     "reddit_user_agent": "web:PureHub.CommandCenter:v1.0 (by /u/PureHubAAA)",
 }
 
-CURRENT_SCHEMA_VERSION = 20
+CURRENT_SCHEMA_VERSION = 21
 DEFAULTS_BOOTSTRAP_VERSION = 8
 LOGIN_ATTEMPT_WINDOW_MINUTES = 15
 LOGIN_MAX_ATTEMPTS = 5
@@ -761,6 +761,7 @@ def run_schema_migrations() -> None:
         (18, "promote-complete-catalog-flagship", _migration_promote_complete_catalog),
         (19, "ensure-distribution-tracker", _migration_distribution_tracker),
         (20, "schedule-social-discovery-throughout-day", _migration_social_discovery_schedule),
+        (21, "refresh-shipped-roadmap-and-bubble-level", _migration_refresh_product_roadmap),
     ]
     applied_versions = {
         item["version"] for item in collection("schema_migrations").find({}, {"version": 1, "_id": 0})
@@ -801,6 +802,29 @@ def _migration_social_discovery_schedule() -> None:
             {"$set": {"value": value, "updated_at": utcnow()}, "$setOnInsert": {"key": key}},
             upsert=True,
         )
+
+
+def _migration_refresh_product_roadmap() -> None:
+    now = utcnow()
+    collection("roadmap_options").update_one(
+        {"option_id": "qr-toolkit"},
+        {"$set": {"active": False, "status": "shipped", "completed_at": now, "updated_at": now}},
+    )
+    collection("roadmap_options").update_one(
+        {"option_id": "bubble-level-accuracy"},
+        {
+            "$setOnInsert": {
+                "title": "Validate Bubble Level accuracy",
+                "description": "Compare flat and edge modes across real devices and refine calibration guidance.",
+                "priority": 10,
+                "votes": 0,
+                "active": True,
+                "created_at": now,
+            },
+            "$set": {"updated_at": now},
+        },
+        upsert=True,
+    )
 
 
 def _migration_product_growth_signals() -> None:
@@ -1499,7 +1523,16 @@ def get_analytics_snapshot() -> dict[str, Any]:
 
 
 PUBLIC_MINIAPP_EVENTS = {"open", "complete", "helpful", "share", "feedback"}
-PUBLIC_FUNNEL_STAGES = {"visit", "download", "first_open", "installed_open", "tester_join", "device_report"}
+PUBLIC_FUNNEL_STAGES = {
+    "visit",
+    "download",  # Legacy mixed download signal retained for historical reports.
+    "apk_download_click",
+    "pwa_install_accepted",
+    "first_open",  # Legacy browser-profile signal; never present it as an install.
+    "installed_open",
+    "tester_join",
+    "device_report",
+}
 FLAGSHIP_MINIAPP_IDS = {
     "zen-habit", "zen-pomodoro", "zen-breath", "qr-studio", "ocr-text",
     "speaker-cleaner", "doc-to-pdf", "expense-tracker", "bill-splitter",
@@ -1620,9 +1653,14 @@ def get_product_growth_snapshot(days: int = 30) -> dict[str, Any]:
         "roadmap_votes": sum(int(item.get("votes", 0) or 0) for item in roadmap),
         "funnel": funnel,
         "funnel_rates": {
+            "tools_per_100_visits": round((totals["open"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
+            "apk_download": round((funnel["apk_download_click"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
+            "pwa_accept": round((funnel["pwa_install_accepted"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
+            "pwa_open": round((funnel["installed_open"] / funnel["pwa_install_accepted"]) * 100, 1) if funnel["pwa_install_accepted"] else 0.0,
+            # Compatibility keys for older templates and API consumers.
             "tool_open": round((totals["open"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
             "download": round((funnel["download"] / funnel["visit"]) * 100, 1) if funnel["visit"] else 0.0,
-            "first_open": round((funnel["installed_open"] / funnel["download"]) * 100, 1) if funnel["download"] else 0.0,
+            "first_open": round((funnel["installed_open"] / funnel["pwa_install_accepted"]) * 100, 1) if funnel["pwa_install_accepted"] else 0.0,
         },
         "top_sources": [
             {"source": source, "visits": visits}

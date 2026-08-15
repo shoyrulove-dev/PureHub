@@ -262,6 +262,7 @@ def _publish_post(row: dict[str, Any]) -> dict[str, Any]:
             release = {
                 "title": str(row.get("topic") or "PureHub community engineering note"),
                 "github_url": f"{get_config_value('site_url', 'https://hub.blissbiovn.com').rstrip('/')}/en/tools",
+                "canonical_url": "",
             }
             external_id, external_url = _publish_devto(content, release)
         update_growth_post(
@@ -321,6 +322,13 @@ def run_growth_automation(
     topic = TOPICS[cycle_day - 1]
     channels = _channels_for_day(cycle_day)
     existing_posts = list_growth_posts(500)
+    retryable = [
+        item for item in existing_posts
+        if item.get("status") == "failed"
+        and item.get("channel") in AUTO_CHANNELS
+        and int(item.get("attempts", 0) or 0) < 3
+    ]
+    retried = [_publish_post(item) for item in retryable]
     if "youtube" in channels and _has_upcoming_youtube_queue(existing_posts):
         channels.remove("youtube")
     bundle = _generate_bundle(topic, cycle_day, channels)
@@ -365,6 +373,7 @@ def run_growth_automation(
         "topic": topic,
         "created": created,
         "published": published,
+        "retried": sum(1 for item in retried if item.get("status") == "published"),
         "posts": rows,
         "support": support,
     }

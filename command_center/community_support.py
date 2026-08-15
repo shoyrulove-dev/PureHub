@@ -488,13 +488,25 @@ def _looks_like_relevant_opportunity(text: str, keyword: str = "") -> bool:
     if not _looks_like_question(text):
         return False
     value = f" {text.lower()} "
+    # Discovery is for explicit utility-app intent, not any post that happens to
+    # contain words such as "app", "QR", or "no ads". These exclusions prevent
+    # personal conversations and unrelated support threads from entering the
+    # PureHub product inbox.
+    negative_signals = (
+        "starter pack", "follow our friends", "following our friends", "social network",
+        "dating app", "banking app", "delivery app", "ride app", "game app",
+        "contact bluesky", "contact support", "redownload it", "my qr code",
+    )
+    if any(signal in value for signal in negative_signals):
+        return False
     intent_signals = (
         "any app", "which app", "what app", "recommend", "looking for", "alternative",
         "without ads", "no ads", "offline", "privacy", "open source",
     )
     utility_signals = (
-        " app", " tool", "utility", "scanner", "ocr", "qr code", "pomodoro", "password",
-        "expense", "converter", "habit", "notes", "timer", "calculator",
+        " utility app", " utility tool", "scanner app", "ocr app", "qr scanner", "qr code app",
+        "pomodoro app", "password manager", "expense tracker", "unit converter", "habit tracker",
+        "notes app", "timer app", "calculator app", "bubble level", "wifi analyzer",
     )
     has_intent = any(signal in value for signal in intent_signals)
     has_utility = any(signal in value for signal in utility_signals)
@@ -503,7 +515,8 @@ def _looks_like_relevant_opportunity(text: str, keyword: str = "") -> bool:
     if keyword.startswith("#"):
         return True
     keyword_tokens = [token.lower() for token in keyword.split() if len(token) >= 4]
-    return any(token in value for token in keyword_tokens)
+    matching_tokens = sum(1 for token in keyword_tokens if token in value)
+    return matching_tokens >= min(2, len(keyword_tokens))
 
 
 def _discover_bluesky(keywords: list[str], limit: int) -> int:
@@ -985,12 +998,33 @@ def _sync_mastodon_metrics() -> dict[str, int]:
     }
 
 
+def _sync_github_metrics() -> dict[str, int]:
+    repo = get_config_value("github_repo", "shoyrulove-dev/PureHub").strip().strip("/")
+    response = requests.get(
+        f"https://api.github.com/repos/{repo}/releases",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "PureHub-Community-Metrics/1.0"},
+        params={"per_page": 10},
+        timeout=30,
+    )
+    response.raise_for_status()
+    releases = response.json()
+    assets = [asset for release in releases for asset in (release.get("assets") or [])]
+    apk_assets = [asset for asset in assets if str(asset.get("name") or "").lower().endswith(".apk")]
+    latest_assets = (releases[0].get("assets") or []) if releases else []
+    return {
+        "releases": len(releases),
+        "apk_downloads": sum(int(asset.get("download_count") or 0) for asset in apk_assets),
+        "latest_downloads": sum(int(asset.get("download_count") or 0) for asset in latest_assets),
+    }
+
+
 def sync_engagement_metrics() -> dict[str, Any]:
     functions = {
         "telegram": _sync_telegram_metrics,
         "devto": _sync_devto_metrics,
         "bluesky": _sync_bluesky_metrics,
         "mastodon": _sync_mastodon_metrics,
+        "github": _sync_github_metrics,
     }
     result: dict[str, Any] = {}
 

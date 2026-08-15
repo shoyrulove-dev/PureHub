@@ -40,9 +40,15 @@ class BubbleLevelSensorManager(
 
                 val x = gravity[0]
                 val y = gravity[1]
-                val z = gravity[2].coerceAtLeast(0.001f)
-                val pitch = Math.toDegrees(kotlin.math.atan2(x.toDouble(), z.toDouble())).toFloat()
-                val roll = Math.toDegrees(kotlin.math.atan2(y.toDouble(), z.toDouble())).toFloat()
+                val z = gravity[2]
+                // Use the other two axes as the denominator so face-up and
+                // face-down readings remain finite and symmetric.
+                val pitch = Math.toDegrees(
+                    kotlin.math.atan2(x.toDouble(), sqrt(y * y + z * z).toDouble()),
+                ).toFloat()
+                val roll = Math.toDegrees(
+                    kotlin.math.atan2(y.toDouble(), sqrt(x * x + z * z).toDouble()),
+                ).toFloat()
                 val tiltMagnitude = sqrt(x * x + y * y)
 
                 trySend(

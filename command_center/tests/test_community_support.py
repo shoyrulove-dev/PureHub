@@ -12,6 +12,7 @@ from command_center.community_support import (
     _looks_like_question,
     _looks_like_relevant_opportunity,
     _plain_text,
+    _sync_github_metrics,
     discover_opportunities,
     generate_support_draft,
     ingest_telegram_update,
@@ -165,7 +166,29 @@ class CommunitySupportTests(unittest.TestCase):
         self.assertFalse(_looks_like_relevant_opportunity("Does anyone want a TV stick without Android?", "#android"))
         self.assertFalse(_looks_like_relevant_opportunity("What is the climate benefit of replacing a car early?", "#opensource"))
         self.assertFalse(_looks_like_relevant_opportunity("Looking for an alternative school housing policy", "#android"))
+        self.assertFalse(_looks_like_relevant_opportunity("Which dating app should I use without ads?", "#android"))
+        self.assertFalse(_looks_like_relevant_opportunity("How can I contact Bluesky support about my app?", "#opensource"))
         self.assertTrue(_looks_like_relevant_opportunity("Any offline QR scanner without ads?", "#android"))
+        self.assertTrue(_looks_like_relevant_opportunity("Looking for an offline expense tracker app", "offline expense tracker"))
+
+    @patch("command_center.community_support.get_config_value", return_value="shoyrulove-dev/PureHub")
+    @patch("command_center.community_support.requests.get")
+    def test_github_metrics_separate_downloads_from_installs(self, get, _config) -> None:
+        response = MagicMock()
+        response.json.return_value = [
+            {"assets": [
+                {"name": "PureHub-beta.apk", "download_count": 7},
+                {"name": "PureHub-beta.aab", "download_count": 2},
+            ]},
+            {"assets": [{"name": "PureHub-older-fdroid.apk", "download_count": 4}]},
+        ]
+        get.return_value = response
+
+        metrics = _sync_github_metrics()
+
+        self.assertEqual(metrics["apk_downloads"], 11)
+        self.assertEqual(metrics["latest_downloads"], 9)
+        response.raise_for_status.assert_called_once()
 
     @patch("command_center.community_support.update_support_sync_state")
     @patch("command_center.community_support._discover_devto", side_effect=lambda _keywords, limit: limit)

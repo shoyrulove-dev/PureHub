@@ -45,7 +45,7 @@ export function PwaInstallPrompt() {
                 onClick={async () => {
                   await deferredPrompt.prompt()
                   const choice = await deferredPrompt.userChoice
-                  if (choice.outcome === 'accepted') void trackJourneyEvent('download')
+                  if (choice.outcome === 'accepted') void trackJourneyEvent('pwa_install_accepted')
                   setDeferredPrompt(null)
                   setOpen(false)
                 }}

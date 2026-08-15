@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, Compass, Download, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck } from 'lucide-react'
 import { ActionButton } from '../MiniAppPrimitives'
+import { trackProductEvent } from '../../../lib/community-api'
 
 type SensorMode = 'compass' | 'level' | 'sound'
 type PermissionState = 'idle' | 'active' | 'denied' | 'unsupported'
@@ -76,13 +77,30 @@ function LevelPanel() {
   const [zero, setZero] = useState(() => { try { return JSON.parse(localStorage.getItem('purehub.level.zero.v1') ?? '{"x":0,"y":0}') as { x: number; y: number } } catch { return { x: 0, y: 0 } } })
   const [held, setHeld] = useState<{ x: number; y: number } | null>(null)
   const [permission, setPermission] = useState<PermissionState>('idle')
+  const [levelMode, setLevelMode] = useState<'flat' | 'horizontal' | 'vertical'>('flat')
+  const [tolerance, setTolerance] = useState(() => Number(localStorage.getItem('purehub.level.tolerance.v1') || 0.5))
+  const [settled, setSettled] = useState(false)
+  const [soundCue, setSoundCue] = useState(false)
+  const previous = useRef({ x: 0, y: 0, at: 0 })
+  const [moving, setMoving] = useState(false)
   const angles = held ?? { x: Math.round((raw.x - zero.x) * 10) / 10, y: Math.round((raw.y - zero.y) * 10) / 10 }
 
   useEffect(() => {
     if (permission !== 'active') return
-    const listener = (event: DeviceOrientationEvent) => setRaw({ x: event.gamma ?? 0, y: event.beta ?? 0 })
+    let movementTimer = 0
+    const listener = (event: DeviceOrientationEvent) => {
+      const next = { x: event.gamma ?? 0, y: event.beta ?? 0 }
+      const delta = Math.abs(next.x - previous.current.x) + Math.abs(next.y - previous.current.y)
+      if (previous.current.at && delta > 3) {
+        setMoving(true)
+        window.clearTimeout(movementTimer)
+        movementTimer = window.setTimeout(() => setMoving(false), 650)
+      }
+      previous.current = { ...next, at: Date.now() }
+      setRaw(next)
+    }
     window.addEventListener('deviceorientation', listener, { passive: true })
-    return () => window.removeEventListener('deviceorientation', listener)
+    return () => { window.clearTimeout(movementTimer); window.removeEventListener('deviceorientation', listener) }
   }, [permission])
 
   const start = async () => {
@@ -93,14 +111,40 @@ function LevelPanel() {
       setPermission('active')
     } catch { setPermission('denied') }
   }
-  const flat = Math.abs(angles.x) <= 1 && Math.abs(angles.y) <= 1
+  const isLevel = levelMode === 'flat'
+    ? Math.abs(angles.x) <= tolerance && Math.abs(angles.y) <= tolerance
+    : levelMode === 'horizontal'
+      ? Math.abs(angles.x) <= tolerance
+      : Math.abs(angles.y) <= tolerance
+
+  useEffect(() => {
+    if (permission !== 'active' || moving || !isLevel || held) { setSettled(false); return }
+    const timer = window.setTimeout(() => {
+      setSettled(true)
+      if ('vibrate' in navigator) navigator.vibrate(45)
+      if (soundCue) {
+        const audio = new AudioContext()
+        const oscillator = audio.createOscillator(); const gain = audio.createGain()
+        oscillator.frequency.value = 660; gain.gain.value = 0.035
+        oscillator.connect(gain).connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + 0.09)
+        oscillator.onended = () => void audio.close()
+      }
+      const day = new Date().toISOString().slice(0, 10)
+      const key = `purehub-complete-bubble-level-${day}`
+      if (!localStorage.getItem(key)) { localStorage.setItem(key, 'true'); void trackProductEvent('bubble-level', 'complete') }
+    }, 1800)
+    return () => window.clearTimeout(timer)
+  }, [held, isLevel, moving, permission, soundCue])
 
   return <div>
-    <div className={`relative mx-auto aspect-square max-w-72 overflow-hidden rounded-[32px] border-8 ${flat ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-sky-50'} dark:bg-slate-950`}><div className="absolute left-0 top-1/2 h-px w-full bg-slate-300" /><div className="absolute left-1/2 top-0 h-full w-px bg-slate-300" /><span className="absolute size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-sky-500 shadow-xl transition-all duration-150" style={{ left: `${50 + Math.max(-35, Math.min(35, angles.x))}%`, top: `${50 + Math.max(-35, Math.min(35, angles.y))}%` }} /></div>
+    <div className="mb-4 grid grid-cols-3 gap-2">{([['flat', 'Surface'], ['horizontal', 'Edge X'], ['vertical', 'Edge Y']] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setLevelMode(value)} className={`min-h-11 rounded-xl border text-xs font-black ${levelMode === value ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 dark:border-slate-700'}`}>{label}</button>)}</div>
+    <div className={`relative mx-auto aspect-square max-w-72 overflow-hidden rounded-[32px] border-8 transition-colors ${settled ? 'border-emerald-500 bg-emerald-50 shadow-[0_0_40px_rgba(16,185,129,.24)]' : isLevel ? 'border-emerald-300 bg-emerald-50' : 'border-slate-100 bg-sky-50'} dark:bg-slate-950`}><div className="absolute left-0 top-1/2 h-px w-full bg-slate-300" /><div className="absolute left-1/2 top-0 h-full w-px bg-slate-300" /><div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-emerald-500/60" /><span className={`absolute size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white shadow-xl transition-all duration-150 ${settled ? 'bg-emerald-500' : 'bg-sky-500'}`} style={{ left: `${50 + Math.max(-35, Math.min(35, levelMode === 'vertical' ? 0 : angles.x))}%`, top: `${50 + Math.max(-35, Math.min(35, levelMode === 'horizontal' ? 0 : angles.y))}%` }} /></div>
     <PermissionNotice state={permission} />
-    <div className="mt-4 grid grid-cols-2 gap-2 text-center"><Metric label="Left / right" value={`${angles.x}°`} /><Metric label="Front / back" value={`${angles.y}°`} /></div>
+    <p role="status" className={`mt-3 rounded-xl px-3 py-2 text-center text-xs font-bold ${settled ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200' : moving ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200' : 'bg-slate-500/8 text-slate-600 dark:text-slate-300'}`}>{settled ? 'Level confirmed · reading held steady' : moving ? 'Device moving · wait for a stable reading' : isLevel ? 'Inside tolerance · hold still to confirm' : 'Move the bubble into the center target'}</p>
+    <div className="mt-3 grid grid-cols-2 gap-2 text-center"><Metric label="Left / right" value={`${angles.x}°`} /><Metric label="Front / back" value={`${angles.y}°`} /></div>
     <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Level active' : 'Enable level'}</ActionButton><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => setHeld((value) => value == null ? angles : null)}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
     <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => { setZero(raw); localStorage.setItem('purehub.level.zero.v1', JSON.stringify(raw)) }}>Save current zero</ActionButton><ActionButton tone="muted" onClick={() => { setZero({ x: 0, y: 0 }); localStorage.removeItem('purehub.level.zero.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset zero</ActionButton></div>
+    <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">Accuracy & cues</summary><p className="mt-3 text-xs text-slate-500">Tolerance</p><div className="mt-2 grid grid-cols-3 gap-2">{[0.2, 0.5, 1].map((value) => <button key={value} type="button" onClick={() => { setTolerance(value); localStorage.setItem('purehub.level.tolerance.v1', String(value)) }} className={`min-h-10 rounded-xl border text-xs font-black ${tolerance === value ? 'border-violet-500 bg-violet-500/10 text-violet-700 dark:text-violet-300' : 'border-slate-200 dark:border-slate-700'}`}>±{value}°</button>)}</div><label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-xs font-bold"><span>Sound when level</span><input type="checkbox" checked={soundCue} onChange={(event) => setSoundCue(event.target.checked)} className="size-5 accent-violet-600" /></label><p className="mt-2 text-xs leading-5 text-slate-500">Calibrate on a known-flat reference. Phone sensors are useful estimates, not certified measurement tools.</p></details>
   </div>
 }
 
