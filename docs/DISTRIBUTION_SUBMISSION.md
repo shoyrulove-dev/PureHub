@@ -22,6 +22,8 @@ The `fdroid` flavor uses ZXing and Tesseract with bundled English, Vietnamese, a
 
 There is no Play-Console-style registration form. The official F-Droid process is code review in GitLab:
 
+**Submission status:** [`fdroiddata!45848`](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/45848) is open for official F-Droid review. GitHub issue [#2](https://github.com/shoyrulove-dev/PureHub/issues/2) remains open until the app is merged and published.
+
 1. Read the [F-Droid Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/).
 2. Sign in to GitLab and fork [`fdroid/fdroiddata`](https://gitlab.com/fdroid/fdroiddata).
 3. Create a branch such as `com.purehub.app` from `master`.
@@ -38,7 +40,7 @@ Suggested merge-request title:
 New App: PureHub
 ```
 
-Suggested categories: `Office`, `System`, `Time`, `Money`, and `Security`.
+Relevant current F-Droid categories include `Calculator`, `Finance Manager`, `OCR`, `Security`, and `System`; the submitted primary category is `System`.
 
 Suggested summary:
 
