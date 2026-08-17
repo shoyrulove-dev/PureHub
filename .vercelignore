@@ -1,3 +1,8 @@
+# Never upload local environment/secrets files.
+# Runtime secrets are injected via Vercel project Environment Variables.
+.env
+.env.*
+!.env.example
 .git
 .gradle
 .kotlin
