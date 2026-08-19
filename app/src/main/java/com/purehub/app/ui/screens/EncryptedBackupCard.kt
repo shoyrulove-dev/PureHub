@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.backup.EncryptedBackupManager
+import java.text.DateFormat
+import java.util.Date
 import com.purehub.app.ui.LocalSnackbarHostState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,11 +42,16 @@ fun EncryptedBackupCard() {
     val scope = rememberCoroutineScope()
     var passphrase by rememberSaveable { mutableStateOf("") }
     var pendingExport by remember { mutableStateOf<String?>(null) }
+    var backupStatus by remember { mutableStateOf(manager.backupStatus()) }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val content = pendingExport
         if (uri != null && content != null) scope.launch(Dispatchers.IO) {
             context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(content) }
-            withContext(Dispatchers.Main) { snackbar.showSnackbar("Encrypted PureHub backup saved.") }
+            manager.recordSuccessfulExport(content)
+            withContext(Dispatchers.Main) {
+                backupStatus = manager.backupStatus()
+                snackbar.showSnackbar("Encrypted PureHub backup saved and fingerprint recorded.")
+            }
         }
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -63,6 +70,15 @@ fun EncryptedBackupCard() {
                 Text("Encrypted private backup", style = MaterialTheme.typography.titleMedium)
             }
             Text("Habit, check-ins, expenses, Vault and OCR/QR history. AES-256; your passphrase never leaves this device.", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = if (backupStatus.exportedAtMillis > 0) {
+                    "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(backupStatus.exportedAtMillis))} · fingerprint ${backupStatus.fingerprint}"
+                } else {
+                    "No verified export recorded on this device yet."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             OutlinedTextField(
                 value = passphrase, onValueChange = { passphrase = it }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("Backup passphrase (8+ characters)") },

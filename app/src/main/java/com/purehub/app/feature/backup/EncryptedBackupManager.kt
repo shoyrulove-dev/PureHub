@@ -9,6 +9,7 @@ import com.purehub.app.data.local.entity.HabitEntity
 import com.purehub.app.feature.vault.PasswordVaultRepository
 import com.purehub.app.feature.vault.VaultEntry
 import java.security.SecureRandom
+import java.security.MessageDigest
 import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
@@ -55,6 +56,27 @@ class EncryptedBackupManager(private val context: Context) {
         vault.saveEntries(vaultEntries)
         context.getSharedPreferences("purehub.ocr-studio.v2", 0).edit().putString("history", payload.optString("ocrHistory", "[]")).commit()
         context.getSharedPreferences("purehub.qr-studio.v2", 0).edit().putString("history", payload.optString("qrHistory", "[]")).commit()
+    }
+
+    data class BackupStatus(val exportedAtMillis: Long = 0, val fingerprint: String = "")
+
+    fun backupStatus(): BackupStatus {
+        val preferences = context.getSharedPreferences("purehub.encrypted-backup", Context.MODE_PRIVATE)
+        return BackupStatus(
+            exportedAtMillis = preferences.getLong("last_exported_at", 0),
+            fingerprint = preferences.getString("last_export_fingerprint", "").orEmpty(),
+        )
+    }
+
+    fun recordSuccessfulExport(raw: String) {
+        val fingerprint = MessageDigest.getInstance("SHA-256")
+            .digest(raw.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+            .take(12)
+        context.getSharedPreferences("purehub.encrypted-backup", Context.MODE_PRIVATE).edit()
+            .putLong("last_exported_at", System.currentTimeMillis())
+            .putString("last_export_fingerprint", fingerprint)
+            .apply()
     }
 
     private fun encrypt(data: ByteArray, passphrase: CharArray): String {

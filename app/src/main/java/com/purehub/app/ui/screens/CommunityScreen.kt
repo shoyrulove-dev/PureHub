@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 private const val TELEGRAM_DEEP_LINK = "tg://resolve?domain=aaa_letan_vip_bot"
 private const val TELEGRAM_WEB_LINK = "https://t.me/aaa_letan_vip_bot"
 private const val GITHUB_LINK = "https://github.com/shoyrulove-dev/PureHub"
+private const val GITHUB_FEEDBACK_LINK = "https://github.com/shoyrulove-dev/PureHub/issues/new/choose"
 
 @Composable
 fun CommunityScreen(
@@ -102,6 +103,17 @@ fun CommunityScreen(
                 ) {
                     Text("Open GitHub")
                 }
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { openUri(GITHUB_FEEDBACK_LINK) },
+                ) {
+                    Text("Send feedback or report a bug")
+                }
+                Text(
+                    "For a bug, include the tool name, Android version and repeatable steps—never private files, passwords or API keys.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 

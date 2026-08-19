@@ -1,4 +1,4 @@
-import { Activity, Check, Languages, Moon, ShieldCheck, Sun, SunMoon } from 'lucide-react'
+import { Activity, Check, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
@@ -34,6 +34,17 @@ export function SettingsPage() {
               <Icon className="size-5" /><strong className="flex-1">{label}</strong>{theme === id ? <Check className="size-4 text-emerald-500" /> : null}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="app-surface rounded-[18px] p-5">
+        <div className="flex items-start gap-3">
+          <Smartphone className="mt-0.5 size-5 text-emerald-500" />
+          <div>
+            <h2 className="font-bold text-slate-950 dark:text-white">Platform availability</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">PureHub has 26 tools on Android and 26 in this PWA. Browser tools cannot silently clean files, change wallpaper, or access every device sensor; Android asks for those permissions only when you use the matching tool.</p>
+            <Link to={`/${locale}/download`} className="text-link mt-3"><Globe2 className="size-4" /> Compare Android and PWA</Link>
+          </div>
         </div>
       </section>
 

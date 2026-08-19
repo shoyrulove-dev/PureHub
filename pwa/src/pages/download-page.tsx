@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Code2, Download, FileArchive, RefreshCw, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Code2, Download, FileArchive, Globe2, RefreshCw, ShieldCheck, Smartphone } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { normalizeLocale } from '../i18n/locales'
 import { trackJourneyEvent } from '../lib/community-api'
@@ -125,6 +125,17 @@ export function DownloadPage() {
           )}
         </article>
       )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="app-surface rounded-[18px] p-4">
+          <p className="flex items-center gap-2 text-sm font-bold text-slate-950 dark:text-white"><Smartphone className="size-4 text-emerald-500" /> Android beta: 26 native tools</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">The signed APK includes the full Android catalog. F-Droid builds use only FOSS-compatible components.</p>
+        </div>
+        <div className="app-surface rounded-[18px] p-4">
+          <p className="flex items-center gap-2 text-sm font-bold text-slate-950 dark:text-white"><Globe2 className="size-4 text-sky-500" /> PWA: 26 web tools</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Install from your browser for the same 26-tool catalog, with browser-specific limits clearly shown inside each tool.</p>
+        </div>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="promise-card"><ShieldCheck className="size-5 text-emerald-500" /><span>Signed release builds</span></div>
