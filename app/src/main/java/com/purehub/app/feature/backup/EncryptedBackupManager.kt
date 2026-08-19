@@ -71,7 +71,7 @@ class EncryptedBackupManager(private val context: Context) {
     fun recordSuccessfulExport(raw: String) {
         val fingerprint = MessageDigest.getInstance("SHA-256")
             .digest(raw.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
             .take(12)
         context.getSharedPreferences("purehub.encrypted-backup", Context.MODE_PRIVATE).edit()
             .putLong("last_exported_at", System.currentTimeMillis())
