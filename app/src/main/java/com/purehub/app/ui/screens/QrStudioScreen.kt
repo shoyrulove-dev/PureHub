@@ -155,7 +155,7 @@ fun QrStudioScreen(
 
     fun saveHistory(value: String, source: String) {
         if (value.isBlank()) return
-        history = (listOf(QrHistoryItem(value.trim(), source, Instant.now().toString())) + history.filter { it.value != value.trim() }).take(24)
+        history = (listOf(QrHistoryItem(value.trim(), source, Instant.now().toString())) + history.filter { it.value != value.trim() }).take(120)
         preferences.edit().putString("history", encodeQrHistory(history)).apply()
     }
 
@@ -760,8 +760,9 @@ private fun describeQrPayload(value: String): QrPayloadInfo {
         raw.startsWith("tel:", true) -> QrPayloadInfo("Phone number", "Open dialer", raw)
         raw.startsWith("sms:", true) -> QrPayloadInfo("Message", "Open messages", raw)
         raw.startsWith("geo:", true) -> QrPayloadInfo("Location", "Open map", raw)
+        raw.startsWith("BEGIN:VEVENT", true) -> QrPayloadInfo("Calendar event")
         raw.startsWith("MECARD:", true) || raw.startsWith("BEGIN:VCARD", true) -> QrPayloadInfo("Contact card")
-        raw.matches(Regex("(?:\\d{8}|\\d{12,14})")) -> QrPayloadInfo("Product barcode", "Search product online", "https://www.google.com/search?q=${Uri.encode(raw)}", "Product lookup opens a search engine and shares this barcode only after you confirm.")
+        raw.matches(Regex("(?:\\d{8}|\\d{12,14})")) -> QrPayloadInfo("Product barcode", "Compare prices online", "https://www.google.com/search?tbm=shop&q=${Uri.encode(raw)}", "Price comparison opens Google Shopping and shares this barcode only after you confirm.")
         else -> QrPayloadInfo("Plain text")
     }
 }

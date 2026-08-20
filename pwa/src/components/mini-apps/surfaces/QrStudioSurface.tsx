@@ -2,17 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import {
   Camera, Check, Clipboard, Download, ExternalLink, Flashlight, History, ImageUp,
-  QrCode, RefreshCw, ScanLine, Search, Share2, ShieldCheck, Sparkles, Star, Trash2,
+  FolderOpen, NotebookPen, QrCode, RefreshCw, ScanLine, Search, Share2, ShieldCheck, ShoppingBag, Sparkles, Star, Trash2,
 } from 'lucide-react'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 
 const STORAGE_KEY = 'purehub.qr-studio.history.v2'
-const MAX_HISTORY = 24
+const MAX_HISTORY = 120
 
 type StudioTab = 'scan' | 'create' | 'library'
 type ScanSource = 'Camera' | 'Image' | 'Created'
-type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string; pinned?: boolean }
+type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string; pinned?: boolean; folder?: string; note?: string }
 type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'sms' | 'location' | 'calendar' | 'contact'
 type CreatorFields = { primary: string; secondary: string; tertiary: string }
 type DetectedCode = { value: string; format: string }
@@ -66,6 +66,8 @@ function loadHistory(): ScanEntry[] {
       source: row.source === 'Image' || row.source === 'Created' ? row.source : 'Camera',
       format: typeof row.format === 'string' ? row.format : undefined,
       pinned: Boolean(row.pinned),
+      folder: typeof row.folder === 'string' ? row.folder.slice(0, 48) : '',
+      note: typeof row.note === 'string' ? row.note.slice(0, 240) : '',
     }))
   } catch {
     return []
@@ -75,8 +77,14 @@ function loadHistory(): ScanEntry[] {
 let zxingReaderPromise: Promise<InstanceType<(typeof import('@zxing/browser'))['BrowserMultiFormatReader']>> | undefined
 
 function nativeBarcodeDetector() {
-  const Detector = (globalThis as typeof globalThis & { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector
-  return Detector ? new Detector({ formats: ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'] }) : null
+  try {
+    const Detector = (globalThis as typeof globalThis & { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector
+    return Detector ? new Detector({ formats: ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'] }) : null
+  } catch {
+    // Some browsers expose BarcodeDetector but reject one or more requested formats.
+    // Returning null guarantees the local jsQR/ZXing fallbacks still get a chance.
+    return null
+  }
 }
 
 async function decodeCanvas(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): Promise<DetectedCode | null> {
@@ -141,6 +149,7 @@ function payloadDetails(value: string) {
   if (/^tel:/i.test(trimmed)) return { kind: 'Phone number', destination: trimmed, action: 'Open dialer', warning: '' }
   if (/^sms:/i.test(trimmed)) return { kind: 'Message', destination: trimmed, action: 'Open messages', warning: '' }
   if (/^geo:/i.test(trimmed)) return { kind: 'Location', destination: trimmed, action: 'Open map', warning: '' }
+  if (/^BEGIN:VEVENT/i.test(trimmed)) return { kind: 'Calendar event', destination: '', action: '', warning: '' }
   if (/^(MECARD:|BEGIN:VCARD)/i.test(trimmed)) return { kind: 'Contact card', destination: '', action: '', warning: '' }
   if (/^(?:\d{8}|\d{12,14})$/.test(trimmed)) return { kind: 'Product barcode', destination: `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`, action: 'Search product online', warning: 'Product lookup opens a search engine and shares this barcode only after you confirm.' }
   return { kind: 'Plain text', destination: '', action: '', warning: '' }
@@ -185,9 +194,19 @@ export default function QrStudioSurface() {
   const [showMoreTypes, setShowMoreTypes] = useState(false)
   const [historyQuery, setHistoryQuery] = useState('')
   const [historyFilter, setHistoryFilter] = useState<'all' | 'scanned' | 'created'>('all')
+  const [libraryFolder, setLibraryFolder] = useState('')
+  const [libraryNote, setLibraryNote] = useState('')
+  const [productProvider, setProductProvider] = useState<'shopping' | 'web'>('shopping')
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
   const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
   const resultDetails = useMemo(() => payloadDetails(scanResult), [scanResult])
+  const productDestination = useMemo(() => {
+    if (resultDetails.kind !== 'Product barcode') return resultDetails.destination
+    const query = encodeURIComponent(scanResult.trim())
+    return productProvider === 'shopping'
+      ? `https://www.google.com/search?tbm=shop&q=${query}`
+      : `https://duckduckgo.com/?q=${query}`
+  }, [productProvider, resultDetails.destination, resultDetails.kind, scanResult])
   const contrast = useMemo(() => contrastRatio(foreground, background), [background, foreground])
 
   useEffect(() => {
@@ -207,7 +226,7 @@ export default function QrStudioSurface() {
     if (!value.trim()) return
     setHistory((current) => {
       const existing = current.find((item) => item.value === value.trim())
-      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source, format: format || undefined, pinned: existing?.pinned }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
+      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source, format: format || undefined, pinned: existing?.pinned, folder: existing?.folder, note: existing?.note }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
@@ -219,6 +238,8 @@ export default function QrStudioSurface() {
     setScanResult(code.value)
     setScanFormat(code.format)
     setOpenConfirmed(false)
+    setLibraryFolder('')
+    setLibraryNote('')
     setScanStatus(`${source} ${code.format.toLowerCase()} scan complete. Review the result before taking action.`)
     saveEntry(code.value, source, code.format)
     navigator.vibrate?.(45)
@@ -340,6 +361,8 @@ export default function QrStudioSurface() {
     setScanFormat('')
     setOpenConfirmed(false)
     setCopied(false)
+    setLibraryFolder('')
+    setLibraryNote('')
     setScanStatus(cameraActive ? 'Hold a QR code inside the frame. Detection is automatic.' : 'Ready for another scan.')
   }
 
@@ -355,9 +378,17 @@ export default function QrStudioSurface() {
   }
 
   const exportHistory = () => {
-    const csv = ['value,format,source,saved_at', ...history.map((item) => `"${item.value.replaceAll('"', '""')}",${item.format ?? ''},${item.source},${item.savedAt}`)].join('\n')
+    const csvField = (value: string | undefined) => `"${(value ?? '').replaceAll('"', '""')}"`
+    const csv = ['value,format,source,folder,note,saved_at', ...history.map((item) => [csvField(item.value), csvField(item.format), csvField(item.source), csvField(item.folder), csvField(item.note), item.savedAt].join(','))].join('\n')
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'purehub-qr-library.csv'; anchor.click(); URL.revokeObjectURL(url)
+    markToolSuccess('qr-studio', { headline: 'QR library exported', detail: 'Your QR records, folders, and notes were exported locally as CSV.', shareText: 'I keep my QR library private and exportable with PureHub.' })
+  }
+
+  const downloadPayload = (extension: 'ics' | 'vcf' | 'txt') => {
+    const mime = extension === 'ics' ? 'text/calendar;charset=utf-8' : extension === 'vcf' ? 'text/vcard;charset=utf-8' : 'text/plain;charset=utf-8'
+    const url = URL.createObjectURL(new Blob([scanResult], { type: mime }))
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = `purehub-scanned-code.${extension}`; anchor.click(); URL.revokeObjectURL(url)
   }
 
   const shareQr = async () => {
@@ -379,13 +410,19 @@ export default function QrStudioSurface() {
   }
 
   const visibleHistory = history.filter((item) => {
-    const matchesQuery = !historyQuery.trim() || `${item.value} ${item.format ?? ''} ${item.source}`.toLowerCase().includes(historyQuery.trim().toLowerCase())
+    const matchesQuery = !historyQuery.trim() || `${item.value} ${item.format ?? ''} ${item.source} ${item.folder ?? ''} ${item.note ?? ''}`.toLowerCase().includes(historyQuery.trim().toLowerCase())
     const matchesFilter = historyFilter === 'all' || (historyFilter === 'created' ? item.source === 'Created' : item.source !== 'Created')
     return matchesQuery && matchesFilter
   }).sort((first, second) => Number(Boolean(second.pinned)) - Number(Boolean(first.pinned)))
 
   const togglePin = (value: string) => setHistory((current) => {
     const next = current.map((item) => item.value === value ? { ...item, pinned: !item.pinned } : item)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    return next
+  })
+
+  const updateEntry = (value: string, patch: Pick<ScanEntry, 'folder' | 'note'>) => setHistory((current) => {
+    const next = current.map((item) => item.value === value ? { ...item, ...patch } : item)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     return next
   })
@@ -426,10 +463,18 @@ export default function QrStudioSurface() {
             {resultDetails.kind === 'Website' && resultDetails.destination ? <p className="mt-3 truncate rounded-xl border border-emerald-200 bg-white px-3 py-2 text-base font-black text-slate-950 dark:border-emerald-900 dark:bg-slate-950 dark:text-white">{new URL(resultDetails.destination).hostname}</p> : null}
             <p className="mt-3 max-h-32 overflow-auto break-all rounded-xl bg-white/80 p-3 text-sm font-semibold text-slate-900 dark:bg-slate-950/70 dark:text-white">{scanResult}</p>
             {resultDetails.warning ? <p className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-300">{resultDetails.warning}</p> : null}
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+              <label className="relative"><FolderOpen className="pointer-events-none absolute left-2.5 top-2.5 size-3.5 text-slate-400" /><input aria-label="Library folder" maxLength={48} value={libraryFolder} onChange={(event) => setLibraryFolder(event.target.value)} placeholder="Folder (optional)" className="min-h-9 w-full rounded-lg border border-emerald-200 bg-white px-2 py-1.5 pl-8 text-xs font-semibold text-slate-700 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-200" /></label>
+              <label className="relative"><NotebookPen className="pointer-events-none absolute left-2.5 top-2.5 size-3.5 text-slate-400" /><input aria-label="Private library note" maxLength={240} value={libraryNote} onChange={(event) => setLibraryNote(event.target.value)} placeholder="Private note (optional)" className="min-h-9 w-full rounded-lg border border-emerald-200 bg-white px-2 py-1.5 pl-8 text-xs font-semibold text-slate-700 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-200" /></label>
+              <ActionButton tone="muted" className="justify-center" onClick={() => updateEntry(scanResult, { folder: libraryFolder.trim(), note: libraryNote.trim() })}><History className="size-4" />Save details</ActionButton>
+            </div>
+            {resultDetails.kind === 'Product barcode' ? <label className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-white/75 px-3 py-2 text-xs font-bold text-slate-700 dark:border-emerald-900 dark:bg-slate-950/70 dark:text-slate-200"><ShoppingBag className="size-4 shrink-0 text-emerald-700 dark:text-emerald-300" />Lookup after confirmation<select aria-label="Product lookup provider" value={productProvider} onChange={(event) => { setProductProvider(event.target.value as 'shopping' | 'web'); setOpenConfirmed(false) }} className="ml-auto min-h-8 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold dark:border-slate-600 dark:bg-slate-900"><option value="shopping">Compare prices</option><option value="web">Private web search</option></select></label> : null}
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
               <ActionButton tone="muted" className="justify-center" onClick={() => { void navigator.clipboard.writeText(scanResult); setCopied(true) }}>{copied ? <Check className="size-4" /> : <Clipboard className="size-4" />}{copied ? 'Copied' : 'Copy'}</ActionButton>
               <ActionButton tone="muted" className="justify-center" onClick={() => void shareResult()}><Share2 className="size-4" />Share</ActionButton>
-              {resultDetails.destination ? <ActionButton className="col-span-2 justify-center" onClick={() => { if (openConfirmed) window.open(resultDetails.destination, '_blank', 'noopener,noreferrer'); else setOpenConfirmed(true) }}><ExternalLink className="size-4" />{openConfirmed ? resultDetails.action : resultDetails.kind === 'Product barcode' ? 'Confirm external product search' : `Review domain, then ${resultDetails.action.toLowerCase()}`}</ActionButton> : null}
+              {resultDetails.kind === 'Calendar event' ? <ActionButton tone="muted" className="col-span-2 justify-center" onClick={() => downloadPayload('ics')}><Download className="size-4" />Download calendar file</ActionButton> : null}
+              {resultDetails.kind === 'Contact card' ? <ActionButton tone="muted" className="col-span-2 justify-center" onClick={() => downloadPayload(/^BEGIN:VCARD/i.test(scanResult) ? 'vcf' : 'txt')}><Download className="size-4" />Save contact payload</ActionButton> : null}
+              {productDestination ? <ActionButton className="col-span-2 justify-center" onClick={() => { if (openConfirmed) window.open(productDestination, '_blank', 'noopener,noreferrer'); else setOpenConfirmed(true) }}><ExternalLink className="size-4" />{openConfirmed ? resultDetails.kind === 'Product barcode' && productProvider === 'shopping' ? 'Compare prices online' : resultDetails.action : resultDetails.kind === 'Product barcode' ? 'Confirm external product lookup' : `Review domain, then ${resultDetails.action.toLowerCase()}`}</ActionButton> : null}
               <ActionButton tone="muted" className="col-span-2 justify-center" onClick={resetScanner}><RefreshCw className="size-4" />Scan another</ActionButton>
             </div>
           </article> : null}
