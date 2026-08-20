@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type VaultItem = {
   id: string
@@ -61,6 +62,7 @@ export default function PasswordVaultSurface() {
     link.download = `purehub-vault-backup-${new Date().toISOString().slice(0, 10)}.json`
     link.click()
     URL.revokeObjectURL(url)
+    markToolSuccess('password-vault', { headline: 'Vault backup exported', detail: `${items.length} encrypted ${items.length === 1 ? 'entry' : 'entries'} remained protected in a local backup file.`, shareText: 'I exported a local encrypted vault backup with PureHub.' })
   }
 
   const importBackup = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +103,7 @@ export default function PasswordVaultSurface() {
               setLabel('')
               setSecret('')
               setNotice('Encrypted entry saved. The label remains visible; the secret does not.')
+              markToolSuccess('password-vault', { headline: 'Encrypted vault entry saved', detail: 'The secret was encrypted with your passphrase before local storage.', shareText: 'I saved an encrypted local secret with PureHub.' })
             }}
           >Save encrypted entry</ActionButton>
           <div className="grid grid-cols-2 gap-2">

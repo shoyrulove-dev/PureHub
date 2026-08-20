@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Camera, Download, FileImage, FileText, ImagePlus, ScanText, ShieldCheck, Trash2 } from 'lucide-react'
 import { ActionButton, FormInput } from '../MiniAppPrimitives'
-import { trackProductEvent } from '../../../lib/community-api'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type Page = { id: string; file: File; url: string; rotation: number; fit: 'contain' | 'cover'; crop: number; recognizedText?: string }
 const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
@@ -82,7 +82,7 @@ export default function DocumentSuiteSurface() {
           pdf.setTextColor(0, 0, 0)
         }
       }
-      pdf.setProperties({ title, creator: 'PureHub Document Suite' }); pdf.save(`${safeName(title)}.pdf`); setStatus('PDF exported. No document was uploaded.'); void trackProductEvent('doc-to-pdf', 'complete')
+      pdf.setProperties({ title, creator: 'PureHub Document Suite' }); pdf.save(`${safeName(title)}.pdf`); setStatus('PDF exported. No document was uploaded.'); markToolSuccess('doc-to-pdf', { headline: 'PDF exported locally', detail: `${pages.length} page${pages.length === 1 ? '' : 's'} were packaged into a private PDF.`, shareText: 'I exported a PDF locally with PureHub.' })
     } catch { setStatus('The PDF could not be created. Try fewer or smaller images.') } finally { setBusy(false) }
   }
 

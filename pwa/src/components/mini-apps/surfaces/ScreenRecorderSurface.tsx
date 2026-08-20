@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Download, MonitorUp, Square } from 'lucide-react'
 import { ActionButton, FlagshipHero, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 export default function ScreenRecorderSurface() {
   const recorder = useRef<MediaRecorder | null>(null)
@@ -39,6 +40,7 @@ export default function ScreenRecorderSurface() {
         if (videoUrl) URL.revokeObjectURL(videoUrl)
         setVideoUrl(URL.createObjectURL(new Blob(chunks.current, { type: mimeType })))
         setMessage('Recording ready. Preview or download it locally.')
+        markToolSuccess('screen-recorder', { headline: 'Screen recording ready', detail: 'Your recording is in browser memory and ready to preview or download.', shareText: 'I recorded my screen locally with PureHub.' })
       }
       display.getVideoTracks()[0].addEventListener('ended', stop, { once: true })
       recorder.current = next

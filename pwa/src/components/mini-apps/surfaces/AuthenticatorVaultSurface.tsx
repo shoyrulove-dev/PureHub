@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, Clipboard, KeyRound, LockKeyhole, Plus, Trash2 } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type StoredAccount = {
   id: string
@@ -170,6 +171,7 @@ export default function AuthenticatorVaultSurface() {
       setOpened([...opened, { ...item, plainSecret: parsed.secret, code: await createTotp(parsed.secret) }])
       setLabel(''); setIssuer(''); setAccount(''); setSecretInput('')
       setMessage('Account encrypted and saved on this device.')
+      markToolSuccess('authenticator-vault', { headline: '2FA account added securely', detail: 'The account secret was encrypted and saved only in this browser.', shareText: 'I added an offline 2FA code to PureHub.' })
     } catch {
       setMessage('Enter a valid Base32 secret or otpauth:// URI.')
     }

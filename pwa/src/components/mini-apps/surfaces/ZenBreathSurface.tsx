@@ -46,7 +46,7 @@ export default function ZenBreathSurface() {
     oscillator.onended = () => void context.close()
   }, [haptics, sound])
 
-  const saveSession = () => {
+  const saveSession = useCallback(() => {
     if (completedRef.current) return
     completedRef.current = true
     setTotalSessions((current) => {
@@ -55,7 +55,7 @@ export default function ZenBreathSurface() {
       return next
     })
     markToolSuccess('zen-breath', { headline: 'Breathing session complete', detail: `${targetMinutes}-minute ${PATTERNS[pattern].label.toLowerCase()} session saved only on this device.`, shareText: `I completed a private ${targetMinutes}-minute breathing session with PureHub.` })
-  }
+  }, [pattern, targetMinutes])
 
   const reset = (nextPattern = pattern) => {
     setPattern(nextPattern); setPhaseIndex(0); setRemaining(PATTERNS[nextPattern].phases[0].seconds)
@@ -81,7 +81,7 @@ export default function ZenBreathSurface() {
     if (sessionSeconds < targetSeconds || completedRef.current) return
     saveSession(); setRunning(false)
     if (haptics && 'vibrate' in navigator) navigator.vibrate([100, 70, 160])
-  }, [haptics, sessionSeconds, targetSeconds])
+  }, [haptics, saveSession, sessionSeconds, targetSeconds])
 
   const toggle = () => {
     if (running) { if (sessionSeconds >= 30) saveSession(); setRunning(false) }

@@ -8,6 +8,7 @@ import {
   type HabitRecord,
 } from '../../../lib/db/purehub-db'
 import { decryptBackup, downloadBackup, encryptBackup } from '../../../lib/encrypted-backup'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type View = 'today' | 'insights' | 'manage'
 
@@ -110,7 +111,11 @@ export default function ZenHabitSurface() {
   const toggleDay = async (habitId: string, day: string) => {
     const existing = checkIns.find((item) => item.habitId === habitId && item.completedOn === day)
     if (existing) await habitCheckInRepository.remove(existing.id)
-    else await habitCheckInRepository.upsert({ id: createId(), habitId, completedOn: day, createdAt: new Date().toISOString() })
+    else {
+      await habitCheckInRepository.upsert({ id: createId(), habitId, completedOn: day, createdAt: new Date().toISOString() })
+      const habit = habits.find((item) => item.id === habitId)
+      markToolSuccess('zen-habit', { headline: 'Habit check-in saved', detail: `${habit?.name ?? 'Your habit'} is marked complete for ${day}, only on this device.`, shareText: 'I completed a private habit check-in with PureHub.' })
+    }
     await load()
   }
 
@@ -129,6 +134,7 @@ export default function ZenHabitSurface() {
     setDescription('')
     setShowComposer(false)
     await load()
+    markToolSuccess('zen-habit', { headline: 'Habit created', detail: `${name.trim()} is ready for private daily check-ins.`, shareText: 'I set up a private habit in PureHub.' })
   }
 
   const exportBackup = async () => {
@@ -137,6 +143,7 @@ export default function ZenHabitSurface() {
       const contents = await encryptBackup('zen-habit', { habits, checkIns }, backupPassphrase)
       downloadBackup(contents, `purehub-zen-habit-${today}.purehub`)
       setBackupNotice('Encrypted backup saved. Keep its passphrase separately.')
+      markToolSuccess('zen-habit', { headline: 'Encrypted habit backup saved', detail: 'Your local habit history was exported with device-side encryption.', shareText: 'I backed up my private habit data with PureHub.' })
     } catch (error) {
       setBackupNotice(error instanceof Error ? error.message : 'Could not create the backup.')
     } finally {

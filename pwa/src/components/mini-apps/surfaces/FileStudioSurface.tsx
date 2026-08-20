@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { unzipSync, zipSync } from 'fflate'
 import { Archive, Download, FileKey, Share2 } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type FileInfo = { file: File; hash?: string }
 
@@ -32,6 +33,7 @@ export default function FileStudioSurface() {
     }))
     setItems(next)
     setMessage('SHA-256 checksums calculated locally.')
+    markToolSuccess('file-studio', { headline: 'File checksums calculated', detail: `SHA-256 hashes were generated locally for ${next.length} file${next.length === 1 ? '' : 's'}.`, shareText: 'I verified file checksums locally with PureHub.' })
   }
 
   const createZip = async () => {
@@ -40,6 +42,7 @@ export default function FileStudioSurface() {
     const bytes = zipSync(input, { level: 6 })
     saveBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), 'purehub-files.zip')
     setMessage(`Created a ${formatBytes(bytes.byteLength)} ZIP locally.`)
+    markToolSuccess('file-studio', { headline: 'ZIP archive created', detail: `${items.length} local file${items.length === 1 ? '' : 's'} were archived without upload.`, shareText: 'I created a local ZIP archive with PureHub.' })
   }
 
   const extract = async (file: File) => {
@@ -49,6 +52,7 @@ export default function FileStudioSurface() {
         window.setTimeout(() => saveBlob(new Blob([bytes as BlobPart]), name.split('/').pop() || `file-${index + 1}`), index * 120)
       })
       setMessage(`Extracted ${Object.keys(files).length} entries as local downloads.`)
+      markToolSuccess('file-studio', { headline: 'ZIP extracted locally', detail: `${Object.keys(files).length} file${Object.keys(files).length === 1 ? '' : 's'} were prepared as local downloads.`, shareText: 'I extracted a ZIP locally with PureHub.' })
     } catch { setMessage('This ZIP could not be read.') }
   }
 
