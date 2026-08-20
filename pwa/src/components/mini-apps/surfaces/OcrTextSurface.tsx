@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { ocrDocumentRepository, type OcrDocumentRecord } from '../../../lib/db/purehub-db'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
-import { trackProductEvent } from '../../../lib/community-api'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 const OCR_LANGUAGES = [
   { code: 'eng', label: 'English' },
@@ -155,7 +155,7 @@ export default function OcrTextSurface() {
           setOcrText(text)
           setStatus('Text extracted privately. Review it before export.')
           setTab('text')
-          void trackProductEvent('ocr-text', 'complete')
+          markToolSuccess('ocr-text', { headline: 'Text extracted locally', detail: `${nextPage.confidence}% recognition confidence. Review the text before exporting or sharing.`, shareText: 'I turned an image into editable text locally with PureHub.' })
         }
       } finally {
         await worker.terminate()
@@ -179,6 +179,7 @@ export default function OcrTextSurface() {
     await ocrDocumentRepository.put(record)
     setDocuments((current) => [record, ...current])
     setStatus('Saved to your private OCR library.')
+    markToolSuccess('ocr-text', { headline: 'OCR document saved', detail: 'Searchable text was saved only in this browser library.', shareText: 'I saved a private OCR document with PureHub.' })
   }
 
   const exportPdf = async () => {
@@ -195,7 +196,7 @@ export default function OcrTextSurface() {
       pdf.text(line, 42, y); y += 15
     })
     pdf.save(`${safeName(title)}.pdf`)
-    void trackProductEvent('ocr-text', 'complete')
+    markToolSuccess('ocr-text', { headline: 'OCR text exported as PDF', detail: 'Your editable scan was exported locally as a PDF.', shareText: 'I exported OCR text to a PDF locally with PureHub.' })
   }
 
   const sendToDocumentSuite = async () => {
@@ -264,7 +265,7 @@ export default function OcrTextSurface() {
               <div className="mt-3 flex gap-2 overflow-x-auto">{(['Original', 'Clean', 'B&W'] as ImageFilter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${filter === value ? 'border-emerald-400 bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-300 dark:border-slate-700'}`}>{value}</button>)}</div>
               <label className="mt-3 block text-xs font-bold text-slate-600 dark:text-slate-300">Edge crop {Math.round(crop * 100)}%<input type="range" min="0" max="0.16" step="0.01" value={crop} onChange={(event) => setCrop(Number(event.target.value))} className="mt-2 w-full accent-emerald-600" /></label>
             </div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Recognition language<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}{cachedLanguages.includes(item.code) ? ' · ready offline' : ' · first download'}</option>)}</select></label>
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Recognition language<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}{cachedLanguages.includes(item.code) ? ' · ready offline' : ' · first download'}</option>)}</select><span className="mt-1 block text-xs font-medium text-slate-500">Usually 10–30 seconds per page after the language pack is ready; first use can take longer.</span></label>
             {running && packProgress > 0 ? <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/30"><div className="flex justify-between text-xs font-bold text-emerald-800 dark:text-emerald-200"><span>OCR pack and recognition</span><span>{packProgress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${packProgress}%` }} /></div></div> : null}
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
           </div>
