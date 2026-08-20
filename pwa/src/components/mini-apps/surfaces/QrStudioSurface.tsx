@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import {
   Camera, Check, Clipboard, Download, ExternalLink, Flashlight, History, ImageUp,
-  QrCode, RefreshCw, ScanLine, Share2, ShieldCheck, Sparkles, Trash2,
+  QrCode, RefreshCw, ScanLine, Search, Share2, ShieldCheck, Sparkles, Star, Trash2,
 } from 'lucide-react'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
@@ -12,7 +12,7 @@ const MAX_HISTORY = 24
 
 type StudioTab = 'scan' | 'create' | 'library'
 type ScanSource = 'Camera' | 'Image' | 'Created'
-type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string }
+type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string; pinned?: boolean }
 type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'sms' | 'location' | 'calendar' | 'contact'
 type CreatorFields = { primary: string; secondary: string; tertiary: string }
 type DetectedCode = { value: string; format: string }
@@ -65,6 +65,7 @@ function loadHistory(): ScanEntry[] {
       savedAt: String(row.savedAt ?? new Date().toISOString()),
       source: row.source === 'Image' || row.source === 'Created' ? row.source : 'Camera',
       format: typeof row.format === 'string' ? row.format : undefined,
+      pinned: Boolean(row.pinned),
     }))
   } catch {
     return []
@@ -181,6 +182,9 @@ export default function QrStudioSurface() {
   const [copied, setCopied] = useState(false)
   const [openConfirmed, setOpenConfirmed] = useState(false)
   const [creatorVerified, setCreatorVerified] = useState(false)
+  const [showMoreTypes, setShowMoreTypes] = useState(false)
+  const [historyQuery, setHistoryQuery] = useState('')
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'scanned' | 'created'>('all')
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
   const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
   const resultDetails = useMemo(() => payloadDetails(scanResult), [scanResult])
@@ -202,7 +206,8 @@ export default function QrStudioSurface() {
   const saveEntry = (value: string, source: ScanSource, format = '') => {
     if (!value.trim()) return
     setHistory((current) => {
-      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source, format: format || undefined }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
+      const existing = current.find((item) => item.value === value.trim())
+      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source, format: format || undefined, pinned: existing?.pinned }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
@@ -373,6 +378,18 @@ export default function QrStudioSurface() {
     setCopied(true)
   }
 
+  const visibleHistory = history.filter((item) => {
+    const matchesQuery = !historyQuery.trim() || `${item.value} ${item.format ?? ''} ${item.source}`.toLowerCase().includes(historyQuery.trim().toLowerCase())
+    const matchesFilter = historyFilter === 'all' || (historyFilter === 'created' ? item.source === 'Created' : item.source !== 'Created')
+    return matchesQuery && matchesFilter
+  }).sort((first, second) => Number(Boolean(second.pinned)) - Number(Boolean(first.pinned)))
+
+  const togglePin = (value: string) => setHistory((current) => {
+    const next = current.map((item) => item.value === value ? { ...item, pinned: !item.pinned } : item)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    return next
+  })
+
   return (
     <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_24px_70px_-45px_rgba(15,23,42,.5)] dark:border-slate-700 dark:bg-slate-900">
       <header className="bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-5 sm:px-6 dark:from-emerald-950/45 dark:via-slate-900 dark:to-cyan-950/30">
@@ -395,17 +412,18 @@ export default function QrStudioSurface() {
             <div className="pointer-events-none absolute inset-0 grid place-items-center"><div className={`relative aspect-square w-[58%] max-w-64 rounded-[28px] border-2 ${scanResult ? 'border-emerald-400' : 'border-white/75'} shadow-[0_0_0_999px_rgba(2,6,23,.28)]`}><span className="absolute -left-0.5 -top-0.5 size-8 rounded-tl-[26px] border-l-4 border-t-4 border-emerald-400"/><span className="absolute -right-0.5 -top-0.5 size-8 rounded-tr-[26px] border-r-4 border-t-4 border-emerald-400"/><span className="absolute -bottom-0.5 -left-0.5 size-8 rounded-bl-[26px] border-b-4 border-l-4 border-emerald-400"/><span className="absolute -bottom-0.5 -right-0.5 size-8 rounded-br-[26px] border-b-4 border-r-4 border-emerald-400"/>{cameraActive && !scanResult ? <span className="absolute left-[8%] right-[8%] top-1/2 h-0.5 bg-emerald-300 shadow-[0_0_16px_3px_rgba(110,231,183,.7)]"/> : null}{scanResult ? <span className="absolute inset-0 grid place-items-center"><span className="grid size-12 place-items-center rounded-full bg-emerald-400 text-slate-950"><Check className="size-6" /></span></span> : null}</div></div>
             <canvas ref={scanCanvasRef} className="hidden" />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-center">
+          <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white/90 p-2 shadow-lg dark:border-slate-700 dark:bg-slate-950/90 sm:flex sm:justify-center">
             <ActionButton className="justify-center" onClick={cameraActive ? stopCamera : startCamera}><Camera className="size-4" />{cameraActive ? 'Stop' : 'Start camera'}</ActionButton>
             <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800 dark:border-slate-600 dark:text-slate-100"><ImageUp className="size-4" />Choose image<input className="sr-only" type="file" accept="image/*" onChange={(event) => void handleScanFile(event.target.files?.[0])} /></label>
             <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800 dark:border-slate-600 dark:text-slate-100"><ImageUp className="size-4" />Batch<input className="sr-only" multiple type="file" accept="image/*" onChange={(event) => void handleScanFiles(event.target.files)} /></label>
             {torchAvailable ? <ActionButton className="justify-center" tone="muted" onClick={() => void toggleTorch()}><Flashlight className="size-4" />{torchOn ? 'Torch off' : 'Torch'}</ActionButton> : null}
           </div>
           {zoomRange ? <label className="mt-3 block rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">Camera zoom <span className="float-right text-emerald-700 dark:text-emerald-300">{zoom.toFixed(1)}×</span><input aria-label="Camera zoom" className="mt-2 w-full accent-emerald-600" type="range" min={zoomRange.min} max={zoomRange.max} step={zoomRange.step} value={zoom} onChange={(event) => void setCameraZoom(Number(event.target.value))} /></label> : null}
-          <p className="mt-3 text-center text-sm text-slate-500 dark:text-slate-400">{scanStatus}</p>
+          <p aria-live="polite" className="mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">{scanStatus}</p>
           {batchStatus ? <p className="mt-2 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300">{batchStatus}</p> : null}
-          {scanResult ? <article className="mt-4 rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800 dark:bg-emerald-950/25">
-            <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950">{resultDetails.kind}</span><span className="flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-200"><ShieldCheck className="size-3.5" />{scanFormat || 'CODE'} · local</span></div>
+          {scanResult ? <article className="mt-4 rounded-t-[28px] border border-emerald-200 bg-emerald-50/95 p-4 shadow-[0_-16px_45px_-30px_rgba(5,150,105,.8)] dark:border-emerald-800 dark:bg-emerald-950/80 sm:rounded-[24px]">
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-emerald-200 dark:bg-emerald-800 sm:hidden"/><div className="flex items-center justify-between gap-3"><span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950">{resultDetails.kind}</span><span className="flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-200"><ShieldCheck className="size-3.5" />{scanFormat || 'CODE'} · local</span></div>
+            {resultDetails.kind === 'Website' && resultDetails.destination ? <p className="mt-3 truncate rounded-xl border border-emerald-200 bg-white px-3 py-2 text-base font-black text-slate-950 dark:border-emerald-900 dark:bg-slate-950 dark:text-white">{new URL(resultDetails.destination).hostname}</p> : null}
             <p className="mt-3 max-h-32 overflow-auto break-all rounded-xl bg-white/80 p-3 text-sm font-semibold text-slate-900 dark:bg-slate-950/70 dark:text-white">{scanResult}</p>
             {resultDetails.warning ? <p className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-300">{resultDetails.warning}</p> : null}
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
@@ -419,7 +437,8 @@ export default function QrStudioSurface() {
 
         {tab === 'create' ? <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
           <div><h3 className="text-lg font-black text-slate-950 dark:text-white">Create a code</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Pick a format and fill in only the information people need.</p>
-            <div className="mt-4 flex flex-wrap gap-2">{(Object.keys(templates) as QrTemplate[]).map((item) => <button key={item} type="button" onClick={() => { setTemplate(item); setCreatorFields(defaultFields[item]) }} className={`min-h-10 rounded-full border px-3 text-xs font-black ${template === item ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'}`}>{templates[item].label}</button>)}</div>
+            <div className="mt-4 flex flex-wrap gap-2">{(['url', 'text', 'wifi'] as QrTemplate[]).map((item) => <button key={item} type="button" onClick={() => { setTemplate(item); setCreatorFields(defaultFields[item]) }} className={`min-h-11 rounded-full border px-3 text-xs font-black ${template === item ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'}`}>{templates[item].label}</button>)}<button type="button" onClick={() => setShowMoreTypes((value) => !value)} className="min-h-11 rounded-full border border-slate-300 px-3 text-xs font-black text-slate-600 dark:border-slate-600 dark:text-slate-300">{showMoreTypes ? 'Less types' : 'More types'}</button></div>
+            {showMoreTypes ? <div className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-slate-50 p-2 dark:bg-slate-950">{(['email', 'phone', 'sms', 'location', 'calendar', 'contact'] as QrTemplate[]).map((item) => <button key={item} type="button" onClick={() => { setTemplate(item); setCreatorFields(defaultFields[item]) }} className={`min-h-10 rounded-full border px-3 text-xs font-black ${template === item ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'}`}>{templates[item].label}</button>)}</div> : null}
             <div className="mt-4 grid gap-3">
               {template === 'text'
                 ? <FormTextArea className="min-h-32" aria-label="Text" placeholder="Write something useful" value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />
@@ -437,7 +456,7 @@ export default function QrStudioSurface() {
         </div> : null}
 
         {tab === 'library' ? <div><div className="flex items-center justify-between gap-3"><div><h3 className="text-lg font-black text-slate-950 dark:text-white">Private library</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Stored only in this browser. Nothing is synced.</p></div>{history.length ? <div className="flex gap-1"><button type="button" title="Export library" className="grid size-10 place-items-center rounded-xl text-emerald-700 hover:bg-emerald-50" onClick={exportHistory}><Download className="size-4" /></button><button type="button" title="Clear library" className="grid size-10 place-items-center rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" onClick={() => { localStorage.removeItem(STORAGE_KEY); setHistory([]) }}><Trash2 className="size-4" /></button></div> : null}</div>
-          {history.length ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={`${item.savedAt}-${item.value}`} type="button" className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 p-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-700 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/20" onClick={() => { setScanResult(item.value); setScanFormat(item.format ?? ''); setTab('scan'); scanLockedRef.current = true }}><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-100 group-hover:text-emerald-800 dark:bg-slate-800 dark:text-slate-200"><QrCode className="size-5" /></span><span className="min-w-0"><span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{item.value}</span><span className="mt-0.5 block text-xs text-slate-500">{item.format ? `${item.format} · ` : ''}{item.source} · {new Date(item.savedAt).toLocaleString()}</span></span></button>)}</div> : <div className="mt-5 grid min-h-48 place-items-center rounded-[22px] border border-dashed border-slate-300 text-center dark:border-slate-700"><div><History className="mx-auto size-8 text-slate-400"/><p className="mt-2 font-bold text-slate-700 dark:text-slate-200">No saved codes yet</p><p className="mt-1 text-sm text-slate-500">Scans and codes you save will appear here.</p></div></div>}
+          {history.length ? <><label className="relative mt-4 block"><Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-slate-400"/><FormInput aria-label="Search history" value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Search codes" className="pl-10" /></label><div className="mt-2 flex gap-2">{(['all', 'scanned', 'created'] as const).map((filter) => <button key={filter} type="button" onClick={() => setHistoryFilter(filter)} className={`min-h-9 rounded-full px-3 text-xs font-black ${historyFilter === filter ? 'bg-emerald-700 text-white dark:bg-emerald-400 dark:text-slate-950' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>{filter === 'all' ? 'All' : filter === 'scanned' ? 'Scanned' : 'Created'}</button>)}</div><div className="mt-3 grid gap-2 sm:grid-cols-2">{visibleHistory.map((item) => <div key={`${item.savedAt}-${item.value}`} className="group flex min-w-0 items-center gap-2 rounded-2xl border border-slate-200 p-3 transition hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-700 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/20"><button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => { setScanResult(item.value); setScanFormat(item.format ?? ''); setTab('scan'); scanLockedRef.current = true }}><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-100 group-hover:text-emerald-800 dark:bg-slate-800 dark:text-slate-200"><QrCode className="size-5" /></span><span className="min-w-0"><span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{item.value}</span><span className="mt-0.5 block text-xs text-slate-500">{item.format ? `${item.format} · ` : ''}{item.source} · {new Date(item.savedAt).toLocaleString()}</span></span></button><button type="button" aria-label={item.pinned ? 'Unpin code' : 'Pin code'} onClick={() => togglePin(item.value)} className={`grid size-10 shrink-0 place-items-center rounded-xl ${item.pinned ? 'text-amber-500' : 'text-slate-400'}`}><Star className={`size-4 ${item.pinned ? 'fill-current' : ''}`}/></button></div>)}{!visibleHistory.length ? <p className="col-span-full py-6 text-center text-sm text-slate-500">No matching codes.</p> : null}</div></> : <div className="mt-5 grid min-h-48 place-items-center rounded-[22px] border border-dashed border-slate-300 text-center dark:border-slate-700"><div><History className="mx-auto size-8 text-slate-400"/><p className="mt-2 font-bold text-slate-700 dark:text-slate-200">No saved codes yet</p><p className="mt-1 text-sm text-slate-500">Scans and codes you save will appear here.</p></div></div>}
         </div> : null}
       </div>
     </section>

@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current preview is PureHub 1.0.0-beta.24. Its PWA is deployed to production, and signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
+The current preview is PureHub 1.0.0-beta.25. Its PWA is deployed to production, and signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

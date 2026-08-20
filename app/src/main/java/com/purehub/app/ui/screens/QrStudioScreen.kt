@@ -539,6 +539,11 @@ private fun CreatorField(
 
 @Composable
 private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryItem) -> Unit, onClear: () -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var showCreatedOnly by rememberSaveable { mutableStateOf(false) }
+    val visibleHistory = history.filter { item ->
+        (!showCreatedOnly || item.source == "Created") && (query.isBlank() || "${item.value} ${item.source}".contains(query, ignoreCase = true))
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -556,7 +561,11 @@ private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryI
                         Text("Your scans and saved creations appear here.", style = MaterialTheme.typography.bodySmall)
                     }
                 }
-            } else history.forEachIndexed { index, item ->
+            } else {
+                OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Search history") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+                FilterChip(selected = showCreatedOnly, onClick = { showCreatedOnly = !showCreatedOnly }, label = { Text(if (showCreatedOnly) "Created only" else "All codes") })
+            } 
+            visibleHistory.forEachIndexed { index, item ->
                 Surface(onClick = { onSelect(item) }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
                     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(if (item.source == "Created") Icons.Rounded.QrCode2 else Icons.Rounded.QrCodeScanner, null, tint = MaterialTheme.colorScheme.primary)
@@ -567,8 +576,9 @@ private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryI
                         }
                     }
                 }
-                if (index < history.lastIndex) HorizontalDivider(color = Color.Transparent)
+                if (index < visibleHistory.lastIndex) HorizontalDivider(color = Color.Transparent)
             }
+            if (history.isNotEmpty() && visibleHistory.isEmpty()) Text("No matching codes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
