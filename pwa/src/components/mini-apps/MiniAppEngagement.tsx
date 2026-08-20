@@ -3,6 +3,7 @@ import { Check, Download, Heart, MessageSquare, Send, Share2, X } from 'lucide-r
 import type { MiniAppId } from '../../features/catalog/tabs'
 import { submitProductFeedback, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
 import { shareCard } from '../../lib/share-card'
+import type { ToolSuccess } from '../../lib/tool-success'
 
 type MiniAppEngagementProps = {
   miniAppId: MiniAppId
@@ -18,6 +19,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [shareStatus, setShareStatus] = useState('')
   const [completed, setCompleted] = useState(() => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true')
+  const [success, setSuccess] = useState<ToolSuccess | null>(null)
 
   useEffect(() => {
     const day = new Date().toISOString().slice(0, 10)
@@ -36,6 +38,15 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
     return () => window.removeEventListener('purehub:product-complete', onComplete)
   }, [miniAppId])
 
+  useEffect(() => {
+    const onSuccess = (event: Event) => {
+      const detail = (event as CustomEvent<{ miniAppId: MiniAppId; success: ToolSuccess }>).detail
+      if (detail?.miniAppId === miniAppId) setSuccess(detail.success)
+    }
+    window.addEventListener('purehub:tool-success', onSuccess)
+    return () => window.removeEventListener('purehub:tool-success', onSuccess)
+  }, [miniAppId])
+
   const markHelpful = () => {
     if (helpful) return
     window.localStorage.setItem(helpfulKey, 'true')
@@ -45,7 +56,11 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
 
   const shareTool = async () => {
     try {
-      const result = await shareCard({ title, headline: `A useful result from ${title}`, detail: 'Works without ads, tracking walls, or surprise paywalls.' })
+      const result = await shareCard({
+        title,
+        headline: success?.headline ?? `A useful result from ${title}`,
+        detail: success?.shareText ?? 'Works without ads, tracking walls, or surprise paywalls.',
+      })
       setShareStatus(result)
       void trackProductEvent(miniAppId, 'share')
       window.setTimeout(() => setShareStatus(''), 1800)
@@ -68,6 +83,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
 
   return (
     <section className="app-surface rounded-[18px] p-4" aria-label="Help improve this mini app">
+      {success ? <div className="mb-4 rounded-[14px] border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong className="block">{success.headline}</strong><span className="mt-1 block text-xs leading-5">{success.detail}</span></div> : null}
       {completed ? <a href={`/${window.location.pathname.split('/')[1] || 'en'}/download?utm_source=completed_tool&utm_campaign=useful_result`} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span>Keep this workflow offline on Android</span><Download className="size-5 shrink-0" /></a> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Activity, CheckCircle2, Pause, Play, RotateCcw, Sparkles, Vibrate, Volume2, Waves } from 'lucide-react'
 import { ActionButton, FlagshipHero, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 const STORAGE_KEY = 'purehub.zen-breath.sessions.v1'
 const PATTERNS = {
@@ -53,6 +54,7 @@ export default function ZenBreathSurface() {
       localStorage.setItem(STORAGE_KEY, String(next))
       return next
     })
+    markToolSuccess('zen-breath', { headline: 'Breathing session complete', detail: `${targetMinutes}-minute ${PATTERNS[pattern].label.toLowerCase()} session saved only on this device.`, shareText: `I completed a private ${targetMinutes}-minute breathing session with PureHub.` })
   }
 
   const reset = (nextPattern = pattern) => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AudioLines, CheckCircle2, CircleStop, Droplets, Ear, History, Play, RotateCcw, ShieldCheck, Sparkles, Volume2 } from 'lucide-react'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 const PRESETS = [
   { label: 'Gentle', frequency: 150, pulse: 1.2 },
@@ -54,7 +55,7 @@ export default function SpeakerCleanerFlagship() {
   useEffect(() => {
     if (!playing) return
     const timer = window.setInterval(() => setRemaining((value) => {
-      if (value <= 1) { setRecentRuns((current) => { const next = [duration, ...current].slice(0, 5); localStorage.setItem('purehub.speaker-cleaner.runs', JSON.stringify(next)); return next }); setCompleted(true); stop(); return 0 }
+      if (value <= 1) { setRecentRuns((current) => { const next = [duration, ...current].slice(0, 5); localStorage.setItem('purehub.speaker-cleaner.runs', JSON.stringify(next)); return next }); setCompleted(true); markToolSuccess('speaker-cleaner', { headline: 'Cleaning cycle complete', detail: `${duration}-second tone cycle finished. Test normal audio before running another cycle.`, shareText: 'I completed a timed, local speaker-care tone cycle with PureHub.' }); stop(); return 0 }
       return value - 1
     }), 1000)
     return () => window.clearInterval(timer)

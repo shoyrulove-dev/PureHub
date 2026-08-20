@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Download, ImagePlus, MapPinOff, ShieldCheck } from 'lucide-react'
+import { Download, ImagePlus, MapPinOff, Share2, ShieldCheck } from 'lucide-react'
 import { ActionButton, FlagshipHero, Panel } from '../MiniAppPrimitives'
+import { shareCard } from '../../../lib/share-card'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 function size(value: number) {
   if (!value) return '0 B'
@@ -42,6 +44,11 @@ export default function PhotoPrivacySurface() {
       const next = { url: URL.createObjectURL(blob), size: blob.size, name: `${file.name.replace(/\.[^.]+$/, '')}-privacy-clean.jpg` }
       setResult(next)
       setMessage(`Privacy-clean copy ready · ${size(blob.size)}. Original EXIF fields were not copied.`)
+      markToolSuccess('photo-privacy', {
+        headline: 'Private copy ready',
+        detail: 'A new JPEG was created locally without copying GPS, camera, author, or other original EXIF metadata.',
+        shareText: 'I created a separate, metadata-free photo copy locally before sharing.',
+      })
     } catch {
       setMessage('This browser could not decode the selected image. Try JPEG, PNG, or WebP.')
     } finally {
@@ -61,8 +68,10 @@ export default function PhotoPrivacySurface() {
           <ActionButton disabled={!file || busy} onClick={() => void clean()}><ShieldCheck className="size-4" />{busy ? 'Removing metadata...' : 'Create private copy'}</ActionButton>
           {result ? <a href={result.url} download={result.name} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-bold dark:border-slate-700"><Download className="size-4" />Download clean JPEG</a> : <ActionButton disabled tone="muted"><Download className="size-4" />Download after review</ActionButton>}
         </div>
+        {result ? <ActionButton tone="muted" className="mt-2 w-full" onClick={() => void shareCard({ title: 'Photo Privacy', headline: 'A metadata-free photo copy is ready', detail: 'PureHub created a separate JPEG locally without copying the original EXIF metadata.' })}><Share2 className="size-4" />Share privacy workflow</ActionButton> : null}
       </Panel>
       <Panel title="What changes" subtitle="A clear privacy boundary before you share.">
+        <div className="mb-3 rounded-2xl bg-violet-50 p-3 text-xs leading-5 text-violet-950 dark:bg-violet-950/30 dark:text-violet-100"><strong>Before:</strong> original photo and its metadata. <strong>After:</strong> a new JPEG pixel copy with location, camera, author, and EXIF blocks excluded.</div>
         <div className="space-y-3">
           <Info icon={<MapPinOff className="size-5" />} title="Metadata removed" text="The new JPEG does not copy GPS, camera model, author, or original EXIF blocks." />
           <Info icon={<ShieldCheck className="size-5" />} title="Original protected" text="PureHub creates a separate file and never overwrites or deletes your source photo." />

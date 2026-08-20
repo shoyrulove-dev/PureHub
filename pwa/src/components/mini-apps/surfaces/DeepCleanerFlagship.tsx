@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Database, FileSearch, HardDrive, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type ReviewedFile = { file: File; hash?: string }
 type BrowserStorage = {
@@ -68,6 +69,11 @@ export default function DeepCleanerFlagship() {
       }))
       setFiles(reviewed)
       setMessage('Review complete. PureHub cannot delete files from your folders; use the list below as a safe guide.')
+      markToolSuccess('deep-cleaner', {
+        headline: 'Storage review complete',
+        detail: `${reviewed.length} selected file${reviewed.length === 1 ? '' : 's'} checked locally; nothing was removed automatically.`,
+        shareText: 'I reviewed local browser storage and exact file duplicates without uploading or silently deleting anything.',
+      })
     } finally {
       setHashing(false)
     }
@@ -78,6 +84,11 @@ export default function DeepCleanerFlagship() {
     setCleaning(true)
     const removed = (await Promise.all(storage.cacheNames.map((name) => caches.delete(name)))).filter(Boolean).length
     setMessage(`Removed ${removed} offline cache ${removed === 1 ? 'bundle' : 'bundles'}. Saved tool data was not touched.`)
+    markToolSuccess('deep-cleaner', {
+      headline: 'Rebuildable cache cleared',
+      detail: `${removed} offline cache ${removed === 1 ? 'bundle was' : 'bundles were'} removed. Saved tool data stayed protected.`,
+      shareText: 'I cleared rebuildable app cache while keeping saved local data protected.',
+    })
     await inspectStorage()
     setCleaning(false)
   }

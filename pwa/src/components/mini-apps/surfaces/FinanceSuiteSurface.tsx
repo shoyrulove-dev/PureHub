@@ -4,6 +4,7 @@ import { Download, LockKeyhole, PieChart, Plus, ReceiptText, ScanLine, Share2, S
 import { expenseRepository, type ExpenseRecord } from '../../../lib/db/purehub-db'
 import { decryptBackup, downloadBackup, encryptBackup } from '../../../lib/encrypted-backup'
 import { recognizeReceipt } from '../../../lib/receipt-ocr'
+import { markToolSuccess } from '../../../lib/tool-success'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 
 type Mode = 'expenses' | 'split'
@@ -38,7 +39,7 @@ function ExpenseLedger() {
   const monthTotal = useMemo(() => { const now = new Date(); return records.filter((item) => { const date = new Date(item.createdAt); return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear() }).reduce((sum, item) => sum + item.amount, 0) }, [records])
   const categoryTotals = useMemo(() => Object.entries(records.reduce<Record<string, number>>((result, item) => ({ ...result, [item.category]: (result[item.category] ?? 0) + item.amount }), {})).sort((a, b) => b[1] - a[1]), [records])
   const budgetProgress = budget > 0 ? Math.min(1, monthTotal / budget) : 0
-  const add = async () => { const value = Number(amount); if (!title.trim() || !Number.isFinite(value) || value <= 0) return; const row = { id: crypto.randomUUID(), title: title.trim(), amount: value, category, note: note.trim(), createdAt: new Date().toISOString() }; await expenseRepository.put(row); setRecords((current) => [row, ...current]); setTitle(''); setAmount(''); setNote('') }
+  const add = async () => { const value = Number(amount); if (!title.trim() || !Number.isFinite(value) || value <= 0) return; const row = { id: crypto.randomUUID(), title: title.trim(), amount: value, category, note: note.trim(), createdAt: new Date().toISOString() }; await expenseRepository.put(row); setRecords((current) => [row, ...current]); setTitle(''); setAmount(''); setNote(''); markToolSuccess('expense-tracker', { headline: 'Expense saved locally', detail: `${row.title} was added to this device-only ledger.`, shareText: 'I saved an expense locally with no account or financial-data upload.' }) }
   const exportCsv = () => { const data = ['Date,Title,Category,Amount,Note', ...records.map((item) => [item.createdAt, item.title, item.category, item.amount, item.note ?? ''].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','))].join('\n'); const url = URL.createObjectURL(new Blob([data], { type: 'text/csv' })); const link = document.createElement('a'); link.href = url; link.download = 'purehub-expenses.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 500) }
   const scanReceipt = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]; event.target.value = ''; if (!file) return

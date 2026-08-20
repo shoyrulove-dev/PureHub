@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, Compass, Download, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck } from 'lucide-react'
 import { ActionButton } from '../MiniAppPrimitives'
-import { trackProductEvent } from '../../../lib/community-api'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 type SensorMode = 'compass' | 'level' | 'sound'
 type PermissionState = 'idle' | 'active' | 'denied' | 'unsupported'
@@ -66,8 +66,8 @@ function CompassPanel() {
     <div className="relative mx-auto grid size-64 place-items-center rounded-full border-[10px] border-slate-100 bg-slate-950 shadow-inner dark:border-slate-800"><span className="absolute top-3 font-black text-rose-400">N</span><div className="text-white transition-transform duration-300" style={{ transform: `rotate(${-(heading ?? 0)}deg)` }}><Compass className="size-32 stroke-[1] text-sky-300" /></div><div className="absolute"><strong className="block text-4xl text-white">{heading == null ? '—' : `${Math.round(heading)}°`}</strong><span className="text-sm font-black text-sky-300">{label}</span></div></div>
     <PermissionNotice state={permission} />
     {permission === 'active' ? <p className={`mt-3 rounded-xl px-3 py-2 text-xs font-bold ${accuracy === 'stable' ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/15 text-amber-800'}`}>{accuracy === 'stable' ? 'Reading stable · estimated accuracy' : 'Magnetic jump detected · move away from metal and recalibrate'}</p> : null}
-    <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Compass active' : 'Enable compass'}</ActionButton><ActionButton tone="muted" disabled={heading == null} onClick={() => setHeld((value) => value == null ? heading : null)}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
-    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={rawHeading == null} onClick={() => { const next = rawHeading == null ? 0 : -rawHeading; setOffset(next); localStorage.setItem('purehub.compass.offset.v1', String(next)) }}>Set current as North</ActionButton><ActionButton tone="muted" onClick={() => { setOffset(0); localStorage.removeItem('purehub.compass.offset.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset calibration</ActionButton></div>
+    <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Compass active' : 'Enable compass'}</ActionButton><ActionButton tone="muted" disabled={heading == null} onClick={() => setHeld((value) => { if (value == null && heading != null) markToolSuccess('compass', { headline: 'Compass reading held', detail: `${Math.round(heading)}° ${label} saved locally until you resume live mode.`, shareText: `I used a private on-device compass reading: ${Math.round(heading)}° ${label}.` }); return value == null ? heading : null })}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
+    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={rawHeading == null} onClick={() => { const next = rawHeading == null ? 0 : -rawHeading; setOffset(next); localStorage.setItem('purehub.compass.offset.v1', String(next)); markToolSuccess('compass', { headline: 'Compass calibrated', detail: 'The current direction is now your local north reference.', shareText: 'I calibrated a private on-device compass without an account or tracker.' }) }}>Set current as North</ActionButton><ActionButton tone="muted" onClick={() => { setOffset(0); localStorage.removeItem('purehub.compass.offset.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset calibration</ActionButton></div>
     <p className="mt-3 text-xs text-slate-500">Move the phone in a figure-eight before use. Magnetic readings are estimates and may be affected by cases or nearby metal.</p>
   </div>
 }
@@ -129,12 +129,10 @@ function LevelPanel() {
         oscillator.connect(gain).connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + 0.09)
         oscillator.onended = () => void audio.close()
       }
-      const day = new Date().toISOString().slice(0, 10)
-      const key = `purehub-complete-bubble-level-${day}`
-      if (!localStorage.getItem(key)) { localStorage.setItem(key, 'true'); void trackProductEvent('bubble-level', 'complete') }
+      markToolSuccess('bubble-level', { headline: 'Level confirmed', detail: `The ${levelMode} reading stayed within ±${tolerance}° long enough to confirm.`, shareText: `I checked a ${levelMode} surface with a private on-device bubble level.` })
     }, 1800)
     return () => window.clearTimeout(timer)
-  }, [held, isLevel, moving, permission, soundCue])
+  }, [held, isLevel, levelMode, moving, permission, soundCue, tolerance])
 
   return <div>
     <div className="mb-4 grid grid-cols-3 gap-2">{([['flat', 'Surface'], ['horizontal', 'Edge X'], ['vertical', 'Edge Y']] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setLevelMode(value)} className={`min-h-11 rounded-xl border text-xs font-black ${levelMode === value ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 dark:border-slate-700'}`}>{label}</button>)}</div>
