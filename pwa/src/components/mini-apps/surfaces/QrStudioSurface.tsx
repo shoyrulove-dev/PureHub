@@ -13,7 +13,7 @@ const MAX_HISTORY = 24
 type StudioTab = 'scan' | 'create' | 'library'
 type ScanSource = 'Camera' | 'Image' | 'Created'
 type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string }
-type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'contact'
+type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'sms' | 'location' | 'calendar' | 'contact'
 type CreatorFields = { primary: string; secondary: string; tertiary: string }
 type DetectedCode = { value: string; format: string }
 type NativeBarcode = { rawValue: string; format: string }
@@ -26,6 +26,9 @@ const templates: Record<QrTemplate, { label: string; value: string }> = {
   wifi: { label: 'Wi-Fi', value: 'WIFI:T:WPA;S:Network name;P:Password;H:false;;' },
   email: { label: 'Email', value: 'mailto:hello@example.com?subject=Hello' },
   phone: { label: 'Phone', value: 'tel:+10000000000' },
+  sms: { label: 'SMS', value: 'SMSTO:+10000000000:Hello' },
+  location: { label: 'Location', value: 'geo:10.7769,106.7009' },
+  calendar: { label: 'Calendar', value: 'BEGIN:VEVENT\nSUMMARY:PureHub event\nDTSTART:20260821T090000\nEND:VEVENT' },
   contact: { label: 'Contact', value: 'MECARD:N:PureHub;URL:https://hub.blissbiovn.com;;' },
 }
 
@@ -35,6 +38,9 @@ const defaultFields: Record<QrTemplate, CreatorFields> = {
   wifi: { primary: '', secondary: '', tertiary: 'WPA' },
   email: { primary: '', secondary: '', tertiary: '' },
   phone: { primary: '', secondary: '', tertiary: '' },
+  sms: { primary: '', secondary: '', tertiary: '' },
+  location: { primary: '', secondary: '', tertiary: '' },
+  calendar: { primary: '', secondary: '', tertiary: '' },
   contact: { primary: '', secondary: '', tertiary: '' },
 }
 
@@ -45,6 +51,9 @@ function buildQrValue(template: QrTemplate, fields: CreatorFields) {
   if (template === 'wifi') return `WIFI:T:${fields.tertiary === 'None' ? '' : fields.tertiary};S:${escapeQrField(fields.primary)};P:${escapeQrField(fields.secondary)};H:false;;`
   if (template === 'email') return `mailto:${fields.primary.trim()}?subject=${encodeURIComponent(fields.secondary.trim())}`
   if (template === 'phone') return `tel:${fields.primary.replaceAll(/\s/g, '')}`
+  if (template === 'sms') return `SMSTO:${fields.primary.replaceAll(/\s/g, '')}:${fields.secondary.trim()}`
+  if (template === 'location') return `geo:${fields.primary.trim()}`
+  if (template === 'calendar') return `BEGIN:VEVENT\nSUMMARY:${fields.primary.trim()}\nDTSTART:${fields.secondary.replaceAll(/[-:]/g, '').replace('T', 'T')}\n${fields.tertiary.trim() ? `LOCATION:${fields.tertiary.trim()}\n` : ''}END:VEVENT`
   return `MECARD:N:${escapeQrField(fields.primary)}${fields.secondary ? `;TEL:${escapeQrField(fields.secondary)}` : ''}${fields.tertiary ? `;EMAIL:${escapeQrField(fields.tertiary)}` : ''};;`
 }
 
@@ -169,6 +178,7 @@ export default function QrStudioSurface() {
   const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null)
   const [zoom, setZoom] = useState(1)
   const [copied, setCopied] = useState(false)
+  const [openConfirmed, setOpenConfirmed] = useState(false)
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
   const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
   const resultDetails = useMemo(() => payloadDetails(scanResult), [scanResult])
@@ -198,6 +208,7 @@ export default function QrStudioSurface() {
     scanLockedRef.current = true
     setScanResult(code.value)
     setScanFormat(code.format)
+    setOpenConfirmed(false)
     setScanStatus(`${source} ${code.format.toLowerCase()} scan complete. Review the result before taking action.`)
     saveEntry(code.value, source, code.format)
     navigator.vibrate?.(45)
@@ -317,6 +328,7 @@ export default function QrStudioSurface() {
     scanLockedRef.current = false
     setScanResult('')
     setScanFormat('')
+    setOpenConfirmed(false)
     setCopied(false)
     setScanStatus(cameraActive ? 'Hold a QR code inside the frame. Detection is automatic.' : 'Ready for another scan.')
   }
@@ -394,7 +406,7 @@ export default function QrStudioSurface() {
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
               <ActionButton tone="muted" className="justify-center" onClick={() => { void navigator.clipboard.writeText(scanResult); setCopied(true) }}>{copied ? <Check className="size-4" /> : <Clipboard className="size-4" />}{copied ? 'Copied' : 'Copy'}</ActionButton>
               <ActionButton tone="muted" className="justify-center" onClick={() => void shareResult()}><Share2 className="size-4" />Share</ActionButton>
-              {resultDetails.destination ? <ActionButton className="col-span-2 justify-center" onClick={() => window.open(resultDetails.destination, '_blank', 'noopener,noreferrer')}><ExternalLink className="size-4" />{resultDetails.action}</ActionButton> : null}
+              {resultDetails.destination ? <ActionButton className="col-span-2 justify-center" onClick={() => { if (openConfirmed) window.open(resultDetails.destination, '_blank', 'noopener,noreferrer'); else setOpenConfirmed(true) }}><ExternalLink className="size-4" />{openConfirmed ? resultDetails.action : `Review domain, then ${resultDetails.action.toLowerCase()}`}</ActionButton> : null}
               <ActionButton tone="muted" className="col-span-2 justify-center" onClick={resetScanner}><RefreshCw className="size-4" />Scan another</ActionButton>
             </div>
           </article> : null}
@@ -406,9 +418,11 @@ export default function QrStudioSurface() {
             <div className="mt-4 grid gap-3">
               {template === 'text'
                 ? <FormTextArea className="min-h-32" aria-label="Text" placeholder="Write something useful" value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />
-                : <FormInput aria-label={template === 'wifi' ? 'Network name' : template === 'contact' ? 'Contact name' : template === 'email' ? 'Email address' : template === 'phone' ? 'Phone number' : 'Website address'} placeholder={template === 'wifi' ? 'Wi-Fi name' : template === 'contact' ? 'Full name' : template === 'email' ? 'hello@example.com' : template === 'phone' ? '+1 000 000 0000' : 'https://example.com'} value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />}
+                : <FormInput aria-label={template === 'wifi' ? 'Network name' : template === 'contact' ? 'Contact name' : template === 'email' ? 'Email address' : template === 'phone' || template === 'sms' ? 'Phone number' : template === 'location' ? 'Coordinates' : template === 'calendar' ? 'Event title' : 'Website address'} placeholder={template === 'wifi' ? 'Wi-Fi name' : template === 'contact' ? 'Full name' : template === 'email' ? 'hello@example.com' : template === 'phone' || template === 'sms' ? '+1 000 000 0000' : template === 'location' ? '10.7769,106.7009' : template === 'calendar' ? 'Event title' : 'https://example.com'} value={creatorFields.primary} onChange={(event) => setCreatorFields({ ...creatorFields, primary: event.target.value })} />}
               {template === 'wifi' ? <><FormInput aria-label="Wi-Fi password" placeholder="Wi-Fi password" type="password" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /><select aria-label="Wi-Fi security" className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold dark:border-slate-600 dark:bg-slate-900" value={creatorFields.tertiary} onChange={(event) => setCreatorFields({ ...creatorFields, tertiary: event.target.value })}><option>WPA</option><option>WEP</option><option>None</option></select></> : null}
               {template === 'email' ? <FormInput aria-label="Email subject" placeholder="Subject" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /> : null}
+              {template === 'sms' ? <FormInput aria-label="Message" placeholder="Message (optional)" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /> : null}
+              {template === 'calendar' ? <><FormInput aria-label="Start time" type="datetime-local" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /><FormInput aria-label="Location" placeholder="Location (optional)" value={creatorFields.tertiary} onChange={(event) => setCreatorFields({ ...creatorFields, tertiary: event.target.value })} /></> : null}
               {template === 'contact' ? <><FormInput aria-label="Contact phone" placeholder="Phone" value={creatorFields.secondary} onChange={(event) => setCreatorFields({ ...creatorFields, secondary: event.target.value })} /><FormInput aria-label="Contact email" placeholder="Email" value={creatorFields.tertiary} onChange={(event) => setCreatorFields({ ...creatorFields, tertiary: event.target.value })} /></> : null}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3"><label className="text-sm font-bold text-slate-600 dark:text-slate-300">Code<input aria-label="QR foreground color" type="color" value={foreground} onChange={(event) => setForeground(event.target.value)} className="ml-2 size-10 cursor-pointer rounded-lg border-0 bg-transparent align-middle" /></label><label className="text-sm font-bold text-slate-600 dark:text-slate-300">Background<input aria-label="QR background color" type="color" value={background} onChange={(event) => setBackground(event.target.value)} className="ml-2 size-10 cursor-pointer rounded-lg border-0 bg-transparent align-middle" /></label><button type="button" className="text-xs font-bold text-slate-500" onClick={() => { setForeground('#0f172a'); setBackground('#ffffff') }}>Reset</button></div>

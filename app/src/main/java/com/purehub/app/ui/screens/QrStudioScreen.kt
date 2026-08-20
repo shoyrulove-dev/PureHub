@@ -115,6 +115,9 @@ private enum class QrTemplate(val label: String) {
     Wifi("Wi-Fi"),
     Email("Email"),
     Phone("Phone"),
+    Sms("SMS"),
+    Location("Location"),
+    Calendar("Calendar"),
     Contact("Contact"),
 }
 
@@ -320,6 +323,7 @@ private fun QrScannerContent(
     onClearResult: () -> Unit,
 ) {
     val context = LocalContext.current
+    var confirmOpen by remember(latestScan) { mutableStateOf(false) }
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (hasCameraPermission) {
@@ -391,8 +395,11 @@ private fun QrScannerContent(
                     }
                 }
                 if (payloadInfo.destination.isNotBlank()) {
-                    Button(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(payloadInfo.destination))) }, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); Text(payloadInfo.action)
+                    Button(onClick = {
+                        if (confirmOpen) context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(payloadInfo.destination)))
+                        else confirmOpen = true
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); Text(if (confirmOpen) payloadInfo.action else "Review domain, then ${payloadInfo.action.lowercase()}")
                     }
                 }
             }
@@ -446,6 +453,16 @@ private fun QrCreatorContent(
                     CreatorField("Subject", secondary, onSecondaryChanged, "Hello")
                 }
                 QrTemplate.Phone -> CreatorField("Phone number", primary, onPrimaryChanged, "+1 000 000 0000")
+                QrTemplate.Sms -> {
+                    CreatorField("Phone number", primary, onPrimaryChanged, "+1 000 000 0000")
+                    CreatorField("Message", secondary, onSecondaryChanged, "Message (optional)")
+                }
+                QrTemplate.Location -> CreatorField("Coordinates", primary, onPrimaryChanged, "10.7769,106.7009")
+                QrTemplate.Calendar -> {
+                    CreatorField("Event title", primary, onPrimaryChanged, "Event title")
+                    CreatorField("Start (YYYYMMDDTHHMMSS)", secondary, onSecondaryChanged, "20260821T090000")
+                    CreatorField("Location", tertiary, onTertiaryChanged, "Location (optional)")
+                }
                 QrTemplate.Contact -> {
                     CreatorField("Name", primary, onPrimaryChanged, "Full name")
                     CreatorField("Phone", secondary, onSecondaryChanged, "+1 000 000 0000")
@@ -731,6 +748,9 @@ private fun defaultQrFields(template: QrTemplate): QrCreatorFields = when (templ
     QrTemplate.Wifi -> QrCreatorFields("", "", "WPA")
     QrTemplate.Email -> QrCreatorFields("", "")
     QrTemplate.Phone -> QrCreatorFields("")
+    QrTemplate.Sms -> QrCreatorFields("", "")
+    QrTemplate.Location -> QrCreatorFields("")
+    QrTemplate.Calendar -> QrCreatorFields("", "")
     QrTemplate.Contact -> QrCreatorFields("", "", "")
 }
 
@@ -742,6 +762,14 @@ private fun buildQrPayload(template: QrTemplate, fields: QrCreatorFields): Strin
     }
     QrTemplate.Email -> "mailto:${fields.primary.trim()}?subject=${Uri.encode(fields.secondary.trim())}"
     QrTemplate.Phone -> "tel:${fields.primary.filterNot(Char::isWhitespace)}"
+    QrTemplate.Sms -> "SMSTO:${fields.primary.filterNot(Char::isWhitespace)}:${fields.secondary.trim()}"
+    QrTemplate.Location -> "geo:${fields.primary.trim()}"
+    QrTemplate.Calendar -> buildString {
+        append("BEGIN:VEVENT\nSUMMARY:").append(fields.primary.trim())
+        if (fields.secondary.isNotBlank()) append("\nDTSTART:").append(fields.secondary.trim())
+        if (fields.tertiary.isNotBlank()) append("\nLOCATION:").append(fields.tertiary.trim())
+        append("\nEND:VEVENT")
+    }
     QrTemplate.Contact -> buildString {
         append("MECARD:N:").append(escapeQrField(fields.primary))
         if (fields.secondary.isNotBlank()) append(";TEL:").append(escapeQrField(fields.secondary))
