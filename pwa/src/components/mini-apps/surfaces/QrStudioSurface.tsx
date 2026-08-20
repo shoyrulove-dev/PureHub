@@ -12,9 +12,13 @@ const MAX_HISTORY = 24
 
 type StudioTab = 'scan' | 'create' | 'library'
 type ScanSource = 'Camera' | 'Image' | 'Created'
-type ScanEntry = { value: string; savedAt: string; source: ScanSource }
+type ScanEntry = { value: string; savedAt: string; source: ScanSource; format?: string }
 type QrTemplate = 'url' | 'text' | 'wifi' | 'email' | 'phone' | 'contact'
 type CreatorFields = { primary: string; secondary: string; tertiary: string }
+type DetectedCode = { value: string; format: string }
+type NativeBarcode = { rawValue: string; format: string }
+type NativeBarcodeDetector = { detect: (source: CanvasImageSource) => Promise<NativeBarcode[]> }
+type NativeBarcodeDetectorConstructor = new (options?: { formats?: string[] }) => NativeBarcodeDetector
 
 const templates: Record<QrTemplate, { label: string; value: string }> = {
   url: { label: 'Website', value: 'https://hub.blissbiovn.com' },
@@ -51,14 +55,37 @@ function loadHistory(): ScanEntry[] {
       value: String(row.value),
       savedAt: String(row.savedAt ?? new Date().toISOString()),
       source: row.source === 'Image' || row.source === 'Created' ? row.source : 'Camera',
+      format: typeof row.format === 'string' ? row.format : undefined,
     }))
   } catch {
     return []
   }
 }
 
-function decodePixels(data: ImageData) {
-  return jsQR(data.data, data.width, data.height, { inversionAttempts: 'attemptBoth' })?.data ?? ''
+let zxingReaderPromise: Promise<InstanceType<(typeof import('@zxing/browser'))['BrowserMultiFormatReader']>> | undefined
+
+function nativeBarcodeDetector() {
+  const Detector = (globalThis as typeof globalThis & { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector
+  return Detector ? new Detector({ formats: ['qr_code', 'aztec', 'data_matrix', 'pdf417', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'] }) : null
+}
+
+async function decodeCanvas(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): Promise<DetectedCode | null> {
+  const native = nativeBarcodeDetector()
+  if (native) {
+    try {
+      const [result] = await native.detect(canvas)
+      if (result?.rawValue) return { value: result.rawValue, format: result.format.replaceAll('_', ' ').toUpperCase() }
+    } catch { /* Native support can be partial; continue with local fallbacks. */ }
+  }
+  const qr = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' })
+  if (qr?.data) return { value: qr.data, format: 'QR CODE' }
+  try {
+    zxingReaderPromise ??= import('@zxing/browser').then(({ BrowserMultiFormatReader }) => new BrowserMultiFormatReader())
+    const result = (await zxingReaderPromise).decodeFromCanvas(canvas)
+    return result.getText() ? { value: result.getText(), format: result.getBarcodeFormat().toString().replaceAll('_', ' ') } : null
+  } catch {
+    return null
+  }
 }
 
 async function decodeImage(file: File) {
@@ -72,21 +99,22 @@ async function decodeImage(file: File) {
   if (!context) return ''
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close()
-  return decodePixels(context.getImageData(0, 0, canvas.width, canvas.height))
+  return decodeCanvas(canvas, context)
 }
 
 function payloadDetails(value: string) {
-  const trimmed = value.trim()
-  if (/^https?:\/\//i.test(trimmed)) {
+  const trimmed = value.trim().replace(/^URL:/i, '').trim()
+  const webCandidate = /^https?:\/\//i.test(trimmed) ? trimmed : /^(?:www\.|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:[/:?#]|$)/i.test(trimmed) ? `https://${trimmed}` : ''
+  if (webCandidate) {
     try {
-      const url = new URL(trimmed)
+      const url = new URL(webCandidate)
       const risks = [
         url.protocol !== 'https:' ? 'The link is not encrypted (HTTP).' : '',
         /^\d{1,3}(?:\.\d{1,3}){3}$/i.test(url.hostname) ? 'The destination uses a raw IP address.' : '',
         /xn--/i.test(url.hostname) ? 'The domain contains an internationalized/punycode name.' : '',
         url.username || url.password ? 'The link embeds sign-in information.' : '',
         url.port && !['80', '443'].includes(url.port) ? `The link uses unusual port ${url.port}.` : '',
-        trimmed.length > 500 ? 'The destination is unusually long.' : '',
+        webCandidate.length > 500 ? 'The destination is unusually long.' : '',
       ].filter(Boolean)
       return {
         kind: 'Website',
@@ -125,6 +153,7 @@ export default function QrStudioSurface() {
   const frameRef = useRef<number | null>(null)
   const lastFrameRef = useRef(0)
   const scanLockedRef = useRef(false)
+  const scanBusyRef = useRef(false)
   const [tab, setTab] = useState<StudioTab>('scan')
   const [template, setTemplate] = useState<QrTemplate>('url')
   const [creatorFields, setCreatorFields] = useState<CreatorFields>(defaultFields.url)
@@ -132,10 +161,13 @@ export default function QrStudioSurface() {
   const [background, setBackground] = useState('#ffffff')
   const [batchStatus, setBatchStatus] = useState('')
   const [scanResult, setScanResult] = useState('')
+  const [scanFormat, setScanFormat] = useState('')
   const [scanStatus, setScanStatus] = useState('Ready when you are. Nothing is uploaded.')
   const [cameraActive, setCameraActive] = useState(false)
   const [torchAvailable, setTorchAvailable] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
+  const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null)
+  const [zoom, setZoom] = useState(1)
   const [copied, setCopied] = useState(false)
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
   const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
@@ -152,21 +184,22 @@ export default function QrStudioSurface() {
     }))
   }, [background, foreground, qrValue])
 
-  const saveEntry = (value: string, source: ScanSource) => {
+  const saveEntry = (value: string, source: ScanSource, format = '') => {
     if (!value.trim()) return
     setHistory((current) => {
-      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
+      const next = [{ value: value.trim(), savedAt: new Date().toISOString(), source, format: format || undefined }, ...current.filter((item) => item.value !== value.trim())].slice(0, MAX_HISTORY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
   }
 
-  const rememberResult = (value: string, source: ScanSource) => {
-    if (!value || scanLockedRef.current) return
+  const rememberResult = (code: DetectedCode | null, source: ScanSource) => {
+    if (!code?.value || scanLockedRef.current) return
     scanLockedRef.current = true
-    setScanResult(value)
-    setScanStatus(`${source} scan complete. Review the result before taking action.`)
-    saveEntry(value, source)
+    setScanResult(code.value)
+    setScanFormat(code.format)
+    setScanStatus(`${source} ${code.format.toLowerCase()} scan complete. Review the result before taking action.`)
+    saveEntry(code.value, source, code.format)
     navigator.vibrate?.(45)
     markToolSuccess('qr-studio', { headline: 'QR code scanned locally', detail: `${source} result is saved in your private library. Review it before opening or sharing.`, shareText: 'I scanned a QR code locally with PureHub, without ads or uploads.' })
   }
@@ -179,6 +212,8 @@ export default function QrStudioSurface() {
     setCameraActive(false)
     setTorchAvailable(false)
     setTorchOn(false)
+    setZoomRange(null)
+    setZoom(1)
   }
 
   useEffect(() => stopCamera, [])
@@ -186,16 +221,17 @@ export default function QrStudioSurface() {
   const scanFrame = (timestamp: number) => {
     const video = videoRef.current
     const canvas = scanCanvasRef.current
-    if (!scanLockedRef.current && video && canvas && video.readyState >= 2 && timestamp - lastFrameRef.current > 140) {
+    if (!scanLockedRef.current && !scanBusyRef.current && video && canvas && video.readyState >= 2 && timestamp - lastFrameRef.current > 180) {
       lastFrameRef.current = timestamp
-      const width = Math.min(video.videoWidth, 960)
+      const width = Math.min(video.videoWidth, 1280)
       const scale = width / video.videoWidth
       canvas.width = width
       canvas.height = Math.round(video.videoHeight * scale)
       const context = canvas.getContext('2d', { willReadFrequently: true })
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height)
-        rememberResult(decodePixels(context.getImageData(0, 0, canvas.width, canvas.height)), 'Camera')
+        scanBusyRef.current = true
+        void decodeCanvas(canvas, context).then((code) => rememberResult(code, 'Camera')).finally(() => { scanBusyRef.current = false })
       }
     }
     frameRef.current = requestAnimationFrame(scanFrame)
@@ -215,8 +251,13 @@ export default function QrStudioSurface() {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
-      const capabilities = stream.getVideoTracks()[0]?.getCapabilities() as MediaTrackCapabilities & { torch?: boolean }
+      const capabilities = stream.getVideoTracks()[0]?.getCapabilities() as MediaTrackCapabilities & { torch?: boolean; zoom?: { min: number; max: number; step?: number } }
       setTorchAvailable(Boolean(capabilities?.torch))
+      const zoomCapabilities = capabilities?.zoom
+      if (zoomCapabilities && typeof zoomCapabilities.min === 'number' && typeof zoomCapabilities.max === 'number' && zoomCapabilities.max > zoomCapabilities.min) {
+        setZoomRange({ min: zoomCapabilities.min, max: zoomCapabilities.max, step: zoomCapabilities.step || .1 })
+        setZoom(zoomCapabilities.min)
+      }
       setCameraActive(true)
       setScanStatus('Hold a QR code inside the frame. Detection is automatic.')
       frameRef.current = requestAnimationFrame(scanFrame)
@@ -233,14 +274,23 @@ export default function QrStudioSurface() {
     setTorchOn(next)
   }
 
+  const setCameraZoom = async (next: number) => {
+    const track = streamRef.current?.getVideoTracks()[0]
+    if (!track) return
+    try {
+      await track.applyConstraints({ advanced: [{ zoom: next } as MediaTrackConstraintSet] })
+      setZoom(next)
+    } catch { setScanStatus('This camera does not allow zoom control in the browser.') }
+  }
+
   const handleScanFile = async (file?: File) => {
     if (!file) return
     scanLockedRef.current = false
     setScanStatus('Reading the image locally…')
     try {
-      const value = await decodeImage(file)
-      if (value) rememberResult(value, 'Image')
-      else setScanStatus('No readable QR code found. Try a sharper or less cropped image.')
+      const code = await decodeImage(file)
+      if (code) rememberResult(code, 'Image')
+      else setScanStatus('No readable code found. Try a sharper image, more light, or a closer crop.')
     } catch {
       setScanStatus('That image could not be read. Try PNG, JPG, or a camera photo.')
     }
@@ -253,8 +303,8 @@ export default function QrStudioSurface() {
     setScanStatus(`Reading ${selected.length} image(s) locally…`)
     for (const file of selected) {
       try {
-        const value = await decodeImage(file)
-        if (value) { saveEntry(value, 'Image'); found += 1; if (!scanResult) setScanResult(value) }
+        const code = await decodeImage(file)
+        if (code) { saveEntry(code.value, 'Image', code.format); found += 1; if (!scanResult) { setScanResult(code.value); setScanFormat(code.format) } }
       } catch { /* continue with the remaining local files */ }
     }
     scanLockedRef.current = found > 0
@@ -266,6 +316,7 @@ export default function QrStudioSurface() {
   const resetScanner = () => {
     scanLockedRef.current = false
     setScanResult('')
+    setScanFormat('')
     setCopied(false)
     setScanStatus(cameraActive ? 'Hold a QR code inside the frame. Detection is automatic.' : 'Ready for another scan.')
   }
@@ -282,7 +333,7 @@ export default function QrStudioSurface() {
   }
 
   const exportHistory = () => {
-    const csv = ['value,source,saved_at', ...history.map((item) => `"${item.value.replaceAll('"', '""')}",${item.source},${item.savedAt}`)].join('\n')
+    const csv = ['value,format,source,saved_at', ...history.map((item) => `"${item.value.replaceAll('"', '""')}",${item.format ?? ''},${item.source},${item.savedAt}`)].join('\n')
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'purehub-qr-library.csv'; anchor.click(); URL.revokeObjectURL(url)
   }
@@ -333,10 +384,11 @@ export default function QrStudioSurface() {
             <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800 dark:border-slate-600 dark:text-slate-100"><ImageUp className="size-4" />Batch<input className="sr-only" multiple type="file" accept="image/*" onChange={(event) => void handleScanFiles(event.target.files)} /></label>
             {torchAvailable ? <ActionButton className="justify-center" tone="muted" onClick={() => void toggleTorch()}><Flashlight className="size-4" />{torchOn ? 'Torch off' : 'Torch'}</ActionButton> : null}
           </div>
+          {zoomRange ? <label className="mt-3 block rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">Camera zoom <span className="float-right text-emerald-700 dark:text-emerald-300">{zoom.toFixed(1)}×</span><input aria-label="Camera zoom" className="mt-2 w-full accent-emerald-600" type="range" min={zoomRange.min} max={zoomRange.max} step={zoomRange.step} value={zoom} onChange={(event) => void setCameraZoom(Number(event.target.value))} /></label> : null}
           <p className="mt-3 text-center text-sm text-slate-500 dark:text-slate-400">{scanStatus}</p>
           {batchStatus ? <p className="mt-2 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300">{batchStatus}</p> : null}
           {scanResult ? <article className="mt-4 rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800 dark:bg-emerald-950/25">
-            <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950">{resultDetails.kind}</span><span className="flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-200"><ShieldCheck className="size-3.5" />Read locally</span></div>
+            <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950">{resultDetails.kind}</span><span className="flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-200"><ShieldCheck className="size-3.5" />{scanFormat || 'CODE'} · local</span></div>
             <p className="mt-3 max-h-32 overflow-auto break-all rounded-xl bg-white/80 p-3 text-sm font-semibold text-slate-900 dark:bg-slate-950/70 dark:text-white">{scanResult}</p>
             {resultDetails.warning ? <p className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-300">{resultDetails.warning}</p> : null}
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
@@ -366,7 +418,7 @@ export default function QrStudioSurface() {
         </div> : null}
 
         {tab === 'library' ? <div><div className="flex items-center justify-between gap-3"><div><h3 className="text-lg font-black text-slate-950 dark:text-white">Private library</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Stored only in this browser. Nothing is synced.</p></div>{history.length ? <div className="flex gap-1"><button type="button" title="Export library" className="grid size-10 place-items-center rounded-xl text-emerald-700 hover:bg-emerald-50" onClick={exportHistory}><Download className="size-4" /></button><button type="button" title="Clear library" className="grid size-10 place-items-center rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" onClick={() => { localStorage.removeItem(STORAGE_KEY); setHistory([]) }}><Trash2 className="size-4" /></button></div> : null}</div>
-          {history.length ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={`${item.savedAt}-${item.value}`} type="button" className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 p-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-700 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/20" onClick={() => { setScanResult(item.value); setTab('scan'); scanLockedRef.current = true }}><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-100 group-hover:text-emerald-800 dark:bg-slate-800 dark:text-slate-200"><QrCode className="size-5" /></span><span className="min-w-0"><span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{item.value}</span><span className="mt-0.5 block text-xs text-slate-500">{item.source} · {new Date(item.savedAt).toLocaleString()}</span></span></button>)}</div> : <div className="mt-5 grid min-h-48 place-items-center rounded-[22px] border border-dashed border-slate-300 text-center dark:border-slate-700"><div><History className="mx-auto size-8 text-slate-400"/><p className="mt-2 font-bold text-slate-700 dark:text-slate-200">No saved codes yet</p><p className="mt-1 text-sm text-slate-500">Scans and codes you save will appear here.</p></div></div>}
+          {history.length ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{history.map((item) => <button key={`${item.savedAt}-${item.value}`} type="button" className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 p-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-700 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/20" onClick={() => { setScanResult(item.value); setScanFormat(item.format ?? ''); setTab('scan'); scanLockedRef.current = true }}><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-100 group-hover:text-emerald-800 dark:bg-slate-800 dark:text-slate-200"><QrCode className="size-5" /></span><span className="min-w-0"><span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{item.value}</span><span className="mt-0.5 block text-xs text-slate-500">{item.format ? `${item.format} · ` : ''}{item.source} · {new Date(item.savedAt).toLocaleString()}</span></span></button>)}</div> : <div className="mt-5 grid min-h-48 place-items-center rounded-[22px] border border-dashed border-slate-300 text-center dark:border-slate-700"><div><History className="mx-auto size-8 text-slate-400"/><p className="mt-2 font-bold text-slate-700 dark:text-slate-200">No saved codes yet</p><p className="mt-1 text-sm text-slate-500">Scans and codes you save will appear here.</p></div></div>}
         </div> : null}
       </div>
     </section>

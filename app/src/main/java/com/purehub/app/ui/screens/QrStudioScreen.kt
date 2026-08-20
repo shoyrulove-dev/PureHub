@@ -692,10 +692,15 @@ private fun processQrFrame(imageProxy: ImageProxy): String? {
 }
 
 private fun describeQrPayload(value: String): QrPayloadInfo {
-    val trimmed = value.trim()
-    if (trimmed.startsWith("http://", true) || trimmed.startsWith("https://", true)) {
+    val raw = value.trim().replaceFirst(Regex("^URL:", RegexOption.IGNORE_CASE), "").trim()
+    val webCandidate = when {
+        raw.startsWith("http://", true) || raw.startsWith("https://", true) -> raw
+        raw.matches(Regex("^(?:www\\.|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}(?:[/:?#].*)?$", RegexOption.IGNORE_CASE)) -> "https://$raw"
+        else -> ""
+    }
+    if (webCandidate.isNotBlank()) {
         return runCatching {
-            val uri = Uri.parse(trimmed)
+            val uri = Uri.parse(webCandidate)
             val host = uri.host.orEmpty()
             val risks = buildList {
                 if (uri.scheme != "https") add("The link is not encrypted (HTTP).")
@@ -703,19 +708,19 @@ private fun describeQrPayload(value: String): QrPayloadInfo {
                 if (host.matches(Regex("\\d{1,3}(\\.\\d{1,3}){3}"))) add("The destination uses a raw IP address.")
                 if (!uri.userInfo.isNullOrBlank()) add("The link embeds sign-in information.")
                 if (uri.port !in listOf(-1, 80, 443)) add("The link uses unusual port ${uri.port}.")
-                if (trimmed.length > 500) add("The destination is unusually long.")
+                if (webCandidate.length > 500) add("The destination is unusually long.")
             }
             val warning = risks.joinToString(" ")
-            QrPayloadInfo("Website", "Open website", trimmed, warning)
+            QrPayloadInfo("Website", "Open website", webCandidate, warning)
         }.getOrElse { QrPayloadInfo("Invalid link", warning = "This web address is not valid.") }
     }
     return when {
-        trimmed.startsWith("WIFI:", true) -> QrPayloadInfo("Wi-Fi network", warning = "The password is visible in the raw QR content.")
-        trimmed.startsWith("mailto:", true) -> QrPayloadInfo("Email", "Open email", trimmed)
-        trimmed.startsWith("tel:", true) -> QrPayloadInfo("Phone number", "Open dialer", trimmed)
-        trimmed.startsWith("sms:", true) -> QrPayloadInfo("Message", "Open messages", trimmed)
-        trimmed.startsWith("geo:", true) -> QrPayloadInfo("Location", "Open map", trimmed)
-        trimmed.startsWith("MECARD:", true) || trimmed.startsWith("BEGIN:VCARD", true) -> QrPayloadInfo("Contact card")
+        raw.startsWith("WIFI:", true) -> QrPayloadInfo("Wi-Fi network", warning = "The password is visible in the raw QR content.")
+        raw.startsWith("mailto:", true) -> QrPayloadInfo("Email", "Open email", raw)
+        raw.startsWith("tel:", true) -> QrPayloadInfo("Phone number", "Open dialer", raw)
+        raw.startsWith("sms:", true) -> QrPayloadInfo("Message", "Open messages", raw)
+        raw.startsWith("geo:", true) -> QrPayloadInfo("Location", "Open map", raw)
+        raw.startsWith("MECARD:", true) || raw.startsWith("BEGIN:VCARD", true) -> QrPayloadInfo("Contact card")
         else -> QrPayloadInfo("Plain text")
     }
 }

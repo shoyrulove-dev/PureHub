@@ -3,11 +3,13 @@ package com.purehub.app.feature.qr
 import android.graphics.Bitmap
 import androidx.camera.core.ImageProxy
 import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import com.google.zxing.BarcodeFormat
 
 object QrDecoder {
     fun decode(bitmap: Bitmap): String? {
@@ -35,7 +37,14 @@ object QrDecoder {
     }
 
     private fun decode(bitmap: BinaryBitmap): String? = try {
-        MultiFormatReader().decode(bitmap).text?.takeIf(String::isNotBlank)
+        MultiFormatReader().apply {
+            setHints(
+                mapOf(
+                    DecodeHintType.TRY_HARDER to true,
+                    DecodeHintType.POSSIBLE_FORMATS to BarcodeFormat.values().toList(),
+                ),
+            )
+        }.decodeWithState(bitmap).text?.takeIf(String::isNotBlank)
     } catch (_: NotFoundException) {
         null
     }
