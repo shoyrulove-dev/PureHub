@@ -5,7 +5,7 @@ import {
   QrCode, RefreshCw, ScanLine, Share2, ShieldCheck, Sparkles, Trash2,
 } from 'lucide-react'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
-import { trackProductEvent } from '../../../lib/community-api'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 const STORAGE_KEY = 'purehub.qr-studio.history.v2'
 const MAX_HISTORY = 24
@@ -168,7 +168,7 @@ export default function QrStudioSurface() {
     setScanStatus(`${source} scan complete. Review the result before taking action.`)
     saveEntry(value, source)
     navigator.vibrate?.(45)
-    void trackProductEvent('qr-studio', 'complete')
+    markToolSuccess('qr-studio', { headline: 'QR code scanned locally', detail: `${source} result is saved in your private library. Review it before opening or sharing.`, shareText: 'I scanned a QR code locally with PureHub, without ads or uploads.' })
   }
 
   const stopCamera = () => {
@@ -260,7 +260,7 @@ export default function QrStudioSurface() {
     scanLockedRef.current = found > 0
     setBatchStatus(`${found} QR code(s) found in ${selected.length} image(s). Saved to your private library.`)
     setScanStatus(found ? 'Batch scan complete. Review the first result or open the library.' : 'No readable QR codes were found in these images.')
-    if (found) void trackProductEvent('qr-studio', 'complete')
+    if (found) markToolSuccess('qr-studio', { headline: 'Batch scan complete', detail: `${found} QR code${found === 1 ? '' : 's'} found and saved in your private library.`, shareText: `I scanned ${found} QR codes locally with PureHub.` })
   }
 
   const resetScanner = () => {
@@ -278,7 +278,7 @@ export default function QrStudioSurface() {
     link.href = href
     link.download = `purehub-${template}-qr.png`
     link.click()
-    void trackProductEvent('qr-studio', 'complete')
+    markToolSuccess('qr-studio', { headline: 'QR image exported', detail: 'Your generated QR code was downloaded locally.', shareText: 'I created a QR code locally with PureHub.' })
   }
 
   const exportHistory = () => {
