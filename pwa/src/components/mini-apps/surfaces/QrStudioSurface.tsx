@@ -141,6 +141,7 @@ function payloadDetails(value: string) {
   if (/^sms:/i.test(trimmed)) return { kind: 'Message', destination: trimmed, action: 'Open messages', warning: '' }
   if (/^geo:/i.test(trimmed)) return { kind: 'Location', destination: trimmed, action: 'Open map', warning: '' }
   if (/^(MECARD:|BEGIN:VCARD)/i.test(trimmed)) return { kind: 'Contact card', destination: '', action: '', warning: '' }
+  if (/^(?:\d{8}|\d{12,14})$/.test(trimmed)) return { kind: 'Product barcode', destination: `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`, action: 'Search product online', warning: 'Product lookup opens a search engine and shares this barcode only after you confirm.' }
   return { kind: 'Plain text', destination: '', action: '', warning: '' }
 }
 
@@ -179,6 +180,7 @@ export default function QrStudioSurface() {
   const [zoom, setZoom] = useState(1)
   const [copied, setCopied] = useState(false)
   const [openConfirmed, setOpenConfirmed] = useState(false)
+  const [creatorVerified, setCreatorVerified] = useState(false)
   const [history, setHistory] = useState<ScanEntry[]>(loadHistory)
   const qrValue = useMemo(() => buildQrValue(template, creatorFields), [creatorFields, template])
   const resultDetails = useMemo(() => payloadDetails(scanResult), [scanResult])
@@ -186,12 +188,15 @@ export default function QrStudioSurface() {
 
   useEffect(() => {
     if (!qrCanvasRef.current) return
-    void import('qrcode').then(({ default: QRCode }) => QRCode.toCanvas(qrCanvasRef.current, qrValue || ' ', {
-      width: 320,
-      margin: 3,
-      errorCorrectionLevel: 'M',
-      color: { dark: foreground, light: background },
-    }))
+    setCreatorVerified(false)
+    void import('qrcode').then(async ({ default: QRCode }) => {
+      await QRCode.toCanvas(qrCanvasRef.current, qrValue || ' ', { width: 320, margin: 3, errorCorrectionLevel: 'M', color: { dark: foreground, light: background } })
+      const canvas = qrCanvasRef.current
+      const context = canvas?.getContext('2d', { willReadFrequently: true })
+      if (!canvas || !context || !qrValue.trim()) return
+      const result = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' })
+      setCreatorVerified(result?.data === qrValue)
+    })
   }, [background, foreground, qrValue])
 
   const saveEntry = (value: string, source: ScanSource, format = '') => {
@@ -406,7 +411,7 @@ export default function QrStudioSurface() {
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
               <ActionButton tone="muted" className="justify-center" onClick={() => { void navigator.clipboard.writeText(scanResult); setCopied(true) }}>{copied ? <Check className="size-4" /> : <Clipboard className="size-4" />}{copied ? 'Copied' : 'Copy'}</ActionButton>
               <ActionButton tone="muted" className="justify-center" onClick={() => void shareResult()}><Share2 className="size-4" />Share</ActionButton>
-              {resultDetails.destination ? <ActionButton className="col-span-2 justify-center" onClick={() => { if (openConfirmed) window.open(resultDetails.destination, '_blank', 'noopener,noreferrer'); else setOpenConfirmed(true) }}><ExternalLink className="size-4" />{openConfirmed ? resultDetails.action : `Review domain, then ${resultDetails.action.toLowerCase()}`}</ActionButton> : null}
+              {resultDetails.destination ? <ActionButton className="col-span-2 justify-center" onClick={() => { if (openConfirmed) window.open(resultDetails.destination, '_blank', 'noopener,noreferrer'); else setOpenConfirmed(true) }}><ExternalLink className="size-4" />{openConfirmed ? resultDetails.action : resultDetails.kind === 'Product barcode' ? 'Confirm external product search' : `Review domain, then ${resultDetails.action.toLowerCase()}`}</ActionButton> : null}
               <ActionButton tone="muted" className="col-span-2 justify-center" onClick={resetScanner}><RefreshCw className="size-4" />Scan another</ActionButton>
             </div>
           </article> : null}
@@ -428,7 +433,7 @@ export default function QrStudioSurface() {
             <div className="mt-3 flex flex-wrap items-center gap-3"><label className="text-sm font-bold text-slate-600 dark:text-slate-300">Code<input aria-label="QR foreground color" type="color" value={foreground} onChange={(event) => setForeground(event.target.value)} className="ml-2 size-10 cursor-pointer rounded-lg border-0 bg-transparent align-middle" /></label><label className="text-sm font-bold text-slate-600 dark:text-slate-300">Background<input aria-label="QR background color" type="color" value={background} onChange={(event) => setBackground(event.target.value)} className="ml-2 size-10 cursor-pointer rounded-lg border-0 bg-transparent align-middle" /></label><button type="button" className="text-xs font-bold text-slate-500" onClick={() => { setForeground('#0f172a'); setBackground('#ffffff') }}>Reset</button></div>
             <p className={`mt-2 rounded-xl px-3 py-2 text-xs font-bold ${contrast >= 4.5 ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/15 text-amber-800'}`}>{contrast >= 4.5 ? `Scan-safe contrast · ${contrast.toFixed(1)}:1` : `Low contrast · ${contrast.toFixed(1)}:1. Darken the code or lighten the background.`}</p>
           </div>
-          <div className="flex flex-col items-center rounded-[24px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950"><div className="rounded-[20px] bg-white p-3 shadow-sm"><canvas ref={qrCanvasRef} className="h-auto w-full max-w-[300px]" /></div><p className="mt-3 text-center text-xs font-semibold text-slate-500">High-contrast PNG · works with standard scanners</p><div className="mt-4 grid w-full grid-cols-2 gap-2"><ActionButton className="justify-center" onClick={downloadQr}><Download className="size-4" />Download</ActionButton><ActionButton tone="muted" className="justify-center" onClick={() => void shareQr()}><Share2 className="size-4" />Share</ActionButton><ActionButton tone="muted" className="col-span-2 justify-center" onClick={() => saveEntry(qrValue, 'Created')}><History className="size-4" />Save to library</ActionButton></div></div>
+          <div className="flex flex-col items-center rounded-[24px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950"><div className="rounded-[20px] bg-white p-3 shadow-sm"><canvas ref={qrCanvasRef} className="h-auto w-full max-w-[300px]" /></div><p className={`mt-3 text-center text-xs font-semibold ${creatorVerified ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>{creatorVerified ? 'Self-tested locally · ready to scan' : 'Checking generated code locally…'}</p><div className="mt-4 grid w-full grid-cols-2 gap-2"><ActionButton className="justify-center" disabled={!creatorVerified} onClick={downloadQr}><Download className="size-4" />Download</ActionButton><ActionButton tone="muted" disabled={!creatorVerified} className="justify-center" onClick={() => void shareQr()}><Share2 className="size-4" />Share</ActionButton><ActionButton tone="muted" disabled={!creatorVerified} className="col-span-2 justify-center" onClick={() => saveEntry(qrValue, 'Created', 'QR CODE')}><History className="size-4" />Save to library</ActionButton></div></div>
         </div> : null}
 
         {tab === 'library' ? <div><div className="flex items-center justify-between gap-3"><div><h3 className="text-lg font-black text-slate-950 dark:text-white">Private library</h3><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Stored only in this browser. Nothing is synced.</p></div>{history.length ? <div className="flex gap-1"><button type="button" title="Export library" className="grid size-10 place-items-center rounded-xl text-emerald-700 hover:bg-emerald-50" onClick={exportHistory}><Download className="size-4" /></button><button type="button" title="Clear library" className="grid size-10 place-items-center rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" onClick={() => { localStorage.removeItem(STORAGE_KEY); setHistory([]) }}><Trash2 className="size-4" /></button></div> : null}</div>

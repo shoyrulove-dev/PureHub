@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
@@ -241,7 +242,14 @@ fun QrStudioScreen(
                 onPrimaryChanged = { creatorPrimary = it },
                 onSecondaryChanged = { creatorSecondary = it },
                 onTertiaryChanged = { creatorTertiary = it },
-                onSave = { saveHistory(qrText, "Created") },
+                onSave = {
+                    if (qrBitmap != null && QrDecoder.decode(qrBitmap) == qrText) {
+                        saveHistory(qrText, "Created")
+                        scanStatus = "Generated QR self-test passed and was saved locally."
+                    } else {
+                        scanStatus = "Generated QR did not pass its local scan test. Adjust the content and try again."
+                    }
+                },
             )
 
             QrStudioTab.Library -> QrLibraryContent(
@@ -392,6 +400,11 @@ private fun QrScannerContent(
                     }
                     OutlinedButton(onClick = { shareText(context, latestScan) }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Rounded.IosShare, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.size(6.dp)); Text("Share")
+                    }
+                }
+                if (payloadInfo.kind == "Wi-Fi network") {
+                    OutlinedButton(onClick = { context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Rounded.Language, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); Text("Open Wi-Fi settings")
                     }
                 }
                 if (payloadInfo.destination.isNotBlank()) {
@@ -738,6 +751,7 @@ private fun describeQrPayload(value: String): QrPayloadInfo {
         raw.startsWith("sms:", true) -> QrPayloadInfo("Message", "Open messages", raw)
         raw.startsWith("geo:", true) -> QrPayloadInfo("Location", "Open map", raw)
         raw.startsWith("MECARD:", true) || raw.startsWith("BEGIN:VCARD", true) -> QrPayloadInfo("Contact card")
+        raw.matches(Regex("(?:\\d{8}|\\d{12,14})")) -> QrPayloadInfo("Product barcode", "Search product online", "https://www.google.com/search?q=${Uri.encode(raw)}", "Product lookup opens a search engine and shares this barcode only after you confirm.")
         else -> QrPayloadInfo("Plain text")
     }
 }
