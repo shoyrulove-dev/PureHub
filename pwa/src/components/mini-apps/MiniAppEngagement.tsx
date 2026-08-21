@@ -10,6 +10,21 @@ type MiniAppEngagementProps = {
   title: string
 }
 
+type CompletionCta = {
+  label: string
+  detail: string
+}
+
+const completionCtas: Partial<Record<MiniAppId, CompletionCta>> = {
+  'qr-studio': { label: 'Scan QR and barcodes offline on Android', detail: 'Use the native camera workflow when a browser cannot access every code format.' },
+  'ocr-text': { label: 'Extract text from photos on Android', detail: 'Keep receipts and documents in an offline-first workflow.' },
+  'bubble-level': { label: 'Use the calibrated level on Android', detail: 'Continue with the native sensor workflow when you need it.' },
+  compass: { label: 'Keep the compass calibration on Android', detail: 'Use the native sensor workflow away from browser limits.' },
+  'wifi-analyzer': { label: 'Run a real Wi-Fi scan on Android', detail: 'Browsers cannot expose nearby network details; Android can show the supported scan.' },
+  'photo-privacy': { label: 'Remove photo metadata on Android', detail: 'Keep the same private cleanup workflow when sharing photos.' },
+  'deep-cleaner': { label: 'Review storage safely on Android', detail: 'Plan a cleanup with clear controls instead of background file deletion.' },
+}
+
 export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) {
   const helpfulKey = `purehub-helpful-${miniAppId}`
   const [helpful, setHelpful] = useState(() => window.localStorage.getItem(helpfulKey) === 'true')
@@ -20,6 +35,12 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [shareStatus, setShareStatus] = useState('')
   const [completed, setCompleted] = useState(() => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true')
   const [success, setSuccess] = useState<ToolSuccess | null>(null)
+  const locale = window.location.pathname.split('/')[1] || 'en'
+  const completionCta = completionCtas[miniAppId] ?? {
+    label: `Keep ${title} available offline on Android`,
+    detail: 'Continue this privacy-first workflow in the signed Android app.',
+  }
+  const downloadUrl = `/${locale}/download?utm_source=tool_success&utm_campaign=completion-${miniAppId}`
 
   useEffect(() => {
     const day = new Date().toISOString().slice(0, 10)
@@ -84,11 +105,11 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   return (
     <section className="app-surface rounded-[18px] p-4" aria-label="Help improve this mini app">
       {success ? <div className="mb-4 rounded-[14px] border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong className="block">{success.headline}</strong><span className="mt-1 block text-xs leading-5">{success.detail}</span></div> : null}
-      {completed ? <a href={`/${window.location.pathname.split('/')[1] || 'en'}/download?utm_source=completed_tool&utm_campaign=useful_result`} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span>Keep this workflow offline on Android</span><Download className="size-5 shrink-0" /></a> : null}
+      {completed ? <a href={downloadUrl} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span><strong className="block">{completionCta.label}</strong><span className="mt-0.5 block text-xs font-medium text-white/85">{completionCta.detail}</span></span><Download className="size-5 shrink-0" /></a> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-950 dark:text-white">Did this tool help?</h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">One tap helps the community choose what to improve next.</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">One tap helps prioritize the next improvement. Share only when this result is worth passing on.</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" className={`filter-chip ${helpful ? 'filter-chip--active' : ''}`} onClick={markHelpful} disabled={helpful}>
@@ -114,7 +135,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
           ) : (
             <>
               <div className="mt-3 flex flex-wrap gap-2">
-                {([['feedback', 'General'], ['bug', 'Bug'], ['feature_request', 'Idea']] as Array<[FeedbackCategory, string]>).map(([value, label]) => (
+                {([['feedback', 'General'], ['bug', 'Bug'], ['feature_request', 'Idea'], ['device_report', 'Device']] as Array<[FeedbackCategory, string]>).map(([value, label]) => (
                   <button key={value} type="button" className={`filter-chip ${category === value ? 'filter-chip--active' : ''}`} onClick={() => setCategory(value)}>{label}</button>
                 ))}
               </div>
