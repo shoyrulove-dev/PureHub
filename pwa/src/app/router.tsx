@@ -10,6 +10,8 @@ import { DownloadPage } from '../pages/download-page'
 import { ChangelogPage } from '../pages/changelog-page'
 import { BackendRouteRecovery } from '../pages/backend-route-recovery'
 import { PrivacyPage, TermsPage } from '../pages/legal-pages'
+import { GrowthLandingPage } from '../pages/growth-landing-page'
+import { GROWTH_LANDING_IDS, growthLandingPages } from '../config/growthLandingPages'
 
 export const appRouter = createBrowserRouter([
   {
@@ -64,6 +66,10 @@ export const appRouter = createBrowserRouter([
         path: 'terms',
         element: <TermsPage />,
       },
+      ...GROWTH_LANDING_IDS.map((landingId) => ({
+        path: growthLandingPages[landingId].slug,
+        element: <GrowthLandingPage landingId={landingId} />,
+      })),
       {
         path: ':appSlug',
         element: <LocalizedEntryPage />,

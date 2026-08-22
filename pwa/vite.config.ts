@@ -15,6 +15,7 @@ import {
   seoRouteEntries,
   seoSiteMeta,
 } from './src/config/seoMeta.js'
+import { growthLandingPages, growthLandingRoutes } from './src/config/growthLandingPages.js'
 
 function escapeAttribute(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -120,6 +121,27 @@ function staticSeoPages() {
         }
       }
 
+      for (const landing of Object.values(growthLandingPages)) {
+        const canonicalUrl = `${SITE_ORIGIN}/en/${landing.slug}`
+        pages.push({
+          path: `/en/${landing.slug}`,
+          lang: 'en',
+          title: landing.title,
+          description: landing.description,
+          canonicalUrl,
+          alternates: {},
+          schema: {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: landing.faqs.map((faq) => ({
+              '@type': 'Question',
+              name: faq.question,
+              acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+            })),
+          },
+        })
+      }
+
       for (const page of pages) {
         const outputPath = resolve(distRoot, page.path.slice(1), 'index.html')
         mkdirSync(dirname(outputPath), { recursive: true })
@@ -135,7 +157,7 @@ export default defineConfig({
     tailwindcss(),
     Sitemap({
       hostname: SITE_ORIGIN,
-      dynamicRoutes: buildSeoSitemapPaths(),
+      dynamicRoutes: [...buildSeoSitemapPaths(), ...growthLandingRoutes],
       exclude: ['/'],
       readable: true,
       generateRobotsTxt: true,
