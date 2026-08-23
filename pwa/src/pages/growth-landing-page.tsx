@@ -49,6 +49,18 @@ export function GrowthLandingPage({ landingId }: { landingId: GrowthLandingId })
         <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">Free to use. No ad wall. No mandatory account.</p>
       </section>
 
+      <section className="app-surface grid gap-4 rounded-[18px] p-4 sm:grid-cols-[minmax(0,1fr)_12rem] sm:items-center">
+        <div>
+          <p className="eyebrow">Real device demo</p>
+          <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">See the landing workflow on a real phone</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">A short on-device walkthrough of this page: result, workflow, limits, and the next action.</p>
+        </div>
+        <video className="mx-auto aspect-[9/19] w-full max-w-48 rounded-[16px] border border-slate-200 bg-slate-950 object-cover shadow-lg dark:border-slate-700" autoPlay muted loop playsInline controls preload="metadata" aria-label={`${page.headline} real device demo`}>
+          <source src={page.videoUrl} type="video/mp4" />
+          Your browser does not support embedded video.
+        </video>
+      </section>
+
       <section className="app-surface rounded-[18px] p-5">
         <h2 className="text-xl font-bold text-slate-950 dark:text-white">A simple local workflow</h2>
         <ol className="mt-4 grid gap-3 sm:grid-cols-3">
