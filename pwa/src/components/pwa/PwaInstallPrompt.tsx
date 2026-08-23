@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GiCrystalBall } from 'react-icons/gi'
+import { CheckCircle2, Download, MonitorDown, Share2, Smartphone, X } from 'lucide-react'
 import { trackJourneyEvent } from '../../lib/community-api'
 
 type BeforeInstallPromptEvent = Event & {
@@ -12,6 +12,7 @@ export function PwaInstallPrompt() {
   const { t } = useTranslation()
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [open, setOpen] = useState(false)
+  const [installed, setInstalled] = useState(false)
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -20,8 +21,25 @@ export function PwaInstallPrompt() {
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    const standalone = window.matchMedia('(display-mode: standalone)')
+    const updateInstalled = () => setInstalled(standalone.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
+    updateInstalled()
+    standalone.addEventListener('change', updateInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+      standalone.removeEventListener('change', updateInstalled)
+    }
   }, [])
+
+  if (installed) return null
+
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isIos = /iphone|ipad|ipod/.test(userAgent)
+  const installHint = deferredPrompt
+    ? t('pwa.installReadyHint')
+    : isIos
+      ? t('pwa.installIosHint')
+      : t('pwa.installHint')
 
   return (
     <div className="relative">
@@ -29,15 +47,23 @@ export function PwaInstallPrompt() {
         type="button"
         aria-label={t('pwa.installIconLabel')}
         onClick={() => setOpen((value) => !value)}
-        className="flex size-10 items-center justify-center rounded-2xl border border-emerald-400/14 bg-white/5 text-emerald-300 shadow-[0_18px_50px_-22px_rgba(16,185,129,0.28)] transition hover:bg-white/8"
+        className="flex min-h-10 items-center gap-1.5 rounded-[13px] border border-emerald-500/30 bg-emerald-500 px-3 text-sm font-black text-white shadow-[0_18px_50px_-22px_rgba(16,185,129,0.5)] transition hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-emerald-400/35"
       >
-        <GiCrystalBall className="text-[1.1rem]" />
+        <Download className="size-4" />
+        <span>{t('pwa.installButton')}</span>
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-12 z-30 w-72 rounded-[24px] border border-emerald-400/14 bg-slate-950/96 p-4 shadow-[0_28px_90px_-52px_rgba(16,185,129,0.45)] backdrop-blur-xl">
-          <p className="text-sm font-semibold text-white">{t('pwa.installTitle')}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{t('pwa.installDescription')}</p>
+        <div className="absolute right-0 top-12 z-30 w-[min(22rem,calc(100vw-1.5rem))] rounded-[20px] border border-emerald-400/20 bg-slate-950/98 p-4 shadow-[0_28px_90px_-52px_rgba(16,185,129,0.55)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <div><p className="flex items-center gap-2 text-sm font-black text-white"><Smartphone className="size-4 text-emerald-300" />{t('pwa.installTitle')}</p><p className="mt-1 text-xs font-semibold text-emerald-200">{t('pwa.installBenefit')}</p></div>
+            <button type="button" onClick={() => setOpen(false)} className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white" aria-label={t('pwa.later')}><X className="size-4" /></button>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-300">{t('pwa.installDescription')}</p>
+          <div className="mt-3 flex items-start gap-2 rounded-[14px] bg-white/6 p-3 text-xs leading-5 text-slate-200">
+            {isIos ? <Share2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : deferredPrompt ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : <MonitorDown className="mt-0.5 size-4 shrink-0 text-emerald-300" />}
+            <span>{installHint}</span>
+          </div>
           <div className="mt-4 flex gap-2">
             {deferredPrompt ? (
               <button
@@ -49,19 +75,19 @@ export function PwaInstallPrompt() {
                   setDeferredPrompt(null)
                   setOpen(false)
                 }}
-                className="rounded-2xl bg-emerald-400/14 px-4 py-2.5 text-sm font-semibold text-emerald-200 ring-1 ring-inset ring-emerald-400/18 transition hover:bg-emerald-400/18"
+                className="rounded-[12px] bg-emerald-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
               >
                 {t('pwa.installNow')}
               </button>
             ) : (
-              <div className="rounded-2xl bg-white/5 px-4 py-2.5 text-sm text-slate-300">
-                {t('pwa.installHint')}
+              <div className="rounded-[12px] bg-white/5 px-4 py-2.5 text-sm text-slate-300">
+                {t('pwa.installGuideLabel')}
               </div>
             )}
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-2xl bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/8"
+              className="rounded-[12px] bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/8"
             >
               {t('pwa.later')}
             </button>
