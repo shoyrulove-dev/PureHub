@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, Download, MonitorDown, Share2, Smartphone, X } from 'lucide-react'
+import { CheckCircle2, MonitorDown, Share2, Smartphone, X } from 'lucide-react'
 import { trackJourneyEvent } from '../../lib/community-api'
 
 type BeforeInstallPromptEvent = Event & {
@@ -49,7 +49,7 @@ export function PwaInstallPrompt() {
         onClick={() => setOpen((value) => !value)}
         className="flex min-h-10 items-center gap-1.5 rounded-[13px] border border-emerald-500/30 bg-emerald-500 px-3 text-sm font-black text-white shadow-[0_18px_50px_-22px_rgba(16,185,129,0.5)] transition hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-emerald-400/35"
       >
-        <Download className="size-4" />
+        <img src="/icons/app-icon-192.png" alt="" className="size-5 rounded-md" />
         <span>{t('pwa.installButton')}</span>
       </button>
 

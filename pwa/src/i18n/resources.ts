@@ -18,8 +18,8 @@ export const resources = {
         freePromise: 'Useful tools without ads, tracking walls, or surprise paywalls.',
       },
       pwa: {
-        installIconLabel: 'Install app',
-        installButton: 'Install app',
+        installIconLabel: 'Install App',
+        installButton: 'Install App',
         installTitle: 'Install PureHub',
         installBenefit: 'Open faster and keep tools available offline.',
         installDescription: 'Pin PureHub for faster launches and a more native offline experience.',
@@ -122,8 +122,8 @@ export const resources = {
         freePromise: 'Tiện ích hữu dụng, không quảng cáo, không theo dõi và không khóa tính năng bất ngờ.',
       },
       pwa: {
-        installIconLabel: 'Cài ứng dụng',
-        installButton: 'Cài app',
+        installIconLabel: 'Cài Ứng dụng',
+        installButton: 'Cài Ứng dụng',
         installTitle: 'Cài đặt PureHub',
         installBenefit: 'Mở nhanh hơn và dùng công cụ offline.',
         installDescription: 'Ghim PureHub lên thiết bị để mở nhanh hơn và dùng offline giống app native hơn.',

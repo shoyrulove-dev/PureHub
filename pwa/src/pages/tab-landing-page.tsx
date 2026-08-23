@@ -33,10 +33,10 @@ export function TabLandingPage({ tab }: TabLandingPageProps) {
         <p className="text-sm font-semibold text-slate-500">{t('app.miniAppMap')}</p>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
           {miniApps.map((miniApp) => (
-            <li key={miniApp.id}>
+            <li key={miniApp.id} className="h-full">
               <Link
                 to={buildMiniAppPath(normalizedLocale, miniApp.id)}
-                className="tool-card tool-card__link group"
+                className="tool-card tool-card__link group h-full"
               >
                 <div className={`tool-card__icon ${tab.accentClass}`}>
                   <miniApp.icon className="size-5" strokeWidth={2.2} />
