@@ -7,7 +7,10 @@ export type JourneyStage =
   | 'visit'
   | 'download'
   | 'apk_download_click'
+  | 'pwa_install_prompt_opened'
+  | 'pwa_install_guide_viewed'
   | 'pwa_install_accepted'
+  | 'pwa_install_dismissed'
   | 'installed_open'
   | 'tester_join'
 
