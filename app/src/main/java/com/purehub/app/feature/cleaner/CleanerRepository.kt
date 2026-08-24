@@ -39,8 +39,8 @@ class CleanerRepository(
         onProgress("Scanning large media files")
         val largeFiles = queryLargeFiles()
 
-        onProgress("Analyzing duplicate images")
-        val duplicateGroups = queryDuplicateImages()
+        onProgress("Analyzing exact duplicate photos and videos")
+        val duplicateGroups = queryDuplicateMedia()
 
         CleanerScanResult(
             largeFiles = largeFiles.sortedByDescending { it.sizeBytes },
@@ -109,8 +109,8 @@ class CleanerRepository(
         }
     }
 
-    private fun queryDuplicateImages(): List<DuplicateImageGroup> {
-        val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    private fun queryDuplicateMedia(): List<DuplicateImageGroup> {
+        val collection = MediaStore.Files.getContentUri("external")
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
@@ -119,12 +119,15 @@ class CleanerRepository(
             MediaStore.Images.Media.DATE_MODIFIED,
         )
 
-        val images = buildList {
+        val media = buildList {
             contentResolver.query(
                 collection,
                 projection,
-                null,
-                null,
+                "${MediaStore.Files.FileColumns.MEDIA_TYPE} IN (?, ?)",
+                arrayOf(
+                    MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
+                    MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString(),
+                ),
                 "${MediaStore.Images.Media.SIZE} DESC",
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
@@ -149,7 +152,7 @@ class CleanerRepository(
             }
         }
 
-        return findDuplicateGroups(images) { file ->
+        return findDuplicateGroups(media) { file ->
             hashImage(contentResolver.openInputStream(file.contentUri))
         }
     }

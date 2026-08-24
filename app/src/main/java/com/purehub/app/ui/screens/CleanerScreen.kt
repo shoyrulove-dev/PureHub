@@ -60,7 +60,7 @@ fun CleanerScreen(
             permissionMessage = null
             viewModel.startScan()
             scope.launch { snackbar.showSnackbar("Media access granted. Scan stays on this device.") }
-        } else permissionMessage = "Allow visible media access to review large files and exact duplicate images."
+        } else permissionMessage = "Allow visible media access to review large files and exact duplicate photos or videos."
     }
     val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -151,7 +151,7 @@ fun CleanerScreen(
                 }
             }
             if (!uiState.isScanning && activeView == CleanerView.DUPLICATES && uiState.duplicateGroups.isEmpty()) item {
-                EmptyCleanerCard("No exact copies", "No byte-for-byte duplicate images were found in visible media.")
+                EmptyCleanerCard("No exact copies", "No byte-for-byte duplicate photos or videos were found in visible media.")
             }
             if (!uiState.isScanning && activeView == CleanerView.LARGE_FILES && uiState.largeFiles.isEmpty()) item {
                 EmptyCleanerCard("No large media", "No visible photo, video, or audio file is currently above 100 MB.")
