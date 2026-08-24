@@ -1,5 +1,6 @@
 import type { MiniAppId } from '../features/catalog/tabs'
 import { trackProductEvent } from './community-api'
+import { rememberToolResult } from './result-center'
 
 export type ToolSuccess = {
   headline: string
@@ -14,6 +15,7 @@ export function markToolSuccess(miniAppId: MiniAppId, success: ToolSuccess) {
   if (typeof window !== 'undefined' && firstSuccessToday) window.localStorage.setItem(key, 'true')
   if (firstSuccessToday) void trackProductEvent(miniAppId, 'complete')
   if (typeof window !== 'undefined') {
+    rememberToolResult(miniAppId, success.headline)
     window.dispatchEvent(new CustomEvent('purehub:tool-success', { detail: { miniAppId, success } }))
   }
 }

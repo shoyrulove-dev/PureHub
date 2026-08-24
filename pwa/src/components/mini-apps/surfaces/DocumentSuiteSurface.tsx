@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Camera, Download, FileImage, FileText, ImagePlus, ScanText, ShieldCheck, Trash2 } from 'lucide-react'
 import { ActionButton, FormInput } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
+import { buildMiniAppPath } from '../../../i18n/routing'
+import { normalizeLocale } from '../../../i18n/locales'
 
 type Page = { id: string; file: File; url: string; rotation: number; fit: 'contain' | 'cover'; crop: number; recognizedText?: string }
 const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
@@ -9,6 +11,7 @@ const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
 function safeName(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'purehub-document' }
 
 export default function DocumentSuiteSurface() {
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
   const [pages, setPages] = useState<Page[]>([])
   const [title, setTitle] = useState('My document')
   const [quality, setQuality] = useState(.86)
@@ -89,7 +92,7 @@ export default function DocumentSuiteSurface() {
   return <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
     <header className="bg-gradient-to-br from-violet-50 via-white to-sky-50 p-5 dark:from-violet-950/40 dark:via-slate-900 dark:to-sky-950/30">
       <div className="flex items-start gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-violet-700 text-white dark:bg-violet-300 dark:text-slate-950"><FileText className="size-6" /></span><div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-violet-700 dark:text-violet-300">PUREHUB DOCUMENT SUITE</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">Doc to PDF</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Capture, arrange and export clean PDFs without a cloud account.</p></div><ShieldCheck className="hidden size-5 text-emerald-600 sm:block" /></div>
-      <div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-xl bg-white/80 p-3 dark:bg-slate-800"><strong className="block text-xl">{pages.length}</strong><span className="text-xs text-slate-500">Pages staged</span></div><a href="/en/ocr-text" className="flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white/80 p-3 text-sm font-black text-violet-800 dark:border-violet-800 dark:bg-slate-800 dark:text-violet-200"><ScanText className="size-4" />Open OCR Studio</a></div>
+      <div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-xl bg-white/80 p-3 dark:bg-slate-800"><strong className="block text-xl">{pages.length}</strong><span className="text-xs text-slate-500">Pages staged</span></div><a href={buildMiniAppPath(locale, 'ocr-text')} className="flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white/80 p-3 text-sm font-black text-violet-800 dark:border-violet-800 dark:bg-slate-800 dark:text-violet-200"><ScanText className="size-4" />Open OCR Studio</a></div>
     </header>
     <div className="space-y-4 p-4 sm:p-5">
       <FormInput value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Document title" aria-label="Document title" />

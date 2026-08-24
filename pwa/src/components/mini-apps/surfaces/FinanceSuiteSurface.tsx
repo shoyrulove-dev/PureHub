@@ -7,6 +7,8 @@ import { recognizeReceipt } from '../../../lib/receipt-ocr'
 import { markToolSuccess } from '../../../lib/tool-success'
 import { trackProductEvent } from '../../../lib/community-api'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
+import { buildMiniAppPath } from '../../../i18n/routing'
+import { normalizeLocale } from '../../../i18n/locales'
 
 type Mode = 'expenses' | 'split'
 const CATEGORIES = ['Food', 'Transport', 'Home', 'Health', 'Fun', 'General']
@@ -15,10 +17,11 @@ const CURRENCIES: CurrencyCode[] = ['USD', 'EUR', 'GBP', 'VND', 'JPY']
 const currency = { format: (value: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: (typeof window === 'undefined' ? 'USD' : localStorage.getItem('purehub.finance.currency') || 'USD') }).format(value) }
 
 export default function FinanceSuiteSurface({ mode }: { mode: Mode }) {
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
   return <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
     <header className="bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 dark:from-amber-950/35 dark:via-slate-900 dark:to-emerald-950/30">
       <div className="flex items-start gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950">{mode === 'expenses' ? <Wallet className="size-6" /> : <Users className="size-6" />}</span><div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-amber-700 dark:text-amber-300">PRIVATE MONEY TOOLS</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{mode === 'expenses' ? 'Expense Tracker' : 'Bill Splitter'}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{mode === 'expenses' ? 'A calm local ledger with useful trends and export.' : 'Settle a shared bill clearly without sign-up or ads.'}</p></div><ShieldCheck className="hidden size-5 text-emerald-600 sm:block" /></div>
-      <nav className="mt-4 grid grid-cols-2 gap-2"><a href="/en/expense-tracker" className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'expenses' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><PieChart className="size-4" />Expenses</a><a href="/en/bill-splitter" className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'split' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><ReceiptText className="size-4" />Split bill</a></nav>
+      <nav className="mt-4 grid grid-cols-2 gap-2"><a href={buildMiniAppPath(locale, 'expense-tracker')} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'expenses' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><PieChart className="size-4" />Expenses</a><a href={buildMiniAppPath(locale, 'bill-splitter')} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'split' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><ReceiptText className="size-4" />Split bill</a></nav>
     </header>
     <div className="p-4 sm:p-5">{mode === 'expenses' ? <ExpenseLedger /> : <BillSplit />}</div>
   </section>

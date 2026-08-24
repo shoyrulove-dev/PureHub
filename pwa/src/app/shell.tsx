@@ -1,4 +1,4 @@
-import { Code2, Download, Grid2X2, Home, Moon, Settings, Sparkles, Sun, Users } from 'lucide-react'
+import { Archive, Code2, Download, Grid2X2, Home, Moon, Settings, Sparkles, Sun, Users } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -42,6 +42,8 @@ export function AppShell() {
     if (location.pathname.endsWith('/tools')) return `/${nextLocale}/tools`
     if (location.pathname.endsWith('/community')) return `/${nextLocale}/community`
     if (location.pathname.endsWith('/settings')) return `/${nextLocale}/settings`
+    if (location.pathname.endsWith('/results')) return `/${nextLocale}/results`
+    if (location.pathname.endsWith('/privacy-center')) return `/${nextLocale}/privacy-center`
     if (location.pathname.endsWith('/download')) return `/${nextLocale}/download`
     if (location.pathname.endsWith('/changelog')) return `/${nextLocale}/changelog`
     if (location.pathname.endsWith('/privacy')) return `/${nextLocale}/privacy`
@@ -55,12 +57,16 @@ export function AppShell() {
   const navItems = [
     { label: t('nav.home'), icon: Home, path: `/${locale}` },
     { label: t('nav.tools'), icon: Grid2X2, path: `/${locale}/tools` },
+    { label: t('nav.results'), icon: Archive, path: `/${locale}/results` },
     { label: t('nav.community'), icon: Users, path: `/${locale}/community` },
     { label: t('nav.settings'), icon: Settings, path: `/${locale}/settings` },
   ]
 
   return (
     <div className="min-h-screen px-2 py-2 text-slate-800 sm:px-4 sm:py-4 dark:text-slate-100">
+      <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-xl transition focus:translate-y-0 dark:bg-white dark:text-slate-950">
+        Skip to content
+      </a>
       <div className="mx-auto flex min-h-[calc(100vh-1rem)] w-full max-w-7xl gap-4 xl:items-start">
         <aside className="hidden w-[256px] shrink-0 xl:sticky xl:top-5 xl:block">
           <div className="app-surface rounded-[20px] p-3">
@@ -103,6 +109,7 @@ export function AppShell() {
               <p className="hidden text-sm font-semibold text-slate-500 xl:block">{t('app.subtitle')}</p>
 
               <div className="flex items-center gap-1.5">
+                <Link to={`/${locale}/results`} className="grid size-10 place-items-center rounded-[13px] text-slate-500 transition hover:bg-slate-500/10 hover:text-slate-900 dark:hover:text-white" aria-label={t('nav.results')}><Archive className="size-4.5" /></Link>
                 <PwaInstallPrompt />
                 <button
                   type="button"
@@ -128,7 +135,7 @@ export function AppShell() {
             </div>
           </header>
 
-          <main className="flex-1 px-3 pb-24 pt-4 sm:px-5 sm:pt-5">
+          <main id="main-content" tabIndex={-1} className="flex-1 px-3 pb-24 pt-4 outline-none sm:px-5 sm:pt-5">
             <div key={location.pathname} className="page-enter"><Outlet /></div>
             <footer className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-500/10 pt-4 text-xs text-slate-500">
               <Link to={`/${locale}/privacy`} className="hover:text-slate-900 dark:hover:text-white">Privacy</Link>

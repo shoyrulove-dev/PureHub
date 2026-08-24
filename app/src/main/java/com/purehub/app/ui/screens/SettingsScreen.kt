@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,7 +49,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = onOpenHelp) {
                 Icon(
-                    imageVector = Icons.Rounded.HelpOutline,
+                    imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
                     contentDescription = "Help",
                 )
             }

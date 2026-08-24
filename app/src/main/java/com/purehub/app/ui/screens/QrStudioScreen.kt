@@ -69,6 +69,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -144,6 +145,7 @@ fun QrStudioScreen(
     var latestScan by rememberSaveable { mutableStateOf("") }
     var scanSource by rememberSaveable { mutableStateOf("Camera") }
     var scanStatus by rememberSaveable { mutableStateOf("Ready. Codes are processed only on this device.") }
+    var saveScans by rememberSaveable { mutableStateOf(preferences.getBoolean("save_scan_history", true)) }
     var history by remember { mutableStateOf(loadQrHistory(preferences.getString("history", "[]") ?: "[]")) }
     val qrText = remember(selectedTemplate, creatorPrimary, creatorSecondary, creatorTertiary) {
         buildQrPayload(selectedTemplate, QrCreatorFields(creatorPrimary, creatorSecondary, creatorTertiary))
@@ -163,8 +165,8 @@ fun QrStudioScreen(
         if (value.isBlank() || value == latestScan) return
         latestScan = value
         scanSource = source
-        scanStatus = "$source scan complete. Review the result before taking action."
-        saveHistory(value, source)
+        scanStatus = if (saveScans) "$source scan complete. Saved to your private library." else "$source scan complete. Private session: result was not saved."
+        if (saveScans) saveHistory(value, source)
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
     }
 
@@ -195,7 +197,7 @@ fun QrStudioScreen(
                 }
                 if (!value.isNullOrBlank()) { acceptScan(value, "Batch"); found += 1 }
             }
-            scanStatus = "$found QR or barcode result(s) found in ${uris.take(20).size} images and saved locally."
+            scanStatus = "$found QR or barcode result(s) found in ${uris.take(20).size} images. ${if (saveScans) "Saved locally." else "Private session: not saved."}"
         }
     }
 
@@ -217,6 +219,12 @@ fun QrStudioScreen(
                 latestScan = latestScan,
                 scanSource = scanSource,
                 scanStatus = scanStatus,
+                saveScans = saveScans,
+                onSaveScansChanged = {
+                    saveScans = it
+                    preferences.edit().putBoolean("save_scan_history", it).apply()
+                    scanStatus = if (it) "Scan history is on. New results stay in your private library." else "Private session is on. New scan payloads will not be retained."
+                },
                 payloadInfo = payloadInfo,
                 onCodeDetected = { acceptScan(it, "Camera") },
                 onClearResult = {
@@ -326,6 +334,8 @@ private fun QrScannerContent(
     latestScan: String,
     scanSource: String,
     scanStatus: String,
+    saveScans: Boolean,
+    onSaveScansChanged: (Boolean) -> Unit,
     payloadInfo: QrPayloadInfo,
     onCodeDetected: (String) -> Unit,
     onClearResult: () -> Unit,
@@ -363,6 +373,17 @@ private fun QrScannerContent(
                     Spacer(Modifier.size(7.dp))
                     Text("Batch")
                 }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Save scan history", style = MaterialTheme.typography.labelLarge)
+                    Text("Turn off for a private session with no QR payload retained.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Switch(checked = saveScans, onCheckedChange = onSaveScansChanged)
             }
             if (latestScan.isNotBlank()) {
                 Row(modifier = Modifier.fillMaxWidth()) {

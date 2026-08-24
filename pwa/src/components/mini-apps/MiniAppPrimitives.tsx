@@ -59,7 +59,7 @@ export function FormInput(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={[
-        'min-h-11 w-full rounded-[12px] border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-950 outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:ring-3 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500',
+        'min-h-12 w-full rounded-[12px] border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-950 outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:ring-3 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500',
         props.className,
       ].filter(Boolean).join(' ')}
     />
@@ -84,7 +84,7 @@ export function ActionButton(props: ButtonHTMLAttributes<HTMLButtonElement> & { 
     <button
       {...props}
       className={[
-        'min-h-10 rounded-[11px] px-3.5 py-2 text-sm font-bold shadow-sm transition duration-150 focus-visible:outline-none focus-visible:ring-3 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50',
+        'min-h-12 rounded-[11px] px-3.5 py-2 text-sm font-bold shadow-sm transition duration-150 focus-visible:outline-none focus-visible:ring-3 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50',
         tone === 'primary' && 'bg-emerald-700 text-white hover:bg-emerald-800 focus-visible:ring-emerald-500/30 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400',
         tone === 'muted' && 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 focus-visible:ring-slate-400/25 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
         tone === 'danger' && 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 focus-visible:ring-rose-400/25 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200',

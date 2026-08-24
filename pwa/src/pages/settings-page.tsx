@@ -1,4 +1,4 @@
-import { Activity, Check, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon } from 'lucide-react'
+import { Activity, ArrowRight, Check, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
@@ -36,6 +36,8 @@ export function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <Link to={`/${locale}/privacy-center`} className="flex min-h-16 items-center gap-3 rounded-[18px] border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/25 dark:text-emerald-100"><ShieldCheck className="size-6" /><span className="min-w-0 flex-1"><strong className="block">Open Privacy & Trust Center</strong><small className="text-emerald-800 dark:text-emerald-300">Permissions, encrypted suite backup and local data controls</small></span><ArrowRight className="size-5" /></Link>
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start gap-3">

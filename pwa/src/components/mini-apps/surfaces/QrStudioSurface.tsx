@@ -181,6 +181,7 @@ export default function QrStudioSurface() {
   const [foreground, setForeground] = useState('#0f172a')
   const [background, setBackground] = useState('#ffffff')
   const [batchStatus, setBatchStatus] = useState('')
+  const [saveScans, setSaveScans] = useState(() => localStorage.getItem('purehub.qr-studio.save-history') !== 'false')
   const [scanResult, setScanResult] = useState('')
   const [scanFormat, setScanFormat] = useState('')
   const [scanStatus, setScanStatus] = useState('Ready when you are. Nothing is uploaded.')
@@ -242,9 +243,9 @@ export default function QrStudioSurface() {
     setLibraryFolder('')
     setLibraryNote('')
     setScanStatus(`${source} ${code.format.toLowerCase()} scan complete. Review the result before taking action.`)
-    saveEntry(code.value, source, code.format)
+    if (saveScans) saveEntry(code.value, source, code.format)
     navigator.vibrate?.(45)
-    markToolSuccess('qr-studio', { headline: 'QR code scanned locally', detail: `${source} result is saved in your private library. Review it before opening or sharing.`, shareText: 'I scanned a QR code locally with PureHub, without ads or uploads.' })
+    markToolSuccess('qr-studio', { headline: 'QR code scanned locally', detail: saveScans ? `${source} result is saved in your private library. Review it before opening or sharing.` : `${source} result is available for this private session only.`, shareText: 'I scanned a QR code locally with PureHub, without ads or uploads.' })
   }
 
   const stopCamera = () => {
@@ -347,13 +348,13 @@ export default function QrStudioSurface() {
     for (const file of selected) {
       try {
         const code = await decodeImage(file)
-        if (code) { saveEntry(code.value, 'Image', code.format); found += 1; if (!scanResult) { setScanResult(code.value); setScanFormat(code.format) } }
+        if (code) { if (saveScans) saveEntry(code.value, 'Image', code.format); found += 1; if (!scanResult) { setScanResult(code.value); setScanFormat(code.format) } }
       } catch { /* continue with the remaining local files */ }
     }
     scanLockedRef.current = found > 0
-    setBatchStatus(`${found} QR code(s) found in ${selected.length} image(s). Saved to your private library.`)
-    setScanStatus(found ? 'Batch scan complete. Review the first result or open the library.' : 'No readable QR codes were found in these images.')
-    if (found) markToolSuccess('qr-studio', { headline: 'Batch scan complete', detail: `${found} QR code${found === 1 ? '' : 's'} found and saved in your private library.`, shareText: `I scanned ${found} QR codes locally with PureHub.` })
+    setBatchStatus(`${found} QR code(s) found in ${selected.length} image(s). ${saveScans ? 'Saved to your private library.' : 'Kept only for this private session.'}`)
+    setScanStatus(found ? `Batch scan complete. Review the first result${saveScans ? ' or open the library' : ''}.` : 'No readable QR codes were found in these images.')
+    if (found) markToolSuccess('qr-studio', { headline: 'Batch scan complete', detail: `${found} QR code${found === 1 ? '' : 's'} found ${saveScans ? 'and saved in your private library' : 'for this private session only'}.`, shareText: `I scanned ${found} QR codes locally with PureHub.` })
   }
 
   const resetScanner = () => {
@@ -459,6 +460,7 @@ export default function QrStudioSurface() {
             <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800 dark:border-slate-600 dark:text-slate-100"><ImageUp className="size-4" />Batch<input className="sr-only" multiple type="file" accept="image/*" onChange={(event) => void handleScanFiles(event.target.files)} /></label>
             {torchAvailable ? <ActionButton className="justify-center" tone="muted" onClick={() => void toggleTorch()}><Flashlight className="size-4" />{torchOn ? 'Torch off' : 'Torch'}</ActionButton> : null}
           </div>
+          <label className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-slate-200 px-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200"><span><strong className="block">Save scan history</strong><small className="font-medium text-slate-500">Turn off for a private session with no QR payload retained.</small></span><input type="checkbox" checked={saveScans} onChange={(event) => { setSaveScans(event.target.checked); localStorage.setItem('purehub.qr-studio.save-history', String(event.target.checked)) }} className="size-5 accent-emerald-600" /></label>
           {zoomRange ? <label className="mt-3 block rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">Camera zoom <span className="float-right text-emerald-700 dark:text-emerald-300">{zoom.toFixed(1)}×</span><input aria-label="Camera zoom" className="mt-2 w-full accent-emerald-600" type="range" min={zoomRange.min} max={zoomRange.max} step={zoomRange.step} value={zoom} onChange={(event) => void setCameraZoom(Number(event.target.value))} /></label> : null}
           <p aria-live="polite" className="mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">{scanStatus}</p>
           {batchStatus ? <p className="mt-2 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300">{batchStatus}</p> : null}
@@ -467,11 +469,11 @@ export default function QrStudioSurface() {
             {resultDetails.kind === 'Website' && resultDetails.destination ? <p className="mt-3 truncate rounded-xl border border-emerald-200 bg-white px-3 py-2 text-base font-black text-slate-950 dark:border-emerald-900 dark:bg-slate-950 dark:text-white">{new URL(resultDetails.destination).hostname}</p> : null}
             <p className="mt-3 max-h-32 overflow-auto break-all rounded-xl bg-white/80 p-3 text-sm font-semibold text-slate-900 dark:bg-slate-950/70 dark:text-white">{scanResult}</p>
             {resultDetails.warning ? <p className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-300">{resultDetails.warning}</p> : null}
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            {saveScans ? <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
               <label className="relative"><FolderOpen className="pointer-events-none absolute left-2.5 top-2.5 size-3.5 text-slate-400" /><input aria-label="Library folder" maxLength={48} value={libraryFolder} onChange={(event) => setLibraryFolder(event.target.value)} placeholder="Folder (optional)" className="min-h-9 w-full rounded-lg border border-emerald-200 bg-white px-2 py-1.5 pl-8 text-xs font-semibold text-slate-700 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-200" /></label>
               <label className="relative"><NotebookPen className="pointer-events-none absolute left-2.5 top-2.5 size-3.5 text-slate-400" /><input aria-label="Private library note" maxLength={240} value={libraryNote} onChange={(event) => setLibraryNote(event.target.value)} placeholder="Private note (optional)" className="min-h-9 w-full rounded-lg border border-emerald-200 bg-white px-2 py-1.5 pl-8 text-xs font-semibold text-slate-700 outline-none focus:border-emerald-500 dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-200" /></label>
               <ActionButton tone="muted" className="justify-center" onClick={() => updateEntry(scanResult, { folder: libraryFolder.trim(), note: libraryNote.trim() })}><History className="size-4" />Save details</ActionButton>
-            </div>
+            </div> : <p className="mt-3 rounded-xl border border-emerald-200 bg-white/70 px-3 py-2 text-xs font-bold text-emerald-800 dark:border-emerald-900 dark:bg-slate-950/70 dark:text-emerald-200">Private session active · this QR payload is not in the library.</p>}
             {resultDetails.kind === 'Product barcode' ? <label className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-white/75 px-3 py-2 text-xs font-bold text-slate-700 dark:border-emerald-900 dark:bg-slate-950/70 dark:text-slate-200"><ShoppingBag className="size-4 shrink-0 text-emerald-700 dark:text-emerald-300" />Lookup after confirmation<select aria-label="Product lookup provider" value={productProvider} onChange={(event) => { setProductProvider(event.target.value as 'shopping' | 'web'); setOpenConfirmed(false) }} className="ml-auto min-h-8 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold dark:border-slate-600 dark:bg-slate-900"><option value="shopping">Compare prices</option><option value="web">Private web search</option></select></label> : null}
             <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
               <ActionButton tone="muted" className="justify-center" onClick={() => { void navigator.clipboard.writeText(scanResult); setCopied(true) }}>{copied ? <Check className="size-4" /> : <Clipboard className="size-4" />}{copied ? 'Copied' : 'Copy'}</ActionButton>

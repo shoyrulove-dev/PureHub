@@ -30,7 +30,7 @@ export const resources = {
         installGuideLabel: 'Use browser menu',
         later: 'Later',
       },
-      nav: { home: 'Home', tools: 'Tools', community: 'Community', settings: 'Settings' },
+      nav: { home: 'Home', tools: 'Tools', results: 'Results', community: 'Community', settings: 'Settings' },
       dashboard: {
         collection: 'Tools for everyday moments',
         offline: 'Offline',
@@ -134,7 +134,7 @@ export const resources = {
         installGuideLabel: 'Dùng menu trình duyệt',
         later: 'Để sau',
       },
-      nav: { home: 'Trang chủ', tools: 'Công cụ', community: 'Cộng đồng', settings: 'Cài đặt' },
+      nav: { home: 'Trang chủ', tools: 'Công cụ', results: 'Kết quả', community: 'Cộng đồng', settings: 'Cài đặt' },
       dashboard: {
         collection: 'Công cụ cho mọi khoảnh khắc',
         offline: 'Ngoại tuyến',
@@ -238,7 +238,7 @@ export const resources = {
         installGuideLabel: '使用浏览器菜单',
         later: '稍后',
       },
-      nav: { home: '首页', tools: '工具', community: '社区', settings: '设置' },
+      nav: { home: '首页', tools: '工具', results: '结果', community: '社区', settings: '设置' },
       dashboard: {
         collection: '日常实用工具',
         offline: '离线',

@@ -11,6 +11,8 @@ import { ChangelogPage } from '../pages/changelog-page'
 import { BackendRouteRecovery } from '../pages/backend-route-recovery'
 import { PrivacyPage, TermsPage } from '../pages/legal-pages'
 import { GrowthLandingPage } from '../pages/growth-landing-page'
+import { ResultsPage } from '../pages/results-page'
+import { PrivacyCenterPage } from '../pages/privacy-center-page'
 import { GROWTH_LANDING_IDS, growthLandingPages } from '../config/growthLandingPages'
 
 export const appRouter = createBrowserRouter([
@@ -49,6 +51,14 @@ export const appRouter = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'results',
+        element: <ResultsPage />,
+      },
+      {
+        path: 'privacy-center',
+        element: <PrivacyCenterPage />,
       },
       {
         path: 'download',

@@ -189,3 +189,41 @@ export const ocrDocumentRepository = {
     return (await getPureHubDb()).clear('ocrDocuments')
   },
 }
+
+export type PureHubDbSnapshot = {
+  habits: HabitRecord[]
+  habitCheckIns: HabitCheckInRecord[]
+  expenses: ExpenseRecord[]
+  ocrDocuments: OcrDocumentRecord[]
+}
+
+export async function snapshotPureHubDb(): Promise<PureHubDbSnapshot> {
+  const database = await getPureHubDb()
+  const [habits, habitCheckIns, expenses, ocrDocuments] = await Promise.all([
+    database.getAll('habits'), database.getAll('habitCheckIns'), database.getAll('expenses'), database.getAll('ocrDocuments'),
+  ])
+  return { habits, habitCheckIns, expenses, ocrDocuments }
+}
+
+export async function restorePureHubDb(snapshot: PureHubDbSnapshot) {
+  const database = await getPureHubDb()
+  const transaction = database.transaction(['habits', 'habitCheckIns', 'expenses', 'ocrDocuments'], 'readwrite')
+  await Promise.all([
+    transaction.objectStore('habits').clear(), transaction.objectStore('habitCheckIns').clear(),
+    transaction.objectStore('expenses').clear(), transaction.objectStore('ocrDocuments').clear(),
+  ])
+  await Promise.all([
+    ...snapshot.habits.map((item) => transaction.objectStore('habits').put(item)),
+    ...snapshot.habitCheckIns.map((item) => transaction.objectStore('habitCheckIns').put(item)),
+    ...snapshot.expenses.map((item) => transaction.objectStore('expenses').put(item)),
+    ...snapshot.ocrDocuments.map((item) => transaction.objectStore('ocrDocuments').put(item)),
+    transaction.done,
+  ])
+}
+
+export async function clearPureHubDb() {
+  const database = await getPureHubDb()
+  await Promise.all([
+    database.clear('habits'), database.clear('habitCheckIns'), database.clear('expenses'), database.clear('ocrDocuments'),
+  ])
+}
