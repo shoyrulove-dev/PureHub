@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -46,6 +47,7 @@ fun WifiAnalyzerCard(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     var hasPermission by remember { mutableStateOf(checkWifiScanPermission(context)) }
+    var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { result ->
@@ -75,6 +77,11 @@ fun WifiAnalyzerCard(
                 eyebrow = "Connection Care flagship",
                 title = "Wi-Fi Analyzer",
                 description = "Understand signal quality, nearby networks and connection history with transparent Android permissions.",
+            )
+            SuiteModeSwitch(
+                mode = mode,
+                onModeChanged = { mode = it },
+                proHint = "Channel pressure, security details, and up to 32 nearby access points.",
             )
             Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
             if (!hasPermission) {
@@ -150,11 +157,32 @@ fun WifiAnalyzerCard(
                     }
                 }
             }
+            PrivacyReceipt(
+                action = "Live analysis stays on this phone",
+                detail = "PureHub does not upload SSIDs, BSSIDs, signal history, or scan results.",
+            )
             Text(
                 text = "Nearby networks",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
             )
+            if (mode == SuiteMode.PRO && uiState.channelInsights.isNotEmpty()) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("Channel pressure", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(uiState.recommendation, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                        uiState.channelInsights.take(8).forEach { insight ->
+                            Text(
+                                "${insight.band} · Ch ${insight.channel} · ${insight.nearbyCount} nearby · strongest ${insight.strongestRssi} dBm",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
             if (uiState.nearbyNetworks.isEmpty()) {
                 Text(
                     text = if (hasPermission) "No nearby scan results yet." else "Grant permission to see nearby scan results.",
@@ -188,6 +216,13 @@ fun WifiAnalyzerCard(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colorScheme.onSurfaceVariant,
                                     )
+                                    if (mode == SuiteMode.PRO) {
+                                        Text(
+                                            text = "${network.securityLabel} · ${network.frequencyMhz} MHz",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = colorScheme.primary,
+                                        )
+                                    }
                                 }
                                 Text(
                                     text = "${network.level + 1}/5",

@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
         val initialMiniAppId = intent.getStringExtra(EXTRA_MINI_APP_ID)?.let { value ->
             MiniAppId.entries.firstOrNull { it.name == value }
         }
+        initialMiniAppId?.let(::reportMiniAppShortcutUsed)
 
         setContent {
             PureHubTheme {
@@ -53,6 +54,16 @@ class MainActivity : ComponentActivity() {
                 .build()
         }
         ShortcutManagerCompat.setDynamicShortcuts(this, shortcuts)
+    }
+
+    private fun reportMiniAppShortcutUsed(miniAppId: MiniAppId) {
+        val shortcutId = when (miniAppId) {
+            MiniAppId.QR_STUDIO -> "qr_studio"
+            MiniAppId.ZEN_POMODORO -> "zen_pomodoro"
+            MiniAppId.ZEN_BREATH -> "zen_breath"
+            else -> return
+        }
+        ShortcutManagerCompat.reportShortcutUsed(this, shortcutId)
     }
 
     companion object {

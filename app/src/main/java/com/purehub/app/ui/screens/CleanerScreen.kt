@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +54,7 @@ fun CleanerScreen(
     val scope = rememberCoroutineScope()
     var permissionMessage by remember { mutableStateOf<String?>(null) }
     var activeView by remember { mutableStateOf(CleanerView.OVERVIEW) }
+    var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var confirmDelete by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -105,11 +107,18 @@ fun CleanerScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (!embedded) item {
-                FlagshipSuiteHeader(
-                    eyebrow = "Storage Care flagship",
-                    title = "Deep Cleaner",
-                    description = "Scan visible media locally, review exact evidence, and approve every deletion yourself.",
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FlagshipSuiteHeader(
+                        eyebrow = "Storage Care flagship",
+                        title = "Deep Cleaner",
+                        description = "Scan visible media locally, review exact evidence, and approve every deletion yourself.",
+                    )
+                    SuiteModeSwitch(
+                        mode = mode,
+                        onModeChanged = { selected -> mode = selected; if (selected == SuiteMode.QUICK) activeView = CleanerView.OVERVIEW },
+                        proHint = "Inspect large files and byte-identical duplicate groups before choosing anything.",
+                    )
+                }
             }
             item {
                 CleanerDashboard(
@@ -117,9 +126,15 @@ fun CleanerScreen(
                     uiState.exactDuplicateBytes, uiState.duplicateGroups.size, uiState.largeFiles.size, ::launchScan,
                 )
             }
+            item {
+                PrivacyReceipt(
+                    action = "Review first, delete through Android",
+                    detail = "Hashes are calculated locally. PureHub never uploads media or silently selects personal files.",
+                )
+            }
             permissionMessage?.let { item { NoticeCard(it) } }
             uiState.errorMessage?.let { item { NoticeCard(it) } }
-            item {
+            if (mode == SuiteMode.PRO) item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CleanerView.entries.forEach { view ->
                         FilterChip(activeView == view, { activeView = view }, { Text(view.label) })

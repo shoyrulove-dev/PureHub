@@ -76,6 +76,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -616,7 +617,7 @@ private fun QrCameraPreview(
     var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var torchEnabled by rememberSaveable { mutableStateOf(false) }
-    var zoomRatio by rememberSaveable { mutableStateOf(1f) }
+    var zoomRatio by rememberSaveable { mutableFloatStateOf(1f) }
     val currentScanningEnabled by rememberUpdatedState(scanningEnabled)
     val currentOnCodeDetected by rememberUpdatedState(onCodeDetected)
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }

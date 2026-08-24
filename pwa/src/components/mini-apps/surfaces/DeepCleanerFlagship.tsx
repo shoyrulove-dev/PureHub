@@ -26,6 +26,7 @@ export default function DeepCleanerFlagship() {
   const [files, setFiles] = useState<ReviewedFile[]>([])
   const [hashing, setHashing] = useState(false)
   const [cleaning, setCleaning] = useState(false)
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'duplicates' | 'large' | 'images'>('all')
   const [message, setMessage] = useState('Nothing is removed until you review and confirm it.')
 
   const inspectStorage = useCallback(async () => {
@@ -57,6 +58,9 @@ export default function DeepCleanerFlagship() {
   }, [files])
 
   const duplicateBytes = [...duplicateIndexes].reduce((total, index) => total + files[index].file.size, 0)
+  const largeIndexes = useMemo(() => new Set(files.map((item, index) => item.file.size >= 25 * 1024 * 1024 ? index : -1).filter((index) => index >= 0)), [files])
+  const imageIndexes = useMemo(() => new Set(files.map((item, index) => item.file.type.startsWith('image/') ? index : -1).filter((index) => index >= 0)), [files])
+  const visibleFiles = files.map((item, index) => ({ item, index })).filter(({ index }) => reviewFilter === 'all' || reviewFilter === 'duplicates' && duplicateIndexes.has(index) || reviewFilter === 'large' && largeIndexes.has(index) || reviewFilter === 'images' && imageIndexes.has(index))
 
   const analyzeFiles = async () => {
     if (!files.length) return
@@ -132,12 +136,20 @@ export default function DeepCleanerFlagship() {
         {files.length ? <span className="text-xs font-semibold text-slate-500">{files.length} files · {formatBytes(files.reduce((sum, item) => sum + item.file.size, 0))}</span> : null}
       </div>
       <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold leading-5 text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">{message}</p>
+      {files.length ? <div className="mt-3 grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">{([
+        ['all', `All ${files.length}`],
+        ['duplicates', `Copies ${duplicateIndexes.size}`],
+        ['large', `Large ${largeIndexes.size}`],
+        ['images', `Images ${imageIndexes.size}`],
+      ] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setReviewFilter(value)} className={`min-h-10 rounded-xl px-1 text-[11px] font-black transition ${reviewFilter === value ? 'bg-white text-emerald-800 shadow-sm dark:bg-slate-950 dark:text-emerald-300' : 'text-slate-500'}`}>{label}</button>)}</div> : null}
       <div className="mt-3 max-h-80 space-y-2 overflow-auto">
-        {files.map((item, index) => <div key={`${item.file.name}-${item.file.lastModified}-${index}`} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+        {visibleFiles.map(({ item, index }) => <div key={`${item.file.name}-${item.file.lastModified}-${index}`} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
           {duplicateIndexes.has(index) ? <FileSearch className="size-4 shrink-0 text-amber-600" /> : <CheckCircle2 className={`size-4 shrink-0 ${item.hash ? 'text-emerald-600' : 'text-slate-400'}`} />}
-          <div className="min-w-0 flex-1"><strong className="block truncate text-xs">{item.file.name}</strong><span className="text-[11px] text-slate-500">{formatBytes(item.file.size)}</span></div>
+          <div className="min-w-0 flex-1"><strong className="block truncate text-xs">{item.file.name}</strong><span className="text-[11px] text-slate-500">{formatBytes(item.file.size)} · {item.file.type || 'Unknown type'}</span></div>
+          {largeIndexes.has(index) ? <span className="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-violet-900 dark:bg-violet-950 dark:text-violet-200">Large</span> : null}
           {duplicateIndexes.has(index) ? <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-900">Exact copy</span> : null}
         </div>)}
+        {files.length && !visibleFiles.length ? <p className="rounded-xl border border-dashed border-slate-300 py-8 text-center text-xs text-slate-500 dark:border-slate-700">No file matches this review filter.</p> : null}
       </div>
     </Panel>
   </div>

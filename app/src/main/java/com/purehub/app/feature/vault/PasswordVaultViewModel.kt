@@ -36,6 +36,15 @@ class PasswordVaultViewModel(
         _uiState.update { it.copy(draftPassword = value.take(4096)) }
     }
 
+    fun generatePassword() {
+        _uiState.update {
+            it.copy(
+                draftPassword = VaultSecurity.generate(),
+                note = "A strong password was generated locally with SecureRandom.",
+            )
+        }
+    }
+
     fun saveDraft() {
         val state = _uiState.value
         if (state.draftTitle.isBlank() || state.draftPassword.isBlank()) return

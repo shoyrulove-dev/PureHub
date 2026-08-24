@@ -10,6 +10,7 @@ import { MiniAppEngagement } from '../components/mini-apps/MiniAppEngagement'
 import { MiniAppErrorBoundary } from '../components/mini-apps/MiniAppErrorBoundary'
 import { ToolWorkflowStatus } from '../components/mini-apps/ToolWorkflowStatus'
 import { getMiniAppRuntime } from '../features/miniapps/runtime'
+import { WorkspaceNavigator } from '../components/mini-apps/WorkspaceNavigator'
 
 const MiniAppSurface = lazy(() =>
   import('../components/mini-apps/MiniAppSurface').then((module) => ({
@@ -72,6 +73,8 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       </div>
 
       <ToolWorkflowStatus miniAppId={miniApp.id} />
+
+      <WorkspaceNavigator miniAppId={miniApp.id} />
 
       <MiniAppErrorBoundary key={miniApp.id} appId={miniApp.id}>
         <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>

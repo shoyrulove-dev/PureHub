@@ -25,6 +25,7 @@ data class NearbyWifiNetwork(
     val level: Int,
     val frequencyMhz: Int,
     val channelLabel: String,
+    val securityLabel: String,
     val isCurrentConnection: Boolean,
 )
 
@@ -37,6 +38,8 @@ data class WifiAnalyzerUiState(
     val frequencyMhz: Int = 0,
     val channelLabel: String = "--",
     val nearbyNetworks: List<NearbyWifiNetwork> = emptyList(),
+    val channelInsights: List<WifiChannelInsight> = emptyList(),
+    val recommendation: String = "Scan nearby networks to compare channel pressure.",
     val rssiHistory: List<Int> = emptyList(),
     val hasScanPermission: Boolean = false,
     val note: String = "Wi-Fi details stay on-device. Grant Nearby Wi-Fi and Location to unlock nearby scan results.",
@@ -92,7 +95,7 @@ class WifiAnalyzerViewModel(
                     .orEmpty()
                     .sortedByDescending { it.level }
                     .distinctBy { it.BSSID }
-                    .take(12)
+                    .take(32)
                     .map { result ->
                         result.toNearbyNetwork(
                             currentBssid = info?.bssid,
@@ -113,6 +116,8 @@ class WifiAnalyzerViewModel(
             frequencyMhz = frequency,
             channelLabel = deriveChannel(frequency),
             nearbyNetworks = nearbyNetworks,
+            channelInsights = WifiInsights.analyze(nearbyNetworks),
+            recommendation = WifiInsights.recommendation(nearbyNetworks),
             rssiHistory = history,
             hasScanPermission = hasScanPermission,
             note = when {
@@ -150,11 +155,12 @@ class WifiAnalyzerViewModel(
             level = level,
             frequencyMhz = frequency,
             channelLabel = deriveChannel(frequency),
+            securityLabel = WifiInsights.securityLabel(capabilities),
             isCurrentConnection = BSSID == currentBssid,
         )
     }
 
-    private fun deriveChannel(frequencyMhz: Int): String {
+    private fun deriveChannelLegacy(frequencyMhz: Int): String {
         if (frequencyMhz in 2412..2484) {
             val channel = ((frequencyMhz - 2407) / 5)
             return "2.4 GHz • Ch $channel"
@@ -169,6 +175,8 @@ class WifiAnalyzerViewModel(
         }
         return "--"
     }
+
+    private fun deriveChannel(frequencyMhz: Int): String = WifiInsights.channelLabel(frequencyMhz)
 
     override fun onCleared() {
         stop()
