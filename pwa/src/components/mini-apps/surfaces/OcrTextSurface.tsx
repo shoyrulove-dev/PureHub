@@ -8,6 +8,7 @@ import {
 import { ocrDocumentRepository, type OcrDocumentRecord } from '../../../lib/db/purehub-db'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
+import { trackProductEvent } from '../../../lib/community-api'
 
 const OCR_LANGUAGES = [
   { code: 'eng', label: 'English' },
@@ -214,6 +215,7 @@ export default function OcrTextSurface() {
   const shareText = async () => {
     if (navigator.share) await navigator.share({ title, text: allText })
     else await navigator.clipboard.writeText(allText)
+    void trackProductEvent('ocr-text', 'share')
   }
 
   const resetDocument = () => {

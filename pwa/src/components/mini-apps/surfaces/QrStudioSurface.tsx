@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
+import { trackProductEvent } from '../../../lib/community-api'
 
 const STORAGE_KEY = 'purehub.qr-studio.history.v2'
 const MAX_HISTORY = 120
@@ -398,15 +399,18 @@ export default function QrStudioSurface() {
     const file = new File([blob], 'purehub-qr.png', { type: 'image/png' })
     if (navigator.canShare?.({ files: [file] })) await navigator.share({ title: 'PureHub QR', files: [file] })
     else downloadQr()
+    void trackProductEvent('qr-studio', 'share')
   }
 
   const shareResult = async () => {
     if (navigator.share) {
       await navigator.share({ text: scanResult })
+      void trackProductEvent('qr-studio', 'share')
       return
     }
     await navigator.clipboard.writeText(scanResult)
     setCopied(true)
+    void trackProductEvent('qr-studio', 'share')
   }
 
   const visibleHistory = history.filter((item) => {

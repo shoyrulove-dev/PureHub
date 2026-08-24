@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Check, Download, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
 import type { MiniAppId } from '../../features/catalog/tabs'
-import { submitProductFeedback, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
+import { submitProductFeedback, trackJourneyEvent, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
 import { shareCard } from '../../lib/share-card'
 import type { ToolSuccess } from '../../lib/tool-success'
 
@@ -25,6 +25,8 @@ const completionCtas: Partial<Record<MiniAppId, CompletionCta>> = {
   'deep-cleaner': { label: 'Review storage safely on Android', detail: 'Plan a cleanup with clear controls instead of background file deletion.' },
 }
 
+const testerSprintApps: MiniAppId[] = ['qr-studio', 'ocr-text', 'deep-cleaner']
+
 export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) {
   const helpfulKey = `purehub-helpful-${miniAppId}`
   const [helpful, setHelpful] = useState(() => window.localStorage.getItem(helpfulKey) === 'true')
@@ -41,6 +43,8 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
     detail: 'Continue this privacy-first workflow in the signed Android app.',
   }
   const downloadUrl = `/${locale}/download?utm_source=tool_success&utm_campaign=completion-${miniAppId}`
+  const testerSprintUrl = `/${locale}/community?utm_source=tool_success&utm_campaign=tester-sprint-${miniAppId}`
+  const isTesterSprintApp = testerSprintApps.includes(miniAppId)
 
   useEffect(() => {
     const day = new Date().toISOString().slice(0, 10)
@@ -106,9 +110,11 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
     <section className="app-surface rounded-[18px] p-4" aria-label="Help improve this mini app">
       {success ? <div className="mb-4 rounded-[14px] border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong className="block">{success.headline}</strong><span className="mt-1 block text-xs leading-5">{success.detail}</span></div> : null}
       {completed ? <a href={downloadUrl} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span><strong className="block">{completionCta.label}</strong><span className="mt-0.5 block text-xs font-medium text-white/85">{completionCta.detail}</span></span><Download className="size-5 shrink-0" /></a> : null}
+      {completed ? <>
+        {isTesterSprintApp ? <a href={testerSprintUrl} onClick={() => void trackJourneyEvent('tester_join')} className="mb-4 block rounded-[14px] border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold leading-5 text-cyan-950 dark:border-cyan-900 dark:bg-cyan-950/30 dark:text-cyan-100"><strong>Help test the core workflows.</strong> Try QR, OCR, and Deep Cleaner, then tell us one thing to improve.</a> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-slate-950 dark:text-white">Did this tool help?</h2>
+          <h2 className="text-sm font-bold text-slate-950 dark:text-white">Did this result help?</h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">One tap helps prioritize the next improvement. Share only when this result is worth passing on.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -123,6 +129,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
           </button>
         </div>
       </div>
+      </> : <p className="text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">Finish one real task to unlock result feedback and sharing. PureHub does not interrupt while you are working.</p>}
 
       {feedbackOpen ? (
         <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">

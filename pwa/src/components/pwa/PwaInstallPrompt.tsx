@@ -13,6 +13,12 @@ export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [open, setOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
+  const trackInstallAccepted = () => {
+    const key = `purehub-pwa_install_accepted-${new Date().toISOString().slice(0, 10)}`
+    if (window.localStorage.getItem(key)) return
+    window.localStorage.setItem(key, 'true')
+    void trackJourneyEvent('pwa_install_accepted')
+  }
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -22,12 +28,28 @@ export function PwaInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
     const standalone = window.matchMedia('(display-mode: standalone)')
-    const updateInstalled = () => setInstalled(standalone.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
+    const updateInstalled = () => {
+      const nextInstalled = standalone.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+      setInstalled(nextInstalled)
+      if (nextInstalled) {
+        const key = `purehub-installed-open-${new Date().toISOString().slice(0, 10)}`
+        if (!window.localStorage.getItem(key)) {
+          window.localStorage.setItem(key, 'true')
+          void trackJourneyEvent('installed_open')
+        }
+      }
+    }
+    const onInstalled = () => {
+      updateInstalled()
+      trackInstallAccepted()
+    }
     updateInstalled()
     standalone.addEventListener('change', updateInstalled)
+    window.addEventListener('appinstalled', onInstalled)
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
       standalone.removeEventListener('change', updateInstalled)
+      window.removeEventListener('appinstalled', onInstalled)
     }
   }, [])
 
@@ -77,6 +99,7 @@ export function PwaInstallPrompt() {
             <button type="button" onClick={() => { trackInstallStep('pwa_install_dismissed'); setOpen(false) }} className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white" aria-label={t('pwa.later')}><X className="size-4" /></button>
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-300">{t('pwa.installDescription')}</p>
+          <p className="mt-2 text-xs font-semibold text-slate-400">Takes about 10 seconds · works offline · no account needed.</p>
           <div className="mt-3 flex items-start gap-2 rounded-[14px] bg-white/6 p-3 text-xs leading-5 text-slate-200">
             {isIos ? <Share2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : deferredPrompt ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : <MonitorDown className="mt-0.5 size-4 shrink-0 text-emerald-300" />}
             <span>{installHint}</span>
@@ -91,7 +114,7 @@ export function PwaInstallPrompt() {
                 onClick={async () => {
                   await deferredPrompt.prompt()
                   const choice = await deferredPrompt.userChoice
-                  if (choice.outcome === 'accepted') void trackJourneyEvent('pwa_install_accepted')
+                  if (choice.outcome === 'accepted') trackInstallAccepted()
                   setDeferredPrompt(null)
                   setOpen(false)
                 }}

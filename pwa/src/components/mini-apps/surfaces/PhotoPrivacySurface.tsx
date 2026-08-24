@@ -3,6 +3,7 @@ import { Download, ImagePlus, MapPinOff, Share2, ShieldCheck } from 'lucide-reac
 import { ActionButton, FlagshipHero, Panel } from '../MiniAppPrimitives'
 import { shareCard } from '../../../lib/share-card'
 import { markToolSuccess } from '../../../lib/tool-success'
+import { trackProductEvent } from '../../../lib/community-api'
 
 function size(value: number) {
   if (!value) return '0 B'
@@ -68,7 +69,7 @@ export default function PhotoPrivacySurface() {
           <ActionButton disabled={!file || busy} onClick={() => void clean()}><ShieldCheck className="size-4" />{busy ? 'Removing metadata...' : 'Create private copy'}</ActionButton>
           {result ? <a href={result.url} download={result.name} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-bold dark:border-slate-700"><Download className="size-4" />Download clean JPEG</a> : <ActionButton disabled tone="muted"><Download className="size-4" />Download after review</ActionButton>}
         </div>
-        {result ? <ActionButton tone="muted" className="mt-2 w-full" onClick={() => void shareCard({ title: 'Photo Privacy', headline: 'A metadata-free photo copy is ready', detail: 'PureHub created a separate JPEG locally without copying the original EXIF metadata.' })}><Share2 className="size-4" />Share privacy workflow</ActionButton> : null}
+        {result ? <ActionButton tone="muted" className="mt-2 w-full" onClick={() => { void shareCard({ title: 'Photo Privacy', headline: 'A metadata-free photo copy is ready', detail: 'PureHub created a separate JPEG locally without copying the original EXIF metadata.' }); void trackProductEvent('photo-privacy', 'share') }}><Share2 className="size-4" />Share privacy workflow</ActionButton> : null}
       </Panel>
       <Panel title="What changes" subtitle="A clear privacy boundary before you share.">
         <div className="mb-3 rounded-2xl bg-violet-50 p-3 text-xs leading-5 text-violet-950 dark:bg-violet-950/30 dark:text-violet-100"><strong>Before:</strong> original photo and its metadata. <strong>After:</strong> a new JPEG pixel copy with location, camera, author, and EXIF blocks excluded.</div>
