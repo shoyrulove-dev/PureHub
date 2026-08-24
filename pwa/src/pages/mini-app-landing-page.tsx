@@ -8,6 +8,7 @@ import { buildTabPath } from '../i18n/routing'
 import { rememberRecentTool, useToolPreferences } from '../lib/preferences'
 import { MiniAppEngagement } from '../components/mini-apps/MiniAppEngagement'
 import { MiniAppErrorBoundary } from '../components/mini-apps/MiniAppErrorBoundary'
+import { ToolWorkflowStatus } from '../components/mini-apps/ToolWorkflowStatus'
 import { getMiniAppRuntime } from '../features/miniapps/runtime'
 
 const MiniAppSurface = lazy(() =>
@@ -69,6 +70,8 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
           </div>
         ))}
       </div>
+
+      <ToolWorkflowStatus miniAppId={miniApp.id} />
 
       <MiniAppErrorBoundary key={miniApp.id} appId={miniApp.id}>
         <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>

@@ -25,6 +25,7 @@ export default function PasswordVaultSurface() {
   const [items, setItems] = useState<VaultItem[]>([])
   const [preview, setPreview] = useState('')
   const [notice, setNotice] = useState('Locked. Enter your master passphrase when you need it.')
+  const [query, setQuery] = useState('')
   const previewTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export default function PasswordVaultSurface() {
   }
 
   const strength = passphrase.length >= 20 ? 'Strong' : passphrase.length >= 12 ? 'Acceptable' : 'Needs 12+ characters'
+  const visibleItems = items.filter((item) => item.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
   return (
     <div className="space-y-4">
     <FlagshipHero eyebrow="Security Suite flagship" title="Password Vault" description="Versioned PBKDF2 and AES-GCM protect secrets before local storage, with timed reveal and encrypted backup." accent="emerald" />
@@ -116,7 +118,8 @@ export default function PasswordVaultSurface() {
         </div>
 
         <div className="space-y-3">
-          {items.length ? items.map((item) => (
+          {items.length ? <FormInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${items.length} encrypted entries by label`} aria-label="Search vault entries" /> : null}
+          {visibleItems.length ? visibleItems.map((item) => (
             <div key={item.id} className="rounded-[14px] border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-bold text-slate-950 dark:text-white">{item.label}</p>
@@ -139,7 +142,7 @@ export default function PasswordVaultSurface() {
                 </div>
               </div>
             </div>
-          )) : <p className="rounded-[14px] border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No encrypted entries yet.</p>}
+          )) : <p className="rounded-[14px] border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">{items.length ? 'No vault label matched your search.' : 'No encrypted entries yet.'}</p>}
           {preview ? (
             <div className="rounded-[14px] border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/35">
               <p className="break-all font-mono text-sm text-emerald-950 dark:text-emerald-100">{preview}</p>

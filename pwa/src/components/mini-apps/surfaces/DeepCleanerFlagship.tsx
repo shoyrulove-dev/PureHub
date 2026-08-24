@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Database, FileSearch, HardDrive, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
+import { CheckCircle2, Database, Download, FileSearch, HardDrive, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 
@@ -94,6 +94,12 @@ export default function DeepCleanerFlagship() {
   }
 
   const usagePercent = storage.quota ? Math.min(100, Math.round(storage.usage / storage.quota * 100)) : 0
+  const exportReview = () => {
+    const rows = ['Status,File,Bytes,SHA-256', ...files.map((item, index) => [duplicateIndexes.has(index) ? 'Exact copy' : 'Unique', item.file.name, item.file.size, item.hash ?? ''].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','))]
+    const url = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }))
+    const link = document.createElement('a'); link.href = url; link.download = `purehub-duplicate-review-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(url)
+    markToolSuccess('deep-cleaner', { headline: 'Duplicate review exported', detail: `${files.length} reviewed files were saved in a local report; no file content was uploaded.`, shareText: 'I exported a private exact-duplicate review without uploading or deleting my files.' })
+  }
 
   return <div className="space-y-4">
     <FlagshipHero eyebrow="Storage Care flagship" title="Deep Cleaner" description="Understand browser storage, verify exact duplicate files, and reclaim space with explicit review at every step." accent="emerald" />
@@ -122,6 +128,7 @@ export default function DeepCleanerFlagship() {
       <FormInput type="file" multiple onChange={(event) => { setFiles(Array.from(event.target.files ?? [], (file) => ({ file }))); setMessage('Files selected. Start review to compare exact content.') }} />
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <ActionButton onClick={() => void analyzeFiles()} disabled={!files.length || hashing}><FileSearch className="size-4" />{hashing ? 'Comparing...' : 'Find exact duplicates'}</ActionButton>
+        <ActionButton tone="muted" onClick={exportReview} disabled={!files.some((item) => item.hash)}><Download className="size-4" />Export review</ActionButton>
         {files.length ? <span className="text-xs font-semibold text-slate-500">{files.length} files · {formatBytes(files.reduce((sum, item) => sum + item.file.size, 0))}</span> : null}
       </div>
       <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold leading-5 text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">{message}</p>

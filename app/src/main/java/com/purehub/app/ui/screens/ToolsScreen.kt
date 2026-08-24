@@ -12,7 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -24,12 +27,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.feature.catalog.MiniAppTab
 import com.purehub.app.feature.catalog.miniAppsByTab
+import com.purehub.app.data.ToolVisibilityRepository
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun ToolsScreen(
@@ -38,6 +46,10 @@ fun ToolsScreen(
     showAllTools: Boolean = false,
 ) {
     val visibleTools = rememberVisibleTools()
+    val favoriteTools = rememberFavoriteTools()
+    val context = LocalContext.current
+    val preferences = remember { ToolVisibilityRepository(context.applicationContext) }
+    val scope = rememberCoroutineScope()
     var query by rememberSaveable { mutableStateOf("") }
     val tabs = if (showAllTools) MiniAppTab.entries else listOf(MiniAppTab.MEASURE_TOOLS)
 
@@ -76,7 +88,7 @@ fun ToolsScreen(
 
         tabs.forEach { tab ->
             val tools = miniAppsByTab.getValue(tab).filter { tool ->
-                tool in visibleTools && (query.isBlank() || tool.title.contains(query.trim(), ignoreCase = true))
+                tool in visibleTools && toolMatchesSearch(tool, query)
             }
             if (tools.isNotEmpty()) {
                 item(key = "${tab.name}-title") {
@@ -128,6 +140,16 @@ fun ToolsScreen(
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }
+                                IconButton(onClick = {
+                                    scope.launch { preferences.setToolFavorite(tool.name, tool !in favoriteTools) }
+                                }) {
+                                    Icon(
+                                        imageVector = if (tool in favoriteTools) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        contentDescription = if (tool in favoriteTools) "Remove ${tool.title} from favorites" else "Add ${tool.title} to favorites",
+                                        tint = if (tool in favoriteTools) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
                                 Icon(
                                     imageVector = Icons.Rounded.ChevronRight,
                                     contentDescription = "Open ${tool.title}",
@@ -141,6 +163,42 @@ fun ToolsScreen(
             }
         }
     }
+}
+
+private fun toolMatchesSearch(tool: MiniAppId, query: String): Boolean {
+    val terms = query.trim().lowercase().split(Regex("\\s+")).filter(String::isNotBlank)
+    if (terms.isEmpty()) return true
+    val searchable = "${tool.title} ${toolFriendlySummary(tool)} ${toolSearchIntents(tool)}".lowercase()
+    return terms.all(searchable::contains)
+}
+
+private fun toolSearchIntents(tool: MiniAppId): String = when (tool) {
+    MiniAppId.LUNAR_CALENDAR -> "moon date am lich calendar can chi"
+    MiniAppId.ZEN_HABIT -> "habit streak routine goal thoi quen"
+    MiniAppId.ZEN_POMODORO -> "focus timer study work tap trung"
+    MiniAppId.ZEN_BREATH -> "breathing calm relax stress meditation"
+    MiniAppId.COMPASS -> "direction bearing north navigation la ban"
+    MiniAppId.BUBBLE_LEVEL -> "level shelf angle tilt can bang ke"
+    MiniAppId.DECIBEL_METER -> "sound noise microphone db loudness tieng on"
+    MiniAppId.SMART_FLASHLIGHT -> "torch light sos emergency den pin"
+    MiniAppId.UNIT_CONVERTER -> "convert length weight temperature doi don vi"
+    MiniAppId.QR_STUDIO -> "scan barcode link url wifi contact create quet ma vach"
+    MiniAppId.DOC_TO_PDF -> "document image photo merge reorder export tai lieu"
+    MiniAppId.OCR_TEXT -> "photo image text receipt extract recognize scan chu"
+    MiniAppId.COLOR_GRABBER -> "color picker camera hex rgb palette mau"
+    MiniAppId.PHOTO_PRIVACY -> "remove exif gps metadata location xoa vi tri anh"
+    MiniAppId.DEEP_CLEANER -> "storage large duplicate junk cleanup bo nho don dep"
+    MiniAppId.SPEAKER_CLEANER -> "water eject tone speaker loa nuoc"
+    MiniAppId.WIFI_ANALYZER -> "network signal channel router internet mang song"
+    MiniAppId.PASSWORD_VAULT -> "password credential secret encrypted mat khau"
+    MiniAppId.AUTHENTICATOR_VAULT -> "2fa otp totp authenticator code xac thuc"
+    MiniAppId.FILE_STUDIO -> "zip archive hash checksum compress nen tep"
+    MiniAppId.WALLPAPER_CHANGER -> "background image home lock screen hinh nen"
+    MiniAppId.BILL_SPLITTER -> "split tax tip restaurant friends chia hoa don"
+    MiniAppId.EXPENSE_TRACKER -> "money budget spending ledger chi tieu ngan sach"
+    MiniAppId.DECISION_WHEEL -> "random picker choice roulette boc tham"
+    MiniAppId.COMMUNITY_UNLOCK -> "support feedback roadmap github telegram cong dong"
+    MiniAppId.SCREEN_RECORDER -> "record screen video capture quay man hinh"
 }
 
 private fun toolFriendlySummary(tool: MiniAppId): String = when (tool) {

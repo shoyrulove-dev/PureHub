@@ -14,6 +14,7 @@ import {
 import { buildMiniAppPath, buildTabPath } from '../../i18n/routing'
 import { normalizeLocale } from '../../i18n/locales'
 import { useToolPreferences } from '../../lib/preferences'
+import { matchesToolSearch } from '../../features/catalog/search'
 
 const quickIds: MiniAppId[] = ['qr-studio', 'zen-pomodoro', 'zen-breath', 'ocr-text']
 
@@ -71,11 +72,9 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabId | 'all'>('all')
 
   const filteredTools = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
     return MINI_APP_ITEMS.filter((tool) => {
       const matchesTab = activeTab === 'all' || tool.tabId === activeTab
-      const content = `${t(tool.titleKey)} ${t(tool.summaryKey)}`.toLocaleLowerCase()
-      return matchesTab && (!normalizedQuery || content.includes(normalizedQuery))
+      return matchesTab && matchesToolSearch(tool, t(tool.titleKey), t(tool.summaryKey), query)
     })
   }, [activeTab, query, t])
 

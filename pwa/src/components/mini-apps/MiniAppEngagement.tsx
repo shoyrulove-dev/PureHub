@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Check, Download, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
-import type { MiniAppId } from '../../features/catalog/tabs'
+import { ArrowRight, Check, Download, Heart, MessageSquare, Send, Share2, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { MINI_APP_BY_ID, type MiniAppId } from '../../features/catalog/tabs'
+import { buildMiniAppPath } from '../../i18n/routing'
+import { normalizeLocale } from '../../i18n/locales'
 import { submitProductFeedback, trackJourneyEvent, trackProductEvent, type FeedbackCategory } from '../../lib/community-api'
 import { shareCard } from '../../lib/share-card'
 import type { ToolSuccess } from '../../lib/tool-success'
@@ -27,7 +31,37 @@ const completionCtas: Partial<Record<MiniAppId, CompletionCta>> = {
 
 const testerSprintApps: MiniAppId[] = ['qr-studio', 'ocr-text', 'deep-cleaner']
 
+const NEXT_TOOL: Record<MiniAppId, MiniAppId> = {
+  'lunar-calendar': 'zen-habit',
+  'zen-habit': 'zen-pomodoro',
+  'zen-pomodoro': 'zen-breath',
+  'zen-breath': 'zen-habit',
+  compass: 'bubble-level',
+  'bubble-level': 'unit-converter',
+  'decibel-meter': 'speaker-cleaner',
+  'smart-flashlight': 'compass',
+  'unit-converter': 'bill-splitter',
+  'qr-studio': 'ocr-text',
+  'doc-to-pdf': 'ocr-text',
+  'ocr-text': 'doc-to-pdf',
+  'color-grabber': 'wallpaper-changer',
+  'speaker-cleaner': 'decibel-meter',
+  'deep-cleaner': 'file-studio',
+  'photo-privacy': 'file-studio',
+  'wifi-analyzer': 'qr-studio',
+  'password-vault': 'authenticator-vault',
+  'wallpaper-changer': 'color-grabber',
+  'bill-splitter': 'expense-tracker',
+  'expense-tracker': 'bill-splitter',
+  'decision-wheel': 'community-pro-unlock',
+  'community-pro-unlock': 'qr-studio',
+  'authenticator-vault': 'password-vault',
+  'file-studio': 'photo-privacy',
+  'screen-recorder': 'file-studio',
+}
+
 export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) {
+  const { t } = useTranslation()
   const helpfulKey = `purehub-helpful-${miniAppId}`
   const [helpful, setHelpful] = useState(() => window.localStorage.getItem(helpfulKey) === 'true')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -37,7 +71,8 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [shareStatus, setShareStatus] = useState('')
   const [completed, setCompleted] = useState(() => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true')
   const [success, setSuccess] = useState<ToolSuccess | null>(null)
-  const locale = window.location.pathname.split('/')[1] || 'en'
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
+  const nextTool = MINI_APP_BY_ID.get(NEXT_TOOL[miniAppId])
   const completionCta = completionCtas[miniAppId] ?? {
     label: `Keep ${title} available offline on Android`,
     detail: 'Continue this privacy-first workflow in the signed Android app.',
@@ -111,6 +146,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
       {success ? <div className="mb-4 rounded-[14px] border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100"><strong className="block">{success.headline}</strong><span className="mt-1 block text-xs leading-5">{success.detail}</span></div> : null}
       {completed ? <a href={downloadUrl} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 text-sm font-black text-white shadow-sm"><span><strong className="block">{completionCta.label}</strong><span className="mt-0.5 block text-xs font-medium text-white/85">{completionCta.detail}</span></span><Download className="size-5 shrink-0" /></a> : null}
       {completed ? <>
+        {nextTool ? <Link to={buildMiniAppPath(locale, nextTool.id)} className="mb-4 flex min-h-12 items-center justify-between gap-3 rounded-[14px] border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"><span><span className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Continue the workflow</span>{t(nextTool.titleKey)}</span><ArrowRight className="size-4 shrink-0" /></Link> : null}
         {isTesterSprintApp ? <a href={testerSprintUrl} onClick={() => void trackJourneyEvent('tester_join')} className="mb-4 block rounded-[14px] border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold leading-5 text-cyan-950 dark:border-cyan-900 dark:bg-cyan-950/30 dark:text-cyan-100"><strong>Help test the core workflows.</strong> Try QR, OCR, and Deep Cleaner, then tell us one thing to improve.</a> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

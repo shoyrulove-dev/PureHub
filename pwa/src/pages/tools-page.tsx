@@ -1,23 +1,23 @@
-import { Search } from 'lucide-react'
+import { Heart, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { MINI_APP_ITEMS, TAB_ITEMS } from '../features/catalog/tabs'
 import { normalizeLocale } from '../i18n/locales'
 import { buildMiniAppPath } from '../i18n/routing'
+import { matchesToolSearch } from '../features/catalog/search'
+import { useToolPreferences } from '../lib/preferences'
 
 export function ToolsPage() {
   const { t } = useTranslation()
   const { lang } = useParams()
   const locale = normalizeLocale(lang)
   const [query, setQuery] = useState('')
-  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const { favorites, toggleFavorite } = useToolPreferences()
   const visible = useMemo(
     () =>
-      MINI_APP_ITEMS.filter((tool) =>
-        `${t(tool.titleKey)} ${t(tool.summaryKey)}`.toLocaleLowerCase().includes(normalizedQuery),
-      ),
-    [normalizedQuery, t],
+      MINI_APP_ITEMS.filter((tool) => matchesToolSearch(tool, t(tool.titleKey), t(tool.summaryKey), query)),
+    [query, t],
   )
 
   return (
@@ -51,7 +51,8 @@ export function ToolsPage() {
               {tools.map((tool) => {
                 const Icon = tool.icon
                 return (
-                  <Link key={tool.id} to={buildMiniAppPath(locale, tool.id)} className="tool-card__link tool-card">
+                  <article key={tool.id} className="tool-card group relative">
+                  <Link to={buildMiniAppPath(locale, tool.id)} className="tool-card__link pr-11">
                     <span className={`tool-card__icon ${tab.accentClass}`}>
                       <Icon className="size-5" />
                     </span>
@@ -62,6 +63,10 @@ export function ToolsPage() {
                       </span>
                     </span>
                   </Link>
+                  <button type="button" className="absolute right-2 top-2 grid size-10 place-items-center rounded-xl" onClick={() => toggleFavorite(tool.id)} aria-label={favorites.includes(tool.id) ? `Remove ${t(tool.titleKey)} from favorites` : `Add ${t(tool.titleKey)} to favorites`}>
+                    <Heart className={`size-4 ${favorites.includes(tool.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
+                  </button>
+                  </article>
                 )
               })}
             </div>
