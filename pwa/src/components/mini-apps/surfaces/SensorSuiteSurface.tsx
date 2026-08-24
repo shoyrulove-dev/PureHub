@@ -160,6 +160,12 @@ function SoundPanel() {
   const minimum = samples.length ? Math.min(...samples) : 0
 
   const stop = () => { cancelAnimationFrame(frame.current); stream.current?.getTracks().forEach((track) => track.stop()); void context.current?.close(); stream.current = null; context.current = null; setActive(false) }
+  const finish = () => {
+    const sampleCount = samples.length
+    stop()
+    if (!sampleCount) return
+    markToolSuccess('decibel-meter', { headline: 'Sound check complete', detail: `${sampleCount} local samples measured · ${average} dB average · ${peak} dB peak.`, shareText: `I completed a private sound check with an estimated ${average} dB average in PureHub.` })
+  }
   useEffect(() => stop, [])
   const start = async () => {
     if (!navigator.mediaDevices?.getUserMedia) { setPermission('unsupported'); return }
@@ -178,7 +184,7 @@ function SoundPanel() {
     <div className="rounded-[28px] bg-slate-950 p-6 text-center text-white"><Activity className="mx-auto size-7 text-violet-300" /><strong className="mt-3 block text-6xl tabular-nums">{level}</strong><span className="text-sm font-black text-slate-400">estimated dB</span><div className="mt-6 h-4 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full transition-all ${level > 85 ? 'bg-rose-500' : level > 65 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${level}%` }} /></div>{samples.length > 1 ? <svg viewBox="0 0 100 40" className="mt-4 h-20 w-full overflow-visible" preserveAspectRatio="none" aria-label="Recent sound level history"><path d={path} fill="none" stroke="rgb(196 181 253)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /></svg> : null}</div>
     <PermissionNotice state={permission} />
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"><Metric label="Current" value={`${level} dB`} /><Metric label="Average" value={`${average} dB`} /><Metric label="Minimum" value={`${minimum} dB`} /><Metric label="Peak" value={`${peak} dB`} /></div>
-    <ActionButton className="mt-4 w-full" onClick={() => active ? stop() : void start()}>{active ? 'Stop listening' : 'Start sound meter'}</ActionButton>
+    <ActionButton className="mt-4 w-full" onClick={() => active ? finish() : void start()}>{active ? 'Finish measurement' : 'Start sound meter'}</ActionButton>
     <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">Calibration & export</summary><label className="mt-3 block text-xs font-semibold">Reference offset {calibration > 0 ? '+' : ''}{calibration} dB<input className="mt-2 w-full accent-violet-600" type="range" min="-20" max="20" value={calibration} onChange={(event) => { const next = Number(event.target.value); setCalibration(next); localStorage.setItem('purehub.sound.calibration.v1', String(next)) }} /></label><ActionButton tone="muted" className="mt-3 w-full" disabled={!samples.length} onClick={() => { const blob = new Blob([`sample,estimated_db\n${samples.map((value, index) => `${index + 1},${value}`).join('\n')}`], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'purehub-sound-readings.csv'; anchor.click(); URL.revokeObjectURL(url); markToolSuccess('decibel-meter', { headline: 'Sound readings exported', detail: `${samples.length} estimated sound samples were saved as a local CSV.`, shareText: 'I exported local sound readings with PureHub.' }) }}><Download className="size-4" />Export CSV</ActionButton></details>
     <p className="mt-3 text-xs text-slate-500">Microphone samples stay in this browser and are discarded when you stop. Values are estimates, not certified safety measurements.</p>
   </div>

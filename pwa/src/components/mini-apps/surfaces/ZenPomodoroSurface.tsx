@@ -3,6 +3,7 @@ import { BarChart3, Bell, CalendarDays, CheckCircle2, Coffee, RotateCcw, Setting
 import { ActionButton, FlagshipHero, FormInput, Panel } from '../MiniAppPrimitives'
 import { trackProductEvent } from '../../../lib/community-api'
 import { shareCard } from '../../../lib/share-card'
+import { markToolSuccess } from '../../../lib/tool-success'
 
 const STORAGE_KEY = 'purehub.zen-pomodoro.stats.v1'
 const ACTIVE_KEY = 'purehub.zen-pomodoro.active.v1'
@@ -133,7 +134,11 @@ export default function ZenPomodoroSurface() {
           })
           if ('vibrate' in navigator) navigator.vibrate([160, 80, 160])
           if ('Notification' in window && Notification.permission === 'granted') new Notification('Focus session complete', { body: task ? `${task} · ${minutes} focused minutes` : `${minutes} focused minutes completed`, icon: '/icons/pwa-192x192.png' })
-          void trackProductEvent('zen-pomodoro', 'complete')
+          markToolSuccess('zen-pomodoro', {
+            headline: 'Focus session complete',
+            detail: task ? `${task} · ${minutes} focused minutes were saved locally.` : `${minutes} focused minutes were saved locally.`,
+            shareText: `I completed a private ${minutes}-minute focus session with PureHub.`,
+          })
         }
       }
     }

@@ -6,6 +6,7 @@ import {
   expenseRepository,
   type ExpenseRecord,
 } from '../../lib/db/purehub-db'
+import { markToolSuccess } from '../../lib/tool-success'
 
 type MiniAppSurfaceProps = {
   miniAppId: MiniAppId
@@ -103,6 +104,12 @@ function LunarCalendarSurface() {
   const [cursor, setCursor] = useState(() => new Date())
   const [selected, setSelected] = useState(() => new Date())
   const today = new Date()
+  const selectedLunar = buildMoonDay(selected)
+  const conversionText = `${selected.toLocaleDateString()} → ${selectedLunar.day}/${selectedLunar.month}/${selectedLunar.year}${selectedLunar.leap ? ' (leap month)' : ''}`
+  const copyConversion = async () => {
+    await navigator.clipboard.writeText(conversionText)
+    markToolSuccess('lunar-calendar', { headline: 'Lunar date copied', detail: `${conversionText} was calculated and copied locally.`, shareText: `PureHub converted ${conversionText} offline.` })
+  }
   const monthDays = useMemo(() => {
     const year = cursor.getFullYear()
     const month = cursor.getMonth()
@@ -125,9 +132,10 @@ function LunarCalendarSurface() {
       <FlagshipHero eyebrow="Calendar Suite flagship" title="Lunar Calendar" description="A polished Vietnamese solar–lunar calendar with fast month navigation and private on-device conversion." accent="violet" />
       <div className="grid gap-3 sm:grid-cols-3">
         <Metric label="Selected solar" value={selected.toLocaleDateString()} />
-        <Metric label="Selected lunar" value={`${buildMoonDay(selected).day}/${buildMoonDay(selected).month}/${buildMoonDay(selected).year}${buildMoonDay(selected).leap ? ' leap' : ''}`} />
+        <Metric label="Selected lunar" value={`${selectedLunar.day}/${selectedLunar.month}/${selectedLunar.year}${selectedLunar.leap ? ' leap' : ''}`} />
         <button className="min-h-16 rounded-[15px] border border-violet-200 bg-violet-50 px-4 text-sm font-black text-violet-900 dark:border-violet-900 dark:bg-violet-950/35 dark:text-violet-100" onClick={() => { const now = new Date(); setCursor(now); setSelected(now) }}>Jump to today</button>
       </div>
+      <ActionButton className="w-full justify-center" onClick={() => void copyConversion()}>Copy selected conversion</ActionButton>
       <Panel
         title={cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         subtitle="Vietnamese solar-to-lunar conversion calculated locally for UTC+7."
@@ -144,12 +152,12 @@ function LunarCalendarSurface() {
           </ActionButton>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs uppercase tracking-[0.2em] text-slate-500">
+        <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-[0.08em] text-slate-500 sm:gap-2 sm:text-xs sm:tracking-[0.2em]">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
             <div key={label}>{label}</div>
           ))}
         </div>
-        <div className="mt-3 grid grid-cols-7 gap-2">
+        <div className="mt-3 grid grid-cols-7 gap-1 sm:gap-2">
           {monthDays.cells.map(({ date, inMonth }) => {
             const lunarDate = buildMoonDay(date)
             const isToday =
@@ -163,7 +171,7 @@ function LunarCalendarSurface() {
                 type="button"
                 onClick={() => setSelected(date)}
                 className={[
-                  'rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm',
+                  'min-w-0 rounded-xl border p-1.5 text-left transition hover:-translate-y-0.5 hover:shadow-sm sm:rounded-2xl sm:p-3',
                   date.toDateString() === selected.toDateString() ? 'ring-2 ring-violet-500' : '',
                   isToday
                     ? 'border-emerald-300/45 bg-emerald-400/12 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.45)]'
@@ -171,8 +179,8 @@ function LunarCalendarSurface() {
                   inMonth ? 'text-slate-950 dark:text-white' : 'text-slate-500',
                 ].join(' ')}
               >
-                <p className="text-sm font-semibold">{date.getDate()}</p>
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs font-semibold sm:text-sm">{date.getDate()}</p>
+                <p className="mt-1 truncate text-[10px] text-slate-500 dark:text-slate-400 sm:mt-2 sm:text-xs">
                   {lunarDate.day}/{lunarDate.month}{lunarDate.leap ? '*' : ''}
                 </p>
               </button>
