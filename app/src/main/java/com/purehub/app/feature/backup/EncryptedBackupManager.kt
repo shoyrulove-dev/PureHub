@@ -8,6 +8,8 @@ import com.purehub.app.data.local.entity.HabitCheckInEntity
 import com.purehub.app.data.local.entity.HabitEntity
 import com.purehub.app.feature.vault.PasswordVaultRepository
 import com.purehub.app.feature.vault.VaultEntry
+import com.purehub.app.feature.authenticator.AuthenticatorRepository
+import com.purehub.app.feature.authenticator.TotpAccount
 import java.security.SecureRandom
 import java.security.MessageDigest
 import java.util.Base64
@@ -22,6 +24,7 @@ import org.json.JSONObject
 class EncryptedBackupManager(private val context: Context) {
     private val database = PureHubDatabaseProvider.get(context)
     private val vault = PasswordVaultRepository(context)
+    private val authenticator = AuthenticatorRepository(context)
 
     suspend fun export(passphrase: CharArray): String {
         require(passphrase.size >= 8) { "Use at least 8 characters for the backup passphrase." }
@@ -32,6 +35,7 @@ class EncryptedBackupManager(private val context: Context) {
             .put("checkIns", JSONArray(database.habitCheckInDao().getAllCheckIns().map(::checkInJson)))
             .put("expenses", JSONArray(database.expenseDao().getAllExpenses().map(::expenseJson)))
             .put("vault", JSONArray(vault.loadEntries().map(::vaultJson)))
+            .put("authenticator", JSONArray(authenticator.load().map(::authenticatorJson)))
             .put("ocrHistory", context.getSharedPreferences("purehub.ocr-studio.v2", 0).getString("history", "[]"))
             .put("qrHistory", context.getSharedPreferences("purehub.qr-studio.v2", 0).getString("history", "[]"))
         return encrypt(payload.toString().toByteArray(Charsets.UTF_8), passphrase)
@@ -45,6 +49,7 @@ class EncryptedBackupManager(private val context: Context) {
         val checkIns = payload.getJSONArray("checkIns").objects(::checkInFromJson)
         val expenses = payload.getJSONArray("expenses").objects(::expenseFromJson)
         val vaultEntries = payload.getJSONArray("vault").objects(::vaultFromJson)
+        val authenticatorEntries = payload.optJSONArray("authenticator")?.objects(::authenticatorFromJson)
         database.withTransaction {
             database.habitCheckInDao().deleteAllCheckIns()
             database.habitDao().deleteAllHabits()
@@ -54,6 +59,7 @@ class EncryptedBackupManager(private val context: Context) {
             expenses.forEach { database.expenseDao().insertExpense(it) }
         }
         vault.saveEntries(vaultEntries)
+        authenticatorEntries?.let(authenticator::save)
         context.getSharedPreferences("purehub.ocr-studio.v2", 0).edit().putString("history", payload.optString("ocrHistory", "[]")).commit()
         context.getSharedPreferences("purehub.qr-studio.v2", 0).edit().putString("history", payload.optString("qrHistory", "[]")).commit()
     }
@@ -113,9 +119,11 @@ class EncryptedBackupManager(private val context: Context) {
     private fun checkInJson(v: HabitCheckInEntity) = JSONObject().put("id", v.id).put("habitId", v.habitId).put("day", v.completedOn).put("note", v.note).put("created", v.createdAtEpochMillis)
     private fun expenseJson(v: ExpenseEntryEntity) = JSONObject().put("id", v.id).put("title", v.title).put("amount", v.amountMinor).put("category", v.category).put("note", v.note).put("happened", v.happenedAtEpochMillis).put("created", v.createdAtEpochMillis)
     private fun vaultJson(v: VaultEntry) = JSONObject().put("id", v.id).put("title", v.title).put("username", v.username).put("password", v.password)
+    private fun authenticatorJson(v: TotpAccount) = JSONObject().put("id", v.id).put("label", v.label).put("secret", v.secret).put("group", v.group)
     private fun habitFromJson(v: JSONObject) = HabitEntity(v.getLong("id"), v.getString("name"), v.optString("description"), v.optString("color", "#7A9E7E"), v.optInt("target", 7), v.getLong("created"), v.optBoolean("archived"))
     private fun checkInFromJson(v: JSONObject) = HabitCheckInEntity(v.getLong("id"), v.getLong("habitId"), v.getString("day"), v.optString("note"), v.getLong("created"))
     private fun expenseFromJson(v: JSONObject) = ExpenseEntryEntity(v.getLong("id"), v.getString("title"), v.getLong("amount"), v.optString("category", "General"), v.optString("note"), v.getLong("happened"), v.getLong("created"))
     private fun vaultFromJson(v: JSONObject) = VaultEntry(v.getString("id"), v.getString("title"), v.optString("username"), v.getString("password"))
+    private fun authenticatorFromJson(v: JSONObject) = TotpAccount(v.getLong("id"), v.getString("label"), v.getString("secret"), v.optString("group", "Personal"))
     private fun <T> JSONArray.objects(mapper: (JSONObject) -> T) = (0 until length()).map { mapper(getJSONObject(it)) }
 }

@@ -13,16 +13,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.purehub.app.feature.compass.CompassViewModel
+import com.purehub.app.feature.compass.CompassInsights
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -47,6 +52,8 @@ fun CompassScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var sensorActive by rememberSaveable { mutableStateOf(false) }
+    var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
+    var targetBearing by rememberSaveable { mutableStateOf("") }
     val primaryColor = MaterialTheme.colorScheme.primary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val northColor = MaterialTheme.colorScheme.error
@@ -81,6 +88,7 @@ fun CompassScreen(
                 description = "A spring-smoothed heading from locally filtered motion and magnetic sensors.",
             )
         }
+        SuiteModeSwitch(mode, { mode = it }, "Set a target bearing and get shortest-turn alignment guidance.")
         Card(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
@@ -146,6 +154,29 @@ fun CompassScreen(
             style = MaterialTheme.typography.titleMedium,
         )
         Text("Accuracy: ${uiState.accuracyLabel}", color = MaterialTheme.colorScheme.primary)
+        if (mode == SuiteMode.PRO) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = targetBearing,
+                    onValueChange = { targetBearing = it.filter(Char::isDigit).take(3) },
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Target bearing 0–359°") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                )
+                Button(onClick = { targetBearing = "" }, enabled = targetBearing.isNotBlank()) { Text("Clear") }
+            }
+            targetBearing.toFloatOrNull()?.takeIf { it in 0f..359f }?.let { target ->
+                val deviation = CompassInsights.signedDeviation(smoothRotation, target)
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text(CompassInsights.guidance(smoothRotation, target), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Target ${target.toInt()}° · deviation ${"%.1f".format(deviation)}°", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        PrivacyReceipt("Sensor-only navigation", "Heading and target bearings are processed locally; no map, location upload, or tracking account is used.")
         uiState.accuracyWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (!uiState.isSensorAvailable && uiState.errorMessage != null) {
             Text(

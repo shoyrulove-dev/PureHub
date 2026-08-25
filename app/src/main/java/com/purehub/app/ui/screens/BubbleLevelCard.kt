@@ -1,5 +1,6 @@
 package com.purehub.app.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +51,7 @@ fun BubbleLevelCard(
     viewModel: BubbleLevelViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val metrics = LocalResources.current.displayMetrics
     var rulerCentimeters by remember { mutableFloatStateOf(8f) }
     var rulerScale by rememberSaveable { mutableFloatStateOf(1f) }
@@ -56,6 +59,8 @@ fun BubbleLevelCard(
     var levelMode by rememberSaveable { mutableStateOf(LevelMode.Surface) }
     var tolerance by rememberSaveable { mutableFloatStateOf(0.5f) }
     var settled by remember { mutableStateOf(false) }
+    var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
+    var heldMeasurement by rememberSaveable { mutableStateOf("") }
     val colorScheme = MaterialTheme.colorScheme
     val isLevel = when (levelMode) {
         LevelMode.Surface -> uiState.tiltMagnitude <= tolerance
@@ -89,6 +94,7 @@ fun BubbleLevelCard(
                 title = "Bubble Level & Ruler",
                 description = "A calm two-axis level and quick ruler powered by private on-device readings.",
             )
+            SuiteModeSwitch(mode, { mode = it }, "Adjust tolerance, hold/share a reading, and calibrate the on-screen ruler.")
             Button(onClick = { sensorActive = !sensorActive }) {
                 Text(if (sensorActive) "Pause level sensor" else "Enable level sensor")
             }
@@ -192,6 +198,23 @@ fun BubbleLevelCard(
             Text("Tolerance ±${"%.1f".format(tolerance)}°", style = MaterialTheme.typography.titleSmall)
             Slider(value = tolerance, onValueChange = { tolerance = it }, valueRange = 0.1f..1.5f, steps = 13)
 
+            if (mode == SuiteMode.PRO) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(onClick = {
+                        heldMeasurement = "${levelMode.label}: pitch ${"%.1f".format(uiState.pitch)}°, roll ${"%.1f".format(uiState.roll)}°, tolerance ±${"%.1f".format(tolerance)}°"
+                    }, enabled = sensorActive) { Text("Hold reading") }
+                    Button(onClick = {
+                        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, "PureHub level measurement\n$heldMeasurement")
+                        }, "Share level measurement"))
+                    }, enabled = heldMeasurement.isNotBlank()) { Text("Share") }
+                }
+                if (heldMeasurement.isNotBlank()) {
+                    Text(heldMeasurement, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
             val pxPerCm = (metrics.xdpi / 2.54f) * rulerScale
             val rulerWidth = ((pxPerCm * rulerCentimeters) / metrics.density).dp
             Text(
@@ -239,6 +262,10 @@ fun BubbleLevelCard(
                 "Phone DPI can be approximate. Compare the ruler with a known reference and adjust calibration before measuring.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            PrivacyReceipt(
+                action = "Measurements remain local",
+                detail = "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share.",
             )
             uiState.errorMessage?.let { error ->
                 Text(

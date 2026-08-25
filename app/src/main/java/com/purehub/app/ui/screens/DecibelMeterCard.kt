@@ -1,6 +1,7 @@
 package com.purehub.app.ui.screens
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -8,6 +9,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,9 +19,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Slider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -28,8 +34,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.purehub.app.feature.decibel.DecibelMeterViewModel
+import com.purehub.app.feature.decibel.SoundSessionCodec
 import com.purehub.app.ui.LocalSnackbarHostState
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 
 @Composable
 fun DecibelMeterCard(
@@ -39,6 +48,7 @@ fun DecibelMeterCard(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     val hasRecordAudioPermission = ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.RECORD_AUDIO,
@@ -65,6 +75,7 @@ fun DecibelMeterCard(
                 title = "Sound Meter",
                 description = "Current, peak, and rolling sound estimates with no streaming or upload path.",
             )
+            SuiteModeSwitch(mode, { mode = it }, "Calibrated sessions, min/average/max history, and one-second CSV samples.")
             Text(
                 text = "~${uiState.currentDecibel.toInt()} dB",
                 style = MaterialTheme.typography.displaySmall,
@@ -145,6 +156,35 @@ fun DecibelMeterCard(
             Text("Calibration offset ${if (uiState.calibrationOffset >= 0) "+" else ""}${uiState.calibrationOffset.toInt()} dB")
             Slider(value = uiState.calibrationOffset, onValueChange = viewModel::setCalibrationOffset, valueRange = -20f..20f, steps = 39)
             Text(uiState.accuracyWarning, style = MaterialTheme.typography.bodySmall, color = colorScheme.tertiary)
+            PrivacyReceipt(
+                action = "Microphone samples stay on-device",
+                detail = "PureHub stores only estimated dB points for saved sessions, never microphone audio.",
+            )
+            if (mode == SuiteMode.PRO && uiState.sessionHistory.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Recent sessions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    OutlinedButton(onClick = viewModel::clearHistory) { Text("Clear") }
+                }
+                uiState.sessionHistory.take(5).forEach { session ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(session.startedAtEpochMillis)),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text("Min ${session.minimumDecibel.toInt()} · Avg ${session.averageDecibel.toInt()} · Max ${session.maximumDecibel.toInt()} dB")
+                            Text("${session.points.size} one-second samples", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                            OutlinedButton(onClick = {
+                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/csv"
+                                    putExtra(Intent.EXTRA_SUBJECT, "PureHub sound session")
+                                    putExtra(Intent.EXTRA_TEXT, SoundSessionCodec.csv(session))
+                                }, "Export sound CSV"))
+                            }) { Text("Export CSV") }
+                        }
+                    }
+                }
+            }
         }
     }
 }

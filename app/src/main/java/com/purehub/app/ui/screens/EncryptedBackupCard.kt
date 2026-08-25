@@ -69,7 +69,7 @@ fun EncryptedBackupCard() {
                 Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary)
                 Text("Encrypted private backup", style = MaterialTheme.typography.titleMedium)
             }
-            Text("Habit, check-ins, expenses, Vault and OCR/QR history. AES-256; your passphrase never leaves this device.", style = MaterialTheme.typography.bodySmall)
+            Text("Habit, check-ins, expenses, passwords, 2FA accounts and OCR/QR history. AES-256; your passphrase never leaves this device.", style = MaterialTheme.typography.bodySmall)
             Text(
                 text = if (backupStatus.exportedAtMillis > 0) {
                     "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(backupStatus.exportedAtMillis))} · fingerprint ${backupStatus.fingerprint}"

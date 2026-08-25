@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current preview is PureHub 1.0.0-beta.31 (Flagship Premium). It adds Quick/Pro experiences and privacy receipts to high-value tools, channel-pressure and security insights to Wi-Fi Analyzer, monthly budgets and portable CSV exports to Money Studio, and local password health, generation, search, and deliberate reveal controls to Password Vault. It retains the eight goal-based workspaces, safe storage review, metadata-only Result Center, encrypted backups, private QR sessions, and accessibility foundation. Signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
+The current preview is PureHub 1.0.0-beta.32 (Flagship Premium 5.0). It adds organized 2FA accounts to the encrypted whole-app backup, target and held measurements across Sensor Lab, and private Sound Meter session history with CSV export. It retains Quick/Pro experiences, Wi-Fi channel intelligence, Money budgets, password health, eight goal-based workspaces, safe storage review, private QR/OCR libraries, and the accessibility foundation. Signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
