@@ -20,4 +20,35 @@ class ScreenRecorderRuntimeTest {
     fun `capture size rejects invalid dimensions`() {
         assertThrows(IllegalArgumentException::class.java) { calculateCaptureSize(0, 2340, 720) }
     }
+
+    @Test
+    fun `pending recording recovery only accepts PureHub owned output`() {
+        assertEquals(
+            true,
+            isPureHubPendingRecording(
+                displayName = "PureHub-123456.mp4",
+                relativePath = "Movies/PureHub/",
+                ownerPackageName = "com.purehub.app",
+                appPackageName = "com.purehub.app",
+            ),
+        )
+        assertEquals(
+            false,
+            isPureHubPendingRecording(
+                displayName = "PureHub-123456.mp4",
+                relativePath = "Movies/PureHub/",
+                ownerPackageName = "com.example.recorder",
+                appPackageName = "com.purehub.app",
+            ),
+        )
+        assertEquals(
+            false,
+            isPureHubPendingRecording(
+                displayName = "holiday.mp4",
+                relativePath = "Movies/PureHub/",
+                ownerPackageName = "com.purehub.app",
+                appPackageName = "com.purehub.app",
+            ),
+        )
+    }
 }
