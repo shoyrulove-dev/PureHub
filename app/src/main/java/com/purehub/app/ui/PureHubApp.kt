@@ -94,6 +94,9 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry.value?.destination
+    val currentMiniApp = backStackEntry.value?.arguments
+        ?.getString("miniAppId")
+        ?.let { value -> MiniAppId.entries.firstOrNull { it.name == value } }
     val snackbarHostState = remember { SnackbarHostState() }
     val currentMiniAppRoute = currentDestination?.route?.startsWith("$MINI_APP_ROUTE_PREFIX/") == true
 
@@ -104,7 +107,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
             topBar = {
                 if (currentMiniAppRoute) {
                     MiniAppTopBar(
-                        title = currentMiniAppTitle(currentDestination?.route),
+                        title = currentMiniApp?.title.orEmpty(),
                         onBack = { navController.popBackStack() },
                     )
                 }
@@ -343,8 +346,3 @@ private fun ScrollHost(
 }
 
 private fun miniAppRoute(miniAppId: MiniAppId): String = "$MINI_APP_ROUTE_PREFIX/${miniAppId.name}"
-
-private fun currentMiniAppTitle(route: String?): String {
-    val rawId = route?.substringAfter("$MINI_APP_ROUTE_PREFIX/", "")
-    return MiniAppId.entries.firstOrNull { it.name == rawId }?.title.orEmpty()
-}
