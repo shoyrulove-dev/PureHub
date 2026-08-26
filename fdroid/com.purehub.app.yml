@@ -11,18 +11,22 @@ AutoName: PureHub
 
 RepoType: git
 Repo: https://github.com/shoyrulove-dev/PureHub.git
+Binaries: 
+  https://github.com/shoyrulove-dev/PureHub/releases/download/v%v/PureHub-%v-fdroid.apk
 
 Builds:
-  - versionName: 1.0.0-beta.21
-    versionCode: 22
-    commit: 748180a4e968f3df4bb9dd116d0e92c3171af739
+  - versionName: 1.0.0-beta.35
+    versionCode: 36
+    commit: 0bc42a050eda99a6b70cc1788b455ef97e871bbd
     subdir: app
     gradle:
       - fdroid
     output: build/outputs/apk/fdroid/release/app-fdroid-universal-release-unsigned.apk
 
+AllowedAPKSigningKeys: 323050a93655afe2d9ee572467a4dc3fbb1a862c8300019ead67554931592a5a
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: app/build.gradle.kts|versionCode.*?:\s*(\d+)|.|versionName.*?:\s*"([^"]+)"
-CurrentVersion: 1.0.0-beta.21
-CurrentVersionCode: 22
+CurrentVersion: 1.0.0-beta.35
+CurrentVersionCode: 36

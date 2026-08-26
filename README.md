@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current preview is PureHub 1.0.0-beta.34 (Flagship QA 5.2). It adds startup recovery for interrupted Screen Recorder outputs, restores miniapp titles across Android navigation, and provides persistent recording state, quality presets, pause/resume controls, encoder-safe sizing, reliable file cleanup, and visible privacy guidance. It retains organized 2FA backup, Sensor Lab measurements, private Sound Meter history, Quick/Pro experiences, Wi-Fi channel intelligence, Money budgets, password health, eight goal-based workspaces, safe storage review, and private QR/OCR libraries. Signed Android artifacts are published through GitHub Releases after CI and physical-device verification. Each Android release provides:
+The current preview is PureHub 1.0.0-beta.35. It keeps all 26 mini-app experiences, adds a clearer install handoff for Facebook and Instagram in-app browsers, and publishes an F-Droid-compliant build without Android dependency metadata in the APK or AAB signing block. The F-Droid flavor remains offline-only and replaces ML Kit OCR with Tesseract. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

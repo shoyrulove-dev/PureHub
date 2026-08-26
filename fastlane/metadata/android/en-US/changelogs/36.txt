@@ -1,0 +1,1 @@
+PureHub beta.35 keeps all 26 private, ad-free utilities and improves installation from Facebook and Instagram in-app browsers. The F-Droid release now excludes Android dependency metadata, remains offline-only, and passes the official F-Droid build, scanner, lint, and APK checks.
