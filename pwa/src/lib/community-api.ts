@@ -21,6 +21,68 @@ export type RoadmapOption = {
   votes: number
 }
 
+type JourneyAttribution = {
+  source: string
+  campaign: string
+}
+
+const JOURNEY_ATTRIBUTION_KEY = 'purehub-journey-attribution-v1'
+
+export function normalizeJourneySource(value: string | null | undefined) {
+  const raw = (value || '').trim().toLowerCase()
+  if (!raw) return 'direct'
+
+  let candidate = raw
+  try {
+    candidate = new URL(raw.includes('://') ? raw : `https://${raw}`).hostname.toLowerCase()
+  } catch {
+    candidate = raw
+  }
+
+  if (candidate === 'facebook' || candidate === 'fb' || candidate === 'fb.com' || candidate === 'fb.me') return 'facebook'
+  if (candidate === 'facebook.com' || candidate.endsWith('.facebook.com')) return 'facebook'
+  if (candidate === 'google.com' || candidate.endsWith('.google.com')) return 'google'
+  if (candidate === 'github.com' || candidate.endsWith('.github.com')) return 'github'
+  return candidate.replace(/[^a-z0-9._-]/g, '') || 'direct'
+}
+
+function getJourneyAttribution(): JourneyAttribution {
+  const query = new URLSearchParams(window.location.search)
+  const explicitSource = query.get('utm_source')
+  const explicitCampaign = query.get('utm_campaign')
+  let stored: JourneyAttribution | null = null
+
+  try {
+    stored = JSON.parse(window.sessionStorage.getItem(JOURNEY_ATTRIBUTION_KEY) || 'null') as JourneyAttribution | null
+  } catch {
+    stored = null
+  }
+
+  let referrer = ''
+  try {
+    referrer = document.referrer ? new URL(document.referrer).hostname : ''
+  } catch {
+    referrer = ''
+  }
+
+  const referrerSource = referrer && referrer !== window.location.hostname
+    ? normalizeJourneySource(referrer)
+    : ''
+  const source = normalizeJourneySource(explicitSource || referrerSource || stored?.source || 'direct')
+
+  const attribution = {
+    source,
+    campaign: (explicitCampaign || (explicitSource || referrerSource ? 'none' : stored?.campaign) || 'none').trim().toLowerCase(),
+  }
+
+  try {
+    window.sessionStorage.setItem(JOURNEY_ATTRIBUTION_KEY, JSON.stringify(attribution))
+  } catch {
+    // Metrics remain best-effort when storage is unavailable.
+  }
+  return attribution
+}
+
 async function postJson(path: string, payload: Record<string, unknown>) {
   const response = await fetch(path, {
     method: 'POST',
@@ -47,9 +109,7 @@ export function trackProductEvent(miniAppId: MiniAppId, event: ProductEvent) {
 
 export function trackJourneyEvent(stage: JourneyStage) {
   if (!anonymousMetricsEnabled()) return Promise.resolve()
-  const query = new URLSearchParams(window.location.search)
-  const source = query.get('utm_source') || document.referrer.split('/')[2] || 'direct'
-  const campaign = query.get('utm_campaign') || 'none'
+  const { source, campaign } = getJourneyAttribution()
   return postJson('/public-api/journey-event', { stage, source, campaign }).then(() => undefined).catch(() => undefined)
 }
 
