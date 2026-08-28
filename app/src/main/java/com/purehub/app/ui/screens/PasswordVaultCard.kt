@@ -19,7 +19,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -91,9 +91,9 @@ fun PasswordVaultCard() {
             if (mode == SuiteMode.PRO) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Vault health ${health.score}/100", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        LocalizedText("Vault health ${health.score}/100", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(progress = { health.score / 100f }, modifier = Modifier.fillMaxWidth())
-                        Text(
+                        LocalizedText(
                             "${health.total} entries · ${health.weak} weak · ${health.reused} reused",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -101,38 +101,38 @@ fun PasswordVaultCard() {
                     }
                 }
             }
-            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 value = uiState.draftTitle,
                 onValueChange = viewModel::updateDraftTitle,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Entry title") },
+                label = { LocalizedText("Entry title") },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = uiState.draftUsername,
                 onValueChange = viewModel::updateDraftUsername,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Username") },
+                label = { LocalizedText("Username") },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = uiState.draftPassword,
                 onValueChange = viewModel::updateDraftPassword,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Password") },
+                label = { LocalizedText("Password") },
                 singleLine = true,
                 visualTransformation = if (showDraft) VisualTransformation.None else PasswordVisualTransformation(),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = viewModel::generatePassword) { Text("Generate strong") }
-                OutlinedButton(onClick = { showDraft = !showDraft }) { Text(if (showDraft) "Hide" else "Reveal") }
+                OutlinedButton(onClick = viewModel::generatePassword) { LocalizedText("Generate strong") }
+                OutlinedButton(onClick = { showDraft = !showDraft }) { LocalizedText(if (showDraft) "Hide" else "Reveal") }
             }
             Button(
                 onClick = viewModel::saveDraft,
                 enabled = uiState.draftTitle.isNotBlank() && uiState.draftPassword.isNotBlank(),
             ) {
-                Text("Save Encrypted Entry")
+                LocalizedText("Save Encrypted Entry")
             }
             PrivacyReceipt(
                 action = "Android-backed encrypted storage",
@@ -143,12 +143,12 @@ fun PasswordVaultCard() {
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Search entries") },
+                    label = { LocalizedText("Search entries") },
                     singleLine = true,
                 )
             }
             if (filteredEntries.isEmpty()) {
-                Text(
+                LocalizedText(
                     text = if (uiState.entries.isEmpty()) "No entries saved yet." else "No matching entry.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -161,16 +161,16 @@ fun PasswordVaultCard() {
                                 modifier = Modifier.padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
-                                Text(
+                                LocalizedText(
                                     text = entry.title,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                 )
-                                Text(
+                                LocalizedText(
                                     text = if (entry.username.isBlank()) "No username" else entry.username,
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
-                                Text(
+                                LocalizedText(
                                     text = if (revealedEntryId == entry.id) entry.password else "Password hidden (${entry.password.length} chars)",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -181,7 +181,7 @@ fun PasswordVaultCard() {
                                 ) {
                                     OutlinedButton(onClick = {
                                         revealedEntryId = if (revealedEntryId == entry.id) null else entry.id
-                                    }) { Text(if (revealedEntryId == entry.id) "Hide" else "Reveal") }
+                                    }) { LocalizedText(if (revealedEntryId == entry.id) "Hide" else "Reveal") }
                                     Button(
                                         onClick = {
                                             val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
@@ -202,10 +202,10 @@ fun PasswordVaultCard() {
                                             }
                                         },
                                     ) {
-                                        Text("Copy Password")
+                                        LocalizedText("Copy Password")
                                     }
                                     Button(onClick = { viewModel.deleteEntry(entry.id) }) {
-                                        Text("Delete")
+                                        LocalizedText("Delete")
                                     }
                                 }
                             }
@@ -213,7 +213,7 @@ fun PasswordVaultCard() {
                     }
                 }
             }
-            Text(
+            LocalizedText(
                 text = "Screenshots and Android cloud backup are blocked while this vault is open. Keep a separate secure backup; this local vault should not be your only copy of critical credentials.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

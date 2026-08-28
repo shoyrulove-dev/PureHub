@@ -70,7 +70,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -296,9 +296,9 @@ private fun QrStudioHeader(selectedTab: QrStudioTab, onTabSelected: (QrStudioTab
                     Icon(Icons.Rounded.QrCode2, null, modifier = Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primaryContainer)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("PRIVATE BY DESIGN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text("QR Studio", style = MaterialTheme.typography.headlineSmall)
-                    Text("Fast scans, safe previews, zero ads.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText("PRIVATE BY DESIGN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    LocalizedText("QR Studio", style = MaterialTheme.typography.headlineSmall)
+                    LocalizedText("Fast scans, safe previews, zero ads.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -306,7 +306,7 @@ private fun QrStudioHeader(selectedTab: QrStudioTab, onTabSelected: (QrStudioTab
                     FilterChip(
                         selected = selectedTab == tab,
                         onClick = { onTabSelected(tab) },
-                        label = { Text(tab.label) },
+                        label = { LocalizedText(tab.label) },
                         leadingIcon = {
                             Icon(
                                 when (tab) {
@@ -358,8 +358,8 @@ private fun QrScannerContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(48.dp))
-                        Text("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                        Button(onClick = onRequestCameraPermission) { Text("Allow camera") }
+                        LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                        Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                     }
                 }
             }
@@ -367,12 +367,12 @@ private fun QrScannerContent(
                 OutlinedButton(onClick = onChooseImage, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(7.dp))
-                    Text("Scan image")
+                    LocalizedText("Scan image")
                 }
                 OutlinedButton(onClick = onChooseBatch, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.size(7.dp))
-                    Text("Batch")
+                    LocalizedText("Batch")
                 }
             }
             Row(
@@ -381,17 +381,17 @@ private fun QrScannerContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Save scan history", style = MaterialTheme.typography.labelLarge)
-                    Text("Turn off for a private session with no QR payload retained.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText("Save scan history", style = MaterialTheme.typography.labelLarge)
+                    LocalizedText("Turn off for a private session with no QR payload retained.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Switch(checked = saveScans, onCheckedChange = onSaveScansChanged)
             }
             if (latestScan.isNotBlank()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    FilledTonalButton(onClick = onClearResult, modifier = Modifier.fillMaxWidth()) { Text("Scan another") }
+                    FilledTonalButton(onClick = onClearResult, modifier = Modifier.fillMaxWidth()) { LocalizedText("Scan another") }
                 }
             }
-            Text(scanStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(scanStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 
@@ -405,28 +405,28 @@ private fun QrScannerContent(
                     Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.size(8.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(payloadInfo.kind, style = MaterialTheme.typography.titleMedium)
-                        Text("$scanSource · processed locally", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        LocalizedText(payloadInfo.kind, style = MaterialTheme.typography.titleMedium)
+                        LocalizedText("$scanSource · processed locally", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Icon(Icons.Rounded.Security, "Private", tint = MaterialTheme.colorScheme.primary)
                 }
                 Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = .78f)) {
-                    Text(latestScan, modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
+                    LocalizedText(latestScan, modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
                 }
-                if (payloadInfo.warning.isNotBlank()) Text(payloadInfo.warning, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                if (payloadInfo.warning.isNotBlank()) LocalizedText(payloadInfo.warning, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(onClick = {
                         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("QR result", latestScan))
                     }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.ContentCopy, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.size(6.dp)); Text("Copy")
+                        Icon(Icons.Rounded.ContentCopy, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.size(6.dp)); LocalizedText("Copy")
                     }
                     OutlinedButton(onClick = { shareText(context, latestScan) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.IosShare, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.size(6.dp)); Text("Share")
+                        Icon(Icons.Rounded.IosShare, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.size(6.dp)); LocalizedText("Share")
                     }
                 }
                 if (payloadInfo.kind == "Wi-Fi network") {
                     OutlinedButton(onClick = { context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) }, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Rounded.Language, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); Text("Open Wi-Fi settings")
+                        Icon(Icons.Rounded.Language, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); LocalizedText("Open Wi-Fi settings")
                     }
                 }
                 if (payloadInfo.destination.isNotBlank()) {
@@ -434,7 +434,7 @@ private fun QrScannerContent(
                         if (confirmOpen) context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(payloadInfo.destination)))
                         else confirmOpen = true
                     }, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); Text(if (confirmOpen) payloadInfo.action else "Review domain, then ${payloadInfo.action.lowercase()}")
+                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(7.dp)); LocalizedText(if (confirmOpen) payloadInfo.action else "Review domain, then ${payloadInfo.action.lowercase()}")
                     }
                 }
             }
@@ -458,11 +458,11 @@ private fun QrCreatorContent(
     val context = LocalContext.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Create a code", style = MaterialTheme.typography.titleLarge)
-            Text("Pick a format and fill in only the information people need.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText("Create a code", style = MaterialTheme.typography.titleLarge)
+            LocalizedText("Pick a format and fill in only the information people need.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 QrTemplate.entries.forEach { template ->
-                    AssistChip(onClick = { onTemplateSelected(template) }, label = { Text(template.label) }, leadingIcon = {
+                    AssistChip(onClick = { onTemplateSelected(template) }, label = { LocalizedText(template.label) }, leadingIcon = {
                         if (template == selectedTemplate) Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(17.dp))
                     })
                 }
@@ -478,7 +478,7 @@ private fun QrCreatorContent(
                             FilterChip(
                                 selected = tertiary == security,
                                 onClick = { onTertiaryChanged(security) },
-                                label = { Text(security) },
+                                label = { LocalizedText(security) },
                             )
                         }
                     }
@@ -507,7 +507,7 @@ private fun QrCreatorContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Security, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.size(7.dp))
-                Text("Created offline with reliable error correction", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText("Created offline with reliable error correction", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             qrBitmap?.let { bitmap ->
                 Surface(shape = RoundedCornerShape(24.dp), color = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -515,10 +515,10 @@ private fun QrCreatorContent(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Button(onClick = { shareQrBitmap(context, bitmap) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.IosShare, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(6.dp)); Text("Share PNG")
+                        Icon(Icons.Rounded.IosShare, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(6.dp)); LocalizedText("Share PNG")
                     }
                     OutlinedButton(onClick = onSave, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.History, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(6.dp)); Text("Save")
+                        Icon(Icons.Rounded.History, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.size(6.dp)); LocalizedText("Save")
                     }
                 }
             }
@@ -531,7 +531,7 @@ private fun QrCreatorContent(
                     ) {
                         Icon(Icons.Rounded.QrCode2, null, modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.outline)
                         Spacer(Modifier.size(8.dp))
-                        Text("Complete the first field to preview", style = MaterialTheme.typography.titleSmall)
+                        LocalizedText("Complete the first field to preview", style = MaterialTheme.typography.titleSmall)
                     }
                 }
             }
@@ -551,8 +551,8 @@ private fun CreatorField(
         modifier = Modifier.fillMaxWidth(),
         value = value,
         onValueChange = onValueChanged,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
+        label = { LocalizedText(label) },
+        placeholder = { LocalizedText(placeholder) },
         minLines = minLines,
         shape = RoundedCornerShape(16.dp),
         singleLine = minLines == 1,
@@ -570,8 +570,8 @@ private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryI
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Private library", style = MaterialTheme.typography.titleLarge)
-                    Text("Saved only on this phone.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText("Private library", style = MaterialTheme.typography.titleLarge)
+                    LocalizedText("Saved only on this phone.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (history.isNotEmpty()) IconButton(onClick = onClear) { Icon(Icons.Rounded.DeleteOutline, "Clear library", tint = MaterialTheme.colorScheme.error) }
             }
@@ -579,13 +579,13 @@ private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryI
                 Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Rounded.History, null, modifier = Modifier.size(36.dp), tint = MaterialTheme.colorScheme.outline)
-                        Text("No saved codes yet", style = MaterialTheme.typography.titleMedium)
-                        Text("Your scans and saved creations appear here.", style = MaterialTheme.typography.bodySmall)
+                        LocalizedText("No saved codes yet", style = MaterialTheme.typography.titleMedium)
+                        LocalizedText("Your scans and saved creations appear here.", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             } else {
-                OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Search history") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
-                FilterChip(selected = showCreatedOnly, onClick = { showCreatedOnly = !showCreatedOnly }, label = { Text(if (showCreatedOnly) "Created only" else "All codes") })
+                OutlinedTextField(value = query, onValueChange = { query = it }, label = { LocalizedText("Search history") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp))
+                FilterChip(selected = showCreatedOnly, onClick = { showCreatedOnly = !showCreatedOnly }, label = { LocalizedText(if (showCreatedOnly) "Created only" else "All codes") })
             } 
             visibleHistory.forEachIndexed { index, item ->
                 Surface(onClick = { onSelect(item) }, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
@@ -593,14 +593,14 @@ private fun QrLibraryContent(history: List<QrHistoryItem>, onSelect: (QrHistoryI
                         Icon(if (item.source == "Created") Icons.Rounded.QrCode2 else Icons.Rounded.QrCodeScanner, null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.size(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(item.value, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
-                            Text("${item.source} · ${item.savedAt.take(16).replace('T', ' ')}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            LocalizedText(item.value, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
+                            LocalizedText("${item.source} · ${item.savedAt.take(16).replace('T', ' ')}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
                 if (index < visibleHistory.lastIndex) HorizontalDivider(color = Color.Transparent)
             }
-            if (history.isNotEmpty() && visibleHistory.isEmpty()) Text("No matching codes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (history.isNotEmpty() && visibleHistory.isEmpty()) LocalizedText("No matching codes.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -633,7 +633,7 @@ private fun QrCameraPreview(
             Row(modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Security, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(15.dp))
                 Spacer(Modifier.size(6.dp))
-                Text("On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
+                LocalizedText("On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
             }
         }
         if (camera != null) {
@@ -647,7 +647,7 @@ private fun QrCameraPreview(
                 color = Color.Black.copy(alpha = .48f),
                 modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
             ) {
-                Text(if (zoomRatio > 1f) "2×" else "1×", color = Color.White, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+                LocalizedText(if (zoomRatio > 1f) "2×" else "1×", color = Color.White, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
             }
         }
         if (camera?.cameraInfo?.hasFlashUnit() == true) {
@@ -660,7 +660,7 @@ private fun QrCameraPreview(
             ) {
                 Icon(if (torchEnabled) Icons.Rounded.FlashlightOff else Icons.Rounded.FlashlightOn, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(6.dp))
-                Text(if (torchEnabled) "Torch off" else "Torch")
+                LocalizedText(if (torchEnabled) "Torch off" else "Torch")
             }
         }
     }

@@ -10,6 +10,8 @@ import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.purehub.app.ui.AppLanguage
+import com.purehub.app.ui.appText
 
 sealed class PureHubDestination(
     val route: String,
@@ -35,3 +37,16 @@ val bottomNavDestinations = listOf(
     PureHubDestination.Community,
     PureHubDestination.Settings,
 )
+
+fun PureHubDestination.labelFor(language: AppLanguage): String = when (this) {
+    PureHubDestination.Home -> appText(language, "Home", "Trang chủ", "主页")
+    PureHubDestination.AllTools -> appText(language, "Tools", "Công cụ", "工具")
+    PureHubDestination.Community -> appText(language, "Community", "Cộng đồng", "社区")
+    PureHubDestination.Settings -> appText(language, "Settings", "Cài đặt", "设置")
+    PureHubDestination.ZenTime -> appText(language, "Zen", "Thư giãn", "禅意")
+    PureHubDestination.MeasureTools -> appText(language, "Measure", "Đo lường", "测量")
+    PureHubDestination.Vision -> appText(language, "Vision", "Quét", "扫描")
+    PureHubDestination.SystemSecurity -> appText(language, "Security", "Bảo mật", "安全")
+    PureHubDestination.FinanceFun -> appText(language, "Finance", "Tài chính", "财务")
+    PureHubDestination.Help -> appText(language, "Help", "Trợ giúp", "帮助")
+}

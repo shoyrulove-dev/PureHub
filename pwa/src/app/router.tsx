@@ -13,6 +13,7 @@ import { PrivacyPage, TermsPage } from '../pages/legal-pages'
 import { GrowthLandingPage } from '../pages/growth-landing-page'
 import { ResultsPage } from '../pages/results-page'
 import { PrivacyCenterPage } from '../pages/privacy-center-page'
+import { MinigamePage } from '../pages/minigame-page'
 import { GROWTH_LANDING_IDS, growthLandingPages } from '../config/growthLandingPages'
 
 export const appRouter = createBrowserRouter([
@@ -67,6 +68,10 @@ export const appRouter = createBrowserRouter([
       {
         path: 'changelog',
         element: <ChangelogPage />,
+      },
+      {
+        path: 'minigame',
+        element: <MinigamePage />,
       },
       {
         path: 'privacy',

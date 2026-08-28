@@ -67,7 +67,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -335,9 +335,9 @@ private fun OcrStudioHeader(selectedTab: OcrStudioTab, onTabSelected: (OcrStudio
                     Icon(Icons.Rounded.DocumentScanner, null, modifier = Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primaryContainer)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("PRIVATE BY DESIGN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text("OCR Studio", style = MaterialTheme.typography.headlineSmall)
-                    Text("Scan, clean and export text without uploading your documents.", style = MaterialTheme.typography.bodySmall)
+                    LocalizedText("PRIVATE BY DESIGN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    LocalizedText("OCR Studio", style = MaterialTheme.typography.headlineSmall)
+                    LocalizedText("Scan, clean and export text without uploading your documents.", style = MaterialTheme.typography.bodySmall)
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -345,7 +345,7 @@ private fun OcrStudioHeader(selectedTab: OcrStudioTab, onTabSelected: (OcrStudio
                     FilterChip(
                         selected = selectedTab == tab,
                         onClick = { onTabSelected(tab) },
-                        label = { Text(tab.label) },
+                        label = { LocalizedText(tab.label) },
                         leadingIcon = {
                             Icon(
                                 when (tab) {
@@ -393,7 +393,7 @@ private fun OcrScanContent(
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OcrMode.entries.forEach { mode ->
-                FilterChip(selectedMode == mode, onClick = { onModeSelected(mode) }, label = { Text(mode.label) })
+                FilterChip(selectedMode == mode, onClick = { onModeSelected(mode) }, label = { LocalizedText(mode.label) })
             }
         }
         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
@@ -415,13 +415,13 @@ private fun OcrScanContent(
                     ) {
                         Row(Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Rounded.Security, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(16.dp))
-                            Text(" On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
+                            LocalizedText(" On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                     if (pageCount > 0) {
                         AssistChip(
                             onClick = {},
-                            label = { Text("$pageCount page${if (pageCount == 1) "" else "s"}") },
+                            label = { LocalizedText("$pageCount page${if (pageCount == 1) "" else "s"}") },
                             modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
                         )
                     }
@@ -432,7 +432,7 @@ private fun OcrScanContent(
                     ) {
                         if (processing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         else Icon(Icons.Rounded.DocumentScanner, null)
-                        Text(if (processing) "  Reading..." else "  Capture page")
+                        LocalizedText(if (processing) "  Reading..." else "  Capture page")
                     }
                 }
             } else {
@@ -442,45 +442,45 @@ private fun OcrScanContent(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Icon(Icons.Rounded.Security, null, Modifier.size(42.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text("Camera stays off until you allow it", style = MaterialTheme.typography.titleMedium)
-                    Text("OCR runs locally after each capture.", style = MaterialTheme.typography.bodyMedium)
-                    Button(onClick = onRequestCameraPermission) { Text("Allow camera") }
+                    LocalizedText("Camera stays off until you allow it", style = MaterialTheme.typography.titleMedium)
+                    LocalizedText("OCR runs locally after each capture.", style = MaterialTheme.typography.bodyMedium)
+                    Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                 }
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.AddPhotoAlternate, null)
-                Text("  Scan image")
+                LocalizedText("  Scan image")
             }
             OutlinedButton(onClick = onRotate, enabled = !processing, modifier = Modifier.weight(1f)) {
                 Icon(Icons.AutoMirrored.Rounded.RotateRight, null)
-                Text("  Rotate $rotation°")
+                LocalizedText("  Rotate $rotation°")
             }
         }
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Document cleanup", style = MaterialTheme.typography.titleSmall)
+                LocalizedText("Document cleanup", style = MaterialTheme.typography.titleSmall)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OcrFilter.entries.forEach { filter ->
-                        FilterChip(selectedFilter == filter, onClick = { onFilterSelected(filter) }, label = { Text(filter.label) })
+                        FilterChip(selectedFilter == filter, onClick = { onFilterSelected(filter) }, label = { LocalizedText(filter.label) })
                     }
                 }
-                Text("Edge crop ${Math.round(cropPercent * 100)}%", style = MaterialTheme.typography.labelMedium)
+                LocalizedText("Edge crop ${Math.round(cropPercent * 100)}%", style = MaterialTheme.typography.labelMedium)
                 Slider(value = cropPercent, onValueChange = onCropChanged, valueRange = 0f..0.16f)
             }
         }
-        Text("Recognition language", style = MaterialTheme.typography.titleSmall)
+        LocalizedText("Recognition language", style = MaterialTheme.typography.titleSmall)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OcrLanguage.entries.forEach { language ->
                 FilterChip(
                     selected = selectedLanguage == language,
                     onClick = { onLanguageSelected(language) },
-                    label = { Text(language.label) },
+                    label = { LocalizedText(language.label) },
                 )
             }
         }
-        Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -508,9 +508,9 @@ private fun OcrTextContent(
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Rounded.Description, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text("No text yet", style = MaterialTheme.typography.titleLarge)
-                    Text("Capture a page or choose an image to begin.")
-                    FilledTonalButton(onClick = onAddPage, modifier = Modifier.padding(top = 12.dp)) { Text("Start scanning") }
+                    LocalizedText("No text yet", style = MaterialTheme.typography.titleLarge)
+                    LocalizedText("Capture a page or choose an image to begin.")
+                    FilledTonalButton(onClick = onAddPage, modifier = Modifier.padding(top = 12.dp)) { LocalizedText("Start scanning") }
                 }
             }
             return
@@ -523,38 +523,38 @@ private fun OcrTextContent(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text("$displayedPageCount page${if (displayedPageCount == 1) "" else "s"}") })
-            AssistChip(onClick = {}, label = { Text("${text.split(Regex("\\s+")).count { it.isNotBlank() }} words") })
-            AssistChip(onClick = {}, label = { Text("On-device") }, leadingIcon = { Icon(Icons.Rounded.Security, null, Modifier.size(16.dp)) })
+            AssistChip(onClick = {}, label = { LocalizedText("$displayedPageCount page${if (displayedPageCount == 1) "" else "s"}") })
+            AssistChip(onClick = {}, label = { LocalizedText("${text.split(Regex("\\s+")).count { it.isNotBlank() }} words") })
+            AssistChip(onClick = {}, label = { LocalizedText("On-device") }, leadingIcon = { Icon(Icons.Rounded.Security, null, Modifier.size(16.dp)) })
         }
-        OutlinedTextField(value = title, onValueChange = onTitleChanged, label = { Text("Document title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = title, onValueChange = onTitleChanged, label = { LocalizedText("Document title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(
             value = text,
             onValueChange = onTextChanged,
-            label = { Text("Recognized text") },
+            label = { LocalizedText("Recognized text") },
             minLines = 7,
             maxLines = 12,
             modifier = Modifier.fillMaxWidth(),
         )
         DetectedActions(text)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onCopy, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.ContentCopy, null); Text(" Copy") }
-            FilledTonalButton(onClick = onShare, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.IosShare, null); Text(" Share") }
+            Button(onClick = onCopy, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.ContentCopy, null); LocalizedText(" Copy") }
+            FilledTonalButton(onClick = onShare, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.IosShare, null); LocalizedText(" Share") }
         }
         FilledTonalButton(onClick = onSendToDocumentSuite, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Rounded.DocumentScanner, null)
-            Text(" Continue in Doc to PDF")
+            LocalizedText(" Continue in Doc to PDF")
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onExportText, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.Description, null); Text(" TXT") }
-            OutlinedButton(onClick = onExportPdf, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.PictureAsPdf, null); Text(" PDF") }
-            OutlinedButton(onClick = onSave, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.History, null); Text(" Save") }
+            OutlinedButton(onClick = onExportText, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.Description, null); LocalizedText(" TXT") }
+            OutlinedButton(onClick = onExportPdf, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.PictureAsPdf, null); LocalizedText(" PDF") }
+            OutlinedButton(onClick = onSave, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.History, null); LocalizedText(" Save") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(onClick = onAddPage, modifier = Modifier.weight(1f)) { Text("Add page") }
-            OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) { Text("New document") }
+            FilledTonalButton(onClick = onAddPage, modifier = Modifier.weight(1f)) { LocalizedText("Add page") }
+            OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) { LocalizedText("New document") }
         }
-        Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -567,11 +567,11 @@ private fun DetectedActions(text: String) {
     if (url == null && email == null && phone == null) return
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f))) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Quick actions", style = MaterialTheme.typography.titleSmall)
+            LocalizedText("Quick actions", style = MaterialTheme.typography.titleSmall)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                url?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, label = { Text("Open link") }) }
-                email?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$it"))) }, label = { Text("Email") }) }
-                phone?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:${it.filter { c -> c.isDigit() || c == '+' }}"))) }, label = { Text("Call") }) }
+                url?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, label = { LocalizedText("Open link") }) }
+                email?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$it"))) }, label = { LocalizedText("Email") }) }
+                phone?.let { AssistChip(onClick = { openSafeIntent(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:${it.filter { c -> c.isDigit() || c == '+' }}"))) }, label = { LocalizedText("Call") }) }
             }
         }
     }
@@ -588,21 +588,21 @@ private fun OcrLibraryContent(
     val filtered = remember(history, query) { history.filter { query.isBlank() || it.title.contains(query, true) || it.text.contains(query, true) } }
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) { Text("Private library", style = MaterialTheme.typography.titleLarge); Text("Searchable and stored only on this device.") }
+            Column(Modifier.weight(1f)) { LocalizedText("Private library", style = MaterialTheme.typography.titleLarge); LocalizedText("Searchable and stored only on this device.") }
             if (history.isNotEmpty()) IconButton(onClick = onClear) { Icon(Icons.Rounded.DeleteOutline, "Clear library") }
         }
-        OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Search scans") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = query, onValueChange = { query = it }, label = { LocalizedText("Search scans") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         if (filtered.isEmpty()) {
-            Card(Modifier.fillMaxWidth()) { Text(if (history.isEmpty()) "Saved OCR documents will appear here." else "No matching document.", Modifier.padding(24.dp)) }
+            Card(Modifier.fillMaxWidth()) { LocalizedText(if (history.isEmpty()) "Saved OCR documents will appear here." else "No matching document.", Modifier.padding(24.dp)) }
         }
         filtered.forEach { item ->
             Card(onClick = { onOpen(item) }, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) { Icon(Icons.Rounded.Description, null, Modifier.padding(10.dp)) }
                     Column(Modifier.weight(1f)) {
-                        Text(item.title, style = MaterialTheme.typography.titleSmall)
-                        Text(item.text.replace('\n', ' ').take(90), maxLines = 2, style = MaterialTheme.typography.bodySmall)
-                        Text(item.source, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        LocalizedText(item.title, style = MaterialTheme.typography.titleSmall)
+                        LocalizedText(item.text.replace('\n', ' ').take(90), maxLines = 2, style = MaterialTheme.typography.bodySmall)
+                        LocalizedText(item.source, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = { onDelete(item) }) { Icon(Icons.Rounded.DeleteOutline, "Delete") }
                 }

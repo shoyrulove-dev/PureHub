@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -41,12 +41,12 @@ fun TabOverviewScreen(
                 modifier = Modifier.padding(top = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
+                LocalizedText(
                     text = title,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Text(
+                LocalizedText(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -59,12 +59,12 @@ fun TabOverviewScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(
+                    LocalizedText(
                         text = app.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium,
                     )
-                    Text(
+                    LocalizedText(
                         text = app.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -74,7 +74,7 @@ fun TabOverviewScreen(
         }
         footer?.let { footerText ->
             item {
-                Text(
+                LocalizedText(
                     text = footerText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

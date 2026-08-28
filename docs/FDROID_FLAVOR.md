@@ -5,7 +5,7 @@ PureHub has two Android distribution flavors:
 - `standard`: ML Kit OCR for the strongest recognition quality currently available in PureHub.
 - `fdroid`: ZXing QR/barcode scanning and Tesseract OCR with bundled `eng`, `vie`, and `chi_sim` models.
 
-Both flavors are offline-only and remove the Android `INTERNET` permission. The F-Droid flavor must also contain no ML Kit, Google Play Services, or Firebase dependency, including transitively.
+The standard flavor is offline-first but retains the Android `INTERNET` permission for explicit connected workflows such as update checks and the beta minigame. The F-Droid flavor is strictly offline-only and removes `INTERNET`; it must also contain no ML Kit, Google Play Services, or Firebase dependency, including transitively.
 
 ## Verification
 

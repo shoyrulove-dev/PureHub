@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -147,39 +147,39 @@ fun CompassScreen(
             }
         }
         Button(onClick = { sensorActive = !sensorActive }) {
-            Text(if (sensorActive) "Pause compass" else "Enable compass")
+            LocalizedText(if (sensorActive) "Pause compass" else "Enable compass")
         }
-        Text(
+        LocalizedText(
             text = "Heading: ${((smoothRotation % 360f) + 360f).toInt() % 360} deg ${uiState.cardinalDirection}",
             style = MaterialTheme.typography.titleMedium,
         )
-        Text("Accuracy: ${uiState.accuracyLabel}", color = MaterialTheme.colorScheme.primary)
+        LocalizedText("Accuracy: ${uiState.accuracyLabel}", color = MaterialTheme.colorScheme.primary)
         if (mode == SuiteMode.PRO) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = targetBearing,
                     onValueChange = { targetBearing = it.filter(Char::isDigit).take(3) },
                     modifier = Modifier.weight(1f),
-                    label = { Text("Target bearing 0–359°") },
+                    label = { LocalizedText("Target bearing 0–359°") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                 )
-                Button(onClick = { targetBearing = "" }, enabled = targetBearing.isNotBlank()) { Text("Clear") }
+                Button(onClick = { targetBearing = "" }, enabled = targetBearing.isNotBlank()) { LocalizedText("Clear") }
             }
             targetBearing.toFloatOrNull()?.takeIf { it in 0f..359f }?.let { target ->
                 val deviation = CompassInsights.signedDeviation(smoothRotation, target)
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(CompassInsights.guidance(smoothRotation, target), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("Target ${target.toInt()}° · deviation ${"%.1f".format(deviation)}°", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        LocalizedText(CompassInsights.guidance(smoothRotation, target), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        LocalizedText("Target ${target.toInt()}° · deviation ${"%.1f".format(deviation)}°", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
         PrivacyReceipt("Sensor-only navigation", "Heading and target bearings are processed locally; no map, location upload, or tracking account is used.")
-        uiState.accuracyWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+        uiState.accuracyWarning?.let { LocalizedText(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         if (!uiState.isSensorAvailable && uiState.errorMessage != null) {
-            Text(
+            LocalizedText(
                 text = uiState.errorMessage.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,

@@ -14,7 +14,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -96,9 +96,9 @@ fun BubbleLevelCard(
             )
             SuiteModeSwitch(mode, { mode = it }, "Adjust tolerance, hold/share a reading, and calibrate the on-screen ruler.")
             Button(onClick = { sensorActive = !sensorActive }) {
-                Text(if (sensorActive) "Pause level sensor" else "Enable level sensor")
+                LocalizedText(if (sensorActive) "Pause level sensor" else "Enable level sensor")
             }
-            Button(onClick = viewModel::calibrateZero, enabled = sensorActive) { Text("Calibrate zero") }
+            Button(onClick = viewModel::calibrateZero, enabled = sensorActive) { LocalizedText("Calibrate zero") }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -108,17 +108,17 @@ fun BubbleLevelCard(
                         modifier = Modifier.weight(1f),
                         onClick = { levelMode = mode },
                         enabled = levelMode != mode,
-                    ) { Text(mode.label) }
+                    ) { LocalizedText(mode.label) }
                 }
             }
-            uiState.accuracyWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+            uiState.accuracyWarning?.let { LocalizedText(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Text("Pitch ${uiState.pitch.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
-                Text("Roll ${uiState.roll.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("Pitch ${uiState.pitch.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("Roll ${uiState.roll.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
             }
 
             Box(
@@ -184,7 +184,7 @@ fun BubbleLevelCard(
                 }
             }
 
-            Text(
+            LocalizedText(
                 text = when {
                     settled -> "Level confirmed · reading held steady."
                     isLevel -> "Inside tolerance · keep the phone still."
@@ -195,29 +195,29 @@ fun BubbleLevelCard(
                 fontWeight = if (settled) FontWeight.SemiBold else FontWeight.Normal,
             )
 
-            Text("Tolerance ±${"%.1f".format(tolerance)}°", style = MaterialTheme.typography.titleSmall)
+            LocalizedText("Tolerance ±${"%.1f".format(tolerance)}°", style = MaterialTheme.typography.titleSmall)
             Slider(value = tolerance, onValueChange = { tolerance = it }, valueRange = 0.1f..1.5f, steps = 13)
 
             if (mode == SuiteMode.PRO) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(onClick = {
                         heldMeasurement = "${levelMode.label}: pitch ${"%.1f".format(uiState.pitch)}°, roll ${"%.1f".format(uiState.roll)}°, tolerance ±${"%.1f".format(tolerance)}°"
-                    }, enabled = sensorActive) { Text("Hold reading") }
+                    }, enabled = sensorActive) { LocalizedText("Hold reading") }
                     Button(onClick = {
                         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, "PureHub level measurement\n$heldMeasurement")
                         }, "Share level measurement"))
-                    }, enabled = heldMeasurement.isNotBlank()) { Text("Share") }
+                    }, enabled = heldMeasurement.isNotBlank()) { LocalizedText("Share") }
                 }
                 if (heldMeasurement.isNotBlank()) {
-                    Text(heldMeasurement, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    LocalizedText(heldMeasurement, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             val pxPerCm = (metrics.xdpi / 2.54f) * rulerScale
             val rulerWidth = ((pxPerCm * rulerCentimeters) / metrics.density).dp
-            Text(
+            LocalizedText(
                 text = "Ruler ${"%.1f".format(rulerCentimeters)} cm",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
@@ -227,7 +227,7 @@ fun BubbleLevelCard(
                 onValueChange = { rulerCentimeters = it },
                 valueRange = 2f..15f,
             )
-            Text("Ruler calibration ${"%.0f".format(rulerScale * 100)}%", style = MaterialTheme.typography.bodySmall)
+            LocalizedText("Ruler calibration ${"%.0f".format(rulerScale * 100)}%", style = MaterialTheme.typography.bodySmall)
             Slider(value = rulerScale, onValueChange = { rulerScale = it }, valueRange = 0.85f..1.15f)
             Canvas(
                 modifier = Modifier
@@ -258,7 +258,7 @@ fun BubbleLevelCard(
                     )
                 }
             }
-            Text(
+            LocalizedText(
                 "Phone DPI can be approximate. Compare the ruler with a known reference and adjust calibration before measuring.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -268,7 +268,7 @@ fun BubbleLevelCard(
                 detail = "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share.",
             )
             uiState.errorMessage?.let { error ->
-                Text(
+                LocalizedText(
                     text = error,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,

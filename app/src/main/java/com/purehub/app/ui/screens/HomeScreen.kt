@@ -16,7 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.feature.lunar.LunarCalendarConverter
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.locale
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -37,7 +39,8 @@ fun HomeScreen(
 ) {
     val today = LocalDate.now()
     val lunarInfo = LunarCalendarConverter.describeDate(today)
-    val formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", Locale.getDefault())
+    val language = LocalAppLanguage.current
+    val formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", language.locale())
     val visibleTools = rememberVisibleTools()
     val favoriteTools = rememberFavoriteTools()
 
@@ -50,17 +53,17 @@ fun HomeScreen(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
+                LocalizedText(
                     text = "FREE · NO ADS · OPEN SOURCE",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Text(
+                LocalizedText(
                     text = "PureHub",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                Text(
+                LocalizedText(
                     text = "Useful, private tools for everyday life—built openly with the community.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -88,22 +91,22 @@ fun HomeScreen(
                     modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Text(
+                    LocalizedText(
                         text = "TODAY",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                     )
-                    Text(
+                    LocalizedText(
                         text = today.format(formatter),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
-                    Text(
+                    LocalizedText(
                         text = "Lunar ${lunarInfo.lunarDate.displayText}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.secondary,
                     )
-                    Text(
+                    LocalizedText(
                         text = lunarInfo.holidayLabel ?: lunarInfo.canchiLabel,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -114,7 +117,7 @@ fun HomeScreen(
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                Text(
+                LocalizedText(
                     text = if (favoriteTools.isEmpty()) "Quick access" else "Favorites",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
@@ -136,8 +139,8 @@ fun HomeScreen(
                     modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    Text("Privacy & preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text(
+                    LocalizedText("Privacy & preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    LocalizedText(
                         "Review permissions, visible tools and local-only storage behavior.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -165,7 +168,7 @@ private fun PromiseTile(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.labelLarge)
+            LocalizedText(label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

@@ -19,7 +19,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -114,15 +114,15 @@ fun ZenBreathCard() {
                 title = "Zen Breath",
                 description = "A gentle breathing coach with clear pacing, accessible motion, and private session goals.",
             )
-            Text("Session goal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            LocalizedText("Session goal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(1, 3, 5).forEach { minutes ->
-                    FilterChip(selected = targetMinutes == minutes, onClick = { targetMinutes = minutes; reset() }, label = { Text("$minutes min") })
+                    FilterChip(selected = targetMinutes == minutes, onClick = { targetMinutes = minutes; reset() }, label = { LocalizedText("$minutes min") })
                 }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 breathPatterns.forEach { (id, item) ->
-                    AssistChip(onClick = { reset(id) }, label = { Text(if (id == patternId) "${item.label} - Active" else item.label) })
+                    AssistChip(onClick = { reset(id) }, label = { LocalizedText(if (id == patternId) "${item.label} - Active" else item.label) })
                 }
             }
             Box(modifier = Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) {
@@ -135,8 +135,8 @@ fun ZenBreathCard() {
                     drawCircle(colorScheme.onPrimary.copy(alpha = 0.2f), radius, center, style = Stroke(5.dp.toPx()))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (running) phase.label else "Ready", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = colorScheme.onPrimaryContainer)
-                    Text("$remaining sec", style = MaterialTheme.typography.bodyLarge, color = colorScheme.onSurfaceVariant)
+                    LocalizedText(if (running) phase.label else "Ready", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = colorScheme.onPrimaryContainer)
+                    LocalizedText("$remaining sec", style = MaterialTheme.typography.bodyLarge, color = colorScheme.onSurfaceVariant)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -146,15 +146,15 @@ fun ZenBreathCard() {
                         preferences.edit().putInt("sessions", totalSessions).apply()
                     }
                     running = !running
-                }) { Text(if (running) "Pause" else "Start session") }
-                Button(onClick = { reset() }) { Text("Reset") }
+                }) { LocalizedText(if (running) "Pause" else "Start session") }
+                Button(onClick = { reset() }) { LocalizedText("Reset") }
             }
             LinearProgressIndicator(progress = { (elapsed / (targetMinutes * 60f)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
-            Text("${((elapsed / (targetMinutes * 60f)).coerceIn(0f, 1f) * 100).toInt()}% of $targetMinutes-minute goal", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Gentle haptics"); Switch(checked = haptics, onCheckedChange = { haptics = it }) }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Reduce motion"); Switch(checked = reducedMotion, onCheckedChange = { reducedMotion = it }) }
-            Text("$cycles complete cycles · ${elapsed / 60}:${(elapsed % 60).toString().padStart(2, '0')} elapsed · $totalSessions saved sessions", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
-            Text("Breathe comfortably and stop if you feel dizzy or unwell.", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+            LocalizedText("${((elapsed / (targetMinutes * 60f)).coerceIn(0f, 1f) * 100).toInt()}% of $targetMinutes-minute goal", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { LocalizedText("Gentle haptics"); Switch(checked = haptics, onCheckedChange = { haptics = it }) }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { LocalizedText("Reduce motion"); Switch(checked = reducedMotion, onCheckedChange = { reducedMotion = it }) }
+            LocalizedText("$cycles complete cycles · ${elapsed / 60}:${(elapsed % 60).toString().padStart(2, '0')} elapsed · $totalSessions saved sessions", style = MaterialTheme.typography.labelLarge, color = colorScheme.primary)
+            LocalizedText("Breathe comfortably and stop if you feel dizzy or unwell.", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
         }
     }
 }

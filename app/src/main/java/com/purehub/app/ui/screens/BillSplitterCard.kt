@@ -17,7 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -118,12 +118,12 @@ fun BillSplitterCard(
                 title = "Bill Splitter",
                 description = "Assign shared items, settle clearly, and save reusable groups without an account.",
             )
-            Text(
+            LocalizedText(
                 text = "Mix shared charges with item assignments, manage reusable presets locally, and share the final split as plain text.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Button(onClick = { receiptPicker.launch("image/*") }) { Text("Scan receipt") }
+            Button(onClick = { receiptPicker.launch("image/*") }) { LocalizedText("Scan receipt") }
 
             if (savedPresets.isNotEmpty()) {
                 FlowRow(
@@ -146,7 +146,7 @@ fun BillSplitterCard(
                                     items = items,
                                 )
                             },
-                            label = { Text(preset.name) },
+                            label = { LocalizedText(preset.name) },
                         )
                     }
                 }
@@ -188,7 +188,7 @@ fun BillSplitterCard(
                             item.assignedPeople.removeAll { index -> index >= peopleCount }
                         }
                     },
-                    label = { Text("People") },
+                    label = { LocalizedText("People") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                 )
@@ -198,9 +198,9 @@ fun BillSplitterCard(
                 modifier = Modifier.fillMaxWidth(),
                 value = presetName,
                 onValueChange = { presetName = it },
-                label = { Text("Preset name") },
+                label = { LocalizedText("Preset name") },
                 supportingText = {
-                    Text(
+                    LocalizedText(
                         if (savedPresets.isEmpty()) {
                             "No local presets saved yet."
                         } else if (selectedPresetName.isBlank()) {
@@ -233,7 +233,7 @@ fun BillSplitterCard(
                         }
                     },
                 ) {
-                    Text("Save Preset")
+                    LocalizedText("Save Preset")
                 }
                 Button(
                     onClick = {
@@ -245,7 +245,7 @@ fun BillSplitterCard(
                         scope.launch { snackbarHostState.showSnackbar("Split summary ready to share.") }
                     },
                 ) {
-                    Text("Share Summary")
+                    LocalizedText("Share Summary")
                 }
             }
             if (selectedPresetName.isNotBlank()) {
@@ -261,7 +261,7 @@ fun BillSplitterCard(
                             }
                         },
                     ) {
-                        Text("Rename Preset")
+                        LocalizedText("Rename Preset")
                     }
                     Button(
                         onClick = {
@@ -273,7 +273,7 @@ fun BillSplitterCard(
                             }
                         },
                     ) {
-                        Text("Delete Preset")
+                        LocalizedText("Delete Preset")
                     }
                 }
             }
@@ -296,7 +296,7 @@ fun BillSplitterCard(
                         )
                     },
                 ) {
-                    Text("Add Item")
+                    LocalizedText("Add Item")
                 }
                 Button(
                     onClick = {
@@ -305,11 +305,11 @@ fun BillSplitterCard(
                         }
                     },
                 ) {
-                    Text("Remove Last")
+                    LocalizedText("Remove Last")
                 }
             }
 
-            Text(
+            LocalizedText(
                 text = "Per person",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
@@ -320,14 +320,14 @@ fun BillSplitterCard(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Text(
+                        LocalizedText(
                             text = "Person ${person.personIndex + 1}",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                         )
-                        Text("Assigned: ${money(person.assignedTotal)}")
-                        Text("Shared: ${money(person.sharedTotal)}")
-                        Text(
+                        LocalizedText("Assigned: ${money(person.assignedTotal)}")
+                        LocalizedText("Shared: ${money(person.sharedTotal)}")
+                        LocalizedText(
                             text = "Total: ${money(person.grandTotal)}",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
@@ -336,7 +336,7 @@ fun BillSplitterCard(
                 }
             }
 
-            Text(
+            LocalizedText(
                 text = "Shared remainder: ${money(summary.remainingSharedSubtotal)}  |  Extras: ${money(summary.extrasTotal)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -370,7 +370,7 @@ private fun EditableItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 value = item.name,
                 onValueChange = { item.name = it },
-                label = { Text("Item name") },
+                label = { LocalizedText("Item name") },
                 singleLine = true,
             )
             MoneyField(
@@ -390,7 +390,7 @@ private fun EditableItemCard(
                             if (selected) item.assignedPeople.remove(personIndex)
                             else item.assignedPeople.add(personIndex)
                         },
-                        label = { Text("P${personIndex + 1}") },
+                        label = { LocalizedText("P${personIndex + 1}") },
                     )
                 }
             }
@@ -409,7 +409,7 @@ private fun MoneyField(
         modifier = modifier.widthIn(min = 120.dp),
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
+        label = { LocalizedText(label) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
     )

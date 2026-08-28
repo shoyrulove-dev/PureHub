@@ -1,0 +1,1 @@
+PureHub beta.36 adds complete English, Vietnamese, and Simplified Chinese app UI with a first-launch language picker. The standard build stays offline-first while supporting connected minigame and update workflows. The F-Droid build remains strictly offline-only. This release also adds the Android-to-web minigame ticket flow and improves mobile form contrast.

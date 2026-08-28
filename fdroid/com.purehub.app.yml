@@ -23,10 +23,18 @@ Builds:
       - fdroid
     output: build/outputs/apk/fdroid/release/app-fdroid-universal-release-unsigned.apk
 
+  - versionName: 1.0.0-beta.36
+    versionCode: 37
+    commit: v1.0.0-beta.36
+    subdir: app
+    gradle:
+      - fdroid
+    output: build/outputs/apk/fdroid/release/app-fdroid-universal-release-unsigned.apk
+
 AllowedAPKSigningKeys: 323050a93655afe2d9ee572467a4dc3fbb1a862c8300019ead67554931592a5a
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: app/build.gradle.kts|versionCode.*?:\s*(\d+)|.|versionName.*?:\s*"([^"]+)"
-CurrentVersion: 1.0.0-beta.35
-CurrentVersionCode: 36
+CurrentVersion: 1.0.0-beta.36
+CurrentVersionCode: 37

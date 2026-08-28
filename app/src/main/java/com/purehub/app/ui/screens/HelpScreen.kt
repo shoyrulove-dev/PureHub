@@ -13,7 +13,7 @@ import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +36,7 @@ fun HelpScreen(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
         )
-        Text(
+        LocalizedText(
             text = "Help",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
@@ -59,12 +59,12 @@ private fun HelpCard(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(
+            LocalizedText(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(
+            LocalizedText(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

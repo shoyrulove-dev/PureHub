@@ -17,7 +17,7 @@ import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -62,7 +62,7 @@ fun FlagshipSuiteHeader(
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
+                    LocalizedText(
                         eyebrow.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
                         color = accent,
@@ -70,7 +70,7 @@ fun FlagshipSuiteHeader(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    LocalizedText(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                     Icon(Icons.Rounded.WifiOff, contentDescription = "Offline", tint = accent, modifier = Modifier.size(16.dp))
@@ -78,7 +78,7 @@ fun FlagshipSuiteHeader(
                     Icon(Icons.Rounded.Lock, contentDescription = "Private", tint = accent, modifier = Modifier.size(16.dp))
                 }
             }
-            Text(
+            LocalizedText(
                 description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

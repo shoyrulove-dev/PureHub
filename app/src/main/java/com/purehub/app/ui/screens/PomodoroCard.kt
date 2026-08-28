@@ -18,7 +18,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -73,7 +73,7 @@ fun PomodoroCard(
                 }
             }
 
-            Text(
+            LocalizedText(
                 text = formatSeconds(uiState.secondsRemaining),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.SemiBold,
@@ -95,14 +95,14 @@ fun PomodoroCard(
                     ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                     viewModel.toggleTimer()
                 }) {
-                    Text(if (uiState.isRunning) "Pause" else "Start")
+                    LocalizedText(if (uiState.isRunning) "Pause" else "Start")
                 }
                 Button(onClick = { viewModel.reset() }) {
-                    Text("Reset")
+                    LocalizedText("Reset")
                 }
             }
 
-            Text(
+            LocalizedText(
                 text = "Soundscape",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
@@ -115,11 +115,11 @@ fun PomodoroCard(
                     FilterChip(
                         selected = label == uiState.selectedSoundscape,
                         onClick = { viewModel.selectSoundscape(label) },
-                        label = { Text(label) },
+                        label = { LocalizedText(label) },
                     )
                 }
             }
-            Text(
+            LocalizedText(
                 text = "Volume ${(uiState.volume * 100).toInt()}%",
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -127,12 +127,12 @@ fun PomodoroCard(
                 value = uiState.volume,
                 onValueChange = { viewModel.updateVolume(it) },
             )
-            Text(
+            LocalizedText(
                 text = uiState.note,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
+            LocalizedText(
                 text = "This week: ${uiState.weeklySessions} sessions · ${uiState.weeklyMinutes} focused minutes",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
@@ -150,7 +150,7 @@ private fun PresetChip(
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(if (selected) "${preset.label} • Active" else preset.label) },
+        label = { LocalizedText(if (selected) "${preset.label} • Active" else preset.label) },
     )
 }
 

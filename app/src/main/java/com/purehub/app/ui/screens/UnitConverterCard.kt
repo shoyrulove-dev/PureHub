@@ -10,7 +10,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -58,7 +58,7 @@ fun UnitConverterCard() {
                             fromIndex = 0
                             toIndex = 1.coerceAtMost(UnitConverterEngine.categories.getValue(entry).lastIndex)
                         },
-                        label = { Text(entry.title) },
+                        label = { LocalizedText(entry.title) },
                     )
                 }
             }
@@ -66,10 +66,10 @@ fun UnitConverterCard() {
                 value = inputValue,
                 onValueChange = { inputValue = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Value") },
+                label = { LocalizedText("Value") },
                 singleLine = true,
             )
-            Text(
+            LocalizedText(
                 text = "From",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
@@ -81,11 +81,11 @@ fun UnitConverterCard() {
                 units.forEachIndexed { index, unit ->
                     AssistChip(
                         onClick = { fromIndex = index },
-                        label = { Text(if (fromIndex == index) "${unit.label} • From" else unit.label) },
+                        label = { LocalizedText(if (fromIndex == index) "${unit.label} • From" else unit.label) },
                     )
                 }
             }
-            Text(
+            LocalizedText(
                 text = "To",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
@@ -97,12 +97,12 @@ fun UnitConverterCard() {
                 units.forEachIndexed { index, unit ->
                     AssistChip(
                         onClick = { toIndex = index },
-                        label = { Text(if (toIndex == index) "${unit.label} • To" else unit.label) },
+                        label = { LocalizedText(if (toIndex == index) "${unit.label} • To" else unit.label) },
                     )
                 }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
+                LocalizedText(
                     text = if (result.isBlank()) "Enter a number to convert." else "$inputValue ${units[fromIndex].label} = $result ${units[toIndex].label}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,

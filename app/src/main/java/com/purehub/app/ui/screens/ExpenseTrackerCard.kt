@@ -17,7 +17,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -94,41 +94,41 @@ fun ExpenseTrackerCard() {
                         preferences.edit().putString("monthly_budget", budgetText).apply()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Monthly budget") },
+                    label = { LocalizedText("Monthly budget") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    supportingText = { Text(if (budgetMinor > 0) "${(budgetProgress * 100).toInt()}% used" else "Optional and stored only on this device") },
+                    supportingText = { LocalizedText(if (budgetMinor > 0) "${(budgetProgress * 100).toInt()}% used" else "Optional and stored only on this device") },
                 )
                 if (budgetMinor > 0) LinearProgressIndicator(progress = { budgetProgress }, modifier = Modifier.fillMaxWidth())
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     insights.categoryTotals.take(6).forEach {
-                        AssistChip(onClick = { query = it.category }, label = { Text("${it.category} ${formatMoney(it.amountMinor)}") })
+                        AssistChip(onClick = { query = it.category }, label = { LocalizedText("${it.category} ${formatMoney(it.amountMinor)}") })
                     }
                 }
             }
 
-            Button(onClick = { receiptPicker.launch("image/*") }) { Text("Scan receipt") }
-            OutlinedTextField(uiState.draftTitle, viewModel::updateDraftTitle, Modifier.fillMaxWidth(), label = { Text("Title") }, singleLine = true)
+            Button(onClick = { receiptPicker.launch("image/*") }) { LocalizedText("Scan receipt") }
+            OutlinedTextField(uiState.draftTitle, viewModel::updateDraftTitle, Modifier.fillMaxWidth(), label = { LocalizedText("Title") }, singleLine = true)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     uiState.draftAmount,
                     viewModel::updateDraftAmount,
                     Modifier.weight(1f),
-                    label = { Text("Amount") },
+                    label = { LocalizedText("Amount") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                 )
-                OutlinedTextField(uiState.draftCategory, viewModel::updateDraftCategory, Modifier.weight(1f), label = { Text("Category") }, singleLine = true)
+                OutlinedTextField(uiState.draftCategory, viewModel::updateDraftCategory, Modifier.weight(1f), label = { LocalizedText("Category") }, singleLine = true)
             }
-            OutlinedTextField(uiState.draftNote, viewModel::updateDraftNote, Modifier.fillMaxWidth(), label = { Text("Note") }, minLines = 2)
+            OutlinedTextField(uiState.draftNote, viewModel::updateDraftNote, Modifier.fillMaxWidth(), label = { LocalizedText("Note") }, minLines = 2)
             Button(
                 onClick = viewModel::saveExpense,
                 enabled = uiState.draftTitle.isNotBlank() && uiState.draftAmount.isNotBlank(),
-            ) { Text("Save expense") }
+            ) { LocalizedText("Save expense") }
             PrivacyReceipt("Ledger protected locally", "Receipt recognition and insights run on-device. No bank connection or analytics SDK sees these entries.")
 
             if (mode == SuiteMode.PRO && expenses.isNotEmpty()) {
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("Search title or category") }, singleLine = true)
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { LocalizedText("Search title or category") }, singleLine = true)
                 OutlinedButton(
                     onClick = {
                         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
@@ -137,25 +137,25 @@ fun ExpenseTrackerCard() {
                             putExtra(Intent.EXTRA_TEXT, ExpenseInsights.toCsv(expenses))
                         }, "Export expense CSV"))
                     },
-                ) { Text("Export CSV") }
+                ) { LocalizedText("Export CSV") }
             }
 
             if (filtered.isEmpty()) {
-                Text(if (expenses.isEmpty()) "No expenses logged yet." else "No matching expense.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText(if (expenses.isEmpty()) "No expenses logged yet." else "No matching expense.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     filtered.forEach { summary ->
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(summary.entry.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                Text("${summary.amountDisplay} · ${summary.entry.category}")
-                                Text(
+                                LocalizedText(summary.entry.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                LocalizedText("${summary.amountDisplay} · ${summary.entry.category}")
+                                LocalizedText(
                                     Instant.ofEpochMilli(summary.entry.happenedAtEpochMillis).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                if (summary.entry.note.isNotBlank()) Text(summary.entry.note, style = MaterialTheme.typography.bodySmall)
-                                OutlinedButton(onClick = { viewModel.deleteExpense(summary.entry) }) { Text("Delete") }
+                                if (summary.entry.note.isNotBlank()) LocalizedText(summary.entry.note, style = MaterialTheme.typography.bodySmall)
+                                OutlinedButton(onClick = { viewModel.deleteExpense(summary.entry) }) { LocalizedText("Delete") }
                             }
                         }
                     }
@@ -169,8 +169,8 @@ fun ExpenseTrackerCard() {
 private fun MoneyMetric(label: String, value: String, modifier: Modifier = Modifier) {
     Card(modifier) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            LocalizedText(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
     }
 }

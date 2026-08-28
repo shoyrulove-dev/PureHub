@@ -14,7 +14,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,14 +38,14 @@ internal fun SuiteModeSwitch(
                 FilterChip(
                     selected = mode == value,
                     onClick = { onModeChanged(value) },
-                    label = { Text(value.label) },
+                    label = { LocalizedText(value.label) },
                     leadingIcon = if (mode == value) {
                         { Icon(Icons.Rounded.CheckCircle, contentDescription = null) }
                     } else null,
                 )
             }
         }
-        Text(
+        LocalizedText(
             text = if (mode == SuiteMode.QUICK) "The essentials, ready immediately." else proHint,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -67,8 +67,8 @@ internal fun PrivacyReceipt(action: String, detail: String) {
         ) {
             Icon(Icons.Rounded.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Column(modifier = Modifier.weight(1f)) {
-                Text(action, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText(action, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                LocalizedText(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

@@ -15,7 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -59,12 +59,12 @@ fun ZenTimeScreen(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
+                    LocalizedText(
                         text = today.format(formatter),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text(
+                    LocalizedText(
                         text = lunarDescription.lunarDate.displayText,
                         style = MaterialTheme.typography.bodyLarge,
                     )

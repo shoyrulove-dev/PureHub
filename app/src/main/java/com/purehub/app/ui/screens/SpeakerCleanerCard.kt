@@ -11,7 +11,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -39,10 +39,10 @@ fun SpeakerCleanerCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Gentle" to 150f, "Balanced" to 165f, "Deep" to 185f).forEach { (label, value) ->
-                    FilterChip(selected = uiState.frequencyHz == value, onClick = { viewModel.selectPreset(value) }, label = { Text(label) })
+                    FilterChip(selected = uiState.frequencyHz == value, onClick = { viewModel.selectPreset(value) }, label = { LocalizedText(label) })
                 }
             }
-            Text(
+            LocalizedText(
                 text = "Frequency ${uiState.frequencyHz.toInt()} Hz",
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -53,7 +53,7 @@ fun SpeakerCleanerCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(15, 30, 60).forEach { seconds ->
-                    FilterChip(selected = uiState.durationSeconds == seconds, onClick = { viewModel.setDuration(seconds) }, label = { Text("${seconds}s") })
+                    FilterChip(selected = uiState.durationSeconds == seconds, onClick = { viewModel.setDuration(seconds) }, label = { LocalizedText("${seconds}s") })
                 }
             }
             LinearProgressIndicator(
@@ -62,10 +62,10 @@ fun SpeakerCleanerCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = viewModel::togglePlayback) {
-                    Text(if (uiState.isPlaying) "Stop • ${uiState.remainingSeconds}s" else "Start cleaning cycle")
+                    LocalizedText(if (uiState.isPlaying) "Stop • ${uiState.remainingSeconds}s" else "Start cleaning cycle")
                 }
             }
-            Text(
+            LocalizedText(
                 text = uiState.note,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -76,8 +76,8 @@ fun SpeakerCleanerCard(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Text("Cycle complete", fontWeight = FontWeight.Bold)
-                        Text(
+                        LocalizedText("Cycle complete", fontWeight = FontWeight.Bold)
+                        LocalizedText(
                             text = "Play the same familiar audio at a comfortable volume and compare clarity before running another cycle.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -85,7 +85,7 @@ fun SpeakerCleanerCard(
                     }
                 }
             }
-            Text(
+            LocalizedText(
                 text = "Start at a comfortable volume, keep the speaker facing down, and stop if the sound distorts.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

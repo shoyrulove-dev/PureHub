@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,7 +78,7 @@ fun ColorGrabberCard(
                 )
             } else {
                 Button(onClick = onRequestCameraPermission) {
-                    Text("Allow Camera for Color Grabber")
+                    LocalizedText("Allow Camera for Color Grabber")
                 }
             }
             Row(
@@ -95,16 +95,16 @@ fun ColorGrabberCard(
                         ),
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
+                    LocalizedText(
                         text = color.hex,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text(
+                    LocalizedText(
                         text = "RGB ${color.red}, ${color.green}, ${color.blue}",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Text(
+                    LocalizedText(
                         text = "${ColorGrabberUtils.describeBrightness(color)} tone • R ${ColorGrabberUtils.toPercent(color.red)} • G ${ColorGrabberUtils.toPercent(color.green)} • B ${ColorGrabberUtils.toPercent(color.blue)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -120,7 +120,7 @@ fun ColorGrabberCard(
                     scope.launch { snackbarHostState.showSnackbar("Color HEX copied locally.") }
                 },
             ) {
-                Text("Copy HEX")
+                LocalizedText("Copy HEX")
             }
         }
     }

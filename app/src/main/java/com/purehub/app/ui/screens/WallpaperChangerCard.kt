@@ -13,7 +13,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -64,11 +64,11 @@ fun WallpaperChangerCard() {
                 title = "Wallpaper Studio",
                 description = "Build a private wallpaper rotation from local images and apply a fresh look whenever you choose.",
             )
-            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(onClick = { pickerLauncher.launch(arrayOf("image/*")) }) {
-                Text("Choose Local Images")
+                LocalizedText("Choose Local Images")
             }
-            Text(
+            LocalizedText(
                 text = "${uiState.selectedUris.size} image(s) selected",
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -80,7 +80,7 @@ fun WallpaperChangerCard() {
                     AssistChip(
                         onClick = { viewModel.updateRotationHours(hours) },
                         label = {
-                            Text(if (uiState.rotationHours == hours) "$hours h • Selected" else "$hours h")
+                            LocalizedText(if (uiState.rotationHours == hours) "$hours h • Selected" else "$hours h")
                         },
                     )
                 }
@@ -96,7 +96,7 @@ fun WallpaperChangerCard() {
                     },
                     enabled = uiState.selectedUris.isNotEmpty(),
                 ) {
-                    Text("Apply Now")
+                    LocalizedText("Apply Now")
                 }
                 Button(
                     onClick = {
@@ -105,7 +105,7 @@ fun WallpaperChangerCard() {
                     },
                     enabled = uiState.selectedUris.isNotEmpty(),
                 ) {
-                    Text(if (uiState.rotationEnabled) "Reschedule" else "Start Rotation")
+                    LocalizedText(if (uiState.rotationEnabled) "Reschedule" else "Start Rotation")
                 }
                 Button(
                     onClick = {
@@ -114,7 +114,7 @@ fun WallpaperChangerCard() {
                     },
                     enabled = uiState.rotationEnabled,
                 ) {
-                    Text("Stop Rotation")
+                    LocalizedText("Stop Rotation")
                 }
             }
         }

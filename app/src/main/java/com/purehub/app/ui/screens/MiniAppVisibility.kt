@@ -22,7 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -118,7 +118,7 @@ fun MiniAppIconStrip(
 
 @Composable
 fun MiniAppEmptyState() {
-    Text(
+    LocalizedText(
         text = "No tools enabled",
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
@@ -146,7 +146,7 @@ fun ToolVisibilityManagerCard() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
+                LocalizedText(
                     text = "Manage Tools",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium,
@@ -176,7 +176,7 @@ fun ToolVisibilityManagerCard() {
                         contentDescription = null,
                     )
                 },
-                placeholder = { Text("Search mini-app") },
+                placeholder = { LocalizedText("Search mini-app") },
             )
 
             MiniAppTab.entries.forEach { tab ->
@@ -185,7 +185,7 @@ fun ToolVisibilityManagerCard() {
                 }
                 if (filteredTools.isEmpty()) return@forEach
 
-                Text(
+                LocalizedText(
                     text = tab.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
@@ -212,7 +212,7 @@ fun ToolVisibilityManagerCard() {
                                     contentDescription = tool.title,
                                     modifier = Modifier.size(20.dp),
                                 )
-                                Text(
+                                LocalizedText(
                                     text = tool.title,
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyMedium,

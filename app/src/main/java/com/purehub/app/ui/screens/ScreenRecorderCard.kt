@@ -15,7 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,7 +80,7 @@ fun ScreenRecorderCard() {
                 proHint = "Choose recording quality, pause and resume without losing the active session.",
             )
             if (mode == SuiteMode.PRO && isIdle) {
-                Text("Quality preset")
+                LocalizedText("Quality preset")
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -89,13 +89,13 @@ fun ScreenRecorderCard() {
                         FilterChip(
                             selected = preset == value,
                             onClick = { preset = value },
-                            label = { Text(value.label) },
+                            label = { LocalizedText(value.label) },
                         )
                     }
                 }
-                Text(preset.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                LocalizedText(preset.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
             }
-            Text(runtime.message)
+            LocalizedText(runtime.message)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -106,7 +106,7 @@ fun ScreenRecorderCard() {
                         permission.launch(manager.createScreenCaptureIntent())
                     },
                     enabled = isIdle,
-                ) { Text(if (runtime.phase == ScreenRecordingPhase.PREPARING) "Preparing…" else "Start recording") }
+                ) { LocalizedText(if (runtime.phase == ScreenRecordingPhase.PREPARING) "Preparing…" else "Start recording") }
                 if (isRecording || isPaused) {
                     OutlinedButton(
                         onClick = {
@@ -116,12 +116,12 @@ fun ScreenRecorderCard() {
                                 ),
                             )
                         },
-                    ) { Text(if (isPaused) "Resume" else "Pause") }
+                    ) { LocalizedText(if (isPaused) "Resume" else "Pause") }
                     OutlinedButton(
                         onClick = {
                             context.startService(Intent(context, ScreenRecorderService::class.java).setAction(ScreenRecorderService.ACTION_STOP))
                         },
-                    ) { Text("Stop & save") }
+                    ) { LocalizedText("Stop & save") }
                 }
             }
             PrivacyReceipt(

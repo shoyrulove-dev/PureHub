@@ -14,7 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -73,7 +73,7 @@ fun DecisionWheelCard() {
                 value = optionsText,
                 onValueChange = { optionsText = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Options") },
+                label = { LocalizedText("Options") },
                 minLines = 2,
             )
             Canvas(
@@ -144,10 +144,10 @@ fun DecisionWheelCard() {
                         result = "Result: ${options[winnerIndex]}"
                     },
                 ) {
-                    Text("Spin")
+                    LocalizedText("Spin")
                 }
             }
-            Text(
+            LocalizedText(
                 text = result,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,

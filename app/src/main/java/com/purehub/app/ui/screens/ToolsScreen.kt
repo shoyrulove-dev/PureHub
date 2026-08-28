@@ -19,7 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,12 +62,12 @@ fun ToolsScreen(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
+                LocalizedText(
                     text = if (showAllTools) "All tools" else MiniAppTab.MEASURE_TOOLS.title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                Text(
+                LocalizedText(
                     text = "Free, private and ad-free utilities. Search by what you need to do.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -81,7 +81,7 @@ fun ToolsScreen(
                 onValueChange = { query = it },
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                placeholder = { Text("What do you want to do?") },
+                placeholder = { LocalizedText("What do you want to do?") },
                 shape = MaterialTheme.shapes.large,
             )
         }
@@ -92,7 +92,7 @@ fun ToolsScreen(
             }
             if (tools.isNotEmpty()) {
                 item(key = "${tab.name}-title") {
-                    Text(
+                    LocalizedText(
                         text = tab.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
@@ -125,14 +125,14 @@ fun ToolsScreen(
                                     )
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
+                                    LocalizedText(
                                         text = tool.title,
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
-                                    Text(
+                                    LocalizedText(
                                         text = toolFriendlySummary(tool),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,

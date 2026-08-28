@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -83,15 +83,15 @@ fun WifiAnalyzerCard(
                 onModeChanged = { mode = it },
                 proHint = "Channel pressure, security details, and up to 32 nearby access points.",
             )
-            Text(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+            LocalizedText(text = uiState.note, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
             if (!hasPermission) {
                 Button(
                     onClick = { permissionLauncher.launch(wifiScanPermissions()) },
                 ) {
-                    Text("Enable Nearby Scan")
+                    LocalizedText("Enable Nearby Scan")
                 }
             }
-            Text(
+            LocalizedText(
                 text = uiState.ssid,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -100,11 +100,11 @@ fun WifiAnalyzerCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text("BSSID ${uiState.bssid}", style = MaterialTheme.typography.bodySmall)
-                Text("RSSI ${uiState.rssi} dBm", style = MaterialTheme.typography.bodyMedium)
-                Text("Link ${uiState.linkSpeedMbps} Mbps", style = MaterialTheme.typography.bodyMedium)
-                Text("Band ${uiState.channelLabel}", style = MaterialTheme.typography.bodyMedium)
-                Text("Frequency ${uiState.frequencyMhz} MHz", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("BSSID ${uiState.bssid}", style = MaterialTheme.typography.bodySmall)
+                LocalizedText("RSSI ${uiState.rssi} dBm", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("Link ${uiState.linkSpeedMbps} Mbps", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("Band ${uiState.channelLabel}", style = MaterialTheme.typography.bodyMedium)
+                LocalizedText("Frequency ${uiState.frequencyMhz} MHz", style = MaterialTheme.typography.bodyMedium)
             }
             Canvas(
                 modifier = Modifier
@@ -121,7 +121,7 @@ fun WifiAnalyzerCard(
                     cornerRadius = CornerRadius(16.dp.toPx()),
                 )
             }
-            Text(
+            LocalizedText(
                 text = "Signal history",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
@@ -161,7 +161,7 @@ fun WifiAnalyzerCard(
                 action = "Live analysis stays on this phone",
                 detail = "PureHub does not upload SSIDs, BSSIDs, signal history, or scan results.",
             )
-            Text(
+            LocalizedText(
                 text = "Nearby networks",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
@@ -172,10 +172,10 @@ fun WifiAnalyzerCard(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text("Channel pressure", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(uiState.recommendation, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                        LocalizedText("Channel pressure", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        LocalizedText(uiState.recommendation, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
                         uiState.channelInsights.take(8).forEach { insight ->
-                            Text(
+                            LocalizedText(
                                 "${insight.band} · Ch ${insight.channel} · ${insight.nearbyCount} nearby · strongest ${insight.strongestRssi} dBm",
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -184,7 +184,7 @@ fun WifiAnalyzerCard(
                 }
             }
             if (uiState.nearbyNetworks.isEmpty()) {
-                Text(
+                LocalizedText(
                     text = if (hasPermission) "No nearby scan results yet." else "Grant permission to see nearby scan results.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colorScheme.onSurfaceVariant,
@@ -201,30 +201,30 @@ fun WifiAnalyzerCard(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.spacedBy(4.dp),
                                 ) {
-                                    Text(
+                                    LocalizedText(
                                         text = if (network.isCurrentConnection) "${network.ssid} • current" else network.ssid,
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                     )
-                                    Text(
+                                    LocalizedText(
                                         text = "${network.rssi} dBm • ${network.channelLabel} • ${network.frequencyMhz} MHz",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colorScheme.onSurfaceVariant,
                                     )
-                                    Text(
+                                    LocalizedText(
                                         text = network.bssid,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colorScheme.onSurfaceVariant,
                                     )
                                     if (mode == SuiteMode.PRO) {
-                                        Text(
+                                        LocalizedText(
                                             text = "${network.securityLabel} · ${network.frequencyMhz} MHz",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = colorScheme.primary,
                                         )
                                     }
                                 }
-                                Text(
+                                LocalizedText(
                                     text = "${network.level + 1}/5",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,

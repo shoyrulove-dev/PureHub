@@ -19,7 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -110,13 +110,13 @@ fun AuthenticatorVaultCard() {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlagshipSuiteHeader("Security flagship", "Authenticator Vault", "Offline TOTP codes protected by Android-backed encrypted storage and your device lock.")
             if (!unlocked) {
-                Button(onClick = unlock) { Text("Unlock with device security") }
-                Text("No account or network connection is used.", style = MaterialTheme.typography.bodySmall)
+                Button(onClick = unlock) { LocalizedText("Unlock with device security") }
+                LocalizedText("No account or network connection is used.", style = MaterialTheme.typography.bodySmall)
                 return@Column
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("${30 - (System.currentTimeMillis() / 1_000 % 30)}s", color = MaterialTheme.colorScheme.primary)
-                OutlinedButton(onClick = { unlocked = false }) { Text("Lock") }
+                LocalizedText("${30 - (System.currentTimeMillis() / 1_000 % 30)}s", color = MaterialTheme.colorScheme.primary)
+                OutlinedButton(onClick = { unlocked = false }) { LocalizedText("Lock") }
             }
             SuiteModeSwitch(
                 mode = mode,
@@ -124,32 +124,32 @@ fun AuthenticatorVaultCard() {
                 proHint = "Search and group accounts; encrypted backup includes 2FA entries.",
             )
             if (mode == SuiteMode.PRO) {
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("Search accounts") }, singleLine = true)
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { LocalizedText("Search accounts") }, singleLine = true)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     groups.forEach { value ->
-                        FilterChip(selected = selectedGroup == value, onClick = { selectedGroup = value }, label = { Text(value) })
+                        FilterChip(selected = selectedGroup == value, onClick = { selectedGroup = value }, label = { LocalizedText(value) })
                     }
                 }
             }
             visibleAccounts.forEach { item ->
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Column(Modifier.weight(1f)) { Text(item.label, fontWeight = FontWeight.SemiBold); Text("${item.group} · encrypted locally", style = MaterialTheme.typography.bodySmall) }
-                        Text(totp(item.secret), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                        IconButton(onClick = { accounts = accounts.filterNot { it.id == item.id }; store.save(accounts) }) { Text("×") }
+                        Column(Modifier.weight(1f)) { LocalizedText(item.label, fontWeight = FontWeight.SemiBold); LocalizedText("${item.group} · encrypted locally", style = MaterialTheme.typography.bodySmall) }
+                        LocalizedText(totp(item.secret), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                        IconButton(onClick = { accounts = accounts.filterNot { it.id == item.id }; store.save(accounts) }) { LocalizedText("×") }
                     }
                 }
             }
-            OutlinedTextField(label = { Text("Account label") }, value = label, onValueChange = { label = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(label = { Text("Group") }, value = group, onValueChange = { group = it.take(40) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(label = { Text("Base32 secret or otpauth:// URI") }, value = secret, onValueChange = { secret = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(label = { LocalizedText("Account label") }, value = label, onValueChange = { label = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(label = { LocalizedText("Group") }, value = group, onValueChange = { group = it.take(40) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(label = { LocalizedText("Base32 secret or otpauth:// URI") }, value = secret, onValueChange = { secret = it }, modifier = Modifier.fillMaxWidth(), singleLine = true)
             Button(onClick = {
                 val normalized = parseTotpSecret(secret)
                 if (normalized.isNotBlank() && totp(normalized) != "------") {
                     accounts = accounts + TotpAccount(System.currentTimeMillis(), label.ifBlank { "Authenticator" }, normalized, group.ifBlank { "Personal" })
                     store.save(accounts); label = ""; secret = ""
                 }
-            }, enabled = secret.isNotBlank()) { Text("Encrypt & add") }
+            }, enabled = secret.isNotBlank()) { LocalizedText("Encrypt & add") }
             PrivacyReceipt("2FA vault is included in encrypted backup", "Use Security > Encrypted private backup. Keep independent recovery codes as a second recovery path.")
         }
     }

@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,14 +50,14 @@ fun FileStudioCard() {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlagshipSuiteHeader("File utility flagship", "File Studio", "Inspect, hash, archive and share files through Android's private document picker.")
-            Text(message)
+            LocalizedText(message)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { picker.launch(arrayOf("*/*")) }) { Text("Choose") }
-                OutlinedButton(onClick = { zipCreator.launch("purehub-files.zip") }, enabled = files.isNotEmpty()) { Text("Create ZIP") }
+                Button(onClick = { picker.launch(arrayOf("*/*")) }) { LocalizedText("Choose") }
+                OutlinedButton(onClick = { zipCreator.launch("purehub-files.zip") }, enabled = files.isNotEmpty()) { LocalizedText("Create ZIP") }
                 OutlinedButton(onClick = {
                     val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply { type = "*/*"; putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(files)); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
                     context.startActivity(Intent.createChooser(intent, "Share from PureHub"))
-                }, enabled = files.isNotEmpty()) { Text("Share") }
+                }, enabled = files.isNotEmpty()) { LocalizedText("Share") }
             }
             OutlinedButton(onClick = {
                 hashes = files.map { uri ->
@@ -69,8 +69,8 @@ fun FileStudioCard() {
                     digest.digest().joinToString("") { "%02x".format(it) }
                 }
                 message = "SHA-256 checksums calculated locally."
-            }, enabled = files.isNotEmpty()) { Text("Calculate SHA-256") }
-            files.forEachIndexed { index, uri -> Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(10.dp)) { Text(queryDisplayName(context, uri) ?: uri.lastPathSegment.orEmpty()); hashes.getOrNull(index)?.let { Text(it, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } } } }
+            }, enabled = files.isNotEmpty()) { LocalizedText("Calculate SHA-256") }
+            files.forEachIndexed { index, uri -> Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(10.dp)) { LocalizedText(queryDisplayName(context, uri) ?: uri.lastPathSegment.orEmpty()); hashes.getOrNull(index)?.let { LocalizedText(it, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } } } }
         }
     }
 }

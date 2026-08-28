@@ -20,6 +20,10 @@ export function detectPreferredLocale(): LocaleCode {
     if (savedLocale) {
       return normalizeLocale(savedLocale)
     }
+    const browserLocale = window.navigator.languages?.[0] || window.navigator.language
+    if (browserLocale) {
+      return normalizeLocale(browserLocale)
+    }
   }
 
   return DEFAULT_LOCALE

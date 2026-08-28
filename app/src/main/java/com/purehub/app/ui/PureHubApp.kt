@@ -5,23 +5,32 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -52,6 +61,7 @@ import com.purehub.app.navigation.PureHubDestination.SystemSecurity
 import com.purehub.app.navigation.PureHubDestination.Vision
 import com.purehub.app.navigation.PureHubDestination.ZenTime
 import com.purehub.app.navigation.bottomNavDestinations
+import com.purehub.app.navigation.labelFor
 import com.purehub.app.ui.screens.BillSplitterCard
 import com.purehub.app.ui.screens.BoostScreen
 import com.purehub.app.ui.screens.BubbleLevelCard
@@ -90,7 +100,45 @@ import com.purehub.app.ui.screens.ZenTimeScreen
 private const val MINI_APP_ROUTE_PREFIX = "mini_app"
 
 @Composable
+private fun LanguageWelcomeScreen(
+    selected: AppLanguage,
+    onSelect: (AppLanguage) -> Unit,
+    onContinue: () -> Unit,
+) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("PureHub", style = MaterialTheme.typography.displaySmall)
+            Text("Choose your language", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
+            Text("Chọn ngôn ngữ · 选择语言", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+            Spacer(Modifier.height(24.dp))
+            AppLanguage.entries.forEach { language ->
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp), onClick = { onSelect(language) }) {
+                    Text("${if (selected == language) "✓ " else ""}${language.label}", modifier = Modifier.padding(18.dp), style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            Button(onClick = onContinue, modifier = Modifier.fillMaxWidth().padding(top = 20.dp)) {
+                Text(appText(selected, "Continue", "Tiếp tục", "继续"))
+            }
+        }
+    }
+}
+
+@Composable
 fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
+    val context = LocalContext.current
+    var language by rememberSaveable { mutableStateOf(context.loadAppLanguage()) }
+    var languageChosen by rememberSaveable { mutableStateOf(context.hasChosenAppLanguage()) }
+    if (!languageChosen) {
+        LanguageWelcomeScreen(
+            selected = language,
+            onSelect = { language = it },
+            onContinue = { context.saveAppLanguage(language); languageChosen = true },
+        )
+        return
+    }
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry.value?.destination
@@ -100,10 +148,14 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
     val snackbarHostState = remember { SnackbarHostState() }
     val currentMiniAppRoute = currentDestination?.route?.startsWith("$MINI_APP_ROUTE_PREFIX/") == true
 
-    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState, LocalAppLanguage provides language) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar { LocalizedText(data.visuals.message) }
+                }
+            },
             topBar = {
                 if (currentMiniAppRoute) {
                     MiniAppTopBar(
@@ -135,7 +187,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                                     )
                                 },
                                 alwaysShowLabel = false,
-                                label = { Text(destination.label) },
+                                label = { Text(destination.labelFor(language)) },
                             )
                         }
                     }
@@ -147,6 +199,8 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                 navController = navController,
                 onOpenMiniApp = { navController.navigate(miniAppRoute(it)) },
                 onOpenHelp = { navController.navigate(Help.route) },
+                language = language,
+                onLanguageChange = { next -> context.saveAppLanguage(next); language = next },
                 initialMiniAppId = initialMiniAppId,
             )
         }
@@ -159,6 +213,8 @@ private fun PureHubNavHost(
     navController: NavHostController,
     onOpenMiniApp: (MiniAppId) -> Unit,
     onOpenHelp: () -> Unit,
+    language: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
     initialMiniAppId: MiniAppId? = null,
 ) {
     NavHost(
@@ -217,6 +273,8 @@ private fun PureHubNavHost(
             SettingsScreen(
                 innerPadding = innerPadding,
                 onOpenHelp = onOpenHelp,
+                language = language,
+                onLanguageChange = onLanguageChange,
             )
         }
         composable(Help.route) {

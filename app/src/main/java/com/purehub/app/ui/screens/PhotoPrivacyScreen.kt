@@ -24,7 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -108,22 +108,22 @@ fun PhotoPrivacyScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(Icons.Rounded.Image, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
-                        Text(if (selected == null) "No photo selected" else "Photo selected", fontWeight = FontWeight.Bold)
-                        Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        LocalizedText(if (selected == null) "No photo selected" else "Photo selected", fontWeight = FontWeight.Bold)
+                        LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = { picker.launch(arrayOf("image/*")) },
-                    ) { Text("Choose photo") }
+                    ) { LocalizedText("Choose photo") }
                     Button(
                         modifier = Modifier.weight(1f),
                         enabled = selected != null && !isExporting,
                         onClick = { exporter.launch("purehub-privacy-clean.jpg") },
                     ) {
                         Icon(Icons.Rounded.SaveAlt, contentDescription = null)
-                        Text(if (isExporting) " Creating..." else " Create copy")
+                        LocalizedText(if (isExporting) " Creating..." else " Create copy")
                     }
                 }
             }
@@ -158,8 +158,8 @@ private fun PrivacyBoundary(
                 Column(modifier = Modifier.padding(10.dp)) { icon() }
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, fontWeight = FontWeight.Bold)
-                Text(body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText(title, fontWeight = FontWeight.Bold)
+                LocalizedText(body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

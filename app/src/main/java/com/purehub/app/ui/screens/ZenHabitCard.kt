@@ -42,7 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -115,7 +115,7 @@ fun ZenHabitCard(
                     Tab(
                         selected = uiState.section == section,
                         onClick = { viewModel.selectSection(section) },
-                        text = { Text(section.name.lowercase().replaceFirstChar(Char::uppercase), fontWeight = FontWeight.Bold) },
+                        text = { LocalizedText(section.name.lowercase().replaceFirstChar(Char::uppercase), fontWeight = FontWeight.Bold) },
                     )
                 }
             }
@@ -133,8 +133,8 @@ fun ZenHabitCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text("TODAY", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
-                            Text("Small actions count", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                            LocalizedText("TODAY", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                            LocalizedText("Small actions count", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         }
                         IconButton(
                             onClick = viewModel::toggleComposer,
@@ -176,7 +176,7 @@ fun ZenHabitCard(
                     OutlinedButton(onClick = { shareHabitBackup(context, summaries) }, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Rounded.Share, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Export private backup")
+                        LocalizedText("Export private backup")
                     }
                     (active + archived).forEach { summary ->
                         ManageHabitRow(
@@ -194,10 +194,10 @@ fun ZenHabitCard(
     deleteCandidate?.let { habit ->
         AlertDialog(
             onDismissRequest = { deleteCandidate = null },
-            title = { Text("Delete ${habit.name}?") },
-            text = { Text("Its private check-in history will also be removed from this device.") },
-            confirmButton = { Button(onClick = { viewModel.deleteHabit(habit); deleteCandidate = null }) { Text("Delete") } },
-            dismissButton = { OutlinedButton(onClick = { deleteCandidate = null }) { Text("Cancel") } },
+            title = { LocalizedText("Delete ${habit.name}?") },
+            text = { LocalizedText("Its private check-in history will also be removed from this device.") },
+            confirmButton = { Button(onClick = { viewModel.deleteHabit(habit); deleteCandidate = null }) { LocalizedText("Delete") } },
+            dismissButton = { OutlinedButton(onClick = { deleteCandidate = null }) { LocalizedText("Cancel") } },
         )
     }
 }
@@ -215,10 +215,10 @@ private fun HabitHero(completedToday: Int, total: Int, strongestStreak: Int, wee
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                         Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFA7F3D0), modifier = Modifier.size(18.dp))
-                        Text("PRIVATE DAILY RHYTHM", color = Color(0xFFA7F3D0), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                        LocalizedText("PRIVATE DAILY RHYTHM", color = Color(0xFFA7F3D0), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
                     }
-                    Text("Zen Habit", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                    Text("Build consistency without accounts, feeds, ads or guilt.", color = Color.White.copy(alpha = .78f), style = MaterialTheme.typography.bodyMedium)
+                    LocalizedText("Zen Habit", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    LocalizedText("Build consistency without accounts, feeds, ads or guilt.", color = Color.White.copy(alpha = .78f), style = MaterialTheme.typography.bodyMedium)
                 }
                 Box(modifier = Modifier.size(48.dp).background(Color.White.copy(alpha = .1f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                     Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFA7F3D0))
@@ -238,9 +238,9 @@ private fun HeroStat(label: String, value: String, icon: androidx.compose.ui.gra
     Column(modifier = modifier.background(Color.White.copy(alpha = .1f), RoundedCornerShape(16.dp)).padding(11.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Icon(icon, contentDescription = null, tint = Color(0xFFD1FAE5), modifier = Modifier.size(14.dp))
-            Text(label.uppercase(), color = Color.White.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            LocalizedText(label.uppercase(), color = Color.White.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
         }
-        Text(value, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+        LocalizedText(value, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
     }
 }
 
@@ -249,9 +249,9 @@ private fun HabitComposer(viewModel: ZenHabitViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .35f)), shape = RoundedCornerShape(20.dp)) {
         Column(modifier = Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = uiState.draftHabitName, onValueChange = viewModel::updateDraftHabitName, modifier = Modifier.fillMaxWidth(), label = { Text("Habit name") }, placeholder = { Text("Read for 10 minutes") }, singleLine = true)
-            OutlinedTextField(value = uiState.draftDescription, onValueChange = viewModel::updateDraftDescription, modifier = Modifier.fillMaxWidth(), label = { Text("Why it matters (optional)") }, singleLine = true)
-            Text("Color", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            OutlinedTextField(value = uiState.draftHabitName, onValueChange = viewModel::updateDraftHabitName, modifier = Modifier.fillMaxWidth(), label = { LocalizedText("Habit name") }, placeholder = { LocalizedText("Read for 10 minutes") }, singleLine = true)
+            OutlinedTextField(value = uiState.draftDescription, onValueChange = viewModel::updateDraftDescription, modifier = Modifier.fillMaxWidth(), label = { LocalizedText("Why it matters (optional)") }, singleLine = true)
+            LocalizedText("Color", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 habitColors.forEach { hex ->
                     val color = habitColor(hex)
@@ -265,14 +265,14 @@ private fun HabitComposer(viewModel: ZenHabitViewModel) {
                     )
                 }
             }
-            Text("Weekly target", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            LocalizedText("Weekly target", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                (1..7).forEach { day -> FilterChip(selected = uiState.draftTargetDays == day, onClick = { viewModel.updateDraftTarget(day) }, label = { Text(day.toString()) }) }
+                (1..7).forEach { day -> FilterChip(selected = uiState.draftTargetDays == day, onClick = { viewModel.updateDraftTarget(day) }, label = { LocalizedText(day.toString()) }) }
             }
             Button(onClick = viewModel::saveHabit, enabled = uiState.draftHabitName.isNotBlank() && !uiState.saving, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Rounded.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Add habit")
+                LocalizedText("Add habit")
             }
         }
     }
@@ -290,12 +290,12 @@ private fun HabitTodayCard(summary: HabitSummary, week: List<LocalDate>, onToggl
                 ) { Icon(Icons.Rounded.Check, contentDescription = if (summary.completedToday) "Undo today" else "Complete today", tint = if (summary.completedToday) Color.White else color.copy(alpha = .4f)) }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(summary.habit.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(summary.habit.description.ifBlank { "${summary.habit.targetDaysPerWeek} days each week" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    LocalizedText(summary.habit.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    LocalizedText(summary.habit.description.ifBlank { "${summary.habit.targetDaysPerWeek} days each week" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Rounded.LocalFireDepartment, null, tint = Color(0xFFD97706), modifier = Modifier.size(17.dp)); Text(summary.currentStreak.toString(), fontWeight = FontWeight.Black, color = Color(0xFFD97706)) }
-                    Text("DAY STREAK", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Rounded.LocalFireDepartment, null, tint = Color(0xFFD97706), modifier = Modifier.size(17.dp)); LocalizedText(summary.currentStreak.toString(), fontWeight = FontWeight.Black, color = Color(0xFFD97706)) }
+                    LocalizedText("DAY STREAK", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -305,8 +305,8 @@ private fun HabitTodayCard(summary: HabitSummary, week: List<LocalDate>, onToggl
                         modifier = Modifier.weight(1f).clip(RoundedCornerShape(11.dp)).background(if (done) color else MaterialTheme.colorScheme.surfaceContainerHigh).clickable { onToggle(day, done) }.padding(vertical = 7.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text(day.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()), style = MaterialTheme.typography.labelSmall, color = if (done) Color.White.copy(alpha = .75f) else MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (done) Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(15.dp)) else Text(day.dayOfMonth.toString(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        LocalizedText(day.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()), style = MaterialTheme.typography.labelSmall, color = if (done) Color.White.copy(alpha = .75f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (done) Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(15.dp)) else LocalizedText(day.dayOfMonth.toString(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -322,8 +322,8 @@ private fun HabitInsightRow(summary: HabitSummary) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(10.dp).background(habitColor(summary.habit.colorHex), CircleShape))
             Spacer(Modifier.width(9.dp))
-            Column(modifier = Modifier.weight(1f)) { Text(summary.habit.name, fontWeight = FontWeight.Bold); Text("Best streak ${summary.bestStreak} ${if (summary.bestStreak == 1) "day" else "days"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            Text("${summary.weeklyCheckIns}/$target", color = habitColor(summary.habit.colorHex), fontWeight = FontWeight.Black)
+            Column(modifier = Modifier.weight(1f)) { LocalizedText(summary.habit.name, fontWeight = FontWeight.Bold); LocalizedText("Best streak ${summary.bestStreak} ${if (summary.bestStreak == 1) "day" else "days"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            LocalizedText("${summary.weeklyCheckIns}/$target", color = habitColor(summary.habit.colorHex), fontWeight = FontWeight.Black)
         }
         LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().clip(CircleShape), color = habitColor(summary.habit.colorHex))
     }
@@ -334,7 +334,7 @@ private fun ManageHabitRow(summary: HabitSummary, onArchive: () -> Unit, onDelet
     Row(modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(17.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(11.dp).background(habitColor(summary.habit.colorHex), CircleShape))
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) { Text(summary.habit.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); Text(if (summary.habit.isArchived) "Archived" else "${summary.habit.targetDaysPerWeek} days per week", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        Column(modifier = Modifier.weight(1f)) { LocalizedText(summary.habit.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); LocalizedText(if (summary.habit.isArchived) "Archived" else "${summary.habit.targetDaysPerWeek} days per week", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         IconButton(onClick = onArchive) { Icon(if (summary.habit.isArchived) Icons.Rounded.Restore else Icons.Rounded.Archive, contentDescription = if (summary.habit.isArchived) "Restore" else "Archive") }
         IconButton(onClick = onDelete) { Icon(Icons.Rounded.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) }
     }
@@ -343,9 +343,9 @@ private fun ManageHabitRow(summary: HabitSummary, onArchive: () -> Unit, onDelet
 @Composable
 private fun InsightCard(label: String, value: String, detail: String, modifier: Modifier) {
     Column(modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow, RoundedCornerShape(16.dp)).padding(11.dp)) {
-        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        LocalizedText(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        LocalizedText(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+        LocalizedText(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
 
@@ -353,7 +353,7 @@ private fun InsightCard(label: String, value: String, detail: String, modifier: 
 private fun SectionTitle(eyebrow: String, title: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(Modifier.size(42.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
-        Column { Text(eyebrow, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black); Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black) }
+        Column { LocalizedText(eyebrow, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black); LocalizedText(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black) }
     }
 }
 
@@ -361,9 +361,9 @@ private fun SectionTitle(eyebrow: String, title: String, icon: androidx.compose.
 private fun EmptyHabitState(onAdd: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .35f), RoundedCornerShape(22.dp)).padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(Icons.Rounded.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
-        Text("Start with one gentle habit", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
-        Text("Pick something small enough to repeat.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        Button(onClick = onAdd) { Text("Create a habit") }
+        LocalizedText("Start with one gentle habit", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+        LocalizedText("Pick something small enough to repeat.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Button(onClick = onAdd) { LocalizedText("Create a habit") }
     }
 }
 

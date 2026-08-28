@@ -15,7 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,10 +76,10 @@ fun SmartFlashlightCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = { withCameraPermission { viewModel.toggleTorch() } }) {
-                    Text(if (uiState.isTorchOn) "Turn Off" else "Turn On")
+                    LocalizedText(if (uiState.isTorchOn) "Turn Off" else "Turn On")
                 }
                 Button(onClick = viewModel::stopPattern) {
-                    Text("Stop Pattern")
+                    LocalizedText("Stop Pattern")
                 }
             }
             FlowRow(
@@ -88,38 +88,38 @@ fun SmartFlashlightCard(
             ) {
                 AssistChip(
                     onClick = { withCameraPermission { viewModel.playSosPattern() } },
-                    label = { Text("SOS") },
+                    label = { LocalizedText("SOS") },
                 )
                 AssistChip(
                     onClick = { withCameraPermission { viewModel.playMorsePattern("HELP") } },
-                    label = { Text("HELP") },
+                    label = { LocalizedText("HELP") },
                 )
                 AssistChip(
                     onClick = { withCameraPermission { viewModel.playMorsePattern("PURE HUB") } },
-                    label = { Text("PURE HUB") },
+                    label = { LocalizedText("PURE HUB") },
                 )
             }
             OutlinedTextField(
                 value = morseText,
                 onValueChange = { morseText = it.uppercase() },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Custom Morse text") },
-                supportingText = { Text("A-Z and spaces only.") },
+                label = { LocalizedText("Custom Morse text") },
+                supportingText = { LocalizedText("A-Z and spaces only.") },
                 singleLine = true,
             )
             Button(
                 onClick = { withCameraPermission { viewModel.playMorsePattern(morseText) } },
                 enabled = morseText.isNotBlank(),
             ) {
-                Text("Play Morse")
+                LocalizedText("Play Morse")
             }
-            Text(
+            LocalizedText(
                 text = uiState.statusMessage,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             uiState.errorMessage?.let { error ->
-                Text(
+                LocalizedText(
                     text = error,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,

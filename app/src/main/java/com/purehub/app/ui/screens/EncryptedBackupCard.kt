@@ -14,7 +14,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,10 +67,10 @@ fun EncryptedBackupCard() {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary)
-                Text("Encrypted private backup", style = MaterialTheme.typography.titleMedium)
+                LocalizedText("Encrypted private backup", style = MaterialTheme.typography.titleMedium)
             }
-            Text("Habit, check-ins, expenses, passwords, 2FA accounts and OCR/QR history. AES-256; your passphrase never leaves this device.", style = MaterialTheme.typography.bodySmall)
-            Text(
+            LocalizedText("Habit, check-ins, expenses, passwords, 2FA accounts and OCR/QR history. AES-256; your passphrase never leaves this device.", style = MaterialTheme.typography.bodySmall)
+            LocalizedText(
                 text = if (backupStatus.exportedAtMillis > 0) {
                     "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(backupStatus.exportedAtMillis))} · fingerprint ${backupStatus.fingerprint}"
                 } else {
@@ -81,7 +81,7 @@ fun EncryptedBackupCard() {
             )
             OutlinedTextField(
                 value = passphrase, onValueChange = { passphrase = it }, modifier = Modifier.fillMaxWidth(),
-                label = { Text("Backup passphrase (8+ characters)") },
+                label = { LocalizedText("Backup passphrase (8+ characters)") },
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -91,8 +91,8 @@ fun EncryptedBackupCard() {
                             .onSuccess { pendingExport = it; exportLauncher.launch("purehub-backup.purehub") }
                             .onFailure { snackbar.showSnackbar(it.message ?: "Backup export failed.") }
                     }
-                }) { Text("Export") }
-                Button(enabled = passphrase.length >= 8, onClick = { importLauncher.launch(arrayOf("*/*")) }) { Text("Import") }
+                }) { LocalizedText("Export") }
+                Button(enabled = passphrase.length >= 8, onClick = { importLauncher.launch(arrayOf("*/*")) }) { LocalizedText("Import") }
             }
         }
     }

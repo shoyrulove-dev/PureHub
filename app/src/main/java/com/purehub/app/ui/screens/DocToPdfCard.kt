@@ -26,7 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -105,7 +105,7 @@ fun DocToPdfCard(
                 title = "Doc to PDF",
                 description = "Capture, crop, reorder, and export clean PDF pages. Pair it with OCR Studio for searchable text.",
             )
-            Text(
+            LocalizedText(
                 text = exportMessage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -114,7 +114,7 @@ fun DocToPdfCard(
                 modifier = Modifier.fillMaxWidth(),
                 value = documentTitle,
                 onValueChange = { documentTitle = it },
-                label = { Text("Document title") },
+                label = { LocalizedText("Document title") },
                 singleLine = true,
             )
 
@@ -150,7 +150,7 @@ fun DocToPdfCard(
                             )
                         },
                     ) {
-                        Text("Capture Page")
+                        LocalizedText("Capture Page")
                     }
                     Button(
                         onClick = {
@@ -164,7 +164,7 @@ fun DocToPdfCard(
                             }
                         },
                     ) {
-                        Text("Export PDF")
+                        LocalizedText("Export PDF")
                     }
                 }
 
@@ -180,7 +180,7 @@ fun DocToPdfCard(
                                 scope.launch { snackbarHostState.showSnackbar("Opening exported PDF.") }
                             },
                         ) {
-                            Text("Open PDF")
+                            LocalizedText("Open PDF")
                         }
                         Button(
                             onClick = {
@@ -193,13 +193,13 @@ fun DocToPdfCard(
                                 scope.launch { snackbarHostState.showSnackbar("PDF ready to share.") }
                             },
                         ) {
-                            Text("Share PDF")
+                            LocalizedText("Share PDF")
                         }
                     }
                 }
 
                 if (pages.isNotEmpty()) {
-                    Text(
+                    LocalizedText(
                         text = "Crop selected page directly",
                         style = MaterialTheme.typography.titleMedium,
                     )
@@ -218,7 +218,7 @@ fun DocToPdfCard(
                                 }
                             },
                         ) {
-                            Text("Apply Crop")
+                            LocalizedText("Apply Crop")
                         }
                         Button(
                             onClick = {
@@ -230,7 +230,7 @@ fun DocToPdfCard(
                                 }
                             },
                         ) {
-                            Text("Move Left")
+                            LocalizedText("Move Left")
                         }
                         Button(
                             onClick = {
@@ -242,7 +242,7 @@ fun DocToPdfCard(
                                 }
                             },
                         ) {
-                            Text("Move Right")
+                            LocalizedText("Move Right")
                         }
                         Button(
                             onClick = {
@@ -253,7 +253,7 @@ fun DocToPdfCard(
                                 }
                             },
                         ) {
-                            Text("Remove")
+                            LocalizedText("Remove")
                         }
                     }
 
@@ -293,7 +293,7 @@ fun DocToPdfCard(
                                             modifier = Modifier.size(100.dp),
                                         )
                                     }
-                                    Text(
+                                    LocalizedText(
                                         text = if (selectedPageIndex == index) "Page ${index + 1} selected" else "Page ${index + 1}",
                                         style = MaterialTheme.typography.labelMedium,
                                     )
@@ -304,7 +304,7 @@ fun DocToPdfCard(
                 }
             } else {
                 Button(onClick = onRequestCameraPermission) {
-                    Text("Allow Camera for Doc Capture")
+                    LocalizedText("Allow Camera for Doc Capture")
                 }
             }
         }
@@ -318,7 +318,7 @@ private fun CropSlider(
     onValueChange: (Float) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
+        LocalizedText(
             text = "$label ${(value * 100).toInt()}%",
             style = MaterialTheme.typography.bodyMedium,
         )

@@ -9,7 +9,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.lunar.LunarCalendarConverter
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.locale
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -38,7 +40,8 @@ fun LunarCalendarScreen(
     var selectedMonth by remember { mutableStateOf(YearMonth.now()) }
     val today = LocalDate.now()
     val days = remember(selectedMonth) { buildMonthCells(selectedMonth) }
-    val headerFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()) }
+    val language = LocalAppLanguage.current
+    val headerFormatter = remember(language) { DateTimeFormatter.ofPattern("MMMM yyyy", language.locale()) }
 
     Column(
         modifier = Modifier
@@ -67,7 +70,7 @@ fun LunarCalendarScreen(
                     IconButton(onClick = { selectedMonth = selectedMonth.minusMonths(1) }) {
                         Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, contentDescription = "Previous month")
                     }
-                    Text(
+                    LocalizedText(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp),
@@ -85,7 +88,7 @@ fun LunarCalendarScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
-                        Text(
+                        LocalizedText(
                             modifier = Modifier.width(40.dp),
                             text = day,
                             style = MaterialTheme.typography.labelMedium,
@@ -121,18 +124,18 @@ fun LunarCalendarScreen(
                                         .padding(horizontal = 8.dp, vertical = 10.dp),
                                     verticalArrangement = Arrangement.spacedBy(4.dp),
                                 ) {
-                                    Text(
+                                    LocalizedText(
                                         text = cell.dayOfMonth.toString(),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                     )
-                                    Text(
+                                    LocalizedText(
                                         text = "${lunarInfo.lunarDate.day}/${lunarInfo.lunarDate.month}",
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     lunarInfo.holidayLabel?.let { holiday ->
-                                        Text(
+                                        LocalizedText(
                                             text = holiday,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.primary,

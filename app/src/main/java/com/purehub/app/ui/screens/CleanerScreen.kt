@@ -32,6 +32,7 @@ import com.purehub.app.feature.cleaner.CleanerFileItem
 import com.purehub.app.feature.cleaner.CleanerViewModel
 import com.purehub.app.feature.cleaner.DuplicateImageGroup
 import com.purehub.app.ui.LocalSnackbarHostState
+import com.purehub.app.ui.LocalizedText
 import java.text.DecimalFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -94,10 +95,10 @@ fun CleanerScreen(
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },
         icon = { Icon(Icons.Rounded.AutoDelete, null) },
-        title = { Text("Remove ${uiState.selectedFiles.size} reviewed files?") },
-        text = { Text("This can free ${formatBytes(uiState.selectedBytes)}. Android may show one more confirmation. PureHub never selects personal files silently.") },
-        confirmButton = { Button(onClick = { confirmDelete = false; deleteApprovedFiles() }) { Text("Continue") } },
-        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Keep files") } },
+        title = { LocalizedText("Remove ${uiState.selectedFiles.size} reviewed files?") },
+        text = { LocalizedText("This can free ${formatBytes(uiState.selectedBytes)}. Android may show one more confirmation. PureHub never selects personal files silently.") },
+        confirmButton = { Button(onClick = { confirmDelete = false; deleteApprovedFiles() }) { LocalizedText("Continue") } },
+        dismissButton = { TextButton(onClick = { confirmDelete = false }) { LocalizedText("Keep files") } },
     )
 
     Column(Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp)) {
@@ -137,7 +138,7 @@ fun CleanerScreen(
             if (mode == SuiteMode.PRO) item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CleanerView.entries.forEach { view ->
-                        FilterChip(activeView == view, { activeView = view }, { Text(view.label) })
+                        FilterChip(activeView == view, { activeView = view }, { LocalizedText(view.label) })
                     }
                 }
             }
@@ -179,11 +180,11 @@ fun CleanerScreen(
         ) {
             Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("${uiState.selectedFiles.size} reviewed", style = MaterialTheme.typography.labelMedium)
-                    Text(formatBytes(uiState.selectedBytes), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    LocalizedText("${uiState.selectedFiles.size} reviewed", style = MaterialTheme.typography.labelMedium)
+                    LocalizedText(formatBytes(uiState.selectedBytes), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
-                OutlinedButton(onClick = viewModel::clearSelection) { Text("Clear") }
-                Button(onClick = { confirmDelete = true }) { Icon(Icons.Rounded.DeleteSweep, null); Text(" Remove") }
+                OutlinedButton(onClick = viewModel::clearSelection) { LocalizedText("Clear") }
+                Button(onClick = { confirmDelete = true }) { Icon(Icons.Rounded.DeleteSweep, null); LocalizedText(" Remove") }
             }
         }
     }
@@ -205,10 +206,10 @@ private fun CleanerDashboard(
                     else Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(if (reviewBytes > 0) formatBytes(reviewBytes) else "Storage review", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                    Text(if (scanning) status else "Potential space · nothing auto-selected", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText(if (reviewBytes > 0) formatBytes(reviewBytes) else "Storage review", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    LocalizedText(if (scanning) status else "Potential space · nothing auto-selected", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Button(enabled = !scanning, onClick = onScan) { Icon(Icons.Rounded.Refresh, null); Text(if (scanning) " Scanning" else " Scan") }
+                Button(enabled = !scanning, onClick = onScan) { Icon(Icons.Rounded.Refresh, null); LocalizedText(if (scanning) " Scanning" else " Scan") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 DashboardMetric(Modifier.weight(1f), Icons.Rounded.FileCopy, "$duplicateGroups", "Duplicate groups", formatBytes(duplicateBytes))
@@ -216,7 +217,7 @@ private fun CleanerDashboard(
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Security, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("Offline SHA-256 matching · Android confirms deletion", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText("Offline SHA-256 matching · Android confirms deletion", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -227,9 +228,9 @@ private fun DashboardMetric(modifier: Modifier, icon: androidx.compose.ui.graphi
     Surface(modifier, RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .5f)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            Text(label, style = MaterialTheme.typography.labelSmall)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+            LocalizedText(label, style = MaterialTheme.typography.labelSmall)
+            LocalizedText(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -238,16 +239,16 @@ private fun DashboardMetric(modifier: Modifier, icon: androidx.compose.ui.graphi
 private fun ReviewSectionHeader(title: String, subtitle: String, action: String, onAction: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            LocalizedText(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        TextButton(onClick = onAction) { Text(action) }
+        TextButton(onClick = onAction) { LocalizedText(action) }
     }
 }
 
 @Composable private fun NoticeCard(message: String) {
     Surface(Modifier.fillMaxWidth(), RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.errorContainer) {
-        Text(message, Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall)
+        LocalizedText(message, Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -255,8 +256,8 @@ private fun ReviewSectionHeader(title: String, subtitle: String, action: String,
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp)); Text(title, fontWeight = FontWeight.Bold)
-            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp)); LocalizedText(title, fontWeight = FontWeight.Bold)
+            LocalizedText(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -268,9 +269,9 @@ private fun CleanerFileCard(file: CleanerFileItem, selected: Boolean, toggle: ()
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(selected, { toggle() })
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(file.name.ifBlank { "Unnamed file" }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("${formatBytes(file.sizeBytes)} · ${friendlyType(file.mimeType)}", style = MaterialTheme.typography.bodySmall)
-                Text("Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LocalizedText(file.name.ifBlank { "Unnamed file" }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                LocalizedText("${formatBytes(file.sizeBytes)} · ${friendlyType(file.mimeType)}", style = MaterialTheme.typography.bodySmall)
+                LocalizedText("Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -282,21 +283,21 @@ private fun DuplicateGroupCard(group: DuplicateImageGroup, selectedIds: Set<Long
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("${group.files.size} byte-for-byte matches", fontWeight = FontWeight.Bold)
-                    Text("Review ${formatBytes(group.files.drop(1).sumOf { it.sizeBytes })} after keeping the newest", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText("${group.files.size} byte-for-byte matches", fontWeight = FontWeight.Bold)
+                    LocalizedText("Review ${formatBytes(group.files.drop(1).sumOf { it.sizeBytes })} after keeping the newest", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                    Text("SHA-256", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                    LocalizedText("SHA-256", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
                 }
             }
             group.files.forEachIndexed { index, file ->
                 Row(Modifier.fillMaxWidth().clickable(enabled = index != 0) { toggle(file) }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(file.id in selectedIds, { if (index != 0) toggle(file) }, enabled = index != 0)
                     Column(Modifier.weight(1f)) {
-                        Text(file.name.ifBlank { "Unnamed image" }, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(formatBytes(file.sizeBytes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        LocalizedText(file.name.ifBlank { "Unnamed image" }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        LocalizedText(formatBytes(file.sizeBytes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    if (index == 0) Text("KEEP", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+                    if (index == 0) LocalizedText("KEEP", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
                 }
             }
         }

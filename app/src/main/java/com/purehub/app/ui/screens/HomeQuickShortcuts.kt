@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,7 +29,7 @@ fun HomeQuickShortcuts(
     val quickTools = (pinnedVisible + fallbackVisible).take(6)
 
     if (quickTools.isEmpty()) {
-        Text(
+        LocalizedText(
             text = "No visible mini-apps.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -60,7 +60,7 @@ fun HomeQuickShortcuts(
                         modifier = Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
-                    Text(
+                    LocalizedText(
                         text = tool.title,
                         style = MaterialTheme.typography.labelLarge,
                     )
