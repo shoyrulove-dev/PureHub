@@ -41,6 +41,33 @@ export function MinigamePage() {
   const canEnter = Boolean(ticket && campaign?.state === 'open')
   const prize = useMemo(() => new Intl.NumberFormat('vi-VN').format(campaign?.prize_vnd ?? 10000), [campaign])
 
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('main[data-minigame-reveal] > section'))
+    if (!sections.length) return
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      sections.forEach(section => section.classList.add('is-visible'))
+      return
+    }
+
+    document.documentElement.classList.add('reveal-ready')
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        observer.unobserve(entry.target)
+      })
+    }, { threshold: 0.08, rootMargin: '0px 0px -4% 0px' })
+
+    sections.forEach((section, index) => {
+      section.dataset.scrollReveal = ''
+      section.style.setProperty('--reveal-delay', `${Math.min(index % 3, 2) * 45}ms`)
+      observer.observe(section)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => { void api<Campaign>('').then(setCampaign).catch((error: Error) => setNotice(error.message)) }, [])
   useEffect(() => { if (campaign?.day) void api<Result>(`/results/${campaign.day}`).then(setResult).catch(() => undefined) }, [campaign?.day])
   useEffect(() => {
@@ -60,7 +87,7 @@ export function MinigamePage() {
   }
 
   const settled = result?.status === 'settled'
-  return <main className="mx-auto min-h-screen max-w-2xl px-4 py-8 text-slate-900 dark:text-white">
+  return <main data-minigame-reveal className="mx-auto min-h-screen max-w-2xl px-4 py-8 text-slate-900 dark:text-white">
     <section className="overflow-hidden rounded-[28px] bg-gradient-to-br from-violet-700 via-fuchsia-600 to-amber-500 p-6 text-white shadow-xl"><Gift className="size-10" /><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-white/75">PureHub beta tester</p><h1 className="mt-2 text-3xl font-black leading-tight">Dự đoán 2 số<br />Nhận thẻ điện thoại mỗi ngày</h1><p className="mt-3 leading-7 text-white/90">Chọn số từ 00–99 trước 18:00. 5 bạn đoán đúng sớm nhất nhận thẻ điện thoại mệnh giá {prize}đ.</p>{!ticket && <Link to="/vi/download" className="mt-5 flex min-h-12 items-center justify-center rounded-2xl bg-emerald-400 px-4 text-center font-black text-emerald-950 shadow-lg transition hover:bg-emerald-300">📲 Tải App PureHub (APK) ngay để chốt số</Link>}</section>
     <section className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 text-slate-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-white"><Trophy className="size-5 text-violet-600 dark:text-violet-300" /><b className="mt-3 block text-lg">{campaign?.winner_limit ?? 5} người</b><span className="text-sm text-slate-600 dark:text-slate-300">đoán đúng sớm nhất</span></div><div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-slate-900 dark:border-amber-900 dark:bg-amber-950/35 dark:text-white"><Gift className="size-5 text-amber-600 dark:text-amber-300" /><b className="mt-3 block text-lg">{prize}đ</b><span className="text-sm text-slate-600 dark:text-slate-300">thẻ điện thoại / người</span></div><div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-slate-900 dark:border-emerald-900 dark:bg-emerald-950/35 dark:text-white"><CalendarClock className="size-5 text-emerald-600 dark:text-emerald-300" /><b className="mt-3 block text-lg">{campaign?.closes_at ?? '18:00'}</b><span className="text-sm text-slate-600 dark:text-slate-300">đóng dự đoán</span></div></section>
     <section className="mt-5 rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="flex gap-3"><Trophy className="size-6 shrink-0 text-amber-500" /><div><strong>Thể lệ minh bạch</strong><ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-600 dark:text-slate-300"><li>Dự đoán 2 số cuối giải đặc biệt XSMB.</li><li>Mỗi SĐT và Gmail có một lượt mỗi ngày.</li><li>5 người đoán đúng sớm nhất nhận thẻ điện thoại {prize}đ.</li><li>Gmail chỉ dùng để nhận diện lượt beta, không đăng ký marketing.</li></ol></div></div><p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-950">Hôm nay: <b>{campaign?.valid_entries ?? 0}</b> lượt hợp lệ · chốt lúc <b>{campaign?.closes_at ?? '18:00'}</b>.</p></section>
