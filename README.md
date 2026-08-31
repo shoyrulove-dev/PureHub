@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current preview is PureHub 1.0.0-beta.36. It adds complete English, Vietnamese, and Simplified Chinese navigation and tool UI, a first-launch language picker, and the Android-to-web ticket flow for the Vietnam beta minigame. The standard flavor remains offline-first while retaining Internet access for explicitly connected workflows such as the minigame and update checks. The F-Droid flavor remains strictly offline-only and replaces ML Kit OCR with Tesseract. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current preview is PureHub 1.0.0-beta.37. It deepens the Android utility suite with eleven offline converter categories plus favorites and history, overlap-aware Wi-Fi channel ratings, gallery-to-PDF import, pre-clean photo metadata inspection, an optional level sound cue, and a safer screen-recording countdown. The standard flavor remains offline-first while retaining Internet access for explicitly connected workflows such as the minigame and update checks. The F-Droid flavor remains strictly offline-only and replaces ML Kit OCR with Tesseract. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

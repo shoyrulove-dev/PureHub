@@ -1,6 +1,8 @@
 package com.purehub.app.ui.screens
 
 import android.content.Intent
+import android.media.AudioManager
+import android.media.ToneGenerator
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import com.purehub.app.ui.LocalizedText
@@ -61,6 +64,8 @@ fun BubbleLevelCard(
     var settled by remember { mutableStateOf(false) }
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var heldMeasurement by rememberSaveable { mutableStateOf("") }
+    var soundCueEnabled by rememberSaveable { mutableStateOf(false) }
+    val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 55) }
     val colorScheme = MaterialTheme.colorScheme
     val isLevel = when (levelMode) {
         LevelMode.Surface -> uiState.tiltMagnitude <= tolerance
@@ -75,12 +80,17 @@ fun BubbleLevelCard(
         onDispose { viewModel.stop() }
     }
 
+    DisposableEffect(Unit) {
+        onDispose { toneGenerator.release() }
+    }
+
     LaunchedEffect(sensorActive, isLevel, levelMode) {
         settled = false
         if (sensorActive && isLevel) {
             delay(1_500)
             settled = true
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            if (soundCueEnabled) toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 140)
         }
     }
 
@@ -199,6 +209,11 @@ fun BubbleLevelCard(
             Slider(value = tolerance, onValueChange = { tolerance = it }, valueRange = 0.1f..1.5f, steps = 13)
 
             if (mode == SuiteMode.PRO) {
+                FilterChip(
+                    selected = soundCueEnabled,
+                    onClick = { soundCueEnabled = !soundCueEnabled },
+                    label = { LocalizedText(if (soundCueEnabled) "Level sound on" else "Level sound off") },
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(onClick = {
                         heldMeasurement = "${levelMode.label}: pitch ${"%.1f".format(uiState.pitch)}°, roll ${"%.1f".format(uiState.roll)}°, tolerance ±${"%.1f".format(tolerance)}°"

@@ -39,6 +39,12 @@ private val vi = mapOf(
     "Open Telegram" to "Mở Telegram", "Open GitHub" to "Mở GitHub", "Send feedback or report a bug" to "Gửi góp ý hoặc báo lỗi",
     "All tools" to "Tất cả công cụ", "Free, private and ad-free utilities. Search by what you need to do." to "Công cụ miễn phí, riêng tư và không quảng cáo. Tìm theo nhu cầu của bạn.",
     "Privacy & preferences" to "Quyền riêng tư và tùy chọn", "Offline-first" to "Ưu tiên ngoại tuyến", "Private" to "Riêng tư",
+    "Area" to "Diện tích", "Volume" to "Thể tích", "Speed" to "Tốc độ", "Time" to "Thời gian", "Pressure" to "Áp suất",
+    "Energy" to "Năng lượng", "Power" to "Công suất", "Angle" to "Góc", "Search units" to "Tìm đơn vị", "Swap" to "Đảo chiều",
+    "Favorite" to "Yêu thích", "Unfavorite" to "Bỏ yêu thích", "Save to history" to "Lưu lịch sử", "Copy result" to "Sao chép kết quả",
+    "Favorite conversions" to "Phép đổi yêu thích", "Recent conversions" to "Phép đổi gần đây", "Import images" to "Nhập hình ảnh",
+    "Metadata found" to "Metadata tìm thấy", "From" to "Từ", "To" to "Sang", "Value" to "Giá trị",
+    "Level sound on" to "Bật âm báo cân bằng", "Level sound off" to "Tắt âm báo cân bằng",
 )
 
 private val zh = mapOf(
@@ -65,6 +71,12 @@ private val zh = mapOf(
     "Open Telegram" to "打开 Telegram", "Open GitHub" to "打开 GitHub", "Send feedback or report a bug" to "发送反馈或报告错误",
     "All tools" to "全部工具", "Free, private and ad-free utilities. Search by what you need to do." to "免费、私密且无广告的工具。按需求搜索。",
     "Privacy & preferences" to "隐私与偏好", "Offline-first" to "离线优先", "Private" to "隐私",
+    "Area" to "面积", "Volume" to "体积", "Speed" to "速度", "Time" to "时间", "Pressure" to "压力",
+    "Energy" to "能量", "Power" to "功率", "Angle" to "角度", "Search units" to "搜索单位", "Swap" to "互换",
+    "Favorite" to "收藏", "Unfavorite" to "取消收藏", "Save to history" to "保存到历史", "Copy result" to "复制结果",
+    "Favorite conversions" to "收藏的换算", "Recent conversions" to "最近换算", "Import images" to "导入图片",
+    "Metadata found" to "发现元数据", "From" to "从", "To" to "到", "Value" to "数值",
+    "Level sound on" to "开启水平提示音", "Level sound off" to "关闭水平提示音",
 )
 
 private val viMore = mapOf(

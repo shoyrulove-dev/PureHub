@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
@@ -48,6 +50,16 @@ fun WifiAnalyzerCard(
     val scope = rememberCoroutineScope()
     var hasPermission by remember { mutableStateOf(checkWifiScanPermission(context)) }
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
+    var selectedBand by rememberSaveable { mutableStateOf("2.4 GHz") }
+    val availableBands = uiState.nearbyNetworks
+        .map { com.purehub.app.feature.wifi.WifiInsights.bandForFrequency(it.frequencyMhz) }
+        .filterNot { it == "Unknown" }
+        .distinct()
+    val activeBand = selectedBand.takeIf { it in availableBands } ?: availableBands.firstOrNull().orEmpty()
+    val channelRatings = com.purehub.app.feature.wifi.WifiInsights.rateChannels(
+        uiState.nearbyNetworks,
+        activeBand.takeIf(String::isNotBlank),
+    )
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { result ->
@@ -174,6 +186,35 @@ fun WifiAnalyzerCard(
                     ) {
                         LocalizedText("Channel pressure", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         LocalizedText(uiState.recommendation, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            availableBands.forEach { band ->
+                                FilterChip(
+                                    selected = activeBand == band,
+                                    onClick = { selectedBand = band },
+                                    label = { LocalizedText(band) },
+                                )
+                            }
+                        }
+                        channelRatings.take(12).forEach { rating ->
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    LocalizedText("Channel ${rating.channel}", fontWeight = FontWeight.SemiBold)
+                                    LocalizedText(
+                                        "${rating.qualityPercent}%",
+                                        color = if (rating.qualityPercent >= 70) colorScheme.primary else colorScheme.tertiary,
+                                    )
+                                }
+                                LinearProgressIndicator(
+                                    progress = { rating.qualityPercent / 100f },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        }
+                        LocalizedText(
+                            "Quality estimates include signal strength, overlap and advertised channel width.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colorScheme.onSurfaceVariant,
+                        )
                         uiState.channelInsights.take(8).forEach { insight ->
                             LocalizedText(
                                 "${insight.band} · Ch ${insight.channel} · ${insight.nearbyCount} nearby · strongest ${insight.strongestRssi} dBm",

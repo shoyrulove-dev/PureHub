@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -50,7 +52,9 @@ import com.purehub.app.feature.docpdf.DocPdfRepository
 import com.purehub.app.feature.docpdf.ExportedPdf
 import com.purehub.app.ui.LocalSnackbarHostState
 import java.util.concurrent.Executor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DocToPdfCard(
@@ -80,6 +84,19 @@ fun DocToPdfCard(
     var documentTitle by rememberSaveable { mutableStateOf("purehub_doc") }
     var exportMessage by rememberSaveable { mutableStateOf("Capture pages, then export a local PDF.") }
     var exportedPdf by remember { mutableStateOf<ExportedPdf?>(null) }
+    val galleryPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) scope.launch {
+            exportMessage = "Importing ${uris.size} image(s)..."
+            val imported = withContext(Dispatchers.IO) {
+                uris.take(30).mapIndexedNotNull { index, uri ->
+                    runCatching { repository.importImage(uri, index) }.getOrNull()
+                }
+            }
+            pages.addAll(imported)
+            selectedPageIndex = pages.lastIndex
+            exportMessage = "${imported.size} image(s) imported; ${pages.size} page(s) staged locally."
+        }
+    }
 
     LaunchedEffect(Unit) {
         val staged = repository.loadStagedOcrPages()
@@ -117,6 +134,20 @@ fun DocToPdfCard(
                 label = { LocalizedText("Document title") },
                 singleLine = true,
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = { galleryPicker.launch(arrayOf("image/*")) }) {
+                    LocalizedText("Import images")
+                }
+                Button(
+                    enabled = pages.isNotEmpty(),
+                    onClick = {
+                        exportedPdf = repository.exportPdf(pages, documentTitle)
+                        val searchable = pages.count { it.recognizedText.isNotBlank() }
+                        exportMessage = "Saved searchable PDF ($searchable OCR page(s)) to ${exportedPdf?.file?.absolutePath}"
+                        scope.launch { snackbarHostState.showSnackbar("PDF exported locally.") }
+                    },
+                ) { LocalizedText("Export PDF") }
+            }
 
             if (hasCameraPermission) {
                 AndroidView(
@@ -151,20 +182,6 @@ fun DocToPdfCard(
                         },
                     ) {
                         LocalizedText("Capture Page")
-                    }
-                    Button(
-                        onClick = {
-                            if (pages.isEmpty()) {
-                                exportMessage = "Capture at least one page before export."
-                            } else {
-                                exportedPdf = repository.exportPdf(pages, documentTitle)
-                                val searchable = pages.count { it.recognizedText.isNotBlank() }
-                                exportMessage = "Saved searchable PDF ($searchable OCR page(s)) to ${exportedPdf?.file?.absolutePath}"
-                                scope.launch { snackbarHostState.showSnackbar("PDF exported locally.") }
-                            }
-                        },
-                    ) {
-                        LocalizedText("Export PDF")
                     }
                 }
 

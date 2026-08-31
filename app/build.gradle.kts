@@ -20,8 +20,8 @@ android {
         applicationId = "com.purehub.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 37
-        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.36"
+        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 38
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.37"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
@@ -140,6 +140,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.security:security-crypto:1.1.0")
+    implementation("androidx.exifinterface:exifinterface:1.4.1")
     implementation("androidx.work:work-runtime-ktx:$workVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")

@@ -27,6 +27,7 @@ data class NearbyWifiNetwork(
     val channelLabel: String,
     val securityLabel: String,
     val isCurrentConnection: Boolean,
+    val channelWidthMhz: Int = 20,
 )
 
 data class WifiAnalyzerUiState(
@@ -157,6 +158,14 @@ class WifiAnalyzerViewModel(
             channelLabel = deriveChannel(frequency),
             securityLabel = WifiInsights.securityLabel(capabilities),
             isCurrentConnection = BSSID == currentBssid,
+            channelWidthMhz = when (channelWidth) {
+                ScanResult.CHANNEL_WIDTH_40MHZ -> 40
+                ScanResult.CHANNEL_WIDTH_80MHZ -> 80
+                ScanResult.CHANNEL_WIDTH_160MHZ -> 160
+                ScanResult.CHANNEL_WIDTH_80MHZ_PLUS_MHZ -> 160
+                5 -> 320
+                else -> 20
+            },
         )
     }
 

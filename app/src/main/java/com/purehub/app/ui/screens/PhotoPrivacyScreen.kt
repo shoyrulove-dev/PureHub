@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.exifinterface.media.ExifInterface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,11 +49,17 @@ fun PhotoPrivacyScreen(
     val scope = rememberCoroutineScope()
     var selected by remember { mutableStateOf<Uri?>(null) }
     var isExporting by remember { mutableStateOf(false) }
+    var metadataSummary by remember { mutableStateOf<PhotoMetadataSummary?>(null) }
     var status by remember { mutableStateOf("Choose a photo. PureHub creates a separate clean copy and never changes the original.") }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         selected = uri
-        status = if (uri == null) "No photo selected." else "Photo ready. Review the privacy boundary, then create a clean JPEG."
+        metadataSummary = null
+        status = if (uri == null) "No photo selected." else "Inspecting privacy metadata locally..."
+        if (uri != null) scope.launch {
+            metadataSummary = withContext(Dispatchers.IO) { inspectPhotoMetadata(context, uri) }
+            status = "Photo ready. Review the metadata summary, then create a clean JPEG."
+        }
     }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/jpeg")) { destination ->
         val source = selected
@@ -126,6 +133,23 @@ fun PhotoPrivacyScreen(
                         LocalizedText(if (isExporting) " Creating..." else " Create copy")
                     }
                 }
+                metadataSummary?.let { summary ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            LocalizedText("Metadata found", fontWeight = FontWeight.Bold)
+                            LocalizedText(
+                                listOfNotNull(
+                                    "${summary.width}×${summary.height}",
+                                    "GPS ${if (summary.hasLocation) "present" else "not found"}",
+                                    summary.camera.takeIf(String::isNotBlank)?.let { "Camera $it" },
+                                    summary.captureTime.takeIf(String::isNotBlank)?.let { "Captured $it" },
+                                ).joinToString(" • "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (summary.hasLocation) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -140,6 +164,32 @@ fun PhotoPrivacyScreen(
             body = "The source remains untouched. You choose the destination and decide when to share the clean copy.",
         )
     }
+}
+
+private data class PhotoMetadataSummary(
+    val width: Int,
+    val height: Int,
+    val hasLocation: Boolean,
+    val camera: String,
+    val captureTime: String,
+)
+
+private fun inspectPhotoMetadata(context: android.content.Context, uri: Uri): PhotoMetadataSummary {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+    val exif = runCatching {
+        context.contentResolver.openInputStream(uri)?.use(::ExifInterface)
+    }.getOrNull()
+    return PhotoMetadataSummary(
+        width = bounds.outWidth.coerceAtLeast(0),
+        height = bounds.outHeight.coerceAtLeast(0),
+        hasLocation = exif?.latLong != null,
+        camera = listOfNotNull(
+            exif?.getAttribute(ExifInterface.TAG_MAKE)?.trim()?.takeIf(String::isNotBlank),
+            exif?.getAttribute(ExifInterface.TAG_MODEL)?.trim()?.takeIf(String::isNotBlank),
+        ).distinct().joinToString(" "),
+        captureTime = exif?.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL).orEmpty(),
+    )
 }
 
 @Composable

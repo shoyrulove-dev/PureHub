@@ -56,6 +56,21 @@ class DocPdfRepository(
         )
     }
 
+    fun importImage(uri: Uri, index: Int): CapturedDocPage {
+        val bitmap = context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+            ?: error("The selected image could not be decoded")
+        val directory = File(context.cacheDir, "doc_imports").apply { mkdirs() }
+        val file = File(directory, "import_${timestampFormat.format(Date())}_$index.jpg")
+        try {
+            FileOutputStream(file).use { output ->
+                check(bitmap.compress(Bitmap.CompressFormat.JPEG, 94, output)) { "Image import failed" }
+            }
+        } finally {
+            bitmap.recycle()
+        }
+        return wrapCapturedFile(file)
+    }
+
     fun stageOcrPages(pages: List<Pair<Bitmap, String>>): List<CapturedDocPage> {
         val directory = File(context.cacheDir, "doc_ocr_session").apply {
             deleteRecursively()

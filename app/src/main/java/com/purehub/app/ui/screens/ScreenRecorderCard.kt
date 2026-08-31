@@ -17,6 +17,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.purehub.app.feature.screenrecorder.ScreenRecorderRuntime
 import com.purehub.app.feature.screenrecorder.ScreenRecorderService
 import com.purehub.app.feature.screenrecorder.ScreenRecordingPhase
+import kotlinx.coroutines.delay
 
 private enum class RecorderPreset(
     val label: String,
@@ -48,6 +50,7 @@ fun ScreenRecorderCard() {
     val runtime by ScreenRecorderRuntime.status.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var preset by rememberSaveable { mutableStateOf(RecorderPreset.BALANCED) }
+    var countdown by rememberSaveable { mutableStateOf(0) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val service = Intent(context, ScreenRecorderService::class.java).apply {
@@ -66,6 +69,19 @@ fun ScreenRecorderCard() {
     val isIdle = runtime.phase == ScreenRecordingPhase.IDLE
     val isRecording = runtime.phase == ScreenRecordingPhase.RECORDING
     val isPaused = runtime.phase == ScreenRecordingPhase.PAUSED
+
+    LaunchedEffect(countdown) {
+        if (countdown > 0) {
+            delay(1_000)
+            if (countdown > 1) {
+                countdown -= 1
+            } else {
+                countdown = 0
+                val manager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                permission.launch(manager.createScreenCaptureIntent())
+            }
+        }
+    }
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -96,16 +112,18 @@ fun ScreenRecorderCard() {
                 LocalizedText(preset.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
             }
             LocalizedText(runtime.message)
+            if (countdown > 0) {
+                LocalizedText("Screen capture request starts in $countdown…")
+            }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Button(
                     onClick = {
-                        val manager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-                        permission.launch(manager.createScreenCaptureIntent())
+                        countdown = 3
                     },
-                    enabled = isIdle,
+                    enabled = isIdle && countdown == 0,
                 ) { LocalizedText(if (runtime.phase == ScreenRecordingPhase.PREPARING) "Preparing…" else "Start recording") }
                 if (isRecording || isPaused) {
                     OutlinedButton(
