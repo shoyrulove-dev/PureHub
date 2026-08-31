@@ -28,6 +28,8 @@ class ExpenseTrackerRepository(
         title: String,
         amountText: String,
         category: String,
+        transactionType: String,
+        wallet: String,
         note: String,
     ) {
         val amountMinor = ((amountText.toDoubleOrNull() ?: 0.0) * 100).toLong()
@@ -39,6 +41,8 @@ class ExpenseTrackerRepository(
                 title = title.trim(),
                 amountMinor = amountMinor,
                 category = category.trim().ifBlank { "General" },
+                transactionType = transactionType.takeIf { it == "income" } ?: "expense",
+                wallet = wallet.trim().ifBlank { "Cash" },
                 note = note.trim(),
                 happenedAtEpochMillis = now,
                 createdAtEpochMillis = now,

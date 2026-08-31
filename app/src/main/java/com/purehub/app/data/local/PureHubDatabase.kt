@@ -15,7 +15,7 @@ import com.purehub.app.data.local.entity.HabitEntity
         HabitCheckInEntity::class,
         ExpenseEntryEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class PureHubDatabase : RoomDatabase() {

@@ -1,20 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { LocaleLayout } from './locale-layout'
-import { LocalizedEntryPage } from '../pages/localized-entry-page'
-import { LocaleIndexPage } from '../pages/locale-index-page'
 import { LocaleRedirectPage } from '../pages/locale-redirect-page'
-import { ToolsPage } from '../pages/tools-page'
-import { CommunityPage } from '../pages/community-page'
-import { SettingsPage } from '../pages/settings-page'
-import { DownloadPage } from '../pages/download-page'
-import { ChangelogPage } from '../pages/changelog-page'
 import { BackendRouteRecovery } from '../pages/backend-route-recovery'
-import { PrivacyPage, TermsPage } from '../pages/legal-pages'
-import { GrowthLandingPage } from '../pages/growth-landing-page'
-import { ResultsPage } from '../pages/results-page'
-import { PrivacyCenterPage } from '../pages/privacy-center-page'
-import { MinigamePage } from '../pages/minigame-page'
 import { GROWTH_LANDING_IDS, growthLandingPages } from '../config/growthLandingPages'
+import { ChangelogPage, CommunityPage, DownloadPage, GrowthLandingPage, LocaleIndexPage, LocalizedEntryPage, MinigamePage, PrivacyCenterPage, PrivacyPage, ResultsPage, RouteLoader, SettingsPage, TermsPage, ToolsPage } from './lazy-routes'
 
 export const appRouter = createBrowserRouter([
   {
@@ -39,55 +28,55 @@ export const appRouter = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <LocaleIndexPage />,
+        element: <RouteLoader><LocaleIndexPage /></RouteLoader>,
       },
       {
         path: 'tools',
-        element: <ToolsPage />,
+        element: <RouteLoader><ToolsPage /></RouteLoader>,
       },
       {
         path: 'community',
-        element: <CommunityPage />,
+        element: <RouteLoader><CommunityPage /></RouteLoader>,
       },
       {
         path: 'settings',
-        element: <SettingsPage />,
+        element: <RouteLoader><SettingsPage /></RouteLoader>,
       },
       {
         path: 'results',
-        element: <ResultsPage />,
+        element: <RouteLoader><ResultsPage /></RouteLoader>,
       },
       {
         path: 'privacy-center',
-        element: <PrivacyCenterPage />,
+        element: <RouteLoader><PrivacyCenterPage /></RouteLoader>,
       },
       {
         path: 'download',
-        element: <DownloadPage />,
+        element: <RouteLoader><DownloadPage /></RouteLoader>,
       },
       {
         path: 'changelog',
-        element: <ChangelogPage />,
+        element: <RouteLoader><ChangelogPage /></RouteLoader>,
       },
       {
         path: 'minigame',
-        element: <MinigamePage />,
+        element: <RouteLoader><MinigamePage /></RouteLoader>,
       },
       {
         path: 'privacy',
-        element: <PrivacyPage />,
+        element: <RouteLoader><PrivacyPage /></RouteLoader>,
       },
       {
         path: 'terms',
-        element: <TermsPage />,
+        element: <RouteLoader><TermsPage /></RouteLoader>,
       },
       ...GROWTH_LANDING_IDS.map((landingId) => ({
         path: growthLandingPages[landingId].slug,
-        element: <GrowthLandingPage landingId={landingId} />,
+        element: <RouteLoader><GrowthLandingPage landingId={landingId} /></RouteLoader>,
       })),
       {
         path: ':appSlug',
-        element: <LocalizedEntryPage />,
+        element: <RouteLoader><LocalizedEntryPage /></RouteLoader>,
       },
     ],
   },

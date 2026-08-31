@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
@@ -51,13 +52,16 @@ class ScreenRecorderService : Service() {
 
     private fun startRecording(intent: Intent) {
         if (ScreenRecorderRuntime.status.value.phase != ScreenRecordingPhase.IDLE) return
+        val includeMicrophone = intent.getBooleanExtra(EXTRA_INCLUDE_MICROPHONE, false) &&
+            checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         ScreenRecorderRuntime.update(ScreenRecordingPhase.PREPARING, "Preparing a private local recording…")
         createNotificationChannel()
         ServiceCompat.startForeground(
             this,
             NOTIFICATION_ID,
             buildNotification(ScreenRecordingPhase.PREPARING),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or
+                if (includeMicrophone) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0,
         )
 
         runCatching {
@@ -102,9 +106,15 @@ class ScreenRecorderService : Service() {
                 MediaRecorder()
             }
             recorder?.apply {
+                if (includeMicrophone) setAudioSource(MediaRecorder.AudioSource.MIC)
                 setVideoSource(MediaRecorder.VideoSource.SURFACE)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+                if (includeMicrophone) {
+                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    setAudioEncodingBitRate(128_000)
+                    setAudioSamplingRate(44_100)
+                }
                 setVideoEncodingBitRate(bitRate)
                 setVideoFrameRate(frameRate)
                 setVideoSize(size.width, size.height)
@@ -125,7 +135,7 @@ class ScreenRecorderService : Service() {
             recordingStarted = true
             ScreenRecorderRuntime.update(
                 ScreenRecordingPhase.RECORDING,
-                "Recording ${size.width}×${size.height} at $frameRate fps. Stop from PureHub or the notification.",
+                "Recording ${size.width}×${size.height} at $frameRate fps${if (includeMicrophone) " with microphone" else ""}. Stop from PureHub or the notification.",
             )
             updateNotification(ScreenRecordingPhase.RECORDING)
         }.onFailure { failure ->
@@ -273,6 +283,7 @@ class ScreenRecorderService : Service() {
         const val EXTRA_WIDTH_CAP = "width_cap"
         const val EXTRA_FRAME_RATE = "frame_rate"
         const val EXTRA_BIT_RATE = "bit_rate"
+        const val EXTRA_INCLUDE_MICROPHONE = "include_microphone"
         private const val DEFAULT_WIDTH_CAP = 1080
         private const val DEFAULT_FRAME_RATE = 30
         private const val DEFAULT_BIT_RATE = 8_000_000

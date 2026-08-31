@@ -17,6 +17,8 @@ data class ExpenseEntryEntity(
     val title: String,
     val amountMinor: Long,
     val category: String,
+    val transactionType: String = "expense",
+    val wallet: String = "Cash",
     val note: String = "",
     val happenedAtEpochMillis: Long,
     val createdAtEpochMillis: Long,

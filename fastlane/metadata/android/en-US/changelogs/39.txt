@@ -1,0 +1,1 @@
+PureHub beta.38 upgrades Money Studio with income, expenses, monthly balance, wallet labels and safe migration of existing records. Document Suite adds batch cleanup and gallery editing without requiring camera permission. Screen Recorder can optionally include microphone narration with explicit permission. PWA routes now load on demand for a faster initial launch.

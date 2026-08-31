@@ -117,12 +117,22 @@ class EncryptedBackupManager(private val context: Context) {
 
     private fun habitJson(v: HabitEntity) = JSONObject().put("id", v.id).put("name", v.name).put("description", v.description).put("color", v.colorHex).put("target", v.targetDaysPerWeek).put("created", v.createdAtEpochMillis).put("archived", v.isArchived)
     private fun checkInJson(v: HabitCheckInEntity) = JSONObject().put("id", v.id).put("habitId", v.habitId).put("day", v.completedOn).put("note", v.note).put("created", v.createdAtEpochMillis)
-    private fun expenseJson(v: ExpenseEntryEntity) = JSONObject().put("id", v.id).put("title", v.title).put("amount", v.amountMinor).put("category", v.category).put("note", v.note).put("happened", v.happenedAtEpochMillis).put("created", v.createdAtEpochMillis)
+    private fun expenseJson(v: ExpenseEntryEntity) = JSONObject().put("id", v.id).put("title", v.title).put("amount", v.amountMinor).put("category", v.category).put("type", v.transactionType).put("wallet", v.wallet).put("note", v.note).put("happened", v.happenedAtEpochMillis).put("created", v.createdAtEpochMillis)
     private fun vaultJson(v: VaultEntry) = JSONObject().put("id", v.id).put("title", v.title).put("username", v.username).put("password", v.password)
     private fun authenticatorJson(v: TotpAccount) = JSONObject().put("id", v.id).put("label", v.label).put("secret", v.secret).put("group", v.group)
     private fun habitFromJson(v: JSONObject) = HabitEntity(v.getLong("id"), v.getString("name"), v.optString("description"), v.optString("color", "#7A9E7E"), v.optInt("target", 7), v.getLong("created"), v.optBoolean("archived"))
     private fun checkInFromJson(v: JSONObject) = HabitCheckInEntity(v.getLong("id"), v.getLong("habitId"), v.getString("day"), v.optString("note"), v.getLong("created"))
-    private fun expenseFromJson(v: JSONObject) = ExpenseEntryEntity(v.getLong("id"), v.getString("title"), v.getLong("amount"), v.optString("category", "General"), v.optString("note"), v.getLong("happened"), v.getLong("created"))
+    private fun expenseFromJson(v: JSONObject) = ExpenseEntryEntity(
+        id = v.getLong("id"),
+        title = v.getString("title"),
+        amountMinor = v.getLong("amount"),
+        category = v.optString("category", "General"),
+        transactionType = v.optString("type", "expense"),
+        wallet = v.optString("wallet", "Cash"),
+        note = v.optString("note"),
+        happenedAtEpochMillis = v.getLong("happened"),
+        createdAtEpochMillis = v.getLong("created"),
+    )
     private fun vaultFromJson(v: JSONObject) = VaultEntry(v.getString("id"), v.getString("title"), v.optString("username"), v.getString("password"))
     private fun authenticatorFromJson(v: JSONObject) = TotpAccount(v.getLong("id"), v.getString("label"), v.getString("secret"), v.optString("group", "Personal"))
     private fun <T> JSONArray.objects(mapper: (JSONObject) -> T) = (0 until length()).map { mapper(getJSONObject(it)) }

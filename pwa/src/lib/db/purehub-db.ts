@@ -24,6 +24,8 @@ export type ExpenseRecord = {
   title: string
   amount: number
   category: string
+  transactionType?: 'expense' | 'income'
+  wallet?: string
   note?: string
   createdAt: string
 }

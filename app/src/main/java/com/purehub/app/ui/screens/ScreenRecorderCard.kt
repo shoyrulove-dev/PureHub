@@ -1,8 +1,10 @@
 package com.purehub.app.ui.screens
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,7 +52,12 @@ fun ScreenRecorderCard() {
     val runtime by ScreenRecorderRuntime.status.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var preset by rememberSaveable { mutableStateOf(RecorderPreset.BALANCED) }
+    var includeMicrophone by rememberSaveable { mutableStateOf(false) }
     var countdown by rememberSaveable { mutableStateOf(0) }
+    val microphonePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        includeMicrophone = granted
+        if (!granted) ScreenRecorderRuntime.update(ScreenRecordingPhase.IDLE, "Microphone permission was not granted. Video-only recording remains available.")
+    }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val service = Intent(context, ScreenRecorderService::class.java).apply {
@@ -60,6 +67,7 @@ fun ScreenRecorderCard() {
                 putExtra(ScreenRecorderService.EXTRA_WIDTH_CAP, preset.widthCap)
                 putExtra(ScreenRecorderService.EXTRA_FRAME_RATE, preset.frameRate)
                 putExtra(ScreenRecorderService.EXTRA_BIT_RATE, preset.bitRate)
+                putExtra(ScreenRecorderService.EXTRA_INCLUDE_MICROPHONE, includeMicrophone)
             }
             ContextCompat.startForegroundService(context, service)
         } else {
@@ -110,6 +118,19 @@ fun ScreenRecorderCard() {
                     }
                 }
                 LocalizedText(preset.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                FilterChip(
+                    selected = includeMicrophone,
+                    onClick = {
+                        if (includeMicrophone) {
+                            includeMicrophone = false
+                        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                            includeMicrophone = true
+                        } else {
+                            microphonePermission.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    },
+                    label = { LocalizedText("Include microphone") },
+                )
             }
             LocalizedText(runtime.message)
             if (countdown > 0) {
@@ -144,7 +165,7 @@ fun ScreenRecorderCard() {
             }
             PrivacyReceipt(
                 action = "Visible, local recording",
-                detail = "Android always asks for consent and shows a foreground notification. PureHub has no INTERNET permission.",
+                detail = "Android always asks for screen and microphone consent and shows a foreground notification. Recordings stay local.",
             )
         }
     }

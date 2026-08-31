@@ -16,6 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -184,8 +185,13 @@ fun DocToPdfCard(
                         LocalizedText("Capture Page")
                     }
                 }
+            } else {
+                Button(onClick = onRequestCameraPermission) {
+                    LocalizedText("Allow Camera for Doc Capture")
+                }
+            }
 
-                exportedPdf?.let { pdf ->
+            exportedPdf?.let { pdf ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
                             onClick = {
@@ -215,7 +221,7 @@ fun DocToPdfCard(
                     }
                 }
 
-                if (pages.isNotEmpty()) {
+            if (pages.isNotEmpty()) {
                     LocalizedText(
                         text = "Crop selected page directly",
                         style = MaterialTheme.typography.titleMedium,
@@ -225,7 +231,7 @@ fun DocToPdfCard(
                     CropSlider("Right", crop.right) { crop = crop.copy(right = it) }
                     CropSlider("Bottom", crop.bottom) { crop = crop.copy(bottom = it) }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
                             onClick = {
                                 val index = selectedPageIndex
@@ -236,6 +242,23 @@ fun DocToPdfCard(
                             },
                         ) {
                             LocalizedText("Apply Crop")
+                        }
+                        Button(
+                            onClick = {
+                                val snapshot = pages.toList()
+                                scope.launch {
+                                    exportMessage = "Cleaning ${snapshot.size} page(s) locally…"
+                                    val cleaned = withContext(Dispatchers.IO) {
+                                        snapshot.map { repository.enhancePage(it, CropAdjustments()) }
+                                    }
+                                    pages.clear()
+                                    pages.addAll(cleaned)
+                                    selectedPageIndex = selectedPageIndex.coerceIn(0, pages.lastIndex)
+                                    exportMessage = "Cleaned ${cleaned.size} page(s) locally. Review before export."
+                                }
+                            },
+                        ) {
+                            LocalizedText("Clean all pages")
                         }
                         Button(
                             onClick = {
@@ -318,11 +341,6 @@ fun DocToPdfCard(
                             }
                         }
                     }
-                }
-            } else {
-                Button(onClick = onRequestCameraPermission) {
-                    LocalizedText("Allow Camera for Doc Capture")
-                }
             }
         }
     }

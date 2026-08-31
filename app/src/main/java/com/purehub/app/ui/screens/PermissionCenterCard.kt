@@ -34,7 +34,7 @@ fun PermissionCenterCard() {
     val context = LocalContext.current
     val permissions = listOf(
         PermissionExplanation(Manifest.permission.CAMERA, "Camera", "QR Studio, document scans and Color Grabber."),
-        PermissionExplanation(Manifest.permission.RECORD_AUDIO, "Microphone", "Decibel Meter only. Speaker Cleaner plays tones and does not listen."),
+        PermissionExplanation(Manifest.permission.RECORD_AUDIO, "Microphone", "Decibel Meter and optional Screen Recorder narration. Speaker Cleaner plays tones and does not listen."),
         PermissionExplanation(Manifest.permission.ACCESS_FINE_LOCATION, "Nearby Wi-Fi location", "Wi-Fi Analyzer on Android versions that require it."),
         PermissionExplanation(Manifest.permission.POST_NOTIFICATIONS, "Notifications", "Visible controls for an active Pomodoro timer or screen recording."),
     )

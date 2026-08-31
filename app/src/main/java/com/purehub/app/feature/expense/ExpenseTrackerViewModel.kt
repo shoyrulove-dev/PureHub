@@ -17,6 +17,8 @@ data class ExpenseTrackerUiState(
     val draftTitle: String = "",
     val draftAmount: String = "",
     val draftCategory: String = "General",
+    val draftTransactionType: String = "expense",
+    val draftWallet: String = "Cash",
     val draftNote: String = "",
 )
 
@@ -38,6 +40,10 @@ class ExpenseTrackerViewModel(
     fun updateDraftAmount(value: String) = _uiState.update { it.copy(draftAmount = value) }
 
     fun updateDraftCategory(value: String) = _uiState.update { it.copy(draftCategory = value) }
+
+    fun updateDraftTransactionType(value: String) = _uiState.update { it.copy(draftTransactionType = value) }
+
+    fun updateDraftWallet(value: String) = _uiState.update { it.copy(draftWallet = value) }
 
     fun updateDraftNote(value: String) = _uiState.update { it.copy(draftNote = value) }
 
@@ -70,6 +76,8 @@ class ExpenseTrackerViewModel(
                 title = state.draftTitle,
                 amountText = state.draftAmount,
                 category = state.draftCategory,
+                transactionType = state.draftTransactionType,
+                wallet = state.draftWallet,
                 note = state.draftNote,
             )
             _uiState.value = ExpenseTrackerUiState()

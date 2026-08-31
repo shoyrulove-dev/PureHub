@@ -14,7 +14,8 @@ class ExpenseInsightsTest {
             summary("Train", 1200, "Transport", 1_788_307_200_000),
         )
         val result = ExpenseInsights.calculate(expenses, 1_788_393_600_000, ZoneOffset.UTC)
-        assertEquals(1650, result.currentMonthMinor)
+        assertEquals(1650, result.currentMonthExpenseMinor)
+        assertEquals(-1650, result.currentMonthNetMinor)
         assertEquals("Transport", result.categoryTotals.first().category)
     }
 
@@ -22,14 +23,28 @@ class ExpenseInsightsTest {
     fun csvEscapesUserContent() {
         val csv = ExpenseInsights.toCsv(listOf(summary("Coffee, tea", 450, "Dining", 1)))
         assertTrue(csv.contains("\"Coffee, tea\""))
-        assertTrue(csv.startsWith("title,amount"))
+        assertTrue(csv.startsWith("title,type,amount"))
+
     }
 
-    private fun summary(title: String, amount: Long, category: String, timestamp: Long) = ExpenseSummary(
+    @Test
+    fun separatesIncomeFromExpenses() {
+        val rows = listOf(
+            summary("Salary", 500_000, "Income", 1_788_220_800_000, "income"),
+            summary("Rent", 120_000, "Housing", 1_788_307_200_000),
+        )
+        val result = ExpenseInsights.calculate(rows, 1_788_393_600_000, ZoneOffset.UTC)
+        assertEquals(500_000, result.currentMonthIncomeMinor)
+        assertEquals(120_000, result.currentMonthExpenseMinor)
+        assertEquals(380_000, result.currentMonthNetMinor)
+    }
+
+    private fun summary(title: String, amount: Long, category: String, timestamp: Long, type: String = "expense") = ExpenseSummary(
         ExpenseEntryEntity(
             title = title,
             amountMinor = amount,
             category = category,
+            transactionType = type,
             happenedAtEpochMillis = timestamp,
             createdAtEpochMillis = timestamp,
         ),

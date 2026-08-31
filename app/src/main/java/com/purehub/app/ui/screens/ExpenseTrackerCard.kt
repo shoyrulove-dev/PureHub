@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -60,10 +61,13 @@ fun ExpenseTrackerCard() {
     var budgetText by rememberSaveable { mutableStateOf(preferences.getString("monthly_budget", "").orEmpty()) }
     val insights = remember(expenses) { ExpenseInsights.calculate(expenses) }
     val filtered = remember(expenses, query) {
-        expenses.filter { query.isBlank() || it.entry.title.contains(query, true) || it.entry.category.contains(query, true) }
+        expenses.filter {
+            query.isBlank() || it.entry.title.contains(query, true) ||
+                it.entry.category.contains(query, true) || it.entry.wallet.contains(query, true)
+        }
     }
     val budgetMinor = ((budgetText.toDoubleOrNull() ?: 0.0) * 100).toLong()
-    val budgetProgress = if (budgetMinor > 0L) (insights.currentMonthMinor.toFloat() / budgetMinor).coerceIn(0f, 1f) else 0f
+    val budgetProgress = if (budgetMinor > 0L) (insights.currentMonthExpenseMinor.toFloat() / budgetMinor).coerceIn(0f, 1f) else 0f
     val receiptPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) recognizeReceipt(context, uri) { result ->
             result.onSuccess {
@@ -81,9 +85,10 @@ fun ExpenseTrackerCard() {
                 description = "Receipt capture, monthly budget, category insights and a portable local ledger without accounts or ads.",
             )
             SuiteModeSwitch(mode, { mode = it }, "Budget intelligence, category totals, search, and CSV export.")
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MoneyMetric("This month", formatMoney(insights.currentMonthMinor), Modifier.weight(1f))
-                MoneyMetric("All time", formatMoney(insights.allTimeMinor), Modifier.weight(1f))
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                MoneyMetric("Income", formatMoney(insights.currentMonthIncomeMinor), Modifier.weight(1f))
+                MoneyMetric("Expenses", formatMoney(insights.currentMonthExpenseMinor), Modifier.weight(1f))
+                MoneyMetric("Monthly balance", formatMoney(insights.currentMonthNetMinor), Modifier.weight(1f))
             }
 
             if (mode == SuiteMode.PRO) {
@@ -108,6 +113,18 @@ fun ExpenseTrackerCard() {
             }
 
             Button(onClick = { receiptPicker.launch("image/*") }) { LocalizedText("Scan receipt") }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = uiState.draftTransactionType == "expense",
+                    onClick = { viewModel.updateDraftTransactionType("expense") },
+                    label = { LocalizedText("Expense") },
+                )
+                FilterChip(
+                    selected = uiState.draftTransactionType == "income",
+                    onClick = { viewModel.updateDraftTransactionType("income") },
+                    label = { LocalizedText("Income") },
+                )
+            }
             OutlinedTextField(uiState.draftTitle, viewModel::updateDraftTitle, Modifier.fillMaxWidth(), label = { LocalizedText("Title") }, singleLine = true)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -120,15 +137,16 @@ fun ExpenseTrackerCard() {
                 )
                 OutlinedTextField(uiState.draftCategory, viewModel::updateDraftCategory, Modifier.weight(1f), label = { LocalizedText("Category") }, singleLine = true)
             }
+            OutlinedTextField(uiState.draftWallet, viewModel::updateDraftWallet, Modifier.fillMaxWidth(), label = { LocalizedText("Wallet or account") }, singleLine = true)
             OutlinedTextField(uiState.draftNote, viewModel::updateDraftNote, Modifier.fillMaxWidth(), label = { LocalizedText("Note") }, minLines = 2)
             Button(
                 onClick = viewModel::saveExpense,
                 enabled = uiState.draftTitle.isNotBlank() && uiState.draftAmount.isNotBlank(),
-            ) { LocalizedText("Save expense") }
+            ) { LocalizedText(if (uiState.draftTransactionType == "income") "Save income" else "Save expense") }
             PrivacyReceipt("Ledger protected locally", "Receipt recognition and insights run on-device. No bank connection or analytics SDK sees these entries.")
 
             if (mode == SuiteMode.PRO && expenses.isNotEmpty()) {
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { LocalizedText("Search title or category") }, singleLine = true)
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { LocalizedText("Search title, category or wallet") }, singleLine = true)
                 OutlinedButton(
                     onClick = {
                         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
@@ -148,7 +166,10 @@ fun ExpenseTrackerCard() {
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 LocalizedText(summary.entry.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                LocalizedText("${summary.amountDisplay} · ${summary.entry.category}")
+                                LocalizedText(
+                                    "${if (summary.entry.transactionType == "income") "+" else "−"}${summary.amountDisplay} · ${summary.entry.category} · ${summary.entry.wallet}",
+                                    color = if (summary.entry.transactionType == "income") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                )
                                 LocalizedText(
                                     Instant.ofEpochMilli(summary.entry.happenedAtEpochMillis).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                                     style = MaterialTheme.typography.labelSmall,

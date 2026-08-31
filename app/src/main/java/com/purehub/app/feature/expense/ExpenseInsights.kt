@@ -7,8 +7,10 @@ import java.time.ZoneId
 data class ExpenseCategoryTotal(val category: String, val amountMinor: Long)
 
 data class ExpenseInsightSnapshot(
-    val allTimeMinor: Long,
-    val currentMonthMinor: Long,
+    val allTimeExpenseMinor: Long,
+    val currentMonthExpenseMinor: Long,
+    val currentMonthIncomeMinor: Long,
+    val currentMonthNetMinor: Long,
     val categoryTotals: List<ExpenseCategoryTotal>,
 )
 
@@ -19,13 +21,18 @@ object ExpenseInsights {
         zoneId: ZoneId = ZoneId.systemDefault(),
     ): ExpenseInsightSnapshot {
         val currentMonth = YearMonth.from(Instant.ofEpochMilli(nowMillis).atZone(zoneId))
-        val monthTotal = expenses.filter {
+        val currentMonthRows = expenses.filter {
             YearMonth.from(Instant.ofEpochMilli(it.entry.happenedAtEpochMillis).atZone(zoneId)) == currentMonth
-        }.sumOf { it.entry.amountMinor }
+        }
+        val monthExpense = currentMonthRows.filter { it.entry.transactionType != "income" }.sumOf { it.entry.amountMinor }
+        val monthIncome = currentMonthRows.filter { it.entry.transactionType == "income" }.sumOf { it.entry.amountMinor }
         return ExpenseInsightSnapshot(
-            allTimeMinor = expenses.sumOf { it.entry.amountMinor },
-            currentMonthMinor = monthTotal,
-            categoryTotals = expenses
+            allTimeExpenseMinor = expenses.filter { it.entry.transactionType != "income" }.sumOf { it.entry.amountMinor },
+            currentMonthExpenseMinor = monthExpense,
+            currentMonthIncomeMinor = monthIncome,
+            currentMonthNetMinor = monthIncome - monthExpense,
+            categoryTotals = currentMonthRows
+                .filter { it.entry.transactionType != "income" }
                 .groupBy { it.entry.category.ifBlank { "General" } }
                 .map { (category, values) -> ExpenseCategoryTotal(category, values.sumOf { it.entry.amountMinor }) }
                 .sortedByDescending { it.amountMinor },
@@ -33,11 +40,11 @@ object ExpenseInsights {
     }
 
     fun toCsv(expenses: List<ExpenseSummary>): String = buildString {
-        appendLine("title,amount,category,note,timestamp")
+        appendLine("title,type,amount,category,wallet,note,timestamp")
         expenses.forEach { summary ->
             val entry = summary.entry
             appendLine(
-                listOf(entry.title, summary.amountDisplay, entry.category, entry.note, entry.happenedAtEpochMillis.toString())
+                listOf(entry.title, entry.transactionType, summary.amountDisplay, entry.category, entry.wallet, entry.note, entry.happenedAtEpochMillis.toString())
                     .joinToString(",") { csvCell(it) },
             )
         }
