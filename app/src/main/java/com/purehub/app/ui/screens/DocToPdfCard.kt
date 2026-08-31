@@ -51,6 +51,9 @@ import com.purehub.app.feature.docpdf.CapturedDocPage
 import com.purehub.app.feature.docpdf.CropAdjustments
 import com.purehub.app.feature.docpdf.DocPdfRepository
 import com.purehub.app.feature.docpdf.ExportedPdf
+import com.purehub.app.feature.docpdf.ImportedPdf
+import com.purehub.app.feature.docpdf.PdfToolboxRepository
+import com.purehub.app.feature.docpdf.VisualSignature
 import com.purehub.app.ui.LocalSnackbarHostState
 import java.util.concurrent.Executor
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +69,7 @@ fun DocToPdfCard(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val repository = remember { DocPdfRepository(context.applicationContext) }
+    val pdfToolbox = remember { PdfToolboxRepository(context.applicationContext) }
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val cameraExecutor = remember { ContextCompat.getMainExecutor(context) }
@@ -85,6 +89,13 @@ fun DocToPdfCard(
     var documentTitle by rememberSaveable { mutableStateOf("purehub_doc") }
     var exportMessage by rememberSaveable { mutableStateOf("Capture pages, then export a local PDF.") }
     var exportedPdf by remember { mutableStateOf<ExportedPdf?>(null) }
+    val importedPdfs = remember { mutableStateListOf<ImportedPdf>() }
+    var rangeStart by rememberSaveable { mutableStateOf("1") }
+    var rangeEnd by rememberSaveable { mutableStateOf("1") }
+    var signerName by rememberSaveable { mutableStateOf("") }
+    var signaturePage by rememberSaveable { mutableStateOf("1") }
+    var pdfQuality by rememberSaveable { mutableStateOf(0.72f) }
+    var pdfBusy by remember { mutableStateOf(false) }
     val galleryPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) scope.launch {
             exportMessage = "Importing ${uris.size} image(s)..."
@@ -96,6 +107,36 @@ fun DocToPdfCard(
             pages.addAll(imported)
             selectedPageIndex = pages.lastIndex
             exportMessage = "${imported.size} image(s) imported; ${pages.size} page(s) staged locally."
+        }
+    }
+    val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) scope.launch {
+            pdfBusy = true
+            exportMessage = "Opening ${uris.size} PDF file(s) locally..."
+            val imported = withContext(Dispatchers.IO) {
+                uris.take(8 - importedPdfs.size).mapIndexedNotNull { index, uri ->
+                    runCatching { pdfToolbox.importPdf(uri, importedPdfs.size + index) }.getOrNull()
+                }
+            }
+            importedPdfs.addAll(imported)
+            importedPdfs.firstOrNull()?.let { rangeEnd = it.pageCount.toString() }
+            exportMessage = "${imported.size} PDF file(s) opened privately."
+            pdfBusy = false
+        }
+    }
+
+    fun runPdfTool(message: String, action: () -> ExportedPdf) {
+        scope.launch {
+            pdfBusy = true
+            exportMessage = message
+            runCatching { withContext(Dispatchers.IO) { action() } }
+                .onSuccess {
+                    exportedPdf = it
+                    exportMessage = "Saved locally to ${it.file.absolutePath}"
+                    snackbarHostState.showSnackbar("PDF ready locally.")
+                }
+                .onFailure { exportMessage = it.message ?: "The PDF operation could not be completed." }
+            pdfBusy = false
         }
     }
 
@@ -123,6 +164,88 @@ fun DocToPdfCard(
                 title = "Doc to PDF",
                 description = "Capture, crop, reorder, and export clean PDF pages. Pair it with OCR Studio for searchable text.",
             )
+            LocalizedText("PDF toolbox", style = MaterialTheme.typography.titleMedium)
+            LocalizedText(
+                "Merge, split, compress or add a visual signature without uploading the file. Imported PDFs are flattened into safer local copies.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(enabled = !pdfBusy && importedPdfs.size < 8, onClick = { pdfPicker.launch(arrayOf("application/pdf")) }) {
+                    LocalizedText("Add PDFs")
+                }
+                Button(
+                    enabled = !pdfBusy && importedPdfs.size >= 2,
+                    onClick = { runPdfTool("Merging ${importedPdfs.size} PDFs locally...") { pdfToolbox.merge(importedPdfs, "${documentTitle}_merged") } },
+                ) { LocalizedText("Merge PDFs") }
+                Button(enabled = importedPdfs.isNotEmpty() && !pdfBusy, onClick = { importedPdfs.clear(); exportMessage = "PDF toolbox cleared." }) {
+                    LocalizedText("Clear PDFs")
+                }
+            }
+            importedPdfs.forEachIndexed { index, item ->
+                LocalizedText("${index + 1}. ${item.name} · ${item.pageCount} pages · ${item.bytes / 1024} KB", style = MaterialTheme.typography.bodySmall)
+            }
+            importedPdfs.firstOrNull()?.let { source ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = rangeStart,
+                        onValueChange = { rangeStart = it.filter(Char::isDigit).take(4) },
+                        label = { LocalizedText("From page") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = rangeEnd,
+                        onValueChange = { rangeEnd = it.filter(Char::isDigit).take(4) },
+                        label = { LocalizedText("To page") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Button(
+                    enabled = !pdfBusy,
+                    onClick = {
+                        runPdfTool("Extracting pages locally...") {
+                            pdfToolbox.split(source, rangeStart.toIntOrNull() ?: 1, rangeEnd.toIntOrNull() ?: source.pageCount, "${documentTitle}_pages")
+                        }
+                    },
+                ) { LocalizedText("Extract pages") }
+                LocalizedText("Compression quality ${(pdfQuality * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                Slider(value = pdfQuality, onValueChange = { pdfQuality = it }, valueRange = 0.45f..0.9f)
+                Button(
+                    enabled = !pdfBusy,
+                    onClick = { runPdfTool("Compressing PDF locally...") { pdfToolbox.compress(source, "${documentTitle}_compressed", pdfQuality) } },
+                ) { LocalizedText("Compress PDF") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = signerName,
+                        onValueChange = { signerName = it.take(42) },
+                        label = { LocalizedText("Signer name") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = signaturePage,
+                        onValueChange = { signaturePage = it.filter(Char::isDigit).take(4) },
+                        label = { LocalizedText("Page") },
+                        singleLine = true,
+                        modifier = Modifier.weight(0.45f),
+                    )
+                }
+                Button(
+                    enabled = !pdfBusy && signerName.isNotBlank(),
+                    onClick = {
+                        runPdfTool("Adding a visual signature locally...") {
+                            pdfToolbox.sign(source, "${documentTitle}_signed", VisualSignature(signerName, signaturePage.toIntOrNull() ?: 1))
+                        }
+                    },
+                ) { LocalizedText("Sign PDF") }
+                LocalizedText(
+                    "Visual signature only; it is not a certificate-backed digital signature.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             LocalizedText(
                 text = exportMessage,
                 style = MaterialTheme.typography.bodyMedium,

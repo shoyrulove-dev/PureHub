@@ -51,6 +51,11 @@ private val vi = mapOf(
     "Previous" to "Tr\u01b0\u1edbc", "Next" to "Ti\u1ebfp", "Delete page" to "X\u00f3a trang",
     "Receipt detected" to "\u0110\u00e3 nh\u1eadn di\u1ec7n h\u00f3a \u0111\u01a1n", "Total needs review" to "C\u1ea7n ki\u1ec3m tra t\u1ed5ng ti\u1ec1n",
     "Save to Money Studio" to "L\u01b0u v\u00e0o S\u1ed5 chi ti\u00eau", "Add page" to "Th\u00eam trang", "New document" to "T\u00e0i li\u1ec7u m\u1edbi",
+    "PDF toolbox" to "B\u1ed9 c\u00f4ng c\u1ee5 PDF", "Add PDFs" to "Th\u00eam PDF", "Merge PDFs" to "G\u1ed9p PDF", "Clear PDFs" to "X\u00f3a danh s\u00e1ch PDF",
+    "From page" to "T\u1eeb trang", "To page" to "\u0110\u1ebfn trang", "Extract pages" to "T\u00e1ch trang", "Compress PDF" to "N\u00e9n PDF",
+    "Signer name" to "T\u00ean ng\u01b0\u1eddi k\u00fd", "Page" to "Trang", "Sign PDF" to "K\u00fd PDF",
+    "Visual signature only; it is not a certificate-backed digital signature." to "Ch\u1ec9 l\u00e0 ch\u1eef k\u00fd hi\u1ec3n th\u1ecb; kh\u00f4ng ph\u1ea3i ch\u1eef k\u00fd s\u1ed1 c\u00f3 ch\u1ee9ng th\u01b0.",
+    "Merge, split, compress or add a visual signature without uploading the file. Imported PDFs are flattened into safer local copies." to "G\u1ed9p, t\u00e1ch, n\u00e9n ho\u1eb7c th\u00eam ch\u1eef k\u00fd hi\u1ec3n th\u1ecb m\u00e0 kh\u00f4ng t\u1ea3i t\u1ec7p l\u00ean m\u1ea1ng. PDF nh\u1eadp v\u00e0o \u0111\u01b0\u1ee3c l\u00e0m ph\u1eb3ng th\u00e0nh b\u1ea3n sao an to\u00e0n h\u01a1n tr\u00ean m\u00e1y.",
 )
 
 private val zh = mapOf(
@@ -89,6 +94,11 @@ private val zh = mapOf(
     "Previous" to "\u4e0a\u4e00\u9875", "Next" to "\u4e0b\u4e00\u9875", "Delete page" to "\u5220\u9664\u9875\u9762",
     "Receipt detected" to "\u5df2\u8bc6\u522b\u6536\u636e", "Total needs review" to "\u8bf7\u6838\u5bf9\u603b\u989d",
     "Save to Money Studio" to "\u4fdd\u5b58\u5230\u8bb0\u8d26\u672c", "Add page" to "\u6dfb\u52a0\u9875\u9762", "New document" to "\u65b0\u5efa\u6587\u6863",
+    "PDF toolbox" to "PDF \u5de5\u5177\u7bb1", "Add PDFs" to "\u6dfb\u52a0 PDF", "Merge PDFs" to "\u5408\u5e76 PDF", "Clear PDFs" to "\u6e05\u7a7a PDF",
+    "From page" to "\u8d77\u59cb\u9875", "To page" to "\u7ed3\u675f\u9875", "Extract pages" to "\u63d0\u53d6\u9875\u9762", "Compress PDF" to "\u538b\u7f29 PDF",
+    "Signer name" to "\u7b7e\u540d\u4eba", "Page" to "\u9875\u7801", "Sign PDF" to "\u7b7e\u7f72 PDF",
+    "Visual signature only; it is not a certificate-backed digital signature." to "\u4ec5\u4e3a\u53ef\u89c6\u7b7e\u540d\uff0c\u4e0d\u662f\u7531\u8bc1\u4e66\u652f\u6301\u7684\u6570\u5b57\u7b7e\u540d\u3002",
+    "Merge, split, compress or add a visual signature without uploading the file. Imported PDFs are flattened into safer local copies." to "\u65e0\u9700\u4e0a\u4f20\u5373\u53ef\u5408\u5e76\u3001\u62c6\u5206\u3001\u538b\u7f29\u6216\u6dfb\u52a0\u53ef\u89c6\u7b7e\u540d\u3002\u5bfc\u5165\u7684 PDF \u4f1a\u5728\u672c\u673a\u8f6c\u4e3a\u66f4\u5b89\u5168\u7684\u6241\u5e73\u526f\u672c\u3002",
 )
 
 private val viMore = mapOf(

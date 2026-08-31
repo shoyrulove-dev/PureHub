@@ -1,7 +1,7 @@
 {
   "name": "purehub-pwa",
   "private": true,
-  "version": "1.0.0-beta.39",
+  "version": "1.0.0-beta.40",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -23,6 +23,7 @@
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
     "lucide-react": "^1.24.0",
+    "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

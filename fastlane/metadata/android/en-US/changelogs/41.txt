@@ -1,0 +1,1 @@
+Document Suite adds a private PDF toolbox for merging files, extracting page ranges, producing smaller flattened copies, and adding a clearly labelled visual signature. All operations run locally on Android and in the PWA. Visual signatures are not certificate-backed digital signatures.

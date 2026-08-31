@@ -7,7 +7,11 @@ import {
   FileImage,
   FileText,
   ImagePlus,
+  Files,
+  Minimize2,
+  PenLine,
   ScanText,
+  Scissors,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -26,6 +30,7 @@ type Page = {
   filter: "original" | "document";
   recognizedText?: string;
 };
+type ImportedPdf = { id: string; file: File; pageCount: number };
 const DOCUMENT_HANDOFF_KEY = "purehub.document-suite.ocr-handoff.v1";
 
 function safeName(value: string) {
@@ -74,9 +79,15 @@ export default function DocumentSuiteSurface() {
   const [quality, setQuality] = useState(0.86);
   const [status, setStatus] = useState("Add images to build a private PDF.");
   const [busy, setBusy] = useState(false);
+  const [pdfFiles, setPdfFiles] = useState<ImportedPdf[]>([]);
+  const [rangeStart, setRangeStart] = useState("1");
+  const [rangeEnd, setRangeEnd] = useState("1");
+  const [signer, setSigner] = useState("");
+  const [signaturePage, setSignaturePage] = useState("1");
   const [draggingId, setDraggingId] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const pagesRef = useRef<Page[]>([]);
   useEffect(() => {
     pagesRef.current = pages;
@@ -148,6 +159,96 @@ export default function DocumentSuiteSurface() {
     ]);
     setStatus(`${pages.length + accepted.length} page(s) staged locally.`);
   };
+  const addPdfs = async (files: FileList | null) => {
+    const selected = Array.from(files ?? [])
+      .filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))
+      .slice(0, 8 - pdfFiles.length);
+    if (!selected.length) return;
+    setBusy(true);
+    setStatus(`Opening ${selected.length} PDF file(s) locally...`);
+    try {
+      const { PDFDocument } = await import("pdf-lib");
+      const opened: ImportedPdf[] = [];
+      for (const file of selected) {
+        if (file.size > 60 * 1024 * 1024) throw new Error(`${file.name} is larger than the 60 MB safety limit.`);
+        const source = await PDFDocument.load(await file.arrayBuffer());
+        opened.push({ id: crypto.randomUUID(), file, pageCount: source.getPageCount() });
+      }
+      setPdfFiles((current) => [...current, ...opened]);
+      if (!pdfFiles.length && opened[0]) setRangeEnd(String(opened[0].pageCount));
+      setStatus(`${opened.length} PDF file(s) opened locally. No document was uploaded.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "One of the PDFs could not be opened.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const downloadPdfBytes = (bytes: Uint8Array, suffix: string) => {
+    const blob = new Blob([bytes.slice().buffer], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeName(title)}-${suffix}.pdf`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 800);
+  };
+  const runPdfTool = async (label: string, operation: () => Promise<Uint8Array>, suffix: string) => {
+    setBusy(true);
+    setStatus(`${label} on this device...`);
+    try {
+      const bytes = await operation();
+      downloadPdfBytes(bytes, suffix);
+      setStatus(`${label} complete. No PDF was uploaded.`);
+    } catch {
+      setStatus("The PDF operation failed. Password-protected or damaged files may not be supported.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const mergePdfs = () => runPdfTool("Merging PDFs", async () => {
+    const { PDFDocument } = await import("pdf-lib");
+    const output = await PDFDocument.create();
+    for (const item of pdfFiles) {
+      const source = await PDFDocument.load(await item.file.arrayBuffer());
+      const copied = await output.copyPages(source, source.getPageIndices());
+      copied.forEach((page) => output.addPage(page));
+    }
+    output.setTitle(title); output.setCreator("PureHub Document Suite");
+    return output.save({ useObjectStreams: true });
+  }, "merged");
+  const extractPages = () => runPdfTool("Extracting pages", async () => {
+    const { PDFDocument } = await import("pdf-lib");
+    const item = pdfFiles[0];
+    const source = await PDFDocument.load(await item.file.arrayBuffer());
+    const first = Math.max(1, Math.min(source.getPageCount(), Number(rangeStart) || 1));
+    const last = Math.max(first, Math.min(source.getPageCount(), Number(rangeEnd) || source.getPageCount()));
+    const output = await PDFDocument.create();
+    const copied = await output.copyPages(source, Array.from({ length: last - first + 1 }, (_, index) => first - 1 + index));
+    copied.forEach((page) => output.addPage(page));
+    return output.save({ useObjectStreams: true });
+  }, "pages");
+  const compressPdf = () => runPdfTool("Optimizing PDF", async () => {
+    const { PDFDocument } = await import("pdf-lib");
+    const source = await PDFDocument.load(await pdfFiles[0].file.arrayBuffer(), { updateMetadata: false });
+    source.setProducer("PureHub local PDF optimizer");
+    return source.save({ useObjectStreams: true, addDefaultPage: false, objectsPerTick: 40 });
+  }, "compressed");
+  const signPdf = () => runPdfTool("Adding visual signature", async () => {
+    const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+    const source = await PDFDocument.load(await pdfFiles[0].file.arrayBuffer());
+    const index = Math.max(0, Math.min(source.getPageCount() - 1, (Number(signaturePage) || 1) - 1));
+    const page = source.getPage(index);
+    const font = await source.embedFont(StandardFonts.HelveticaOblique);
+    const label = signer.trim().slice(0, 42);
+    const width = Math.min(220, page.getWidth() * .42);
+    const x = page.getWidth() - width - 28;
+    const y = 30;
+    page.drawRectangle({ x, y, width, height: 70, borderColor: rgb(.06, .46, .43), borderWidth: 1.2, opacity: .96 });
+    page.drawText("SIGNED LOCALLY BY PUREHUB", { x: x + 10, y: y + 51, size: 7, color: rgb(.06, .46, .43) });
+    page.drawText(label, { x: x + 10, y: y + 27, size: 17, font, color: rgb(.06, .09, .16), maxWidth: width - 20 });
+    page.drawText(new Date().toISOString().slice(0, 10), { x: x + 10, y: y + 9, size: 7, color: rgb(.06, .46, .43) });
+    return source.save({ useObjectStreams: true });
+  }, "signed");
   const update = (id: string, values: Partial<Page>) =>
     setPages((current) =>
       current.map((page) => (page.id === id ? { ...page, ...values } : page)),
@@ -344,6 +445,13 @@ export default function DocumentSuiteSurface() {
           placeholder="Document title"
           aria-label="Document title"
         />
+        <section className="space-y-3 rounded-2xl border border-violet-200 bg-violet-50/60 p-3.5 dark:border-violet-900 dark:bg-violet-950/25">
+          <div><strong className="flex items-center gap-2"><Files className="size-4 text-violet-700" />PDF toolbox</strong><p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Merge, extract, optimize or add a visual signature entirely in this browser.</p></div>
+          <div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={busy || pdfFiles.length >= 8} onClick={() => pdfInputRef.current?.click()}>Add PDFs</ActionButton><ActionButton tone="muted" disabled={busy || pdfFiles.length < 2} onClick={() => void mergePdfs()}><Files className="size-4" />Merge</ActionButton></div>
+          <input ref={pdfInputRef} hidden multiple type="file" accept="application/pdf,.pdf" onChange={(event) => { void addPdfs(event.target.files); event.target.value = ""; }} />
+          {pdfFiles.map((item, index) => <div key={item.id} className="flex items-center gap-2 rounded-xl bg-white p-2.5 text-xs dark:bg-slate-900"><FileText className="size-4 shrink-0 text-violet-600" /><span className="min-w-0 flex-1 truncate"><b>{index + 1}. {item.file.name}</b><br />{item.pageCount} pages · {Math.ceil(item.file.size / 1024)} KB</span><button title="Remove PDF" onClick={() => setPdfFiles((current) => current.filter((row) => row.id !== item.id))} className="grid size-8 place-items-center text-rose-600"><Trash2 className="size-4" /></button></div>)}
+          {pdfFiles[0] ? <><div className="grid grid-cols-2 gap-2"><FormInput inputMode="numeric" value={rangeStart} onChange={(event) => setRangeStart(event.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="From page" aria-label="From page" /><FormInput inputMode="numeric" value={rangeEnd} onChange={(event) => setRangeEnd(event.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="To page" aria-label="To page" /></div><div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={busy} onClick={() => void extractPages()}><Scissors className="size-4" />Extract</ActionButton><ActionButton tone="muted" disabled={busy} onClick={() => void compressPdf()}><Minimize2 className="size-4" />Compress</ActionButton></div><div className="grid grid-cols-[1fr_5rem] gap-2"><FormInput value={signer} onChange={(event) => setSigner(event.target.value.slice(0, 42))} placeholder="Signer name" aria-label="Signer name" /><FormInput inputMode="numeric" value={signaturePage} onChange={(event) => setSignaturePage(event.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="Page" aria-label="Signature page" /></div><ActionButton className="w-full justify-center" disabled={busy || !signer.trim()} onClick={() => void signPdf()}><PenLine className="size-4" />Add visual signature</ActionButton><p className="text-[11px] leading-4 text-slate-500">Visual signature only; it is not a certificate-backed digital signature. Compression optimizes PDF structure and may not shrink files that are already optimized.</p></> : null}
+        </section>
         <div className="grid grid-cols-2 gap-2">
           <ActionButton onClick={() => cameraRef.current?.click()}>
             <Camera className="mr-2 inline size-4" />
