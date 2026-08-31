@@ -20,8 +20,8 @@ android {
         applicationId = "com.purehub.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 41
-        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.40"
+        versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 42
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.41"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
@@ -79,9 +79,13 @@ android {
     productFlavors {
         create("standard") {
             dimension = "distribution"
+            buildConfigField("boolean", "INTERNET_ENABLED", "true")
+            buildConfigField("boolean", "MINIGAME_ENABLED", "true")
         }
         create("fdroid") {
             dimension = "distribution"
+            buildConfigField("boolean", "INTERNET_ENABLED", "false")
+            buildConfigField("boolean", "MINIGAME_ENABLED", "false")
         }
     }
 

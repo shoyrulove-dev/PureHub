@@ -1,9 +1,9 @@
 package com.purehub.app.feature.cleaner
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.net.Uri
-import android.provider.MediaStore
+import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import java.io.InputStream
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
@@ -34,13 +34,17 @@ class CleanerRepository(
     private val contentResolver: ContentResolver,
 ) {
     suspend fun scan(
+        selectedUris: List<Uri>,
         onProgress: suspend (String) -> Unit,
     ): CleanerScanResult = withContext(Dispatchers.IO) {
-        onProgress("Scanning large media files")
-        val largeFiles = queryLargeFiles()
+        onProgress("Reading files selected in Android")
+        val selectedFiles = selectedUris.distinct().mapNotNull(::readSelectedFile)
+        val largeFiles = selectedFiles.filter { it.sizeBytes >= LARGE_FILE_THRESHOLD_BYTES }
 
-        onProgress("Analyzing exact duplicate photos and videos")
-        val duplicateGroups = queryDuplicateMedia()
+        onProgress("Analyzing byte-for-byte duplicates")
+        val duplicateGroups = findDuplicateGroups(selectedFiles) { file ->
+            hashFile(contentResolver.openInputStream(file.contentUri))
+        }
 
         CleanerScanResult(
             largeFiles = largeFiles.sortedByDescending { it.sizeBytes },
@@ -58,106 +62,27 @@ class CleanerRepository(
         }
     }
 
-    private fun queryLargeFiles(): List<CleanerFileItem> {
-        val collection = MediaStore.Files.getContentUri("external")
-        val projection = arrayOf(
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.DISPLAY_NAME,
-            MediaStore.Files.FileColumns.SIZE,
-            MediaStore.Files.FileColumns.MIME_TYPE,
-            MediaStore.Files.FileColumns.DATE_MODIFIED,
-        )
-        val selection = buildString {
-            append("${MediaStore.Files.FileColumns.SIZE} >= ? AND ")
-            append("${MediaStore.Files.FileColumns.MEDIA_TYPE} IN (?, ?, ?)")
-        }
-        val args = arrayOf(
-            LARGE_FILE_THRESHOLD_BYTES.toString(),
-            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
-            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString(),
-            MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO.toString(),
-        )
-
-        return buildList {
-            contentResolver.query(
-                collection,
-                projection,
-                selection,
-                args,
-                "${MediaStore.Files.FileColumns.SIZE} DESC",
-            )?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
-                val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE)
-                val modifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
-
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    add(
-                        CleanerFileItem(
-                            id = id,
-                            name = cursor.getString(nameColumn).orEmpty(),
-                            sizeBytes = cursor.getLong(sizeColumn),
-                            mimeType = cursor.getString(mimeColumn).orEmpty(),
-                            modifiedAtSeconds = cursor.getLong(modifiedColumn),
-                            contentUri = ContentUris.withAppendedId(collection, id),
-                        ),
-                    )
-                }
+    private fun readSelectedFile(uri: Uri): CleanerFileItem? {
+        val projection = arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE, DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+        return runCatching {
+            contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                if (!cursor.moveToFirst()) return@use null
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                val modifiedIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                CleanerFileItem(
+                    id = uri.toString().hashCode().toLong(),
+                    name = if (nameIndex >= 0) cursor.getString(nameIndex).orEmpty() else uri.lastPathSegment.orEmpty(),
+                    sizeBytes = if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) cursor.getLong(sizeIndex) else 0L,
+                    mimeType = contentResolver.getType(uri).orEmpty(),
+                    modifiedAtSeconds = if (modifiedIndex >= 0 && !cursor.isNull(modifiedIndex)) cursor.getLong(modifiedIndex) / 1000L else 0L,
+                    contentUri = uri,
+                )
             }
-        }
+        }.getOrNull()
     }
 
-    private fun queryDuplicateMedia(): List<DuplicateImageGroup> {
-        val collection = MediaStore.Files.getContentUri("external")
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.MIME_TYPE,
-            MediaStore.Images.Media.DATE_MODIFIED,
-        )
-
-        val media = buildList {
-            contentResolver.query(
-                collection,
-                projection,
-                "${MediaStore.Files.FileColumns.MEDIA_TYPE} IN (?, ?)",
-                arrayOf(
-                    MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
-                    MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString(),
-                ),
-                "${MediaStore.Images.Media.SIZE} DESC",
-            )?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
-                val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
-                val modifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
-
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    add(
-                        CleanerFileItem(
-                            id = id,
-                            name = cursor.getString(nameColumn).orEmpty(),
-                            sizeBytes = cursor.getLong(sizeColumn),
-                            mimeType = cursor.getString(mimeColumn).orEmpty(),
-                            modifiedAtSeconds = cursor.getLong(modifiedColumn),
-                            contentUri = ContentUris.withAppendedId(collection, id),
-                        ),
-                    )
-                }
-            }
-        }
-
-        return findDuplicateGroups(media) { file ->
-            hashImage(contentResolver.openInputStream(file.contentUri))
-        }
-    }
-
-    private fun hashImage(inputStream: InputStream?): String? {
+    private fun hashFile(inputStream: InputStream?): String? {
         inputStream ?: return null
         return runCatching {
             inputStream.use { stream ->

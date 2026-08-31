@@ -6,12 +6,12 @@ This dossier tracks the signed GitHub release, direct submission to the official
 
 - App: PureHub
 - Application ID: `com.purehub.app`
-- Version: `1.0.0-beta.40`
-- Version code: `41`
+- Version: `1.0.0-beta.41`
+- Version code: `42`
 - License: MIT
 - Source: <https://github.com/shoyrulove-dev/PureHub>
-- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.40>
-- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.40/PureHub-1.0.0-beta.40-fdroid.apk>
+- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.41>
+- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.41/PureHub-1.0.0-beta.41-fdroid.apk>
 - Checksums: `SHA256SUMS.txt` on the same release
 - Website: <https://hub.blissbiovn.com/en>
 - Issue tracker: <https://github.com/shoyrulove-dev/PureHub/issues>
@@ -55,7 +55,7 @@ Requirements: Git, JDK 17, and Android SDK API 36.
 
 git clone https://github.com/shoyrulove-dev/PureHub.git
 cd PureHub
-git checkout v1.0.0-beta.40
+git checkout v1.0.0-beta.41
 ./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidRelease
 ./gradlew app:dependencies --configuration fdroidReleaseRuntimeClasspath > fdroid-dependencies.txt
 ! grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt

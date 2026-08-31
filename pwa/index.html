@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      (() => {
+        const url = new URL(window.location.href);
+        const ticket = url.searchParams.get('ticket');
+        if (!ticket) return;
+        sessionStorage.setItem('purehub:minigame-ticket', ticket);
+        url.searchParams.delete('ticket');
+        url.searchParams.delete('source');
+        history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+      })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7G3YP003F4"></script>
     <script>

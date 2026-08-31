@@ -1,6 +1,7 @@
 package com.purehub.app.feature.cleaner
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,9 +48,11 @@ class CleanerViewModel(
 
     private val _uiState = MutableStateFlow(CleanerUiState())
     val uiState: StateFlow<CleanerUiState> = _uiState.asStateFlow()
+    private var selectedUris: List<Uri> = emptyList()
 
-    fun startScan() {
+    fun startScan(uris: List<Uri> = selectedUris) {
         if (_uiState.value.isScanning) return
+        selectedUris = uris
 
         viewModelScope.launch {
             _uiState.update {
@@ -64,7 +67,7 @@ class CleanerViewModel(
             }
 
             runCatching {
-                repository.scan { progress ->
+                repository.scan(selectedUris) { progress ->
                     _uiState.update { state ->
                         state.copy(statusMessage = progress)
                     }

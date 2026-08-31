@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.BuildConfig
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +45,15 @@ fun PermissionCenterCard() {
                 Icon(Icons.Rounded.AdminPanelSettings, null, tint = MaterialTheme.colorScheme.primary)
                 LocalizedText("Permission Center", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
-            LocalizedText("Permissions are requested only from the tool that needs them. PureHub has no INTERNET permission.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LocalizedText(
+                if (BuildConfig.INTERNET_ENABLED) {
+                    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame."
+                } else {
+                    "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             permissions.forEach { item ->
                 val granted = ContextCompat.checkSelfPermission(context, item.permission) == PackageManager.PERMISSION_GRANTED
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {

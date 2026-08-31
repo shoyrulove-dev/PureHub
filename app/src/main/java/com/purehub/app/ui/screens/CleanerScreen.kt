@@ -1,12 +1,8 @@
 package com.purehub.app.ui.screens
 
-import android.Manifest
-import android.app.Activity
-import android.content.pm.PackageManager
-import android.os.Build
-import android.provider.MediaStore
+import android.content.Context
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +21,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.purehub.app.feature.cleaner.CleanerFileItem
@@ -53,43 +48,36 @@ fun CleanerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
-    var permissionMessage by remember { mutableStateOf<String?>(null) }
     var activeView by remember { mutableStateOf(CleanerView.OVERVIEW) }
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var confirmDelete by remember { mutableStateOf(false) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        if (result.values.all { it }) {
-            permissionMessage = null
-            viewModel.startScan()
-            scope.launch { snackbar.showSnackbar("Media access granted. Scan stays on this device.") }
-        } else permissionMessage = "Allow visible media access to review large files and exact duplicate photos or videos."
-    }
-    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.clearSelection()
-            viewModel.startScan()
-            scope.launch { snackbar.showSnackbar("Android removed the files you approved.") }
+    val filePicker = rememberLauncherForActivityResult(object : ActivityResultContracts.OpenMultipleDocuments() {
+        override fun createIntent(context: Context, input: Array<String>): Intent =
+            super.createIntent(context, input).addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+    }) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.forEach { uri ->
+                runCatching {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                    )
+                }
+            }
+            viewModel.startScan(uris)
+            scope.launch { snackbar.showSnackbar("Selected files stay on this device.") }
         }
     }
 
     fun launchScan() {
-        val permissions = cleanerPermissions()
-        if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-            permissionMessage = null
-            viewModel.startScan()
-        } else permissionLauncher.launch(permissions.toTypedArray())
+        filePicker.launch(arrayOf("*/*"))
     }
     fun deleteApprovedFiles() {
         val uris = uiState.selectedFiles.map { it.contentUri }
         if (uris.isEmpty()) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val request = MediaStore.createDeleteRequest(context.contentResolver, uris)
-            deleteLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
-        } else {
-            viewModel.deleteSelectedFiles()
-            scope.launch { snackbar.showSnackbar("Approved files were submitted for deletion.") }
-        }
+        viewModel.deleteSelectedFiles()
+        scope.launch { snackbar.showSnackbar("Approved files were submitted for deletion.") }
     }
 
     if (confirmDelete) AlertDialog(
@@ -112,7 +100,7 @@ fun CleanerScreen(
                     FlagshipSuiteHeader(
                         eyebrow = "Storage Care flagship",
                         title = "Deep Cleaner",
-                        description = "Scan visible media locally, review exact evidence, and approve every deletion yourself.",
+                        description = "Choose files with Android, review exact evidence locally, and approve every deletion yourself.",
                     )
                     SuiteModeSwitch(
                         mode = mode,
@@ -133,7 +121,6 @@ fun CleanerScreen(
                     detail = "Hashes are calculated locally. PureHub never uploads media or silently selects personal files.",
                 )
             }
-            permissionMessage?.let { item { NoticeCard(it) } }
             uiState.errorMessage?.let { item { NoticeCard(it) } }
             if (mode == SuiteMode.PRO) item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -144,7 +131,7 @@ fun CleanerScreen(
             }
 
             if (!uiState.isScanning && uiState.largeFiles.isEmpty() && uiState.duplicateGroups.isEmpty()) item {
-                EmptyCleanerCard("Ready for a private scan", "PureHub only reads media Android lets you see. It does not inspect app data, messages, passwords, or system files.")
+                EmptyCleanerCard("Ready for a private scan", "Choose the files you want to review. PureHub does not request broad photo or video access and never inspects app data, messages, passwords, or system files.")
             }
 
             if (activeView != CleanerView.LARGE_FILES && uiState.duplicateGroups.isNotEmpty()) {
@@ -271,7 +258,9 @@ private fun CleanerFileCard(file: CleanerFileItem, selected: Boolean, toggle: ()
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 LocalizedText(file.name.ifBlank { "Unnamed file" }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 LocalizedText("${formatBytes(file.sizeBytes)} · ${friendlyType(file.mimeType)}", style = MaterialTheme.typography.bodySmall)
-                LocalizedText("Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (file.modifiedAtSeconds > 0) {
+                    LocalizedText("Updated ${Instant.ofEpochSecond(file.modifiedAtSeconds).atZone(ZoneId.systemDefault()).format(formatter)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }
@@ -303,10 +292,6 @@ private fun DuplicateGroupCard(group: DuplicateImageGroup, selectedIds: Set<Long
         }
     }
 }
-
-private fun cleanerPermissions() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO)
-} else listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 
 private fun friendlyType(mime: String) = when {
     mime.startsWith("image/") -> "Image"; mime.startsWith("video/") -> "Video"; mime.startsWith("audio/") -> "Audio"

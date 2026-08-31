@@ -234,6 +234,11 @@ private val zhMore = mapOf(
 )
 
 private val viAudit = mapOf(
+    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." to "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chủ động chọn tính năng kết nối như cập nhật, Cộng đồng hoặc Minigame.",
+    "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." to "Quyền chỉ được yêu cầu bởi công cụ cần dùng. Bản F-Droid này không có quyền INTERNET.",
+    "Choose files with Android, review exact evidence locally, and approve every deletion yourself." to "Chọn tệp bằng Android, xem bằng chứng ngay trên máy và tự xác nhận từng lần xóa.",
+    "Choose the files you want to review. PureHub does not request broad photo or video access and never inspects app data, messages, passwords, or system files." to "Chọn các tệp bạn muốn kiểm tra. PureHub không xin quyền truy cập toàn bộ ảnh/video và không đọc dữ liệu ứng dụng, tin nhắn, mật khẩu hay tệp hệ thống.",
+    "Selected files stay on this device." to "Các tệp đã chọn vẫn nằm trên thiết bị này.",
     "Community flagship" to "Cộng đồng nổi bật", "PureHub belongs to everyone" to "PureHub thuộc về mọi người",
     "Join the conversation, report issues and shape free, no-ad, open-source tools together." to "Cùng thảo luận, báo lỗi và xây dựng bộ công cụ miễn phí, không quảng cáo, mã nguồn mở.",
     "Zen Suite flagship" to "Bộ thư giãn nổi bật", "Sensor Suite" to "Bộ cảm biến", "Document Suite" to "Bộ tài liệu", "Security Suite flagship" to "Bộ bảo mật nổi bật",
@@ -298,6 +303,11 @@ private val viAudit = mapOf(
 )
 
 private val zhAudit = mapOf(
+    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." to "PureHub 优先离线运行。仅当你主动使用更新、社区或小游戏等联网功能时才使用网络。",
+    "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." to "仅由需要的工具请求权限。此 F-Droid 版本没有 INTERNET 权限。",
+    "Choose files with Android, review exact evidence locally, and approve every deletion yourself." to "通过 Android 选择文件，在本机查看明确依据，并亲自确认每次删除。",
+    "Choose the files you want to review. PureHub does not request broad photo or video access and never inspects app data, messages, passwords, or system files." to "请选择要检查的文件。PureHub 不会请求全部照片或视频权限，也不会读取应用数据、消息、密码或系统文件。",
+    "Selected files stay on this device." to "所选文件始终留在此设备上。",
     "Community flagship" to "旗舰社区", "PureHub belongs to everyone" to "PureHub 属于每个人", "Join the conversation, report issues and shape free, no-ad, open-source tools together." to "参与讨论、报告问题，共同打造免费、无广告的开源工具。",
     "Zen Suite flagship" to "旗舰禅意套件", "Sensor Suite" to "传感器套件", "Document Suite" to "文档套件", "Security Suite flagship" to "旗舰安全套件",
     "Private Finance flagship" to "旗舰私密财务", "Private Finance Suite" to "私密财务套件", "Money Studio" to "财务工具", "Creative Suite flagship" to "旗舰创意套件",

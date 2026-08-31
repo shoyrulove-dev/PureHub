@@ -87,7 +87,7 @@ fun CommunityScreen(
             )
         }
 
-        if (BuildConfig.FLAVOR != "fdroid") {
+        if (BuildConfig.MINIGAME_ENABLED) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(20.dp),

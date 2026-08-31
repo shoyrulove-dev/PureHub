@@ -139,7 +139,7 @@ export function DownloadPage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="promise-card"><ShieldCheck className="size-5 text-emerald-500" /><span>Signed release builds</span></div>
-        <div className="promise-card"><CheckCircle2 className="size-5 text-sky-500" /><span>No ads or trackers</span></div>
+        <div className="promise-card"><CheckCircle2 className="size-5 text-sky-500" /><span>No ads or data sales</span></div>
         <div className="promise-card"><FileArchive className="size-5 text-violet-500" /><span>Source available on GitHub</span></div>
       </div>
 
