@@ -5,7 +5,8 @@ import {
   LoaderCircle, LockKeyhole, Mail, Phone, RotateCw, ScanText, Search, Share2,
   ShieldCheck, Sparkles, Trash2,
 } from 'lucide-react'
-import { ocrDocumentRepository, type OcrDocumentRecord } from '../../../lib/db/purehub-db'
+import { expenseRepository, ocrDocumentRepository, type ExpenseRecord, type OcrDocumentRecord } from '../../../lib/db/purehub-db'
+import { parseReceiptText } from '../../../lib/receipt-ocr'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 import { trackProductEvent } from '../../../lib/community-api'
@@ -32,7 +33,6 @@ function cleanText(value: string, mode: ScanMode) {
 function combinedText(pages: OcrPage[], current: string) {
   if (!pages.length) return current.trim()
   const values = pages.map((page) => page.text)
-  if (current.trim()) values[values.length - 1] = current.trim()
   return values.map((value, index) => values.length > 1 ? `Page ${index + 1}\n${value}` : value).join('\n\n')
 }
 
@@ -92,6 +92,7 @@ export default function OcrTextSurface() {
   const [rotation, setRotation] = useState(0)
   const [crop, setCrop] = useState(.02)
   const [pages, setPages] = useState<OcrPage[]>([])
+  const [selectedPageIndex, setSelectedPageIndex] = useState(-1)
   const [ocrText, setOcrText] = useState('')
   const [title, setTitle] = useState('My scan')
   const [status, setStatus] = useState('Ready. Capture a page or choose an image.')
@@ -110,16 +111,18 @@ export default function OcrTextSurface() {
   useEffect(() => { pagesRef.current = pages }, [pages])
   useEffect(() => () => pagesRef.current.forEach((page) => URL.revokeObjectURL(page.previewUrl)), [])
 
-  const currentPreview = pages.at(-1)?.previewUrl
+  const currentPage = pages[selectedPageIndex] ?? pages.at(-1)
+  const currentPreview = currentPage?.previewUrl
   const allText = useMemo(() => combinedText(pages, ocrText), [pages, ocrText])
   const filteredDocuments = useMemo(() => documents.filter((item) => !query || item.title.toLowerCase().includes(query.toLowerCase()) || item.text.toLowerCase().includes(query.toLowerCase())), [documents, query])
   const detectedUrl = ocrText.match(/https?:\/\/\S+/i)?.[0]?.replace(/[.,)]$/, '')
   const detectedEmail = ocrText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]
   const detectedPhone = ocrText.match(/(?:\+?\d[\d .-]{7,}\d)/)?.[0]
+  const detectedReceipt = useMemo(() => mode === 'Receipt' && ocrText.trim() ? parseReceiptText(ocrText) : null, [mode, ocrText])
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>, source: string) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const files = Array.from(event.target.files ?? []).slice(0, Math.max(0, 20 - pages.length))
+    if (!files.length) return
     if (pages.length >= 20) {
       setStatus('A scan can contain up to 20 pages. Export this document before starting another.')
       event.target.value = ''
@@ -128,7 +131,6 @@ export default function OcrTextSurface() {
     setRunning(true)
     setStatus(`Preparing ${mode.toLowerCase()} locally...`)
     try {
-      const prepared = await prepareImage(file, rotation, crop, filter)
       setStatus(`Loading the ${OCR_LANGUAGES.find((item) => item.code === language)?.label} OCR pack...`)
       setPackProgress(0)
       const { createWorker, OEM } = await import('tesseract.js')
@@ -144,19 +146,25 @@ export default function OcrTextSurface() {
           localStorage.setItem(OCR_PACK_CACHE_KEY, JSON.stringify(next))
           return next
         })
-        setStatus('Recognizing text on this device...')
-        const result = await worker.recognize(prepared.blob)
-        const text = cleanText(result.data.text, mode)
-        if (!text) {
-          URL.revokeObjectURL(prepared.previewUrl)
-          setStatus('No readable text found. Try better light or a tighter crop.')
-        } else {
-          const nextPage = { id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source, confidence: Math.round(result.data.confidence ?? 0) }
-          setPages((current) => [...current, nextPage])
-          setOcrText(text)
-          setStatus('Text extracted privately. Review it before export.')
+        const nextPages: OcrPage[] = []
+        for (let index = 0; index < files.length; index += 1) {
+          setStatus(`Recognizing image ${index + 1}/${files.length} on this device...`)
+          const prepared = await prepareImage(files[index], rotation, crop, filter)
+          const result = await worker.recognize(prepared.blob)
+          const text = cleanText(result.data.text, mode)
+          if (!text) URL.revokeObjectURL(prepared.previewUrl)
+          else nextPages.push({ id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source: files.length > 1 ? `Batch image ${index + 1}` : source, confidence: Math.round(result.data.confidence ?? 0) })
+        }
+        if (nextPages.length) {
+          setPages((current) => [...current, ...nextPages])
+          const nextIndex = pages.length + nextPages.length - 1
+          setSelectedPageIndex(nextIndex)
+          setOcrText(nextPages.at(-1)?.text ?? '')
+          setStatus(`Batch OCR finished: ${nextPages.length}/${files.length} readable page(s). Review before export.`)
           setTab('text')
-          markToolSuccess('ocr-text', { headline: 'Text extracted locally', detail: `${nextPage.confidence}% recognition confidence. Review the text before exporting or sharing.`, shareText: 'I turned an image into editable text locally with PureHub.' })
+          markToolSuccess('ocr-text', { headline: 'Text extracted locally', detail: `${nextPages.length} page(s) recognized locally. Review the text before exporting or sharing.`, shareText: 'I turned images into editable text locally with PureHub.' })
+        } else {
+          setStatus('No readable text found. Try better light or a tighter crop.')
         }
       } finally {
         await worker.terminate()
@@ -168,6 +176,42 @@ export default function OcrTextSurface() {
       setPackProgress(0)
       event.target.value = ''
     }
+  }
+
+  const selectPage = (index: number) => {
+    const page = pages[index]
+    if (!page) return
+    setSelectedPageIndex(index)
+    setOcrText(page.text)
+  }
+
+  const updateCurrentText = (value: string) => {
+    setOcrText(value)
+    if (selectedPageIndex >= 0) setPages((current) => current.map((page, index) => index === selectedPageIndex ? { ...page, text: value } : page))
+  }
+
+  const deleteCurrentPage = () => {
+    const target = pages[selectedPageIndex]
+    if (!target) return
+    URL.revokeObjectURL(target.previewUrl)
+    const next = pages.filter((_, index) => index !== selectedPageIndex)
+    setPages(next)
+    const nextIndex = Math.min(selectedPageIndex, next.length - 1)
+    setSelectedPageIndex(nextIndex)
+    setOcrText(next[nextIndex]?.text ?? '')
+    if (!next.length) setTab('scan')
+  }
+
+  const saveReceiptToMoneyStudio = async () => {
+    if (!detectedReceipt?.total) return
+    const record: ExpenseRecord = {
+      id: crypto.randomUUID(), title: detectedReceipt.merchant, amount: detectedReceipt.total,
+      category: 'Shopping', transactionType: 'expense', wallet: 'Cash',
+      note: [detectedReceipt.tax != null ? `Tax: ${detectedReceipt.tax}` : '', 'Imported from OCR Studio'].filter(Boolean).join(' · '),
+      createdAt: new Date().toISOString(),
+    }
+    await expenseRepository.put(record)
+    setStatus('Receipt saved to Money Studio. Review its category and wallet when convenient.')
   }
 
   const saveDocument = async () => {
@@ -220,7 +264,7 @@ export default function OcrTextSurface() {
 
   const resetDocument = () => {
     pages.forEach((page) => URL.revokeObjectURL(page.previewUrl))
-    setPages([]); setOcrText(''); setTitle('My scan'); setStatus('Ready for a new document.'); setTab('scan')
+    setPages([]); setSelectedPageIndex(-1); setOcrText(''); setTitle('My scan'); setStatus('Ready for a new document.'); setTab('scan')
   }
 
   return (
@@ -260,7 +304,7 @@ export default function OcrTextSurface() {
             <div className="grid grid-cols-2 gap-2">
               <ActionButton tone="muted" onClick={() => imageInputRef.current?.click()} disabled={running}><ImagePlus className="mr-2 inline size-4" />Scan image</ActionButton>
               <ActionButton tone="muted" onClick={() => setRotation((value) => (value + 90) % 360)} disabled={running}><RotateCw className="mr-2 inline size-4" />Rotate {rotation}°</ActionButton>
-              <input ref={imageInputRef} hidden type="file" accept="image/*" onChange={(event) => void handleFile(event, 'Image')} />
+              <input ref={imageInputRef} hidden multiple type="file" accept="image/*" onChange={(event) => void handleFile(event, 'Image')} />
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-950">
               <div className="flex items-center gap-2"><Sparkles className="size-4 text-emerald-600" /><p className="text-sm font-black text-slate-900 dark:text-white">Document cleanup</p></div>
@@ -276,14 +320,16 @@ export default function OcrTextSurface() {
         {tab === 'text' ? (
           ocrText ? <div className="space-y-3">
             {currentPreview ? <img src={currentPreview} alt="Scanned page" className="h-44 w-full rounded-2xl bg-slate-100 object-contain dark:bg-slate-950" /> : null}
-            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className={`rounded-full px-2.5 py-1 ${(pages.at(-1)?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{pages.at(-1)?.confidence ?? 0}% confidence</span></div>
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className={`rounded-full px-2.5 py-1 ${(currentPage?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage?.confidence ?? 0}% confidence</span></div>
+            {pages.length > 1 && selectedPageIndex >= 0 ? <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => selectPage(selectedPageIndex - 1)}>Previous</ActionButton><span className="text-xs font-black">Page {selectedPageIndex + 1}/{pages.length}</span><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => selectPage(selectedPageIndex + 1)}>Next</ActionButton></div> : null}
             <FormInput value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
-            <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => setOcrText(event.target.value)} aria-label="Recognized text" />
+            <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => updateCurrentText(event.target.value)} aria-label="Recognized text" />
             {detectedUrl || detectedEmail || detectedPhone ? <div className="flex flex-wrap gap-2 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/30"><span className="w-full text-xs font-black text-sky-900 dark:text-sky-200">QUICK ACTIONS</span>{detectedUrl ? <a className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={detectedUrl} target="_blank" rel="noreferrer">Open link</a> : null}{detectedEmail ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`mailto:${detectedEmail}`}><Mail className="size-3" />Email</a> : null}{detectedPhone ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`tel:${detectedPhone.replace(/[^+\d]/g, '')}`}><Phone className="size-3" />Call</a> : null}</div> : null}
+            {detectedReceipt ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><p className="text-xs font-black tracking-wide">RECEIPT DETECTED</p><p className="mt-1 font-bold">{detectedReceipt.merchant}</p><p className="text-lg font-black">{detectedReceipt.total != null ? `Total ${detectedReceipt.total}` : 'Total needs review'}</p><ActionButton className="mt-3 w-full justify-center" disabled={detectedReceipt.total == null} onClick={() => void saveReceiptToMoneyStudio()}>Save to Money Studio</ActionButton></div> : null}
             <div className="grid grid-cols-2 gap-2"><ActionButton onClick={() => void navigator.clipboard.writeText(ocrText)}><Clipboard className="mr-2 inline size-4" />Copy</ActionButton><ActionButton tone="muted" onClick={() => void shareText()}><Share2 className="mr-2 inline size-4" />Share</ActionButton></div>
             <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => downloadBlob(new Blob([allText], { type: 'text/plain;charset=utf-8' }), `${safeName(title)}.txt`)}><Download className="mr-1 inline size-4" />TXT</ActionButton><ActionButton tone="muted" onClick={() => void exportPdf()}><FileText className="mr-1 inline size-4" />PDF</ActionButton><ActionButton tone="muted" onClick={() => void saveDocument()}><History className="mr-1 inline size-4" />Save</ActionButton></div>
             <ActionButton className="w-full justify-center" onClick={() => void sendToDocumentSuite()}><ScanText className="size-4" />Continue in Doc to PDF</ActionButton>
-            <div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" onClick={() => setTab('scan')}>Add page</ActionButton><ActionButton tone="danger" onClick={resetDocument}>New document</ActionButton></div>
+            <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => setTab('scan')}>Add page</ActionButton><ActionButton tone="danger" disabled={!pages.length} onClick={deleteCurrentPage}>Delete page</ActionButton><ActionButton tone="danger" onClick={resetDocument}>New document</ActionButton></div>
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
           </div> : <div className="py-12 text-center"><FileText className="mx-auto size-12 text-emerald-600" /><h3 className="mt-3 text-lg font-black">No text yet</h3><p className="mt-1 text-sm text-slate-500">Capture a page or choose an image to begin.</p><ActionButton className="mt-4" onClick={() => setTab('scan')}>Start scanning</ActionButton></div>
         ) : null}
@@ -291,7 +337,7 @@ export default function OcrTextSurface() {
         {tab === 'library' ? <div className="space-y-3">
           <div className="flex items-center justify-between"><div><h3 className="text-lg font-black">Private library</h3><p className="text-sm text-slate-500">Searchable and stored only in this browser.</p></div>{documents.length ? <button title="Clear library" onClick={() => void ocrDocumentRepository.clear().then(() => setDocuments([]))} className="grid size-10 place-items-center rounded-xl border border-rose-200 text-rose-600"><Trash2 className="size-4" /></button> : null}</div>
           <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-slate-400" /><FormInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scans" className="pl-10" /></label>
-          {filteredDocuments.length ? filteredDocuments.map((item) => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FileImage className="size-5" /></span><button className="min-w-0 flex-1 text-left" onClick={() => { pages.forEach((page) => URL.revokeObjectURL(page.previewUrl)); setPages([]); setTitle(item.title); setOcrText(item.text); setStatus('Opened from your private OCR library.'); setTab('text') }}><strong className="block truncate text-sm">{item.title}</strong><span className="line-clamp-2 text-xs text-slate-500">{item.text.replace(/\s+/g, ' ')}</span><span className="mt-1 block text-[11px] font-bold text-emerald-700">{item.source}</span></button><button title="Delete" onClick={() => void ocrDocumentRepository.remove(item.id).then(() => setDocuments((current) => current.filter((row) => row.id !== item.id)))} className="grid size-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"><Trash2 className="size-4" /></button></article>) : <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-700">{documents.length ? 'No matching document.' : 'Saved OCR documents will appear here.'}</div>}
+          {filteredDocuments.length ? filteredDocuments.map((item) => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FileImage className="size-5" /></span><button className="min-w-0 flex-1 text-left" onClick={() => { pages.forEach((page) => URL.revokeObjectURL(page.previewUrl)); setPages([]); setSelectedPageIndex(-1); setTitle(item.title); setOcrText(item.text); setStatus('Opened from your private OCR library.'); setTab('text') }}><strong className="block truncate text-sm">{item.title}</strong><span className="line-clamp-2 text-xs text-slate-500">{item.text.replace(/\s+/g, ' ')}</span><span className="mt-1 block text-[11px] font-bold text-emerald-700">{item.source}</span></button><button title="Delete" onClick={() => void ocrDocumentRepository.remove(item.id).then(() => setDocuments((current) => current.filter((row) => row.id !== item.id)))} className="grid size-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"><Trash2 className="size-4" /></button></article>) : <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-700">{documents.length ? 'No matching document.' : 'Saved OCR documents will appear here.'}</div>}
         </div> : null}
       </div>
     </section>

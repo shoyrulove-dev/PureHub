@@ -94,6 +94,10 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.purehub.app.feature.ocr.OcrEngineFactory
 import com.purehub.app.feature.ocr.OcrScript
+import com.purehub.app.data.local.PureHubDatabaseProvider
+import com.purehub.app.feature.expense.ExpenseTrackerRepository
+import com.purehub.app.feature.receipt.ReceiptParser
+import com.purehub.app.feature.receipt.ReceiptResult
 import com.purehub.app.ui.LocalSnackbarHostState
 import com.purehub.app.feature.docpdf.DocPdfRepository
 import kotlinx.coroutines.launch
@@ -134,6 +138,9 @@ fun OcrTextExtractorCard(
     val scope = rememberCoroutineScope()
     val preferences = remember { context.getSharedPreferences("purehub.ocr-studio.v2", 0) }
     val documentRepository = remember { DocPdfRepository(context.applicationContext) }
+    val expenseRepository = remember {
+        ExpenseTrackerRepository(PureHubDatabaseProvider.get(context.applicationContext).expenseDao())
+    }
     var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.Latin) }
     val recognizer = remember(selectedLanguage) {
         OcrEngineFactory.create(
@@ -147,6 +154,7 @@ fun OcrTextExtractorCard(
         ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
     }
     val pages = remember { mutableStateListOf<OcrPage>() }
+    var selectedPageIndex by remember { mutableIntStateOf(-1) }
     var selectedTab by rememberSaveable { mutableStateOf(OcrStudioTab.Scan) }
     var selectedMode by rememberSaveable { mutableStateOf(OcrMode.Document) }
     var selectedFilter by rememberSaveable { mutableStateOf(OcrFilter.Clean) }
@@ -176,6 +184,7 @@ fun OcrTextExtractorCard(
                     status = "No readable text found. Try better light or a tighter crop."
                 } else {
                     pages += OcrPage(bitmap = bitmap, text = text, source = source)
+                    selectedPageIndex = pages.lastIndex
                     status = "${pages.size} page(s) captured privately. Review the text before export."
                     selectedTab = OcrStudioTab.Text
                 }
@@ -189,18 +198,53 @@ fun OcrTextExtractorCard(
             status = "A scan can contain up to 20 pages. Export this document before starting another."
             return
         }
-        val edited = transformOcrBitmap(limitOcrBitmap(bitmap), rotation, cropPercent, selectedFilter)
+        val edited = prepareOcrBitmap(bitmap, rotation, cropPercent, selectedFilter)
         recognize(edited, source)
     }
 
-    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        status = "Opening the selected image locally..."
-        val bitmap = runCatching {
-            context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
-        }.getOrNull()
-        if (bitmap == null) status = "That image could not be opened."
-        else prepareAndRecognize(bitmap, "Image")
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        val selected = uris.take((20 - pages.size).coerceAtLeast(0))
+        if (selected.isEmpty()) {
+            status = "A scan can contain up to 20 pages. Export this document before starting another."
+            return@rememberLauncherForActivityResult
+        }
+        processing = true
+        status = "Preparing ${selected.size} image(s) for private batch OCR..."
+        fun recognizeNext(index: Int) {
+            if (index >= selected.size) {
+                processing = false
+                if (pages.isNotEmpty()) {
+                    selectedPageIndex = pages.lastIndex
+                    currentBitmap = pages.last().bitmap
+                    extractedText = pages.last().text
+                    selectedTab = OcrStudioTab.Text
+                    status = "Batch OCR finished: ${selected.size} image(s), ${pages.size} page(s) in this document."
+                }
+                return
+            }
+            val bitmap = runCatching {
+                context.contentResolver.openInputStream(selected[index])?.use(BitmapFactory::decodeStream)
+            }.getOrNull()
+            if (bitmap == null) {
+                recognizeNext(index + 1)
+                return
+            }
+            val edited = prepareOcrBitmap(bitmap, rotation, cropPercent, selectedFilter)
+            status = "Recognizing image ${index + 1}/${selected.size} on this device..."
+            recognizer.recognize(edited) { result ->
+                result.getOrNull()?.let { raw ->
+                    val text = cleanOcrText(raw, selectedMode)
+                    if (text.isNotBlank()) pages += OcrPage(edited, text, "Batch image ${index + 1}")
+                }
+                recognizeNext(index + 1)
+            }
+        }
+        recognizeNext(0)
+    }
+
+    val parsedReceipt = remember(selectedMode, extractedText) {
+        if (selectedMode == OcrMode.Receipt && extractedText.isNotBlank()) ReceiptParser.parse(extractedText) else null
     }
 
     fun saveCurrent() {
@@ -244,7 +288,7 @@ fun OcrTextExtractorCard(
                 processing = processing,
                 status = status,
                 pageCount = pages.size,
-                onChooseImage = { imagePicker.launch("image/*") },
+                onChooseImage = { imagePicker.launch(arrayOf("image/*")) },
                 onCapture = {
                     captureOcrPage(
                         context = context,
@@ -262,7 +306,14 @@ fun OcrTextExtractorCard(
                 title = documentTitle,
                 status = status,
                 pages = pages,
-                onTextChanged = { extractedText = it },
+                selectedPageIndex = selectedPageIndex,
+                receipt = parsedReceipt,
+                onTextChanged = { value ->
+                    extractedText = value
+                    if (selectedPageIndex in pages.indices) {
+                        pages[selectedPageIndex] = pages[selectedPageIndex].copy(text = value)
+                    }
+                },
                 onTitleChanged = { documentTitle = it },
                 onCopy = { copyOcrText(context, extractedText) },
                 onShare = { shareOcrText(context, documentTitle, combinedOcrText(pages, extractedText)) },
@@ -270,9 +321,8 @@ fun OcrTextExtractorCard(
                     shareFile(context, exportOcrText(context, documentTitle, combinedOcrText(pages, extractedText)), "text/plain")
                 },
                 onExportPdf = {
-                    val pagePairs = pages.mapIndexed { index, page ->
-                        page.bitmap to if (index == pages.lastIndex) extractedText else page.text
-                    }.ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
+                    val pagePairs = pages.map { page -> page.bitmap to page.text }
+                        .ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
                     if (pagePairs.isEmpty()) {
                         shareFile(context, exportOcrPdf(context, documentTitle, extractedText), "application/pdf")
                     } else {
@@ -281,9 +331,8 @@ fun OcrTextExtractorCard(
                     }
                 },
                 onSendToDocumentSuite = {
-                    val pagePairs = pages.mapIndexed { index, page ->
-                        page.bitmap to if (index == pages.lastIndex) extractedText else page.text
-                    }.ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
+                    val pagePairs = pages.map { page -> page.bitmap to page.text }
+                        .ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
                     if (pagePairs.isEmpty()) {
                         status = "This library item has text only. Add its original image before sending to Doc to PDF."
                     } else {
@@ -293,9 +342,52 @@ fun OcrTextExtractorCard(
                     }
                 },
                 onSave = ::saveCurrent,
+                onSaveReceipt = { receipt ->
+                    val total = receipt.total
+                    if (total == null) {
+                        status = "No reliable receipt total found. Edit the OCR text or add the expense manually."
+                    } else scope.launch {
+                        expenseRepository.addExpense(
+                            title = receipt.merchant.ifBlank { "Scanned receipt" },
+                            amountText = total.toString(),
+                            category = "Shopping",
+                            transactionType = "expense",
+                            wallet = "Cash",
+                            note = listOfNotNull(
+                                receipt.date?.let { "Receipt date: $it" },
+                                receipt.tax?.let { "Tax: $it" },
+                                "Imported from OCR Studio",
+                            ).joinToString(" - "),
+                        )
+                        status = "Receipt saved to Money Studio. Review the category and wallet when convenient."
+                        snackbarHostState.showSnackbar("Receipt saved to Money Studio.")
+                    }
+                },
+                onSelectPage = { index ->
+                    pages.getOrNull(index)?.let { page ->
+                        selectedPageIndex = index
+                        currentBitmap = page.bitmap
+                        extractedText = page.text
+                    }
+                },
+                onDeletePage = {
+                    val index = selectedPageIndex
+                    if (index in pages.indices) pages.removeAt(index)
+                    if (pages.isEmpty()) {
+                        selectedPageIndex = -1
+                        currentBitmap = null
+                        extractedText = ""
+                        selectedTab = OcrStudioTab.Scan
+                    } else {
+                        selectedPageIndex = index.coerceAtMost(pages.lastIndex)
+                        currentBitmap = pages[selectedPageIndex].bitmap
+                        extractedText = pages[selectedPageIndex].text
+                    }
+                },
                 onAddPage = { selectedTab = OcrStudioTab.Scan },
                 onClear = {
                     pages.clear()
+                    selectedPageIndex = -1
                     currentBitmap = null
                     extractedText = ""
                     status = "Ready for a new document."
@@ -307,6 +399,7 @@ fun OcrTextExtractorCard(
                 history = history,
                 onOpen = {
                     pages.clear()
+                    selectedPageIndex = -1
                     documentTitle = it.title
                     extractedText = it.text
                     currentBitmap = null
@@ -491,6 +584,8 @@ private fun OcrTextContent(
     title: String,
     status: String,
     pages: List<OcrPage>,
+    selectedPageIndex: Int,
+    receipt: ReceiptResult?,
     onTextChanged: (String) -> Unit,
     onTitleChanged: (String) -> Unit,
     onCopy: () -> Unit,
@@ -499,6 +594,9 @@ private fun OcrTextContent(
     onExportPdf: () -> Unit,
     onSendToDocumentSuite: () -> Unit,
     onSave: () -> Unit,
+    onSaveReceipt: (ReceiptResult) -> Unit,
+    onSelectPage: (Int) -> Unit,
+    onDeletePage: () -> Unit,
     onAddPage: () -> Unit,
     onClear: () -> Unit,
 ) {
@@ -527,6 +625,21 @@ private fun OcrTextContent(
             AssistChip(onClick = {}, label = { LocalizedText("${text.split(Regex("\\s+")).count { it.isNotBlank() }} words") })
             AssistChip(onClick = {}, label = { LocalizedText("On-device") }, leadingIcon = { Icon(Icons.Rounded.Security, null, Modifier.size(16.dp)) })
         }
+        if (pages.size > 1 && selectedPageIndex in pages.indices) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(
+                    enabled = selectedPageIndex > 0,
+                    onClick = { onSelectPage(selectedPageIndex - 1) },
+                    modifier = Modifier.weight(1f),
+                ) { LocalizedText("Previous") }
+                AssistChip(onClick = {}, label = { LocalizedText("Page ${selectedPageIndex + 1}/${pages.size}") })
+                OutlinedButton(
+                    enabled = selectedPageIndex < pages.lastIndex,
+                    onClick = { onSelectPage(selectedPageIndex + 1) },
+                    modifier = Modifier.weight(1f),
+                ) { LocalizedText("Next") }
+            }
+        }
         OutlinedTextField(value = title, onValueChange = onTitleChanged, label = { LocalizedText("Document title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(
             value = text,
@@ -537,6 +650,22 @@ private fun OcrTextContent(
             modifier = Modifier.fillMaxWidth(),
         )
         DetectedActions(text)
+        receipt?.let { item ->
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.62f))) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    LocalizedText("Receipt detected", style = MaterialTheme.typography.titleSmall)
+                    LocalizedText(item.merchant, style = MaterialTheme.typography.bodyMedium)
+                    LocalizedText(
+                        item.total?.let { "Total %.2f".format(it) } ?: "Total needs review",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    item.date?.let { LocalizedText("Date $it", style = MaterialTheme.typography.bodySmall) }
+                    Button(enabled = item.total != null, onClick = { onSaveReceipt(item) }, modifier = Modifier.fillMaxWidth()) {
+                        LocalizedText("Save to Money Studio")
+                    }
+                }
+            }
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onCopy, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.ContentCopy, null); LocalizedText(" Copy") }
             FilledTonalButton(onClick = onShare, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.IosShare, null); LocalizedText(" Share") }
@@ -552,6 +681,7 @@ private fun OcrTextContent(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilledTonalButton(onClick = onAddPage, modifier = Modifier.weight(1f)) { LocalizedText("Add page") }
+            if (pages.isNotEmpty()) OutlinedButton(onClick = onDeletePage, modifier = Modifier.weight(1f)) { LocalizedText("Delete page") }
             OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) { LocalizedText("New document") }
         }
         LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -646,9 +776,11 @@ private fun captureOcrPage(
 
 private fun transformOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filter: OcrFilter): Bitmap {
     val rotated = if (rotation == 0) source else Bitmap.createBitmap(source, 0, 0, source.width, source.height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
+    if (rotated !== source) source.recycle()
     val insetX = (rotated.width * crop).toInt().coerceAtMost(max(0, rotated.width / 3))
     val insetY = (rotated.height * crop).toInt().coerceAtMost(max(0, rotated.height / 3))
     val cropped = Bitmap.createBitmap(rotated, insetX, insetY, max(1, rotated.width - insetX * 2), max(1, rotated.height - insetY * 2))
+    if (cropped !== rotated) rotated.recycle()
     if (filter == OcrFilter.Original) return cropped
     val output = Bitmap.createBitmap(cropped.width, cropped.height, Bitmap.Config.ARGB_8888)
     val matrix = ColorMatrix().apply {
@@ -660,10 +792,17 @@ private fun transformOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filte
         }
     }
     Canvas(output).drawBitmap(cropped, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG).apply { colorFilter = ColorMatrixColorFilter(matrix) })
+    cropped.recycle()
     return output
 }
 
-private fun limitOcrBitmap(source: Bitmap, maxDimension: Int = 2200): Bitmap {
+private fun prepareOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filter: OcrFilter): Bitmap {
+    val limited = limitOcrBitmap(source)
+    if (limited !== source) source.recycle()
+    return transformOcrBitmap(limited, rotation, crop, filter)
+}
+
+private fun limitOcrBitmap(source: Bitmap, maxDimension: Int = 1800): Bitmap {
     val largest = max(source.width, source.height)
     if (largest <= maxDimension) return source
     val scale = maxDimension.toFloat() / largest.toFloat()
@@ -686,8 +825,7 @@ private fun cleanOcrText(raw: String, mode: OcrMode): String {
 
 private fun combinedOcrText(pages: List<OcrPage>, current: String): String {
     if (pages.isEmpty()) return current.trim()
-    val values = pages.map { it.text }.toMutableList()
-    if (current.isNotBlank()) values[values.lastIndex] = current.trim()
+    val values = pages.map { it.text.trim() }
     return values.mapIndexed { index, value -> if (values.size > 1) "Page ${index + 1}\n$value" else value }.joinToString("\n\n")
 }
 

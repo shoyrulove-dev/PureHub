@@ -37,6 +37,36 @@ function safeName(value: string) {
   );
 }
 
+async function estimateSymmetricCrop(url: string) {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const node = new Image(); node.onload = () => resolve(node); node.onerror = reject; node.src = url;
+  });
+  const scale = Math.min(1, 360 / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(24, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(24, Math.round(image.naturalHeight * scale));
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return 0;
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  const luminance = (x: number, y: number) => {
+    const index = (y * canvas.width + x) * 4;
+    return data[index] * .2126 + data[index + 1] * .7152 + data[index + 2] * .0722;
+  };
+  let borderTotal = 0; let borderCount = 0;
+  for (let x = 0; x < canvas.width; x += 2) { borderTotal += luminance(x, 0) + luminance(x, canvas.height - 1); borderCount += 2; }
+  for (let y = 1; y < canvas.height - 1; y += 2) { borderTotal += luminance(0, y) + luminance(canvas.width - 1, y); borderCount += 2; }
+  const background = borderTotal / Math.max(1, borderCount);
+  const rowScore = (y: number) => { let changed = 0; let count = 0; for (let x = 0; x < canvas.width; x += 3) { if (Math.abs(luminance(x, y) - background) > 30) changed += 1; count += 1; } return changed / count; };
+  const columnScore = (x: number) => { let changed = 0; let count = 0; for (let y = 0; y < canvas.height; y += 3) { if (Math.abs(luminance(x, y) - background) > 30) changed += 1; count += 1; } return changed / count; };
+  let top = 0; while (top < canvas.height * .28 && rowScore(top) < .18) top += 2;
+  let bottom = canvas.height - 1; while (bottom > canvas.height * .72 && rowScore(bottom) < .18) bottom -= 2;
+  let left = 0; while (left < canvas.width * .28 && columnScore(left) < .18) left += 2;
+  let right = canvas.width - 1; while (right > canvas.width * .72 && columnScore(right) < .18) right -= 2;
+  const crop = Math.min(left / canvas.width, top / canvas.height, (canvas.width - 1 - right) / canvas.width, (canvas.height - 1 - bottom) / canvas.height);
+  return crop >= .012 && crop <= .12 ? Math.max(0, crop - .01) : 0;
+}
+
 export default function DocumentSuiteSurface() {
   const locale = normalizeLocale(window.location.pathname.split("/")[1]);
   const [pages, setPages] = useState<Page[]>([]);
@@ -149,6 +179,35 @@ export default function DocumentSuiteSurface() {
   const estimatedBytes = Math.round(
     pages.reduce((sum, page) => sum + page.file.size, 0) * quality * 0.72,
   );
+  const autoCropPage = async (page: Page) => {
+    const crop = await estimateSymmetricCrop(page.url);
+    update(page.id, { crop, filter: crop > 0 ? "document" : page.filter });
+    setStatus(crop > 0 ? `Auto-framed ${page.file.name}. Review before export.` : `No reliable frame found for ${page.file.name}; it was left unchanged.`);
+  };
+  const autoCropAll = async () => {
+    setBusy(true);
+    setStatus(`Finding document edges in ${pages.length} page(s) locally...`);
+    try {
+      const crops = await Promise.all(
+        pages.map((page) => estimateSymmetricCrop(page.url)),
+      );
+      setPages((current) =>
+        current.map((page, index) => ({
+          ...page,
+          crop: crops[index] ?? page.crop,
+          filter:
+            (crops[index] ?? 0) > 0 ? "document" : page.filter,
+        })),
+      );
+      setStatus(
+        `Auto-framed ${crops.filter((value) => value > 0).length}/${pages.length} page(s). Uncertain pages were left unchanged.`,
+      );
+    } catch {
+      setStatus("Document edges could not be detected. Your pages were left unchanged.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const exportPdf = async () => {
     if (!pages.length) {
@@ -321,7 +380,7 @@ export default function DocumentSuiteSurface() {
           <>
           <div className="flex items-center justify-between gap-3 rounded-xl bg-violet-50 p-3 dark:bg-violet-950/30">
             <span className="text-xs font-bold text-violet-800 dark:text-violet-200">One-tap grayscale and contrast for scanned pages</span>
-            <button type="button" onClick={() => setPages((current) => current.map((page) => ({ ...page, filter: "document" })))} className="shrink-0 rounded-lg bg-violet-700 px-3 py-2 text-xs font-black text-white">Clean all</button>
+            <div className="flex shrink-0 gap-2"><button type="button" disabled={busy} onClick={() => void autoCropAll()} className="rounded-lg border border-violet-300 bg-white px-3 py-2 text-xs font-black text-violet-800">Auto crop all</button><button type="button" onClick={() => setPages((current) => current.map((page) => ({ ...page, filter: "document" })))} className="rounded-lg bg-violet-700 px-3 py-2 text-xs font-black text-white">Clean all</button></div>
           </div>
           <div className="space-y-2">
             {pages.map((page, index) => (
@@ -387,6 +446,7 @@ export default function DocumentSuiteSurface() {
                       >
                         {page.filter === "document" ? "Clean" : "Original"}
                       </button>
+                      <button onClick={() => void autoCropPage(page)} className="rounded-lg bg-violet-100 px-2 text-xs font-bold text-violet-900 dark:bg-violet-950 dark:text-violet-100">Auto crop</button>
                     </div>
                   </div>
                   <button

@@ -34,6 +34,12 @@ data class CropAdjustments(
     val bottom: Float = 0f,
 )
 
+data class AutoCropResult(
+    val page: CapturedDocPage,
+    val confidence: Float,
+    val applied: Boolean,
+)
+
 class DocPdfRepository(
     private val context: Context,
 ) {
@@ -110,6 +116,22 @@ class DocPdfRepository(
         enhanced.recycle()
         original.recycle()
         return wrapCapturedFile(page.file, page.recognizedText)
+    }
+
+    fun autoCropAndEnhancePage(page: CapturedDocPage): AutoCropResult {
+        val original = BitmapFactory.decodeFile(page.file.absolutePath)
+            ?: return AutoCropResult(page, 0f, false)
+        return try {
+            val frame = DocumentEdgeDetector.detect(original)
+            if (frame.confidence <= 0f) {
+                AutoCropResult(page, 0f, false)
+            } else {
+                val updated = enhancePage(page, frame.crop)
+                AutoCropResult(updated, frame.confidence, true)
+            }
+        } finally {
+            original.recycle()
+        }
     }
 
     fun exportPdf(
@@ -231,17 +253,15 @@ class DocPdfRepository(
 
     private fun enhanceBitmap(bitmap: Bitmap): Bitmap {
         val result = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
-        for (x in 0 until bitmap.width) {
-            for (y in 0 until bitmap.height) {
-                val pixel = bitmap.getPixel(x, y)
-                val r = Color.red(pixel)
-                val g = Color.green(pixel)
-                val b = Color.blue(pixel)
-                val gray = ((r + g + b) / 3f)
-                val contrasted = if (gray > 150f) 255 else (gray * 0.72f).toInt().coerceIn(0, 255)
-                result.setPixel(x, y, Color.rgb(contrasted, contrasted, contrasted))
-            }
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        for (index in pixels.indices) {
+            val pixel = pixels[index]
+            val gray = (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3f
+            val contrasted = if (gray > 150f) 255 else (gray * 0.72f).toInt().coerceIn(0, 255)
+            pixels[index] = Color.rgb(contrasted, contrasted, contrasted)
         }
+        result.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
         return result
     }
 }

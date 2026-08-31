@@ -245,6 +245,25 @@ fun DocToPdfCard(
                         }
                         Button(
                             onClick = {
+                                val index = selectedPageIndex
+                                if (index in pages.indices) scope.launch {
+                                    exportMessage = "Finding document edges locally..."
+                                    val result = withContext(Dispatchers.IO) {
+                                        repository.autoCropAndEnhancePage(pages[index])
+                                    }
+                                    if (result.applied) {
+                                        pages[index] = result.page
+                                        exportMessage = "Auto-framed page ${index + 1} (${(result.confidence * 100).toInt()}% confidence). Review before export."
+                                    } else {
+                                        exportMessage = "No reliable page frame found. Use the crop sliders instead."
+                                    }
+                                }
+                            },
+                        ) {
+                            LocalizedText("Auto crop")
+                        }
+                        Button(
+                            onClick = {
                                 val snapshot = pages.toList()
                                 scope.launch {
                                     exportMessage = "Cleaning ${snapshot.size} page(s) locally…"
@@ -259,6 +278,24 @@ fun DocToPdfCard(
                             },
                         ) {
                             LocalizedText("Clean all pages")
+                        }
+                        Button(
+                            onClick = {
+                                val snapshot = pages.toList()
+                                scope.launch {
+                                    exportMessage = "Auto-framing ${snapshot.size} page(s) locally..."
+                                    val results = withContext(Dispatchers.IO) {
+                                        snapshot.map(repository::autoCropAndEnhancePage)
+                                    }
+                                    pages.clear()
+                                    pages.addAll(results.map { it.page })
+                                    selectedPageIndex = selectedPageIndex.coerceIn(0, pages.lastIndex)
+                                    val applied = results.count { it.applied }
+                                    exportMessage = "Auto-framed $applied/${results.size} page(s). Pages without a reliable edge were left unchanged."
+                                }
+                            },
+                        ) {
+                            LocalizedText("Auto crop all")
                         }
                         Button(
                             onClick = {

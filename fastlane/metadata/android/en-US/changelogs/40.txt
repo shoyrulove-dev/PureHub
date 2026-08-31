@@ -1,0 +1,1 @@
+Document Suite now finds page edges locally for fast, conservative auto-framing. OCR Studio adds private multi-image batch recognition, per-page review and editing, receipt detection, and a direct handoff to the offline Money Studio ledger. The PWA receives the same document and OCR workflow upgrades. Documents and recognized text stay on the device.

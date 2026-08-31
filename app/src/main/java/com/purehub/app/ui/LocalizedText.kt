@@ -47,6 +47,10 @@ private val vi = mapOf(
     "Favorite conversions" to "Phép đổi yêu thích", "Recent conversions" to "Phép đổi gần đây", "Import images" to "Nhập hình ảnh",
     "Metadata found" to "Metadata tìm thấy", "From" to "Từ", "To" to "Sang", "Value" to "Giá trị",
     "Level sound on" to "Bật âm báo cân bằng", "Level sound off" to "Tắt âm báo cân bằng",
+    "Auto crop" to "T\u1ef1 c\u1eaft", "Auto crop all" to "T\u1ef1 c\u1eaft t\u1ea5t c\u1ea3",
+    "Previous" to "Tr\u01b0\u1edbc", "Next" to "Ti\u1ebfp", "Delete page" to "X\u00f3a trang",
+    "Receipt detected" to "\u0110\u00e3 nh\u1eadn di\u1ec7n h\u00f3a \u0111\u01a1n", "Total needs review" to "C\u1ea7n ki\u1ec3m tra t\u1ed5ng ti\u1ec1n",
+    "Save to Money Studio" to "L\u01b0u v\u00e0o S\u1ed5 chi ti\u00eau", "Add page" to "Th\u00eam trang", "New document" to "T\u00e0i li\u1ec7u m\u1edbi",
 )
 
 private val zh = mapOf(
@@ -81,6 +85,10 @@ private val zh = mapOf(
     "Favorite conversions" to "收藏的换算", "Recent conversions" to "最近换算", "Import images" to "导入图片",
     "Metadata found" to "发现元数据", "From" to "从", "To" to "到", "Value" to "数值",
     "Level sound on" to "开启水平提示音", "Level sound off" to "关闭水平提示音",
+    "Auto crop" to "\u81ea\u52a8\u88c1\u526a", "Auto crop all" to "\u5168\u90e8\u81ea\u52a8\u88c1\u526a",
+    "Previous" to "\u4e0a\u4e00\u9875", "Next" to "\u4e0b\u4e00\u9875", "Delete page" to "\u5220\u9664\u9875\u9762",
+    "Receipt detected" to "\u5df2\u8bc6\u522b\u6536\u636e", "Total needs review" to "\u8bf7\u6838\u5bf9\u603b\u989d",
+    "Save to Money Studio" to "\u4fdd\u5b58\u5230\u8bb0\u8d26\u672c", "Add page" to "\u6dfb\u52a0\u9875\u9762", "New document" to "\u65b0\u5efa\u6587\u6863",
 )
 
 private val viMore = mapOf(
