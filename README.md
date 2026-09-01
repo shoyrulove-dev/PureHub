@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current preview is PureHub 1.0.0-beta.41. This security and store-readiness release hardens the Minigame ticket and Turnstile flow, keeps ticket values out of analytics URLs, and moves Deep Cleaner to Android's scoped file picker so it no longer requests broad photo, video, audio, or legacy storage access. The standard flavor remains offline-first while retaining Internet access only for explicitly connected workflows such as the Minigame and update checks. The F-Droid flavor remains strictly offline-only and replaces ML Kit OCR with Tesseract. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current preview is PureHub 1.0.0-beta.42. This reliability release validates the YouTube queue before upload, gives TikTok uploads stable sequential queue numbers, reports Deep Cleaner cache results accurately, and retains beta.41's security hardening. The standard flavor remains offline-first while retaining Internet access only for explicitly connected workflows such as the Minigame and update checks. The F-Droid flavor remains strictly offline-only and replaces ML Kit OCR with Tesseract. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

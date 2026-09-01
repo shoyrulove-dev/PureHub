@@ -1,0 +1,1 @@
+Beta42 reliability update. YouTube queue validation rejects duplicate schedules and verifies the requested publish time. TikTok uploads use stable sequential queue numbers, and drafts no longer remain stuck as processing. Deep Cleaner reports successful and failed cache removals separately. F-Droid remains fully offline.

@@ -86,15 +86,22 @@ export default function DeepCleanerFlagship() {
   const clearOfflineCache = async () => {
     if (!storage.cacheNames.length || !window.confirm('Remove PureHub offline cache? The app may need the network once to rebuild it. Your saved tool data will stay.')) return
     setCleaning(true)
-    const removed = (await Promise.all(storage.cacheNames.map((name) => caches.delete(name)))).filter(Boolean).length
-    setMessage(`Removed ${removed} offline cache ${removed === 1 ? 'bundle' : 'bundles'}. Saved tool data was not touched.`)
-    markToolSuccess('deep-cleaner', {
-      headline: 'Rebuildable cache cleared',
-      detail: `${removed} offline cache ${removed === 1 ? 'bundle was' : 'bundles were'} removed. Saved tool data stayed protected.`,
-      shareText: 'I cleared rebuildable app cache while keeping saved local data protected.',
-    })
-    await inspectStorage()
-    setCleaning(false)
+    try {
+      const results = await Promise.all(storage.cacheNames.map(async (name) => {
+        try { return await caches.delete(name) } catch { return false }
+      }))
+      const removed = results.filter(Boolean).length
+      const failed = results.length - removed
+      setMessage(`Removed ${removed} of ${results.length} offline cache ${results.length === 1 ? 'bundle' : 'bundles'}${failed ? `; ${failed} could not be removed` : ''}. Saved tool data was not touched.`)
+      markToolSuccess('deep-cleaner', {
+        headline: 'Rebuildable cache cleared',
+        detail: `${removed} of ${results.length} offline cache ${results.length === 1 ? 'bundle was' : 'bundles were'} removed${failed ? `; ${failed} failed` : ''}. Saved tool data stayed protected.`,
+        shareText: 'I cleared rebuildable app cache while keeping saved local data protected.',
+      })
+      await inspectStorage()
+    } finally {
+      setCleaning(false)
+    }
   }
 
   const usagePercent = storage.quota ? Math.min(100, Math.round(storage.usage / storage.quota * 100)) : 0

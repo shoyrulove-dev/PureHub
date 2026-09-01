@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import argparse
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,8 +11,10 @@ from typing import Any
 import requests
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+COMMAND_CENTER_ROOT = Path(os.environ.get("PUREHUB_COMMAND_CENTER_ROOT", REPO_ROOT.parent / "PureHub-Command-Center"))
+for source_root in (REPO_ROOT, COMMAND_CENTER_ROOT):
+    if str(source_root) not in sys.path:
+        sys.path.insert(0, str(source_root))
 
 from command_center.database import get_growth_post, init_database, upsert_growth_post
 from command_center.youtube_connector import API_BASE, _access_token, complete_upload, create_upload_session
@@ -70,15 +73,39 @@ def verify_schedule(video_id: str) -> dict[str, str]:
     raise RuntimeError(f"Could not verify the YouTube schedule after three attempts: {last_error}")
 
 
+def validate_manifest(items: list[dict[str, Any]]) -> None:
+    """Reject an ambiguous queue before creating any external upload."""
+    seen: dict[datetime, int] = {}
+    for index, item in enumerate(items, start=1):
+        try:
+            scheduled_at = datetime.fromisoformat(str(item["publish_at"])).astimezone(timezone.utc)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"Queue item {index} has an invalid publish_at value.") from exc
+        previous = seen.get(scheduled_at)
+        if previous is not None:
+            raise ValueError(f"Duplicate YouTube schedule at {scheduled_at.isoformat()} for items {previous} and {index}.")
+        seen[scheduled_at] = index
+        source = Path(str(item.get("file", "")))
+        if not source.is_file():
+            raise FileNotFoundError(f"Queue item {index} source file does not exist: {source}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, default=1)
     parser.add_argument("--limit", type=int, default=22)
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
     parser.add_argument("--campaign-id", default=CAMPAIGN_ID)
+    parser.add_argument("--dry-run", action="store_true", help="Validate the queue without touching the database or YouTube")
     args = parser.parse_args()
-    init_database()
     items = json.loads(args.manifest.read_text(encoding="utf-8"))
+    if not isinstance(items, list) or not items:
+        raise ValueError("YouTube queue manifest must contain at least one item.")
+    validate_manifest(items)
+    if args.dry_run:
+        print(f"Validated {len(items)} queue item(s); no upload performed.")
+        return
+    init_database()
     for index, item in enumerate(items, start=1):
         if index < args.start or index >= args.start + args.limit:
             continue
@@ -103,7 +130,8 @@ def main() -> None:
             continue
         uploaded = upload_item(current, Path(item["file"]))
         verified = verify_schedule(str(uploaded.get("external_id", "")))
-        if verified["privacy"] != "private" or not verified["publish_at"]:
+        expected_publish_at = scheduled_at.isoformat().replace("+00:00", "Z")
+        if verified["privacy"] != "private" or verified["publish_at"] != expected_publish_at:
             raise ValueError(f"YouTube did not preserve the schedule for item {index}: {verified}")
         print(f"{index:02d}/{len(items)} scheduled {verified['publish_at']}: {uploaded.get('external_url')}")
 

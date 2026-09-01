@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+COMMAND_CENTER_ROOT = Path(os.environ.get("PUREHUB_COMMAND_CENTER_ROOT", REPO_ROOT.parent / "PureHub-Command-Center"))
+for source_root in (REPO_ROOT, COMMAND_CENTER_ROOT):
+    if str(source_root) not in sys.path:
+        sys.path.insert(0, str(source_root))
 
 from command_center.database import init_database, upsert_growth_post
 
@@ -32,6 +35,8 @@ def tiktok_caption(item: dict[str, str]) -> str:
 def main() -> None:
     init_database()
     items = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    if len(items) != len(YOUTUBE_URLS):
+        raise ValueError(f"TikTok queue expects {len(YOUTUBE_URLS)} items, found {len(items)}.")
     for index, (item, youtube_url) in enumerate(zip(items, YOUTUBE_URLS, strict=True), start=1):
         source_name = Path(item["file"]).name
         scheduled_at = datetime.fromisoformat(item["publish_at"]).astimezone(timezone.utc) + timedelta(days=1)
