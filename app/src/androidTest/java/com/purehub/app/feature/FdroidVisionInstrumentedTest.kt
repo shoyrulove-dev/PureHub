@@ -39,14 +39,14 @@ class FdroidVisionInstrumentedTest {
 
     private fun assertPrintedSampleRecognized(script: OcrScript, sample: String, expected: String) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val bitmap = Bitmap.createBitmap(1400, 420, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(1800, 420, Bitmap.Config.ARGB_8888)
         Canvas(bitmap).apply {
             drawColor(Color.WHITE)
             drawText(
                 sample,
                 50f,
                 240f,
-                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK; textSize = 110f },
+                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK; textSize = 96f },
             )
         }
         val latch = CountDownLatch(1)
