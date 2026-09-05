@@ -72,6 +72,20 @@ class OcrDocumentStoreTest {
         page.recycle()
     }
 
+    @Test
+    fun prunesOnlyDocumentsMissingFromTheRetainedHistory() {
+        val page = bitmap(Color.WHITE)
+        val retained = store.save(null, "Keep", listOf(OcrStoredPage(page, "one", "Camera")))
+        val orphan = store.save(null, "Remove", listOf(OcrStoredPage(page, "two", "Camera")))
+
+        store.prune(setOf(retained.id, "../unsafe"))
+
+        assertEquals("Keep", store.load(retained.id)?.title)
+        assertNull(store.load(orphan.id))
+        store.load(retained.id)?.pages?.forEach { it.bitmap.recycle() }
+        page.recycle()
+    }
+
     private fun bitmap(color: Int): Bitmap = Bitmap.createBitmap(80, 120, Bitmap.Config.ARGB_8888).apply {
         eraseColor(color)
     }

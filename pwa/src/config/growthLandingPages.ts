@@ -56,7 +56,7 @@ export const growthLandingPages: Record<GrowthLandingId, GrowthLandingPage> = {
     lead: 'OCR Studio keeps the workflow clear: choose a photo, recognize text, edit it, then export only when you are ready.',
     primaryCta: 'Open private OCR', videoUrl: '/media/landing/private-ocr.mp4',
     steps: ['Add a photo, receipt, or document page.', 'Select the language and run text recognition.', 'Review the text, copy it, or continue into a local PDF workflow.'],
-    browserNote: 'OCR packs may load on demand in the browser. Processing is designed to remain local to the device.',
+    browserNote: 'Browser OCR saves searchable text and can hand current pages to PDF. The signed Android beta adds four-corner perspective review and an image-backed library that can reopen complete pages.',
     faqs: [
       { question: 'Can I edit the extracted text?', answer: 'Yes. OCR is a starting point; review and correct the result before exporting.' },
       { question: 'Can I make a PDF afterwards?', answer: 'Yes. PureHub includes a separate local Doc to PDF workflow for pages you choose.' },

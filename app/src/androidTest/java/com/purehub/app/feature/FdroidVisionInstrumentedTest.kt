@@ -28,13 +28,22 @@ class FdroidVisionInstrumentedTest {
     }
 
     @Test
-    fun bundledTesseractRecognizesOfflineText() {
+    fun bundledTesseractRecognizesPrintedVietnameseSampleOffline() {
+        assertPrintedSampleRecognized(OcrScript.LATIN, "PUREHUB TIẾNG VIỆT 67890", "67890")
+    }
+
+    @Test
+    fun bundledTesseractLoadsChinesePackAndRecognizesPrintedSampleOffline() {
+        assertPrintedSampleRecognized(OcrScript.CHINESE, "PUREHUB 中文 OCR 24680", "24680")
+    }
+
+    private fun assertPrintedSampleRecognized(script: OcrScript, sample: String, expected: String) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val bitmap = Bitmap.createBitmap(1400, 420, Bitmap.Config.ARGB_8888)
         Canvas(bitmap).apply {
             drawColor(Color.WHITE)
             drawText(
-                "PUREHUB OCR TEST 12345",
+                sample,
                 50f,
                 240f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK; textSize = 110f },
@@ -43,7 +52,7 @@ class FdroidVisionInstrumentedTest {
         val latch = CountDownLatch(1)
         var recognized = ""
         var failure: Throwable? = null
-        val engine = OcrEngineFactory.create(context, OcrScript.LATIN)
+        val engine = OcrEngineFactory.create(context, script)
         engine.recognize(bitmap) { result ->
             result.onSuccess { recognized = it }.onFailure { failure = it }
             latch.countDown()
@@ -52,6 +61,6 @@ class FdroidVisionInstrumentedTest {
         assertTrue("OCR timed out", latch.await(40, TimeUnit.SECONDS))
         engine.close()
         failure?.let { throw AssertionError("OCR failed", it) }
-        assertTrue("Unexpected OCR output: $recognized", recognized.uppercase().contains("PUREHUB"))
+        assertTrue("Unexpected OCR output: $recognized", recognized.contains(expected))
     }
 }

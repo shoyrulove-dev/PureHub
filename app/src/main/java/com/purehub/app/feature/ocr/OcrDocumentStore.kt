@@ -87,7 +87,10 @@ class OcrDocumentStore(context: Context) {
             val pages = (0 until pageArray.length()).mapNotNull { index ->
                 val item = pageArray.getJSONObject(index)
                 val image = File(directory, item.getString("image"))
-                val bitmap = BitmapFactory.decodeFile(image.absolutePath) ?: return@mapNotNull null
+                val bitmap = BitmapFactory.decodeFile(
+                    image.absolutePath,
+                    BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 },
+                ) ?: return@mapNotNull null
                 OcrStoredPage(bitmap, item.optString("text"), item.optString("source", "Saved page"))
             }
             if (pages.isEmpty()) return null
@@ -107,6 +110,15 @@ class OcrDocumentStore(context: Context) {
 
     fun clear() {
         root.listFiles()?.forEach(File::deleteRecursively)
+    }
+
+    /** Removes document directories no longer referenced by the bounded history index. */
+    fun prune(retainedIds: Set<String>) {
+        val safeIds = retainedIds.filterTo(mutableSetOf(), ::isSafeId)
+        root.listFiles()
+            ?.filter(File::isDirectory)
+            ?.filterNot { it.name in safeIds }
+            ?.forEach(File::deleteRecursively)
     }
 
     private fun isSafeId(id: String): Boolean = id.matches(Regex("[a-zA-Z0-9-]{8,64}"))

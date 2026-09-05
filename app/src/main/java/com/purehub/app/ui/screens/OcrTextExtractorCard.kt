@@ -101,6 +101,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.purehub.app.feature.ocr.OcrEngineFactory
+import com.purehub.app.feature.ocr.OcrBitmapMemory
 import com.purehub.app.feature.ocr.OcrScript
 import com.purehub.app.feature.ocr.OcrDocumentStore
 import com.purehub.app.feature.ocr.OcrStoredPage
@@ -191,6 +192,13 @@ fun OcrTextExtractorCard(
     fun persistHistory(next: List<OcrHistoryItem>) {
         history = next.take(40)
         preferences.edit().putString("history", encodeOcrHistory(history)).apply()
+        documentStore.prune(history.mapNotNull { it.documentId.takeIf(String::isNotBlank) }.toSet())
+    }
+
+    fun recycleOpenPages() {
+        pages.map(OcrPage::bitmap).distinct().forEach(OcrBitmapMemory::recycle)
+        pages.clear()
+        currentBitmap = null
     }
 
     fun recognize(bitmap: Bitmap, source: String) {
@@ -199,17 +207,23 @@ fun OcrTextExtractorCard(
         recognizer.recognize(bitmap) { result ->
             result.onSuccess { rawText ->
                 val text = cleanOcrText(rawText, selectedMode)
-                currentBitmap = bitmap
-                extractedText = text
                 if (text.isBlank()) {
+                    OcrBitmapMemory.recycle(bitmap)
                     status = "No readable text found. Try better light or a tighter crop."
                 } else {
-                    pages += OcrPage(bitmap = bitmap, text = text, source = source)
+                    val retained = OcrBitmapMemory.compactForRetention(bitmap)
+                    if (retained !== bitmap) OcrBitmapMemory.recycle(bitmap)
+                    currentBitmap = retained
+                    extractedText = text
+                    pages += OcrPage(bitmap = retained, text = text, source = source)
                     selectedPageIndex = pages.lastIndex
                     status = "${pages.size} page(s) captured privately. Review the text before export."
                     selectedTab = OcrStudioTab.Text
                 }
-            }.onFailure { status = "OCR could not process this image." }
+            }.onFailure {
+                OcrBitmapMemory.recycle(bitmap)
+                status = "OCR could not process this image."
+            }
             processing = false
         }
     }
@@ -244,8 +258,11 @@ fun OcrTextExtractorCard(
     }
 
     fun rotateReviewOrNextCapture() {
-        rotation = (rotation + 90) % 360
-        val source = pendingBitmap ?: return
+        val source = pendingBitmap
+        if (source == null) {
+            rotation = (rotation + 90) % 360
+            return
+        }
         val rotated = rotateAndLimitOcrBitmap(source, 90)
         val frame = DocumentEdgeDetector.detect(rotated)
         pendingBitmap = rotated
@@ -296,9 +313,18 @@ fun OcrTextExtractorCard(
             val edited = prepareOcrBitmap(bitmap, rotation, selectedFilter)
             status = "Recognizing image ${index + 1}/${selected.size} on this device..."
             recognizer.recognize(edited) { result ->
-                result.getOrNull()?.let { raw ->
+                val raw = result.getOrNull()
+                if (raw != null) {
                     val text = cleanOcrText(raw, selectedMode)
-                    if (text.isNotBlank()) pages += OcrPage(edited, text, "Batch image ${index + 1}")
+                    if (text.isNotBlank()) {
+                        val retained = OcrBitmapMemory.compactForRetention(edited)
+                        if (retained !== edited) OcrBitmapMemory.recycle(edited)
+                        pages += OcrPage(retained, text, "Batch image ${index + 1}")
+                    } else {
+                        OcrBitmapMemory.recycle(edited)
+                    }
+                } else {
+                    OcrBitmapMemory.recycle(edited)
                 }
                 recognizeNext(index + 1)
             }
@@ -338,6 +364,12 @@ fun OcrTextExtractorCard(
     }
 
     DisposableEffect(recognizer) { onDispose { recognizer.close() } }
+    DisposableEffect(Unit) {
+        onDispose {
+            OcrBitmapMemory.recycle(pendingBitmap)
+            recycleOpenPages()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -470,7 +502,7 @@ fun OcrTextExtractorCard(
                 },
                 onDeletePage = {
                     val index = selectedPageIndex
-                    if (index in pages.indices) pages.removeAt(index)
+                    val removed = if (index in pages.indices) pages.removeAt(index) else null
                     if (pages.isEmpty()) {
                         selectedPageIndex = -1
                         currentBitmap = null
@@ -481,11 +513,12 @@ fun OcrTextExtractorCard(
                         currentBitmap = pages[selectedPageIndex].bitmap
                         extractedText = pages[selectedPageIndex].text
                     }
+                    removed?.bitmap?.let(OcrBitmapMemory::recycle)
                 },
                 onAddPage = { selectedTab = OcrStudioTab.Scan },
                 onClear = {
                     activeDocumentId = ""
-                    pages.clear()
+                    recycleOpenPages()
                     selectedPageIndex = -1
                     currentBitmap = null
                     extractedText = ""
@@ -497,7 +530,7 @@ fun OcrTextExtractorCard(
             OcrStudioTab.Library -> OcrLibraryContent(
                 history = history,
                 onOpen = {
-                    pages.clear()
+                    recycleOpenPages()
                     documentTitle = it.title
                     activeDocumentId = it.documentId
                     val stored = it.documentId.takeIf(String::isNotBlank)?.let(documentStore::load)
@@ -678,7 +711,7 @@ private fun OcrScanContent(
             }
             OutlinedButton(onClick = onRotate, enabled = !processing, modifier = Modifier.weight(1f)) {
                 Icon(Icons.AutoMirrored.Rounded.RotateRight, null)
-                LocalizedText("  Rotate $rotation°")
+                LocalizedText(if (pendingBitmap != null) "  Rotate current page" else "  Next image: $rotation deg")
             }
         }
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
