@@ -17,7 +17,11 @@ class PureHubSecurityContractTest {
         val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
         val permissions = info.requestedPermissions.orEmpty().toSet()
 
-        assertFalse("Android app must remain offline-only", Manifest.permission.INTERNET in permissions)
+        if (BuildConfig.INTERNET_ENABLED) {
+            assertTrue("Connected flavor must declare INTERNET for explicit workflows", Manifest.permission.INTERNET in permissions)
+        } else {
+            assertFalse("F-Droid flavor must remain offline-only", Manifest.permission.INTERNET in permissions)
+        }
         assertTrue(Manifest.permission.CAMERA in permissions)
         assertTrue(Manifest.permission.RECORD_AUDIO in permissions)
         assertTrue(Manifest.permission.ACCESS_WIFI_STATE in permissions)

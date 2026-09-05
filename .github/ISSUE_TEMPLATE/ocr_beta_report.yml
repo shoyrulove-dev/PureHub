@@ -1,0 +1,43 @@
+name: OCR beta report
+description: Report a real printed-document OCR result without uploading private document content.
+title: "[OCR beta] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Please redact names, addresses, account numbers, QR codes, and other private content. A document image is not required.
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Xiaomi Mi 9T Pro, Android 13
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: OCR language
+      options: [English, Vietnamese, Simplified Chinese]
+    validations:
+      required: true
+  - type: dropdown
+    id: input
+    attributes:
+      label: Input
+      options: [Camera, Single gallery image, Multi-page gallery batch]
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected and actual result
+      description: Describe edge detection, rotation, recognition, save/reopen, and export. Do not paste sensitive recognized text.
+    validations:
+      required: true
+  - type: dropdown
+    id: export
+    attributes:
+      label: Export outcome
+      options: [Not tested, TXT worked, Searchable PDF worked, Export failed]
+    validations:
+      required: true

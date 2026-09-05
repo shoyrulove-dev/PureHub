@@ -1,6 +1,6 @@
 # PureHub Growth Autopilot
 
-Growth Autopilot runs a 30-day, build-in-public community campaign without requiring the owner to remember platform credentials or a daily posting calendar.
+Growth Autopilot runs the `private-ocr-30d-v1` campaign from 6 September 2026. For this window every automated campaign item leads to the private OCR funnel, so product usage and feedback can answer one question instead of spreading attention across the full catalog. The execution plan and stop rules are in [OCR_30_DAY_LAUNCH_PLAN.md](OCR_30_DAY_LAUNCH_PLAN.md).
 
 ## Automatic channels
 

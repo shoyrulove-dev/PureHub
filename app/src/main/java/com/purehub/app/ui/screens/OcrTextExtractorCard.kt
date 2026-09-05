@@ -22,11 +22,14 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -78,14 +81,19 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -94,12 +102,18 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.purehub.app.feature.ocr.OcrEngineFactory
 import com.purehub.app.feature.ocr.OcrScript
+import com.purehub.app.feature.ocr.OcrDocumentStore
+import com.purehub.app.feature.ocr.OcrStoredPage
 import com.purehub.app.data.local.PureHubDatabaseProvider
 import com.purehub.app.feature.expense.ExpenseTrackerRepository
 import com.purehub.app.feature.receipt.ReceiptParser
 import com.purehub.app.feature.receipt.ReceiptResult
 import com.purehub.app.ui.LocalSnackbarHostState
 import com.purehub.app.feature.docpdf.DocPdfRepository
+import com.purehub.app.feature.docpdf.DocumentCorners
+import com.purehub.app.feature.docpdf.DocumentEdgeDetector
+import com.purehub.app.feature.docpdf.DocumentPerspectiveCorrector
+import com.purehub.app.feature.docpdf.NormalizedPoint
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -125,6 +139,8 @@ private data class OcrHistoryItem(
     val text: String,
     val source: String,
     val savedAt: String,
+    val documentId: String = "",
+    val pageCount: Int = 1,
 )
 
 @Composable
@@ -138,6 +154,7 @@ fun OcrTextExtractorCard(
     val scope = rememberCoroutineScope()
     val preferences = remember { context.getSharedPreferences("purehub.ocr-studio.v2", 0) }
     val documentRepository = remember { DocPdfRepository(context.applicationContext) }
+    val documentStore = remember { OcrDocumentStore(context.applicationContext) }
     val expenseRepository = remember {
         ExpenseTrackerRepository(PureHubDatabaseProvider.get(context.applicationContext).expenseDao())
     }
@@ -159,8 +176,12 @@ fun OcrTextExtractorCard(
     var selectedMode by rememberSaveable { mutableStateOf(OcrMode.Document) }
     var selectedFilter by rememberSaveable { mutableStateOf(OcrFilter.Clean) }
     var rotation by rememberSaveable { mutableIntStateOf(0) }
-    var cropPercent by rememberSaveable { mutableFloatStateOf(0.02f) }
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var pendingSource by rememberSaveable { mutableStateOf("") }
+    var pendingCorners by remember { mutableStateOf(DocumentCorners.fullFrame(0.02f)) }
+    var frameConfidence by rememberSaveable { mutableFloatStateOf(0f) }
+    var activeDocumentId by rememberSaveable { mutableStateOf("") }
     var extractedText by rememberSaveable { mutableStateOf("") }
     var documentTitle by rememberSaveable { mutableStateOf("My scan") }
     var status by rememberSaveable { mutableStateOf("Ready. Capture a page or choose an image.") }
@@ -193,13 +214,47 @@ fun OcrTextExtractorCard(
         }
     }
 
-    fun prepareAndRecognize(bitmap: Bitmap, source: String) {
+    fun reviewBeforeRecognizing(bitmap: Bitmap, source: String) {
         if (pages.size >= 20) {
+            bitmap.recycle()
             status = "A scan can contain up to 20 pages. Export this document before starting another."
             return
         }
-        val edited = prepareOcrBitmap(bitmap, rotation, cropPercent, selectedFilter)
-        recognize(edited, source)
+        pendingBitmap?.takeIf { !it.isRecycled }?.recycle()
+        val prepared = rotateAndLimitOcrBitmap(bitmap, rotation)
+        val frame = DocumentEdgeDetector.detect(prepared)
+        pendingBitmap = prepared
+        pendingSource = source
+        pendingCorners = if (frame.confidence > 0f) DocumentCorners.fromCrop(frame.crop) else DocumentCorners.fullFrame(0.02f)
+        frameConfidence = frame.confidence
+        status = if (frame.confidence > 0f) {
+            "Page frame found (${(frame.confidence * 100).toInt()}%). Adjust the four corners, then recognize."
+        } else {
+            "Check the four corners, then recognize. The full page is selected because no reliable frame was found."
+        }
+    }
+
+    fun acceptReviewedPage() {
+        val source = pendingBitmap ?: return
+        pendingBitmap = null
+        val edited = prepareOcrBitmap(source, 0, selectedFilter, pendingCorners)
+        recognize(edited, pendingSource.ifBlank { "Scanned page" })
+        pendingSource = ""
+        frameConfidence = 0f
+    }
+
+    fun rotateReviewOrNextCapture() {
+        rotation = (rotation + 90) % 360
+        val source = pendingBitmap ?: return
+        val rotated = rotateAndLimitOcrBitmap(source, 90)
+        val frame = DocumentEdgeDetector.detect(rotated)
+        pendingBitmap = rotated
+        frameConfidence = frame.confidence
+        pendingCorners = if (frame.confidence > 0f) {
+            DocumentCorners.fromCrop(frame.crop)
+        } else {
+            DocumentCorners.fullFrame(0.02f)
+        }
     }
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -207,6 +262,14 @@ fun OcrTextExtractorCard(
         val selected = uris.take((20 - pages.size).coerceAtLeast(0))
         if (selected.isEmpty()) {
             status = "A scan can contain up to 20 pages. Export this document before starting another."
+            return@rememberLauncherForActivityResult
+        }
+        if (selected.size == 1) {
+            val bitmap = runCatching {
+                context.contentResolver.openInputStream(selected.first())?.use(BitmapFactory::decodeStream)
+            }.getOrNull()
+            if (bitmap == null) status = "The selected image could not be opened."
+            else reviewBeforeRecognizing(bitmap, "Imported image")
             return@rememberLauncherForActivityResult
         }
         processing = true
@@ -230,7 +293,7 @@ fun OcrTextExtractorCard(
                 recognizeNext(index + 1)
                 return
             }
-            val edited = prepareOcrBitmap(bitmap, rotation, cropPercent, selectedFilter)
+            val edited = prepareOcrBitmap(bitmap, rotation, selectedFilter)
             status = "Recognizing image ${index + 1}/${selected.size} on this device..."
             recognizer.recognize(edited) { result ->
                 result.getOrNull()?.let { raw ->
@@ -250,14 +313,28 @@ fun OcrTextExtractorCard(
     fun saveCurrent() {
         val combined = combinedOcrText(pages, extractedText)
         if (combined.isBlank()) return
-        val item = OcrHistoryItem(
-            title = documentTitle.ifBlank { "Untitled scan" },
-            text = combined,
-            source = if (pages.size > 1) "${pages.size} pages" else pages.lastOrNull()?.source ?: "OCR",
-            savedAt = Instant.now().toString(),
-        )
-        persistHistory(listOf(item) + history.filterNot { it.text == item.text })
-        scope.launch { snackbarHostState.showSnackbar("Saved to your private OCR library.") }
+        val storedPages = pages.map { OcrStoredPage(it.bitmap, it.text, it.source) }
+            .ifEmpty { currentBitmap?.let { listOf(OcrStoredPage(it, extractedText, "OCR")) }.orEmpty() }
+        if (storedPages.isEmpty()) return
+        runCatching {
+            documentStore.save(activeDocumentId.ifBlank { null }, documentTitle, storedPages)
+        }.onSuccess { document ->
+            activeDocumentId = document.id
+            val item = OcrHistoryItem(
+                title = document.title,
+                text = combined,
+                source = "${document.pageCount} saved page${if (document.pageCount == 1) "" else "s"}",
+                savedAt = document.savedAt,
+                documentId = document.id,
+                pageCount = document.pageCount,
+            )
+            persistHistory(listOf(item) + history.filterNot {
+                it.documentId == item.documentId || (it.documentId.isBlank() && it.text == item.text)
+            })
+            scope.launch { snackbarHostState.showSnackbar("Complete document saved privately on this device.") }
+        }.onFailure {
+            status = "The complete document could not be saved. Your current scan remains open."
+        }
     }
 
     DisposableEffect(recognizer) { onDispose { recognizer.close() } }
@@ -281,10 +358,31 @@ fun OcrTextExtractorCard(
                 onFilterSelected = { selectedFilter = it },
                 selectedLanguage = selectedLanguage,
                 onLanguageSelected = { selectedLanguage = it },
-                cropPercent = cropPercent,
-                onCropChanged = { cropPercent = it },
                 rotation = rotation,
-                onRotate = { rotation = (rotation + 90) % 360 },
+                onRotate = ::rotateReviewOrNextCapture,
+                pendingBitmap = pendingBitmap,
+                pendingCorners = pendingCorners,
+                frameConfidence = frameConfidence,
+                onCornersChanged = { pendingCorners = it },
+                onAutoFrame = {
+                    pendingBitmap?.let { bitmap ->
+                        val frame = DocumentEdgeDetector.detect(bitmap)
+                        frameConfidence = frame.confidence
+                        pendingCorners = if (frame.confidence > 0f) {
+                            DocumentCorners.fromCrop(frame.crop)
+                        } else {
+                            DocumentCorners.fullFrame(0.02f)
+                        }
+                    }
+                },
+                onAcceptReview = ::acceptReviewedPage,
+                onCancelReview = {
+                    pendingBitmap?.takeIf { !it.isRecycled }?.recycle()
+                    pendingBitmap = null
+                    pendingSource = ""
+                    frameConfidence = 0f
+                    status = "Ready. Capture a page or choose an image."
+                },
                 processing = processing,
                 status = status,
                 pageCount = pages.size,
@@ -294,7 +392,7 @@ fun OcrTextExtractorCard(
                         context = context,
                         imageCapture = imageCapture,
                         executor = cameraExecutor,
-                        onCaptured = { prepareAndRecognize(it, "Camera") },
+                        onCaptured = { reviewBeforeRecognizing(it, "Camera") },
                         onError = { status = it },
                     )
                 },
@@ -386,6 +484,7 @@ fun OcrTextExtractorCard(
                 },
                 onAddPage = { selectedTab = OcrStudioTab.Scan },
                 onClear = {
+                    activeDocumentId = ""
                     pages.clear()
                     selectedPageIndex = -1
                     currentBitmap = null
@@ -399,15 +498,31 @@ fun OcrTextExtractorCard(
                 history = history,
                 onOpen = {
                     pages.clear()
-                    selectedPageIndex = -1
                     documentTitle = it.title
-                    extractedText = it.text
-                    currentBitmap = null
-                    status = "Opened from your private OCR library."
+                    activeDocumentId = it.documentId
+                    val stored = it.documentId.takeIf(String::isNotBlank)?.let(documentStore::load)
+                    if (stored != null) {
+                        stored.pages.forEach { page -> pages += OcrPage(page.bitmap, page.text, page.source) }
+                        selectedPageIndex = pages.lastIndex
+                        currentBitmap = pages.lastOrNull()?.bitmap
+                        extractedText = pages.lastOrNull()?.text.orEmpty()
+                        status = "Reopened ${pages.size} complete page(s). You can edit or export the document again."
+                    } else {
+                        selectedPageIndex = -1
+                        extractedText = it.text
+                        currentBitmap = null
+                        status = "Opened legacy text-only history. New saves keep the complete document."
+                    }
                     selectedTab = OcrStudioTab.Text
                 },
-                onDelete = { target -> persistHistory(history.filterNot { it == target }) },
-                onClear = { persistHistory(emptyList()) },
+                onDelete = { target ->
+                    target.documentId.takeIf(String::isNotBlank)?.let(documentStore::delete)
+                    persistHistory(history.filterNot { it == target })
+                },
+                onClear = {
+                    documentStore.clear()
+                    persistHistory(emptyList())
+                },
             )
         }
         Spacer(Modifier.height(12.dp))
@@ -472,10 +587,15 @@ private fun OcrScanContent(
     onFilterSelected: (OcrFilter) -> Unit,
     selectedLanguage: OcrLanguage,
     onLanguageSelected: (OcrLanguage) -> Unit,
-    cropPercent: Float,
-    onCropChanged: (Float) -> Unit,
     rotation: Int,
     onRotate: () -> Unit,
+    pendingBitmap: Bitmap?,
+    pendingCorners: DocumentCorners,
+    frameConfidence: Float,
+    onCornersChanged: (DocumentCorners) -> Unit,
+    onAutoFrame: () -> Unit,
+    onAcceptReview: () -> Unit,
+    onCancelReview: () -> Unit,
     processing: Boolean,
     status: String,
     pageCount: Int,
@@ -490,7 +610,17 @@ private fun OcrScanContent(
             }
         }
         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
-            if (hasCameraPermission) {
+            if (pendingBitmap != null) {
+                OcrPageReview(
+                    bitmap = pendingBitmap,
+                    corners = pendingCorners,
+                    frameConfidence = frameConfidence,
+                    onCornersChanged = onCornersChanged,
+                    onAutoFrame = onAutoFrame,
+                    onAccept = onAcceptReview,
+                    onCancel = onCancelReview,
+                )
+            } else if (hasCameraPermission) {
                 Box(Modifier.fillMaxWidth().aspectRatio(1f).background(Color(0xFF07111E))) {
                     AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
                     LaunchedEffect(previewView) {
@@ -559,8 +689,7 @@ private fun OcrScanContent(
                         FilterChip(selectedFilter == filter, onClick = { onFilterSelected(filter) }, label = { LocalizedText(filter.label) })
                     }
                 }
-                LocalizedText("Edge crop ${Math.round(cropPercent * 100)}%", style = MaterialTheme.typography.labelMedium)
-                Slider(value = cropPercent, onValueChange = onCropChanged, valueRange = 0f..0.16f)
+                LocalizedText("Auto-frame runs locally. Review and drag all four corners before recognition.", style = MaterialTheme.typography.bodySmall)
             }
         }
         LocalizedText("Recognition language", style = MaterialTheme.typography.titleSmall)
@@ -575,6 +704,97 @@ private fun OcrScanContent(
         }
         LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+@Composable
+private fun OcrPageReview(
+    bitmap: Bitmap,
+    corners: DocumentCorners,
+    frameConfidence: Float,
+    onCornersChanged: (DocumentCorners) -> Unit,
+    onAutoFrame: () -> Unit,
+    onAccept: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val currentCorners = rememberUpdatedState(corners)
+    val currentOnCornersChanged = rememberUpdatedState(onCornersChanged)
+    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) {
+                LocalizedText("Review page", style = MaterialTheme.typography.titleMedium)
+                LocalizedText(
+                    if (frameConfidence > 0f) "Auto-frame confidence ${(frameConfidence * 100).toInt()}%" else "Manual frame",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            AssistChip(onClick = onAutoFrame, label = { LocalizedText("Auto-frame") }, leadingIcon = { Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(16.dp)) })
+        }
+        BoxWithConstraints(
+            Modifier.fillMaxWidth().aspectRatio(bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1)).clip(RoundedCornerShape(16.dp)),
+        ) {
+            val widthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
+            val heightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+            Image(bitmap.asImageBitmap(), "Page awaiting corner review", Modifier.fillMaxSize())
+            ComposeCanvas(
+                Modifier.fillMaxSize().pointerInput(Unit) {
+                    var activeCorner = -1
+                    detectDragGestures(
+                        onDragStart = { touch ->
+                            val values = currentCorners.value.points()
+                            activeCorner = values.indices.minByOrNull { index ->
+                                val dx = touch.x - values[index].x * widthPx
+                                val dy = touch.y - values[index].y * heightPx
+                                dx * dx + dy * dy
+                            } ?: -1
+                        },
+                        onDragEnd = { activeCorner = -1 },
+                        onDragCancel = { activeCorner = -1 },
+                    ) { change, _ ->
+                        if (activeCorner < 0) return@detectDragGestures
+                        change.consume()
+                        val point = NormalizedPoint(
+                            (change.position.x / widthPx).coerceIn(0f, 1f),
+                            (change.position.y / heightPx).coerceIn(0f, 1f),
+                        )
+                        currentOnCornersChanged.value(currentCorners.value.withPoint(activeCorner, point).sanitized())
+                    }
+                },
+            ) {
+                val values = corners.points().map { point -> Offset(point.x * size.width, point.y * size.height) }
+                val outline = Path().apply {
+                    moveTo(values[0].x, values[0].y)
+                    lineTo(values[1].x, values[1].y)
+                    lineTo(values[2].x, values[2].y)
+                    lineTo(values[3].x, values[3].y)
+                    close()
+                }
+                drawPath(outline, Color(0xFF34D399), style = Stroke(width = 5f))
+                values.forEach { point ->
+                    drawCircle(Color.White, radius = 13f, center = point)
+                    drawCircle(Color(0xFF059669), radius = 9f, center = point)
+                }
+            }
+        }
+        LocalizedText("Drag each green corner to the page edge. PureHub corrects perspective before OCR.", style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { LocalizedText("Retake") }
+            Button(onClick = onAccept, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Rounded.DocumentScanner, null)
+                LocalizedText(" Recognize")
+            }
+        }
+    }
+}
+
+private fun DocumentCorners.points(): List<NormalizedPoint> = listOf(topLeft, topRight, bottomRight, bottomLeft)
+
+private fun DocumentCorners.withPoint(index: Int, point: NormalizedPoint): DocumentCorners = when (index) {
+    0 -> copy(topLeft = point)
+    1 -> copy(topRight = point)
+    2 -> copy(bottomRight = point)
+    3 -> copy(bottomLeft = point)
+    else -> this
 }
 
 @Composable
@@ -774,15 +994,9 @@ private fun captureOcrPage(
     )
 }
 
-private fun transformOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filter: OcrFilter): Bitmap {
-    val rotated = if (rotation == 0) source else Bitmap.createBitmap(source, 0, 0, source.width, source.height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
-    if (rotated !== source) source.recycle()
-    val insetX = (rotated.width * crop).toInt().coerceAtMost(max(0, rotated.width / 3))
-    val insetY = (rotated.height * crop).toInt().coerceAtMost(max(0, rotated.height / 3))
-    val cropped = Bitmap.createBitmap(rotated, insetX, insetY, max(1, rotated.width - insetX * 2), max(1, rotated.height - insetY * 2))
-    if (cropped !== rotated) rotated.recycle()
-    if (filter == OcrFilter.Original) return cropped
-    val output = Bitmap.createBitmap(cropped.width, cropped.height, Bitmap.Config.ARGB_8888)
+private fun applyOcrFilter(source: Bitmap, filter: OcrFilter): Bitmap {
+    if (filter == OcrFilter.Original) return source
+    val output = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
     val matrix = ColorMatrix().apply {
         setSaturation(if (filter == OcrFilter.Mono) 0f else 0.25f)
         if (filter == OcrFilter.Clean) {
@@ -791,15 +1005,40 @@ private fun transformOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filte
             postConcat(ColorMatrix(floatArrayOf(contrast,0f,0f,0f,translate, 0f,contrast,0f,0f,translate, 0f,0f,contrast,0f,translate, 0f,0f,0f,1f,0f)))
         }
     }
-    Canvas(output).drawBitmap(cropped, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG).apply { colorFilter = ColorMatrixColorFilter(matrix) })
-    cropped.recycle()
+    Canvas(output).drawBitmap(source, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG).apply { colorFilter = ColorMatrixColorFilter(matrix) })
     return output
 }
 
-private fun prepareOcrBitmap(source: Bitmap, rotation: Int, crop: Float, filter: OcrFilter): Bitmap {
+private fun rotateAndLimitOcrBitmap(source: Bitmap, rotation: Int): Bitmap {
     val limited = limitOcrBitmap(source)
     if (limited !== source) source.recycle()
-    return transformOcrBitmap(limited, rotation, crop, filter)
+    if (rotation == 0) return limited
+    return Bitmap.createBitmap(
+        limited,
+        0,
+        0,
+        limited.width,
+        limited.height,
+        Matrix().apply { postRotate(rotation.toFloat()) },
+        true,
+    ).also { if (it !== limited) limited.recycle() }
+}
+
+private fun prepareOcrBitmap(
+    source: Bitmap,
+    rotation: Int,
+    filter: OcrFilter,
+    reviewedCorners: DocumentCorners? = null,
+): Bitmap {
+    val prepared = rotateAndLimitOcrBitmap(source, rotation)
+    val corners = reviewedCorners ?: DocumentEdgeDetector.detect(prepared).let { frame ->
+        if (frame.confidence > 0f) DocumentCorners.fromCrop(frame.crop) else DocumentCorners.fullFrame(0.01f)
+    }
+    val corrected = DocumentPerspectiveCorrector.correct(prepared, corners)
+    if (corrected !== prepared) prepared.recycle()
+    val filtered = applyOcrFilter(corrected, filter)
+    if (filtered !== corrected) corrected.recycle()
+    return filtered
 }
 
 private fun limitOcrBitmap(source: Bitmap, maxDimension: Int = 1800): Bitmap {
@@ -881,10 +1120,27 @@ private fun loadOcrHistory(raw: String): List<OcrHistoryItem> = runCatching {
     val array = JSONArray(raw)
     (0 until array.length()).map { index ->
         val item = array.getJSONObject(index)
-        OcrHistoryItem(item.optString("title"), item.optString("text"), item.optString("source"), item.optString("savedAt"))
+        OcrHistoryItem(
+            item.optString("title"),
+            item.optString("text"),
+            item.optString("source"),
+            item.optString("savedAt"),
+            item.optString("documentId"),
+            item.optInt("pageCount", 1).coerceAtLeast(1),
+        )
     }.filter { it.text.isNotBlank() }
 }.getOrDefault(emptyList())
 
 private fun encodeOcrHistory(items: List<OcrHistoryItem>): String = JSONArray().apply {
-    items.forEach { item -> put(JSONObject().put("title", item.title).put("text", item.text).put("source", item.source).put("savedAt", item.savedAt)) }
+    items.forEach { item ->
+        put(
+            JSONObject()
+                .put("title", item.title)
+                .put("text", item.text)
+                .put("source", item.source)
+                .put("savedAt", item.savedAt)
+                .put("documentId", item.documentId)
+                .put("pageCount", item.pageCount),
+        )
+    }
 }.toString()
