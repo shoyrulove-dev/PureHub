@@ -123,6 +123,7 @@ import java.io.FileOutputStream
 import java.time.Instant
 import java.util.concurrent.Executor
 import kotlin.math.max
+import kotlin.math.min
 
 private enum class OcrStudioTab(val label: String) { Scan("Scan"), Text("Text"), Library("Library") }
 private enum class OcrMode(val label: String) { Document("Document"), Receipt("Receipt"), Note("Note") }
@@ -251,7 +252,7 @@ fun OcrTextExtractorCard(
     fun acceptReviewedPage() {
         val source = pendingBitmap ?: return
         pendingBitmap = null
-        val edited = prepareOcrBitmap(source, 0, selectedFilter, pendingCorners)
+        val edited = prepareOcrBitmap(source, 0, selectedFilter, selectedMode, pendingCorners)
         recognize(edited, pendingSource.ifBlank { "Scanned page" })
         pendingSource = ""
         frameConfidence = 0f
@@ -310,7 +311,7 @@ fun OcrTextExtractorCard(
                 recognizeNext(index + 1)
                 return
             }
-            val edited = prepareOcrBitmap(bitmap, rotation, selectedFilter)
+            val edited = prepareOcrBitmap(bitmap, rotation, selectedFilter, selectedMode)
             status = "Recognizing image ${index + 1}/${selected.size} on this device..."
             recognizer.recognize(edited) { result ->
                 val raw = result.getOrNull()
@@ -1061,6 +1062,7 @@ private fun prepareOcrBitmap(
     source: Bitmap,
     rotation: Int,
     filter: OcrFilter,
+    mode: OcrMode,
     reviewedCorners: DocumentCorners? = null,
 ): Bitmap {
     val prepared = rotateAndLimitOcrBitmap(source, rotation)
@@ -1071,7 +1073,59 @@ private fun prepareOcrBitmap(
     if (corrected !== prepared) prepared.recycle()
     val filtered = applyOcrFilter(corrected, filter)
     if (filtered !== corrected) corrected.recycle()
-    return filtered
+    if (mode != OcrMode.Receipt) return filtered
+    return enhanceReceiptForOcr(filtered).also { enhanced ->
+        if (enhanced !== filtered) filtered.recycle()
+    }
+}
+
+/**
+ * Thermal receipts often have small, faded strokes.  The general-purpose Clean
+ * filter improves contrast, but it intentionally preserves colour and can leave
+ * those strokes too close to the paper background.  For Receipt mode only, make
+ * a bounded larger grayscale copy and binarize against each local tile.
+ */
+private fun enhanceReceiptForOcr(source: Bitmap): Bitmap {
+    val largest = max(source.width, source.height).coerceAtLeast(1)
+    val scale = min(2f, 1600f / largest.toFloat())
+    val working = if (scale < 0.98f || scale > 1.02f) {
+        Bitmap.createScaledBitmap(
+            source,
+            max(1, (source.width * scale).toInt()),
+            max(1, (source.height * scale).toInt()),
+            true,
+        )
+    } else {
+        source.copy(Bitmap.Config.ARGB_8888, false)
+    }
+    val width = working.width
+    val height = working.height
+    val pixels = IntArray(width * height)
+    working.getPixels(pixels, 0, width, 0, 0, width, height)
+    val output = IntArray(pixels.size)
+    val tileSize = 32
+    for (tileTop in 0 until height step tileSize) {
+        val tileBottom = min(height, tileTop + tileSize)
+        for (tileLeft in 0 until width step tileSize) {
+            val tileRight = min(width, tileLeft + tileSize)
+            var total = 0L
+            var count = 0
+            for (y in tileTop until tileBottom) for (x in tileLeft until tileRight) {
+                val color = pixels[y * width + x]
+                total += ((color shr 16 and 0xff) * 30 + (color shr 8 and 0xff) * 59 + (color and 0xff) * 11) / 100
+                count++
+            }
+            // Keep light anti-aliased accents while separating faded thermal ink.
+            val threshold = (total / count.coerceAtLeast(1) * 0.88f).toInt().coerceIn(48, 224)
+            for (y in tileTop until tileBottom) for (x in tileLeft until tileRight) {
+                val index = y * width + x
+                val color = pixels[index]
+                val luminance = ((color shr 16 and 0xff) * 30 + (color shr 8 and 0xff) * 59 + (color and 0xff) * 11) / 100
+                output[index] = if (luminance < threshold) 0xff000000.toInt() else 0xffffffff.toInt()
+            }
+        }
+    }
+    return Bitmap.createBitmap(output, width, height, Bitmap.Config.ARGB_8888).also { working.recycle() }
 }
 
 private fun limitOcrBitmap(source: Bitmap, maxDimension: Int = 1800): Bitmap {
