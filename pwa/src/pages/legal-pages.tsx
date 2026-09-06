@@ -1,7 +1,7 @@
 import { ExternalLink, FileText, ShieldCheck } from 'lucide-react'
 
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
-const EFFECTIVE_DATE = 'September 1, 2026'
+const EFFECTIVE_DATE = 'September 6, 2026'
 
 function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
   const privacy = kind === 'privacy'
@@ -42,6 +42,22 @@ function PrivacyContent() {
       <div><h2 className="font-bold text-slate-950 dark:text-white">Website analytics</h2><p className="mt-1">The PureHub website uses Google Analytics 4 to measure aggregate visits, pages, acquisition sources, and download interactions. Analytics is not used to send document contents, vault entries, Minigame phone numbers, Gmail addresses, or Android device identifiers. PureHub does not use analytics data to build advertising profiles or sell personal data.</p></div>
       <div><h2 className="font-bold text-slate-950 dark:text-white">Beta Minigame</h2><p className="mt-1">A Minigame entry requires a two-digit prediction, phone number, Gmail address, and a short-lived ticket created after opening the Android app. Contact details are encrypted in the private Command Center and normalized HMAC values are used to prevent duplicate daily entries. The Android identifier is hashed rather than stored in raw form. Participant records remain in the Command Center until an administrator deletes them for operational or legal reasons. Public results show only partially masked phone numbers and Gmail addresses. Gmail is not automatically subscribed to marketing.</p></div>
       <div><h2 className="font-bold text-slate-950 dark:text-white">Community reports</h2><p className="mt-1">If you voluntarily submit feedback or a device report, its message and selected tool are sent to the private support inbox so the team can review and respond. Do not include passwords, document contents, financial information, or other secrets.</p></div>
+      <div>
+        <h2 className="font-bold text-slate-950 dark:text-white">Google API Services and YouTube data</h2>
+        <p className="mt-1">
+          The private PureHub Command Center accesses Google and YouTube data only after an authenticated administrator explicitly connects a YouTube account. It uses the YouTube Data API to read the connected channel identity, video metadata, publication status, schedule status, and aggregate statistics; upload administrator-selected PureHub videos; and update the privacy and scheduled publication time of those videos. PureHub does not use this access to modify comments, ratings, or captions, and it does not delete YouTube videos automatically.
+        </p>
+        <p className="mt-2">
+          OAuth refresh tokens are encrypted at rest in the private Command Center configuration. YouTube data and credentials are not sold, used for advertising, or shared with unrelated third parties. They are processed only by PureHub infrastructure providers as necessary to operate the administrator-requested connection. Operational upload, schedule, and metrics records are retained until an administrator removes them or requests deletion. Using Disconnect YouTube revokes the OAuth token and removes the stored YouTube connection credentials.
+        </p>
+        <p className="mt-2">
+          PureHub&apos;s use and transfer to any other app of information received from Google APIs will adhere to the{' '}
+          <a className="text-link" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">
+            Google API Services User Data Policy
+          </a>
+          , including the Limited Use requirements.
+        </p>
+      </div>
       <div><h2 className="font-bold text-slate-950 dark:text-white">Device permissions</h2><p className="mt-1">Some tools may request camera, microphone, motion, location, files, or notification access. Permission is requested only when a feature needs it and can be withdrawn in your device or browser settings.</p></div>
       <div><h2 className="font-bold text-slate-950 dark:text-white">Website infrastructure</h2><p className="mt-1">Vercel, Cloudflare Turnstile, Google Analytics, and other hosting or security providers may process standard request data such as IP address, browser type, timestamps, challenge results, and error logs to deliver, measure, and protect the service. PureHub does not use this information for advertising profiles.</p></div>
       <div><h2 className="font-bold text-slate-950 dark:text-white">Community and external services</h2><p className="mt-1">Links to GitHub, Telegram, TikTok, YouTube, and other community services are governed by those services' own policies. Information you submit there is shared with the service you choose.</p></div>
