@@ -6,16 +6,17 @@ export type ReceiptScan = {
   rawText: string
 }
 
-const amountPattern = /(?:^|\s)(?:[$€£¥₫]\s*)?(-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|-?\d+[.,]\d{2})(?:\s|$)/g
+const amountPattern = /(?:^|\s)(?:[$€£¥₫]\s*)?(-?\d{1,3}(?:[., ]\d{3})*(?:[.,]\d{2})?|-?\d+)(?:\s*(?:VND|USD|đ|d))?(?:\s|$)/gi
 
 function parseAmount(value: string) {
   const trimmed = value.replace(/[^\d,.-]/g, '')
   const lastComma = trimmed.lastIndexOf(',')
   const lastDot = trimmed.lastIndexOf('.')
-  const decimalIndex = Math.max(lastComma, lastDot)
+  const separatorIndex = Math.max(lastComma, lastDot)
+  const decimalIndex = separatorIndex >= 0 && trimmed.length - separatorIndex - 1 === 2 ? separatorIndex : -1
   const normalized = decimalIndex >= 0
     ? `${trimmed.slice(0, decimalIndex).replace(/[.,]/g, '')}.${trimmed.slice(decimalIndex + 1)}`
-    : trimmed
+    : trimmed.replace(/[.,]/g, '')
   const parsed = Number(normalized)
   return Number.isFinite(parsed) ? Math.abs(parsed) : null
 }
@@ -28,13 +29,13 @@ export function parseReceiptText(rawText: string): ReceiptScan {
     const label = matches.length ? row.slice(0, matches.at(-1)?.index ?? row.length).replace(/[:\s-]+$/, '').trim() : row
     return { row, label, amount }
   })
-  const totalRows = candidates.filter((item) => item.amount != null && /\b(grand\s*total|amount\s*due|balance|total)\b/i.test(item.row) && !/sub\s*total/i.test(item.row))
+  const totalRows = candidates.filter((item) => item.amount != null && /\b(grand\s*total|amount\s*due|balance|total)\b|tổng\s*cộng|thanh\s*toán/iu.test(item.row) && !/sub\s*total|tạm\s*tính/iu.test(item.row))
   const allAmounts = candidates.flatMap((item) => item.amount == null ? [] : [item.amount])
   const total = totalRows.at(-1)?.amount ?? (allAmounts.length ? Math.max(...allAmounts) : null)
-  const tax = candidates.find((item) => item.amount != null && /\b(tax|vat|gst)\b/i.test(item.row))?.amount ?? null
+  const tax = candidates.find((item) => item.amount != null && /\b(tax|vat|gst)\b|thuế/iu.test(item.row))?.amount ?? null
   const merchant = rows.find((row) => /[A-Za-z\p{L}]{3}/u.test(row) && !/receipt|invoice|tax|total|date/i.test(row))?.slice(0, 80) || 'Receipt'
   const lines = candidates
-    .filter((item) => item.amount != null && item.label.length >= 2 && !/total|tax|vat|gst|cash|change|balance|subtotal/i.test(item.row))
+    .filter((item) => item.amount != null && item.label.length >= 2 && !/total|tax|vat|gst|cash|change|balance|subtotal|tổng\s*cộng|thuế|tạm\s*tính/iu.test(item.row))
     .slice(0, 30)
     .map((item) => ({ label: item.label.slice(0, 80), amount: item.amount as number }))
   return { merchant, total, tax, lines, rawText }

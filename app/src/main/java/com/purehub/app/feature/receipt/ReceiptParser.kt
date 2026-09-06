@@ -13,7 +13,7 @@ data class ReceiptResult(
 data class ReceiptLine(val name: String, val amount: Double)
 
 object ReceiptParser {
-    private val amount = Regex("(?:[$€£₫]|VND|USD)?\\s*([0-9]{1,3}(?:[., ][0-9]{3})*(?:[.,][0-9]{2})?)\\s*(?:VND|USD)?$", RegexOption.IGNORE_CASE)
+    private val amount = Regex("(?:[$€£₫]|VND|USD)?\\s*([0-9]{1,3}(?:[., ][0-9]{3})*(?:[.,][0-9]{2})?)\\s*(?:VND|USD|đ|d)?$", RegexOption.IGNORE_CASE)
     private val totalWords = Regex("\\b(total|grand total|amount due|balance due|tổng cộng|thanh toán)\\b", RegexOption.IGNORE_CASE)
     private val taxWords = Regex("\\b(tax|vat|thuế)\\b", RegexOption.IGNORE_CASE)
     private val tipWords = Regex("\\b(tip|gratuity|service charge)\\b", RegexOption.IGNORE_CASE)
@@ -76,8 +76,11 @@ object ReceiptParser {
         if (trailingAmounts.size < 2) return emptyList()
 
         val labelsEnd = lines.size - trailingAmounts.size
-        if (labelsEnd < trailingAmounts.size) return emptyList()
-        val labels = lines.subList(labelsEnd - trailingAmounts.size, labelsEnd)
+        val labelRows = lines.subList(0, labelsEnd)
+        val totalIndex = labelRows.indexOfLast(totalWords::containsMatchIn)
+        val alignedEnd = if (totalIndex >= 0) totalIndex + 1 else labelRows.size
+        if (alignedEnd < trailingAmounts.size) return emptyList()
+        val labels = labelRows.subList(alignedEnd - trailingAmounts.size, alignedEnd)
         if (labels.any { it.isBlank() || datePattern.containsMatchIn(it) || parseAmount(it) != null }) return emptyList()
         return labels.zip(trailingAmounts)
     }

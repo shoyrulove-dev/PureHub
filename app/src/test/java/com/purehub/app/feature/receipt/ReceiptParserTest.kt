@@ -53,4 +53,27 @@ class ReceiptParserTest {
         assertEquals(listOf("Coffee", "Notebook", "USB Cable", "Subtotal"), result.lines.map { it.name })
         assertEquals(listOf(4.50, 12.00, 8.00, 24.50), result.lines.map { it.amount })
     }
+
+    @Test
+    fun acceptsVietnameseCurrencySymbolDegradedByOcr() {
+        val result = ReceiptParser.parse("""
+            HÓA ĐƠN MẪU PUREHUB
+            Ngày: 06/09/2026
+            Cà phê sữa
+            Bánh mì
+            Nước suối
+            Tạm tính
+            Thuế
+            TỔNG CỘNG
+            Không chứa dữ liệu cá nhân thật.
+            35.000 d
+            25.000 đ
+            10.000 d
+            70.000 d
+            7.000 d
+            77.000 d
+        """.trimIndent())
+
+        assertEquals(77000.0, result.total ?: 0.0, 0.001)
+    }
 }
