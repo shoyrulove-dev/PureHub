@@ -14,6 +14,11 @@ const checks = [
   ['en/wifi-analyzer-android/index.html', 'Android Wi-Fi Analyzer'],
 ]
 
+const sitemap = readFileSync(resolve('dist', 'sitemap.xml'), 'utf8')
+if (sitemap.includes('google11321854edbe5f72')) {
+  throw new Error('Search Console verification file must not be included in sitemap.xml')
+}
+
 for (const [relativePath, expected] of checks) {
   const html = readFileSync(resolve('dist', relativePath), 'utf8')
   if (!html.includes(`<title>`) || !html.includes(expected)) throw new Error(`Prerender validation failed for ${relativePath}`)

@@ -158,7 +158,11 @@ export default defineConfig({
     Sitemap({
       hostname: SITE_ORIGIN,
       dynamicRoutes: [...buildSeoSitemapPaths(), ...growthLandingRoutes],
-      exclude: ['/'],
+      // Verification files are required for Search Console, but are not content
+      // pages and must never be submitted for indexing.  Vercel's SPA fallback
+      // serves the shell at the extensionless variant, which otherwise creates
+      // an alternate-canonical entry in the generated sitemap.
+      exclude: ['/', '/google11321854edbe5f72', '/google11321854edbe5f72.html'],
       readable: true,
       generateRobotsTxt: true,
     }),
