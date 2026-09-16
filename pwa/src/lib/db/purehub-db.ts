@@ -37,6 +37,26 @@ export type OcrDocumentRecord = {
   source: string
   pageCount: number
   createdAt: string
+  pages?: OcrStoredPage[]
+}
+
+export type OcrStoredPage = {
+  id: string
+  text: string
+  source: string
+  confidence: number
+  quality?: { score: number; issues: string[] }
+  words?: OcrWord[]
+  imageDataUrl?: string
+}
+
+export type OcrWord = {
+  text: string
+  left: number
+  top: number
+  width: number
+  height: number
+  confidence: number
 }
 
 interface PureHubSchema extends DBSchema {

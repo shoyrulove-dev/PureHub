@@ -451,6 +451,9 @@ fun OcrTextExtractorCard(
                 onExportText = {
                     shareFile(context, exportOcrText(context, documentTitle, combinedOcrText(pages, extractedText)), "text/plain")
                 },
+                onExportCsv = {
+                    shareFile(context, exportOcrCsv(context, documentTitle, extractTableRows(extractedText)), "text/csv")
+                },
                 onExportPdf = {
                     val pagePairs = pages.map { page -> page.bitmap to page.text }
                         .ifEmpty { currentBitmap?.let { listOf(it to extractedText) }.orEmpty() }
@@ -499,6 +502,16 @@ fun OcrTextExtractorCard(
                         selectedPageIndex = index
                         currentBitmap = page.bitmap
                         extractedText = page.text
+                    }
+                },
+                onMovePage = { direction ->
+                    val target = selectedPageIndex + direction
+                    if (selectedPageIndex in pages.indices && target in pages.indices) {
+                        val moved = pages.removeAt(selectedPageIndex)
+                        pages.add(target, moved)
+                        selectedPageIndex = target
+                        currentBitmap = moved.bitmap
+                        extractedText = moved.text
                     }
                 },
                 onDeletePage = {
@@ -845,16 +858,19 @@ private fun OcrTextContent(
     onCopy: () -> Unit,
     onShare: () -> Unit,
     onExportText: () -> Unit,
+    onExportCsv: () -> Unit,
     onExportPdf: () -> Unit,
     onSendToDocumentSuite: () -> Unit,
     onSave: () -> Unit,
     onSaveReceipt: (ReceiptResult) -> Unit,
     onSelectPage: (Int) -> Unit,
+    onMovePage: (Int) -> Unit,
     onDeletePage: () -> Unit,
     onAddPage: () -> Unit,
     onClear: () -> Unit,
 ) {
     val displayedPageCount = pages.size.coerceAtLeast(if (text.isBlank()) 0 else 1)
+    val tableRows = remember(text) { extractTableRows(text) }
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (text.isBlank()) {
             Card(Modifier.fillMaxWidth()) {
@@ -893,6 +909,10 @@ private fun OcrTextContent(
                     modifier = Modifier.weight(1f),
                 ) { LocalizedText("Next") }
             }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(enabled = selectedPageIndex > 0, onClick = { onMovePage(-1) }, modifier = Modifier.weight(1f)) { LocalizedText("Move earlier") }
+                OutlinedButton(enabled = selectedPageIndex < pages.lastIndex, onClick = { onMovePage(1) }, modifier = Modifier.weight(1f)) { LocalizedText("Move later") }
+            }
         }
         OutlinedTextField(value = title, onValueChange = onTitleChanged, label = { LocalizedText("Document title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(
@@ -917,6 +937,15 @@ private fun OcrTextContent(
                     Button(enabled = item.total != null, onClick = { onSaveReceipt(item) }, modifier = Modifier.fillMaxWidth()) {
                         LocalizedText("Save to Money Studio")
                     }
+                }
+            }
+        }
+        if (tableRows.isNotEmpty()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f))) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    LocalizedText("Table detected", style = MaterialTheme.typography.titleSmall)
+                    LocalizedText("${tableRows.size} row(s), ${tableRows.maxOf { it.size }} column(s). Review before exporting.")
+                    Button(onClick = onExportCsv, modifier = Modifier.fillMaxWidth()) { LocalizedText("Export CSV") }
                 }
             }
         }
@@ -1147,6 +1176,18 @@ private fun cleanOcrText(raw: String, mode: OcrMode): String {
         OcrMode.Document -> lines.joinToString("\n").replace(Regex("[ \\t]+"), " ")
         OcrMode.Note -> lines.joinToString(" ").replace(Regex("\\s+"), " ")
     }.trim()
+}
+
+private fun extractTableRows(text: String): List<List<String>> = text.lines()
+    .map { line -> if ('\t' in line) line.split('\t') else line.split(Regex("\\s{2,}")) }
+    .map { row -> row.map(String::trim).filter(String::isNotBlank) }
+    .filter { row -> row.size >= 2 }
+
+private fun exportOcrCsv(context: Context, title: String, rows: List<List<String>>): File {
+    val directory = File(context.cacheDir, "shared").apply { mkdirs() }
+    return File(directory, "${safeFileName(title)}.csv").apply {
+        writeText(rows.joinToString("\n") { row -> row.joinToString(",") { cell -> "\"${cell.replace("\"", "\"\"")}\"" } }, Charsets.UTF_8)
+    }
 }
 
 private fun combinedOcrText(pages: List<OcrPage>, current: String): String {

@@ -21,7 +21,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 46
-        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.45"
+        versionName = providers.environmentVariable("PUREHUB_VERSION_NAME").orNull ?: "1.0.0-beta.46"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"

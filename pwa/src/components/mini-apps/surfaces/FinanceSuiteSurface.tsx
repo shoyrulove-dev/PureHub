@@ -23,11 +23,11 @@ export default function FinanceSuiteSurface({ mode }: { mode: Mode }) {
       <div className="flex items-start gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950">{mode === 'expenses' ? <Wallet className="size-6" /> : <Users className="size-6" />}</span><div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-amber-700 dark:text-amber-300">PRIVATE MONEY TOOLS</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{mode === 'expenses' ? 'Expense Tracker' : 'Bill Splitter'}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{mode === 'expenses' ? 'A calm local ledger with useful trends and export.' : 'Settle a shared bill clearly without sign-up or ads.'}</p></div><ShieldCheck className="hidden size-5 text-emerald-600 sm:block" /></div>
       <nav className="mt-4 grid grid-cols-2 gap-2"><a href={buildMiniAppPath(locale, 'expense-tracker')} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'expenses' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><PieChart className="size-4" />Expenses</a><a href={buildMiniAppPath(locale, 'bill-splitter')} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-black ${mode === 'split' ? 'border-amber-400 bg-amber-600 text-white dark:bg-amber-300 dark:text-slate-950' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><ReceiptText className="size-4" />Split bill</a></nav>
     </header>
-    <div className="p-4 sm:p-5">{mode === 'expenses' ? <ExpenseLedger /> : <BillSplit />}</div>
+    <div className="p-4 sm:p-5">{mode === 'expenses' ? <ExpenseLedger ocrLanguage={locale === 'zh' ? 'chi_sim' : 'eng+vie'} /> : <BillSplit ocrLanguage={locale === 'zh' ? 'chi_sim' : 'eng+vie'} />}</div>
   </section>
 }
 
-function ExpenseLedger() {
+function ExpenseLedger({ ocrLanguage }: { ocrLanguage: string }) {
   const [records, setRecords] = useState<ExpenseRecord[]>([])
   const [title, setTitle] = useState(''); const [amount, setAmount] = useState(''); const [category, setCategory] = useState('Food'); const [note, setNote] = useState('')
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense'); const [wallet, setWallet] = useState('Cash')
@@ -59,7 +59,7 @@ function ExpenseLedger() {
     const file = event.target.files?.[0]; event.target.value = ''; if (!file) return
     setBusy(true); setReceiptStatus('Reading receipt locally...')
     try {
-      const receipt = await recognizeReceipt(file, (progress) => setReceiptStatus(`Reading receipt locally... ${Math.round(progress * 100)}%`))
+      const receipt = await recognizeReceipt(file, ocrLanguage, (progress) => setReceiptStatus(`Reading receipt locally... ${Math.round(progress * 100)}%`))
       setTitle(receipt.merchant); if (receipt.total != null) setAmount(String(receipt.total))
       setNote([receipt.tax != null ? `Tax: ${receipt.tax}` : '', receipt.lines.length ? `${receipt.lines.length} item lines detected` : ''].filter(Boolean).join(' - '))
       setReceiptStatus(receipt.total == null ? 'Text detected, but the total needs review.' : 'Receipt fields filled. Review before saving.')
@@ -96,7 +96,7 @@ function ExpenseLedger() {
   </div>
 }
 
-function BillSplit() {
+function BillSplit({ ocrLanguage }: { ocrLanguage: string }) {
   const [bill, setBill] = useState('60'); const [tax, setTax] = useState('5'); const [tip, setTip] = useState('10'); const [names, setNames] = useState(['Alex', 'Sam', 'Taylor'])
   const [weights, setWeights] = useState([1, 1, 1]); const [splitMode, setSplitMode] = useState<'equal' | 'weighted' | 'itemized'>('equal'); const [paidBy, setPaidBy] = useState(0)
   const [items, setItems] = useState([{ id: crypto.randomUUID(), label: 'Main dish', amount: '20', person: 0 }])
@@ -122,7 +122,7 @@ function BillSplit() {
     const file = event.target.files?.[0]; event.target.value = ''; if (!file) return
     setReceiptBusy(true); setReceiptStatus('Reading receipt locally...')
     try {
-      const receipt = await recognizeReceipt(file, (progress) => setReceiptStatus(`Reading receipt locally... ${Math.round(progress * 100)}%`))
+      const receipt = await recognizeReceipt(file, ocrLanguage, (progress) => setReceiptStatus(`Reading receipt locally... ${Math.round(progress * 100)}%`))
       if (receipt.tax != null) setTax(String(receipt.tax))
       if (receipt.lines.length) {
         setItems(receipt.lines.map((line, index) => ({ id: crypto.randomUUID(), label: line.label, amount: String(line.amount), person: index % names.length })))
