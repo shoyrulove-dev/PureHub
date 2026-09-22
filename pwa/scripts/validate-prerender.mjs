@@ -22,6 +22,12 @@ if (sitemap.includes('google11321854edbe5f72')) {
   throw new Error('Search Console verification file must not be included in sitemap.xml')
 }
 
+const sitemapUrls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1])
+if (sitemapUrls.length > 500) throw new Error(`SEO inventory exceeds the guarded limit: ${sitemapUrls.length} URLs`)
+if (new Set(sitemapUrls).size !== sitemapUrls.length) throw new Error('Sitemap contains duplicate URLs')
+if (sitemapUrls.some((url) => /[?&](page|amount|value|number)=/i.test(url))) throw new Error('Sitemap contains parameterized SEO URLs')
+if (sitemapUrls.some((url) => /\/converter\/[^/]*\d/i.test(url))) throw new Error('Converter URL appears to encode a quantity; use a fixed unit pair instead')
+
 for (const [relativePath, expected] of checks) {
   const html = readFileSync(resolve('dist', relativePath), 'utf8')
   if (!html.includes(`<title>`) || !html.includes(expected) || !html.includes('<main class="seo-static-content"') || !html.includes('<h1>')) throw new Error(`Prerender content validation failed for ${relativePath}`)
