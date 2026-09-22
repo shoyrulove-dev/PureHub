@@ -13,6 +13,7 @@ export const GrowthLandingPage = lazy(() => import('../pages/growth-landing-page
 export const ResultsPage = lazy(() => import('../pages/results-page').then((module) => ({ default: module.ResultsPage })))
 export const PrivacyCenterPage = lazy(() => import('../pages/privacy-center-page').then((module) => ({ default: module.PrivacyCenterPage })))
 export const MinigamePage = lazy(() => import('../pages/minigame-page').then((module) => ({ default: module.MinigamePage })))
+export const ProgrammaticConverterPage = lazy(() => import('../pages/programmatic-converter-page').then((module) => ({ default: module.ProgrammaticConverterPage })))
 
 export function RouteLoader({ children }: { children: ReactNode }) {
   return <Suspense fallback={<div className="mx-auto mt-10 h-24 w-full max-w-3xl animate-pulse rounded-3xl bg-slate-200/70 dark:bg-slate-800/70" />}>{children}</Suspense>

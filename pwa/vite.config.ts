@@ -17,6 +17,15 @@ import {
 } from './src/config/seoMeta.js'
 import { getSeoContent, getSeoCopy } from './src/config/seoContent.js'
 import { growthLandingPages, growthLandingRoutes } from './src/config/growthLandingPages.js'
+import {
+  buildProgrammaticConverterPath,
+  convertProgrammaticValue,
+  formatProgrammaticValue,
+  programmaticConverters,
+  programmaticConverterDescription,
+  programmaticConverterQuickAnswer,
+  programmaticConverterTitle,
+} from './src/config/programmaticSeo.js'
 
 function escapeAttribute(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -37,6 +46,20 @@ function renderStaticSiteContent(title: string, description: string, lang: strin
   const heading = lang === 'vi' ? 'Giới thiệu PureHub' : lang === 'zh' ? '关于 PureHub' : 'About PureHub'
   const next = lang === 'vi' ? 'Mở danh mục công cụ' : lang === 'zh' ? '浏览工具目录' : 'Browse the tool collection'
   return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><section><h2>${heading}</h2><p>PureHub provides free, private-first tools for focused everyday workflows. Use the browser app now, install the PWA for quick access, or choose Android when native capabilities are useful.</p></section><a href="/${lang}/tools">${next}</a></main>`
+}
+
+function renderStaticProgrammaticContent(converter: (typeof programmaticConverters)[number], lang: Parameters<typeof programmaticConverterTitle>[1]) {
+  const title = programmaticConverterTitle(converter, lang)
+  const quickAnswer = programmaticConverterQuickAnswer(converter, lang)
+  const labels = lang === 'vi'
+    ? { table: 'Bảng quy đổi phổ biến', formula: 'Công thức', faq: 'Câu hỏi thường gặp', input: converter.from.vi, output: converter.to.vi }
+    : lang === 'zh'
+      ? { table: '常用换算表', formula: '计算公式', faq: '常见问题', input: converter.from.zh, output: converter.to.zh }
+      : { table: 'Common conversion table', formula: 'Formula', faq: 'Frequently asked questions', input: converter.from.en, output: converter.to.en }
+  const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
+  const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
+  const rows = converter.values.map((value) => `<tr><td>${escapeHtml(formatProgrammaticValue(value))}</td><td>${escapeHtml(formatProgrammaticValue(convertProgrammaticValue(converter, value)))}</td></tr>`).join('')
+  return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(programmaticConverterDescription(converter, lang))}</p><p><strong>${escapeHtml(quickAnswer)}</strong></p><section><h2>${escapeHtml(labels.table)}</h2><table><thead><tr><th>${escapeHtml(labels.input)}</th><th>${escapeHtml(labels.output)}</th></tr></thead><tbody>${rows}</tbody></table></section><section><h2>${escapeHtml(labels.formula)}</h2><p><code>${escapeHtml(converter.formula[lang])}</code></p></section><section><h2>${escapeHtml(labels.faq)}</h2><details><summary>${escapeHtml(faqQuestion)}</summary><p>${escapeHtml(faqAnswer)}</p></details></section></main>`
 }
 
 function injectSeoHtml(
@@ -111,6 +134,36 @@ function staticSeoPages() {
         })
       }
 
+      for (const converter of programmaticConverters) {
+        for (const lang of SEO_LANGUAGES) {
+          const path = buildProgrammaticConverterPath(lang, converter.slug)
+          const canonicalUrl = `${SITE_ORIGIN}${path}`
+          const title = programmaticConverterTitle(converter, lang)
+          const description = programmaticConverterDescription(converter, lang)
+          const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
+          const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
+          pages.push({
+            path,
+            lang,
+            title,
+            description,
+            canonicalUrl,
+            alternates: Object.fromEntries([
+              ...SEO_LANGUAGES.map((alternateLang) => [alternateLang, `${SITE_ORIGIN}${buildProgrammaticConverterPath(alternateLang, converter.slug)}`]),
+              ['x-default', `${SITE_ORIGIN}${buildProgrammaticConverterPath('en', converter.slug)}`],
+            ]),
+            schema: {
+              '@context': 'https://schema.org',
+              '@graph': [
+                { '@type': 'WebPage', name: title, description, url: canonicalUrl, inLanguage: lang },
+                { '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: faqQuestion, acceptedAnswer: { '@type': 'Answer', text: faqAnswer } }] },
+              ],
+            },
+            bodyHtml: renderStaticProgrammaticContent(converter, lang),
+          })
+        }
+      }
+
       for (const pageId of SEO_SITE_PAGE_IDS) {
         for (const lang of SEO_LANGUAGES) {
           const meta = seoSiteMeta[pageId][lang]
@@ -174,7 +227,7 @@ export default defineConfig({
     tailwindcss(),
     Sitemap({
       hostname: SITE_ORIGIN,
-      dynamicRoutes: [...buildSeoSitemapPaths(), ...growthLandingRoutes],
+      dynamicRoutes: [...buildSeoSitemapPaths(), ...growthLandingRoutes, ...programmaticConverters.flatMap((converter) => SEO_LANGUAGES.map((lang) => buildProgrammaticConverterPath(lang, converter.slug)))],
       // Verification files are required for Search Console, but are not content
       // pages and must never be submitted for indexing.  Vercel's SPA fallback
       // serves the shell at the extensionless variant, which otherwise creates

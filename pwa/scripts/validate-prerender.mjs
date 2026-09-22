@@ -12,6 +12,9 @@ const checks = [
   ['en/offline-barcode-scanner/index.html', 'Offline Barcode'],
   ['en/phone-bubble-level/index.html', 'Bubble Level'],
   ['en/wifi-analyzer-android/index.html', 'Android Wi-Fi Analyzer'],
+  ['en/converter/meter-to-kilometer/index.html', 'Convert meters to kilometers'],
+  ['vi/converter/celsius-to-fahrenheit/index.html', 'Chuyển đổi độ C sang độ F'],
+  ['zh/converter/kilogram-to-pound/index.html', '精准将千克转换为磅'],
 ]
 
 const sitemap = readFileSync(resolve('dist', 'sitemap.xml'), 'utf8')
@@ -23,6 +26,11 @@ for (const [relativePath, expected] of checks) {
   const html = readFileSync(resolve('dist', relativePath), 'utf8')
   if (!html.includes(`<title>`) || !html.includes(expected) || !html.includes('<main class="seo-static-content"') || !html.includes('<h1>')) throw new Error(`Prerender content validation failed for ${relativePath}`)
   if (!html.includes('rel="canonical"') || !html.includes('data-seo-page')) throw new Error(`SEO metadata missing from ${relativePath}`)
+}
+
+const converterHtml = readFileSync(resolve('dist', 'en/converter/meter-to-kilometer/index.html'), 'utf8')
+if (!converterHtml.includes('<table>') || !converterHtml.includes('<code>') || converterHtml.includes('100-meter-to-kilometer')) {
+  throw new Error('Programmatic converter thin-content or infinite-crawl guard failed')
 }
 
 console.log(`Validated ${checks.length} prerendered SEO routes.`)

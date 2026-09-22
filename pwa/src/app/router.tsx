@@ -3,7 +3,8 @@ import { LocaleLayout } from './locale-layout'
 import { LocaleRedirectPage } from '../pages/locale-redirect-page'
 import { BackendRouteRecovery } from '../pages/backend-route-recovery'
 import { GROWTH_LANDING_IDS, growthLandingPages } from '../config/growthLandingPages'
-import { ChangelogPage, CommunityPage, DownloadPage, GrowthLandingPage, LocaleIndexPage, LocalizedEntryPage, MinigamePage, PrivacyCenterPage, PrivacyPage, ResultsPage, RouteLoader, SettingsPage, TermsPage, ToolsPage } from './lazy-routes'
+import { ChangelogPage, CommunityPage, DownloadPage, GrowthLandingPage, LocaleIndexPage, LocalizedEntryPage, MinigamePage, PrivacyCenterPage, PrivacyPage, ProgrammaticConverterPage, ResultsPage, RouteLoader, SettingsPage, TermsPage, ToolsPage } from './lazy-routes'
+import { programmaticConverters } from '../config/programmaticSeo'
 
 export const appRouter = createBrowserRouter([
   {
@@ -73,6 +74,10 @@ export const appRouter = createBrowserRouter([
       ...GROWTH_LANDING_IDS.map((landingId) => ({
         path: growthLandingPages[landingId].slug,
         element: <RouteLoader><GrowthLandingPage landingId={landingId} /></RouteLoader>,
+      })),
+      ...programmaticConverters.map((converter) => ({
+        path: `converter/${converter.slug}`,
+        element: <RouteLoader><ProgrammaticConverterPage /></RouteLoader>,
       })),
       {
         path: ':appSlug',
