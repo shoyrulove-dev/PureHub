@@ -13,6 +13,7 @@ import {
 } from '../config/programmaticSeo'
 import { normalizeLocale } from '../i18n/locales'
 import { buildCanonicalUrl, getSeoMetaByAppId, SITE_ORIGIN } from '../config/seoMeta'
+import { AdsterraNativeBanner } from '../components/ads/AdsterraNativeBanner'
 
 export function ProgrammaticConverterPage() {
   const { lang, pairSlug } = useParams()
@@ -76,6 +77,8 @@ export function ProgrammaticConverterPage() {
         <section className="app-surface rounded-[18px] p-5"><h2 className="flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white"><Code2 className="size-5 text-violet-600" />{labels.formula}</h2><code className="mt-3 block rounded-xl bg-slate-950 p-4 text-sm text-emerald-200">{converter.formula[locale]}</code></section>
 
         <section className="app-surface rounded-[18px] p-5"><h2 className="text-xl font-bold text-slate-950 dark:text-white">{labels.faq}</h2>{faq.map((item) => <details key={item.question} className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700"><summary className="cursor-pointer font-bold">{item.question}</summary><p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.answer}</p></details>)}</section>
+
+        <AdsterraNativeBanner />
 
         {unitConverterMeta ? <Link to={buildCanonicalUrl(locale, unitConverterMeta.slug)} className="flex items-center justify-between rounded-[18px] bg-slate-950 p-4 font-bold text-white dark:bg-emerald-950"><span className="flex items-center gap-2"><CheckCircle2 className="size-5 text-emerald-300" />{labels.use}</span><ArrowRight className="size-5" /></Link> : null}
       </main>
