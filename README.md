@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 26 free, ad-free mini apps. Private by default, open source, community built." />
+  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 26 private-first mini apps. Open source and community built." />
 </p>
 
 <h1 align="center">PureHub</h1>
 
 <p align="center">
   <strong>Small, practical utilities for focus, measurement, scanning, documents, privacy, audio, and personal finance.</strong><br />
-  Free to use. No ads. No mandatory account. Open source.
+  Free to use. Core mini-apps remain ad-free. No mandatory account. Open source.
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@
 
 ## What is PureHub?
 
-PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 25 practical tools plus one community hub in a consistent interface.
+PureHub is an offline-first utility collection for Android and the web. Instead of installing many single-purpose apps filled with advertising and tracking, you get 26 practical mini-app experiences, including the community hub, in a consistent interface.
 
 Typical uses include scanning or creating a QR code, running a Pomodoro session, extracting text from an image, converting units, checking a level or compass, splitting a bill, tracking expenses, and following a guided breathing exercise.
 
@@ -78,7 +78,7 @@ Some tools depend on device capabilities such as a camera, microphone, motion se
 
 ## Why this project exists
 
-- **Free and ad-free:** no banner ads, interstitials, subscriptions, or surprise paywalls.
+- **Free and calm:** core mini-app workflows and the Android app remain ad-free; selected SEO converter pages on the public web may show one small native banner, with no interstitials, subscriptions, or surprise paywalls.
 - **Privacy-first:** local processing and on-device storage are preferred whenever the platform allows it.
 - **Offline-first:** the PWA caches its application shell; the Android app deliberately removes the `INTERNET` permission from release builds.
 - **Open source:** product decisions, releases, security limitations, and implementation are visible here.
@@ -170,7 +170,14 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, or join 
 
 ## Current direction
 
-The immediate priorities are reliability on real devices, deeper workflows for the most-used tools, accessibility, honest privacy boundaries, and community feedback. PureHub will remain free, ad-free, and open source.
+The immediate priorities are reliability on real devices, deeper workflows for the most-used tools, accessibility, honest privacy boundaries, and community feedback. PureHub will remain free, open source, and ad-light on the public web while keeping the core tools distraction-free.
+
+### Latest web update
+
+- The PWA now has a controlled 500-URL SEO inventory with fixed converter pages, static content, canonical URLs, hreflang, tables, formulas, and FAQ structured data.
+- Command Center monitors sitemap reachability, URL counts, locale distribution, duplicate/query guards, and quantity-like converter URLs.
+- A single lazy-loaded Native Banner may appear below the content on SEO converter pages only. OCR, QR, camera, document workflows, and the Android app do not load that ad.
+- The web build uses code-split PDF dependencies so the initial PWA bundle stays separate from PDF tooling.
 
 See the [original 22-app flagship report](ALL_MINIAPPS_FLAGSHIP_REPORT_2026-08-10.md) for the previous catalog milestone, verification results, and video campaign status.
 
