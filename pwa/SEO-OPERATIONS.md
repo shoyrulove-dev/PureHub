@@ -50,3 +50,11 @@ Share links from the app should be user-initiated and use the canonical page URL
 - Use GA4 to compare landing-page views, tool starts, completed actions, and return visits by locale.
 - Keep pages that show impressions and useful engagement; improve or remove pages that remain low-value.
 - Do not treat a larger sitemap as growth by itself. Indexing, impressions, tool starts, and completed workflows are the decision signals.
+
+## Command Center boundary
+
+The Command Center now monitors the production sitemap from its overview dashboard: URL count, 500-URL guard headroom, locale distribution, converter count, duplicate/query URL checks, and quantity-like converter URL checks.
+
+Existing mini-app route status and traffic priority can already be managed from the admin catalog. Creating a brand-new indexable SEO family is not yet a fully no-code admin action: it still requires adding a reviewed data family to the PWA build and deploying it. This is intentional because static HTML, canonical URLs, hreflang, schema, and sitemap membership must be validated together.
+
+The safe next architecture for no-code expansion is an admin-managed SEO content queue with states such as `draft`, `review`, `approved`, `published`, and `noindex`. Approved records would be exported into the PWA build only after the same thin-content and URL guardrails pass. Until that workflow exists, do not create SEO pages directly from arbitrary admin text or user queries.
