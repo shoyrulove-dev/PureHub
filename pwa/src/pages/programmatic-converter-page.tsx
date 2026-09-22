@@ -15,10 +15,10 @@ import { normalizeLocale } from '../i18n/locales'
 import { buildCanonicalUrl, getSeoMetaByAppId, SITE_ORIGIN } from '../config/seoMeta'
 import { AdsterraNativeBanner } from '../components/ads/AdsterraNativeBanner'
 
-export function ProgrammaticConverterPage() {
+export function ProgrammaticConverterPage({ converterSlug }: { converterSlug?: string }) {
   const { lang, pairSlug } = useParams()
   const locale = normalizeLocale(lang)
-  const converter = getProgrammaticConverter(pairSlug ?? '')
+  const converter = getProgrammaticConverter(converterSlug ?? pairSlug ?? '')
   const [value, setValue] = useState('1')
 
   if (!converter) return null

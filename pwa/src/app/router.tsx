@@ -77,7 +77,7 @@ export const appRouter = createBrowserRouter([
       })),
       ...programmaticConverters.map((converter) => ({
         path: `converter/${converter.slug}`,
-        element: <RouteLoader><ProgrammaticConverterPage /></RouteLoader>,
+        element: <RouteLoader><ProgrammaticConverterPage converterSlug={converter.slug} /></RouteLoader>,
       })),
       {
         path: ':appSlug',
