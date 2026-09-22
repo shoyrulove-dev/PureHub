@@ -261,6 +261,21 @@ export default defineConfig({
     }),
     staticSeoPages(),
   ],
+  build: {
+    // pdf-lib is an intentionally lazy-loaded document feature. Its ESM
+    // distribution is a single ~511 KB chunk, while it is not part of the
+    // initial PWA bundle. Keep the warning threshold aligned with that
+    // deferred dependency instead of flagging a non-startup asset.
+    chunkSizeWarningLimit: 550,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/pdf-lib')) return 'pdf-vendor'
+          return undefined
+        },
+      },
+    },
+  },
   server: {
     host: true,
   },
