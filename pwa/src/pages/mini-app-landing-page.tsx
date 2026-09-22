@@ -11,6 +11,8 @@ import { MiniAppErrorBoundary } from '../components/mini-apps/MiniAppErrorBounda
 import { ToolWorkflowStatus } from '../components/mini-apps/ToolWorkflowStatus'
 import { getMiniAppRuntime } from '../features/miniapps/runtime'
 import { WorkspaceNavigator } from '../components/mini-apps/WorkspaceNavigator'
+import { SeoLandingContent } from '../components/seo/SeoLandingContent'
+import { SEO_MINI_APP_IDS, type SeoMiniAppId } from '../config/seoMeta'
 
 const MiniAppSurface = lazy(() =>
   import('../components/mini-apps/MiniAppSurface').then((module) => ({
@@ -36,6 +38,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       ? 'Pack on demand'
       : 'Offline ready'
   const CapabilityIcon = miniApp.id === 'community-pro-unlock' || miniApp.id === 'ocr-text' ? Wifi : WifiOff
+  const seoAppId = (SEO_MINI_APP_IDS as readonly string[]).includes(miniApp.id) ? miniApp.id as SeoMiniAppId : null
 
   useEffect(() => {
     rememberRecentTool(miniApp.id)
@@ -83,6 +86,8 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       </MiniAppErrorBoundary>
 
       <MiniAppEngagement miniAppId={miniApp.id} title={t(miniApp.titleKey)} />
+
+      {seoAppId ? <SeoLandingContent appId={seoAppId} lang={normalizedLocale} /> : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-500/10 bg-slate-500/5 p-2.5 text-xs text-slate-500">
         <span className="flex items-center gap-1.5" title={`Isolated storage: ${runtime.storageNamespace}`}><HardDrive className="size-3.5" /> Local storage</span>

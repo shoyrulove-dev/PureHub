@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { getSeoContent } from '../../config/seoContent'
 import { SEO_LANGUAGES, SITE_ORIGIN, seoMeta, type SeoLanguage, type SeoMiniAppId } from '../../config/seoMeta'
 
 type SeoHelmetProps = {
@@ -18,6 +19,8 @@ export function SeoHelmet({
   lang,
   appId,
 }: SeoHelmetProps) {
+  const content = getSeoContent(appId, lang)
+
   return (
     <Helmet htmlAttributes={{ lang }}>
       <title>{title}</title>
@@ -50,25 +53,44 @@ export function SeoHelmet({
       <script type="application/ld+json">
         {JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'WebApplication',
-          name: title,
-          description,
-          url: canonicalUrl,
-          applicationCategory: 'UtilitiesApplication',
-          operatingSystem: 'Any',
-          browserRequirements: 'Requires a modern web browser with JavaScript enabled',
-          inLanguage: lang,
-          isAccessibleForFree: true,
-          offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'USD',
-          },
-          publisher: {
-            '@type': 'Organization',
-            name: 'PureHub Community',
-            url: SITE_ORIGIN,
-          },
+          '@graph': [
+            {
+              '@type': 'WebApplication',
+              name: title,
+              description,
+              url: canonicalUrl,
+              applicationCategory: 'UtilitiesApplication',
+              operatingSystem: 'Any',
+              browserRequirements: 'Requires a modern web browser with JavaScript enabled',
+              inLanguage: lang,
+              isAccessibleForFree: true,
+              offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'USD',
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'PureHub Community',
+                url: SITE_ORIGIN,
+              },
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'PureHub', item: `${SITE_ORIGIN}/${lang}/` },
+                { '@type': 'ListItem', position: 2, name: title, item: canonicalUrl },
+              ],
+            },
+            {
+              '@type': 'FAQPage',
+              mainEntity: content.faqs.map((faq) => ({
+                '@type': 'Question',
+                name: faq.question,
+                acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+              })),
+            },
+          ],
         })}
       </script>
     </Helmet>

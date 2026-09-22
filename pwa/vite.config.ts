@@ -15,15 +15,33 @@ import {
   seoRouteEntries,
   seoSiteMeta,
 } from './src/config/seoMeta.js'
+import { getSeoContent, getSeoCopy } from './src/config/seoContent.js'
 import { growthLandingPages, growthLandingRoutes } from './src/config/growthLandingPages.js'
 
 function escapeAttribute(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }
 
+function escapeHtml(value: string) {
+  return escapeAttribute(value).replaceAll("'", '&#39;')
+}
+
+function renderStaticSeoContent(appId: Parameters<typeof getSeoContent>[0], lang: Parameters<typeof getSeoContent>[1], title: string) {
+  const content = getSeoContent(appId, lang)
+  const labels = getSeoCopy(lang)
+  const faq = content.faqs.map((item) => `<details><summary>${escapeHtml(item.question)}</summary><p>${escapeHtml(item.answer)}</p></details>`).join('')
+  return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(content.intro)}</p><section><h2>${escapeHtml(labels.features)}</h2><ul>${content.benefits.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>${escapeHtml(labels.steps)}</h2><ol>${content.steps.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol></section><section><h2>${escapeHtml(labels.note)}</h2><p>${escapeHtml(content.note)}</p></section><section><h2>${escapeHtml(labels.faq)}</h2>${faq}</section></main>`
+}
+
+function renderStaticSiteContent(title: string, description: string, lang: string) {
+  const heading = lang === 'vi' ? 'Giới thiệu PureHub' : lang === 'zh' ? '关于 PureHub' : 'About PureHub'
+  const next = lang === 'vi' ? 'Mở danh mục công cụ' : lang === 'zh' ? '浏览工具目录' : 'Browse the tool collection'
+  return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><section><h2>${heading}</h2><p>PureHub provides free, private-first tools for focused everyday workflows. Use the browser app now, install the PWA for quick access, or choose Android when native capabilities are useful.</p></section><a href="/${lang}/tools">${next}</a></main>`
+}
+
 function injectSeoHtml(
   source: string,
-  page: { lang: string; title: string; description: string; canonicalUrl: string; alternates: Record<string, string>; schema: object },
+  page: { lang: string; title: string; description: string; canonicalUrl: string; alternates: Record<string, string>; schema: object; bodyHtml: string },
 ) {
   const title = escapeAttribute(page.title)
   const description = escapeAttribute(page.description)
@@ -47,6 +65,7 @@ function injectSeoHtml(
       /<link rel="canonical" href="[^"]*" \/>/,
       `<link rel="canonical" href="${canonicalUrl}" />\n${alternateLinks}`,
     )
+    .replace('<div id="root"></div>', page.bodyHtml)
     .replace('</head>', `    <script type="application/ld+json" data-seo-page>${schema}</script>\n  </head>`)
 }
 
@@ -64,6 +83,7 @@ function staticSeoPages() {
         canonicalUrl: string
         alternates: Record<string, string>
         schema: object
+        bodyHtml: string
       }> = []
 
       for (const entry of seoRouteEntries) {
@@ -81,16 +101,13 @@ function staticSeoPages() {
           ]),
           schema: {
             '@context': 'https://schema.org',
-            '@type': 'WebApplication',
-            name: meta.title,
-            description: meta.description,
-            url: canonicalUrl,
-            applicationCategory: 'UtilitiesApplication',
-            operatingSystem: 'Any',
-            inLanguage: entry.lang,
-            isAccessibleForFree: true,
-            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            '@graph': [
+              { '@type': 'WebApplication', name: meta.title, description: meta.description, url: canonicalUrl, applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any', inLanguage: entry.lang, isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } },
+              { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'PureHub', item: SITE_ORIGIN }, { '@type': 'ListItem', position: 2, name: meta.title, item: canonicalUrl }] },
+              { '@type': 'FAQPage', mainEntity: getSeoContent(entry.appId, entry.lang).faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) },
+            ],
           },
+          bodyHtml: renderStaticSeoContent(entry.appId, entry.lang, meta.title),
         })
       }
 
@@ -117,6 +134,7 @@ function staticSeoPages() {
               inLanguage: lang,
               isPartOf: { '@type': 'WebSite', '@id': `${SITE_ORIGIN}/#website`, name: 'PureHub', url: SITE_ORIGIN },
             },
+            bodyHtml: renderStaticSiteContent(meta.title, meta.description, lang),
           })
         }
       }
@@ -132,13 +150,12 @@ function staticSeoPages() {
           alternates: {},
           schema: {
             '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: landing.faqs.map((faq) => ({
-              '@type': 'Question',
-              name: faq.question,
-              acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-            })),
+            '@graph': [
+              { '@type': 'WebPage', name: landing.title, description: landing.description, url: canonicalUrl, inLanguage: 'en' },
+              { '@type': 'FAQPage', mainEntity: landing.faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) },
+            ],
           },
+          bodyHtml: `<main class="seo-static-content" aria-label="${escapeAttribute(landing.title)}"><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.lead)}</p><section><h2>How it works</h2><ol>${landing.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></section><section><h2>Important note</h2><p>${escapeHtml(landing.browserNote)}</p></section><section><h2>Questions people ask</h2>${landing.faqs.map((faq) => `<details><summary>${escapeHtml(faq.question)}</summary><p>${escapeHtml(faq.answer)}</p></details>`).join('')}</section></main>`,
         })
       }
 

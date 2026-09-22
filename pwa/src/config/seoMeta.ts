@@ -622,6 +622,11 @@ export const seoMeta: SeoMetaDictionary = {
   },
 }
 
+export function getSeoMetaByAppId(appId: string, lang: SeoLanguage): SeoMetaEntry | null {
+  if (!Object.prototype.hasOwnProperty.call(seoMeta, appId)) return null
+  return seoMeta[appId as SeoMiniAppId][lang]
+}
+
 export type SeoRouteEntry = {
   appId: SeoMiniAppId
   lang: SeoLanguage

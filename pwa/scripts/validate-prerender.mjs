@@ -21,7 +21,7 @@ if (sitemap.includes('google11321854edbe5f72')) {
 
 for (const [relativePath, expected] of checks) {
   const html = readFileSync(resolve('dist', relativePath), 'utf8')
-  if (!html.includes(`<title>`) || !html.includes(expected)) throw new Error(`Prerender validation failed for ${relativePath}`)
+  if (!html.includes(`<title>`) || !html.includes(expected) || !html.includes('<main class="seo-static-content"') || !html.includes('<h1>')) throw new Error(`Prerender content validation failed for ${relativePath}`)
   if (!html.includes('rel="canonical"') || !html.includes('data-seo-page')) throw new Error(`SEO metadata missing from ${relativePath}`)
 }
 
