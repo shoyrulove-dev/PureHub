@@ -22,8 +22,8 @@ if (sitemap.includes('google11321854edbe5f72')) {
   throw new Error('Search Console verification file must not be included in sitemap.xml')
 }
 
-const sitemapUrls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1])
-if (sitemapUrls.length > 500) throw new Error(`SEO inventory exceeds the guarded limit: ${sitemapUrls.length} URLs`)
+const sitemapUrls = [...sitemap.matchAll(/<loc>\s*(.*?)\s*<\/loc>/gs)].map((match) => match[1])
+if (sitemapUrls.length !== 500) throw new Error(`SEO inventory must contain exactly 500 controlled URLs; found ${sitemapUrls.length}`)
 if (new Set(sitemapUrls).size !== sitemapUrls.length) throw new Error('Sitemap contains duplicate URLs')
 if (sitemapUrls.some((url) => /[?&](page|amount|value|number)=/i.test(url))) throw new Error('Sitemap contains parameterized SEO URLs')
 if (sitemapUrls.some((url) => /\/converter\/[^/]*\d/i.test(url))) throw new Error('Converter URL appears to encode a quantity; use a fixed unit pair instead')

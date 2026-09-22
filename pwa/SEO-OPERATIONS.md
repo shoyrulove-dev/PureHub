@@ -2,12 +2,12 @@
 
 ## Current inventory
 
-The PWA publishes a controlled inventory of static SEO pages:
+The PWA publishes a controlled inventory of exactly 500 static SEO pages:
 
 - 26 miniapp pages × 3 locales.
 - 5 site pages × 3 locales.
 - Growth landing pages.
-- A small, reviewed set of fixed converter pairs × 3 locales.
+- 134 reviewed fixed converter pairs × 3 locales.
 
 The sitemap is generated from these allowlists during the production build. It is not generated from arbitrary user input, search queries, or converter values.
 
@@ -32,7 +32,7 @@ Do not create pages such as `100-usd-to-vnd`, `101-usd-to-vnd`, or URLs with `?a
 - Duplicate sitemap URLs.
 - Parameterized SEO URLs.
 - Quantity-like converter URLs.
-- More than 500 indexable URLs in the current inventory.
+- Anything other than exactly 500 indexable URLs in the current inventory.
 - Representative pages without static H1/content, tables, formulas, or schema.
 
 When adding a page, add it to the relevant typed allowlist and add one representative route to `scripts/validate-prerender.mjs`.
