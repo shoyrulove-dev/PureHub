@@ -32,7 +32,7 @@ function languageLabel(code: string, fallback: string) {
 type Tab = 'scan' | 'text' | 'library'
 type ScanMode = 'Document' | 'Receipt' | 'Note'
 type ImageFilter = 'Original' | 'Clean' | 'B&W'
-type ImageQuality = { score: number; issues: string[] }
+type ImageQuality = { score: number; issues: string[]; brightness?: number; contrast?: number; sharpness?: number }
 type OcrPage = { id: string; text: string; previewUrl: string; source: string; confidence: number; quality?: ImageQuality; words?: OcrWord[] }
 
 async function blobUrlToDataUrl(url: string) {
@@ -62,21 +62,36 @@ async function assessImageQuality(blob: Blob): Promise<ImageQuality> {
     if (!context) return { score: 0, issues: ['Image analysis unavailable'] }
     context.drawImage(image, 0, 0, width, height)
     const pixels = context.getImageData(0, 0, width, height).data
+    const luminance = new Float32Array(width * height)
     let total = 0; let squared = 0
     for (let index = 0; index < pixels.length; index += 4) {
-      const luminance = (pixels[index] * 30 + pixels[index + 1] * 59 + pixels[index + 2] * 11) / 100
-      total += luminance; squared += luminance * luminance
+      const value = (pixels[index] * 30 + pixels[index + 1] * 59 + pixels[index + 2] * 11) / 100
+      luminance[index / 4] = value
+      total += value; squared += value * value
     }
     const count = Math.max(1, pixels.length / 4)
     const mean = total / count
     const contrast = Math.sqrt(Math.max(0, squared / count - mean * mean))
+    let laplacianSquared = 0; let laplacianCount = 0
+    for (let y = 1; y < height - 1; y += 1) for (let x = 1; x < width - 1; x += 1) {
+      const offset = y * width + x
+      const edge = 4 * luminance[offset] - luminance[offset - 1] - luminance[offset + 1] - luminance[offset - width] - luminance[offset + width]
+      laplacianSquared += edge * edge
+      laplacianCount += 1
+    }
+    const sharpness = Math.sqrt(laplacianSquared / Math.max(1, laplacianCount))
     const issues: string[] = []
     let score = 100
     if (mean < 48) { score -= 35; issues.push('too dark') }
     if (mean > 224) { score -= 20; issues.push('overexposed') }
     if (contrast < 22) { score -= 30; issues.push('low contrast') }
+    if (sharpness < 12) { score -= 35; issues.push('blurred or out of focus') }
+    else if (sharpness < 20) { score -= 15; issues.push('slightly soft focus') }
     if (Math.max(image.naturalWidth, image.naturalHeight) < 900) { score -= 20; issues.push('low resolution') }
-    return { score: Math.max(0, score), issues }
+    return {
+      score: Math.max(0, score), issues,
+      brightness: Math.round(mean), contrast: Math.round(contrast), sharpness: Math.round(sharpness),
+    }
   } finally {
     URL.revokeObjectURL(url)
   }
@@ -349,7 +364,7 @@ export default function OcrTextSurface() {
         for (let index = 0; index < files.length; index += 1) {
           setStatus(`Recognizing image ${index + 1}/${files.length} on this device...`)
           const autoCrop = await estimateAutoCrop(files[index])
-          const prepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), filter)
+          let prepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), filter)
           const code = await detectQrOrBarcode(prepared.blob)
           if (code) setDetectedCode(code)
           let cloudResult: { text: string; confidence: number; words?: OcrWord[] } | null = null
@@ -361,10 +376,34 @@ export default function OcrTextSurface() {
               setStatus('Cloud Assist failed; continuing with on-device OCR...')
             }
           }
-          const result = cloudResult ? { data: cloudResult } : await worker.recognize(prepared.blob)
-          const text = cleanText(result.data.text, mode)
+          let recognized: { text: string; confidence: number; words: OcrWord[] }
+          if (cloudResult) {
+            recognized = { text: cloudResult.text, confidence: cloudResult.confidence, words: cloudResult.words ?? [] }
+          } else {
+            const initial = await worker.recognize(prepared.blob)
+            recognized = {
+              text: initial.data.text,
+              confidence: Math.round(initial.data.confidence ?? 0),
+              words: normalizeWords('words' in initial.data ? initial.data.words : []),
+            }
+            if (recognized.confidence < 70 && filter !== 'B&W') {
+              setStatus(`Optimizing difficult image ${index + 1}/${files.length}...`)
+              const retryPrepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), 'B&W')
+              const retry = await worker.recognize(retryPrepared.blob)
+              const retryText = cleanText(retry.data.text, mode)
+              const retryConfidence = Math.round(retry.data.confidence ?? 0)
+              if (retryText && retryConfidence >= recognized.confidence + 3) {
+                URL.revokeObjectURL(prepared.previewUrl)
+                prepared = retryPrepared
+                recognized = { text: retry.data.text, confidence: retryConfidence, words: normalizeWords('words' in retry.data ? retry.data.words : []) }
+              } else {
+                URL.revokeObjectURL(retryPrepared.previewUrl)
+              }
+            }
+          }
+          const text = cleanText(recognized.text, mode)
           if (!text) URL.revokeObjectURL(prepared.previewUrl)
-          else nextPages.push({ id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source: files.length > 1 ? `Batch image ${index + 1}` : source, confidence: Math.round(result.data.confidence ?? 0), quality: await assessImageQuality(prepared.blob), words: 'words' in result.data ? (cloudResult?.words ?? normalizeWords(result.data.words)) : [] })
+          else nextPages.push({ id: crypto.randomUUID(), text, previewUrl: prepared.previewUrl, source: files.length > 1 ? `Batch image ${index + 1}` : source, confidence: recognized.confidence, quality: await assessImageQuality(prepared.blob), words: recognized.words })
         }
         if (nextPages.length) {
           setPages((current) => [...current, ...nextPages])
@@ -560,7 +599,7 @@ export default function OcrTextSurface() {
           ocrText ? <div className="space-y-3">
             {currentPreview ? <img src={currentPreview} alt="Scanned page" className="h-44 w-full rounded-2xl bg-slate-100 object-contain dark:bg-slate-950" /> : null}
             <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className={`rounded-full px-2.5 py-1 ${(currentPage?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage?.confidence ?? 0}% OCR confidence</span>{currentPage?.quality ? <span className={`rounded-full px-2.5 py-1 ${currentPage.quality.score >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage.quality.score}% image quality</span> : null}</div>
-            {currentPage?.quality?.issues.length ? <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Retake suggestion: {currentPage.quality.issues.join(', ')}.</p> : null}
+            {currentPage?.quality?.issues.length ? <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Retake suggestion: {currentPage.quality.issues.join(', ')}.{currentPage.quality.brightness != null ? ` Brightness ${currentPage.quality.brightness}/255 · contrast ${currentPage.quality.contrast} · sharpness ${currentPage.quality.sharpness}.` : ''}</p> : null}
             {pages.length > 1 && selectedPageIndex >= 0 ? <div className="space-y-2"><div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => selectPage(selectedPageIndex - 1)}>Previous</ActionButton><span className="text-xs font-black">Page {selectedPageIndex + 1}/{pages.length}</span><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => selectPage(selectedPageIndex + 1)}>Next</ActionButton></div><div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => movePage(-1)}>Move earlier</ActionButton><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => movePage(1)}>Move later</ActionButton></div></div> : null}
             <FormInput value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
             <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => updateCurrentText(event.target.value)} aria-label="Recognized text" />

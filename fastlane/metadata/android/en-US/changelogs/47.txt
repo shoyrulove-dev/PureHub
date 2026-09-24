@@ -1,0 +1,1 @@
+OCR Studio now detects blurred scans, reports practical image-quality diagnostics, and automatically retries difficult printed pages with a stronger black-and-white cleanup pass. Command Center tracking now focuses on real OCR activity instead of hard-to-reach helpful and completion percentages.
