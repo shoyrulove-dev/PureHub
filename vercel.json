@@ -5,7 +5,14 @@
   "outputDirectory": "pwa/dist",
   "headers": [
     {
-      "source": "/admin(?:/.*)?",
+      "source": "/admin",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/admin/:path*",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" },
         { "key": "Service-Worker-Allowed", "value": "/" }
