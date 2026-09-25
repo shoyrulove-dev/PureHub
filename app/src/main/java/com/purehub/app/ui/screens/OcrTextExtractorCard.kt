@@ -81,6 +81,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.AppLanguage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -139,6 +141,7 @@ private enum class OcrStudioTab(val label: String) { Scan("Scan"), Text("Text"),
 private enum class OcrMode(val label: String) { Document("Document"), Receipt("Receipt"), Note("Note") }
 private enum class OcrFilter(val label: String) { Original("Original"), Clean("Clean"), Mono("B&W") }
 private enum class OcrLanguage(val label: String, val statusLabel: String) {
+    Auto("Auto", "AUTO"),
     English("English", "EN"),
     Vietnamese("Tiếng Việt", "VI"),
     Spanish("Español", "ES"),
@@ -176,12 +179,26 @@ fun OcrTextExtractorCard(
     val expenseRepository = remember {
         ExpenseTrackerRepository(PureHubDatabaseProvider.get(context.applicationContext).expenseDao())
     }
-    var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.English) }
-    val recognizer = remember(selectedLanguage) {
+    val appLanguage = LocalAppLanguage.current
+    var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.Auto) }
+    val primaryScript = when (selectedLanguage) {
+        OcrLanguage.Chinese -> OcrScript.CHINESE
+        OcrLanguage.Auto -> if (appLanguage == AppLanguage.Chinese) OcrScript.CHINESE else OcrScript.LATIN
+        else -> OcrScript.LATIN
+    }
+    val fallbackScript = if (selectedLanguage == OcrLanguage.Auto) {
+        if (primaryScript == OcrScript.LATIN) OcrScript.CHINESE else OcrScript.LATIN
+    } else {
+        null
+    }
+    val primaryRecognizer = remember(primaryScript) {
         OcrEngineFactory.create(
             context.applicationContext,
-            if (selectedLanguage == OcrLanguage.Chinese) OcrScript.CHINESE else OcrScript.LATIN,
+            primaryScript,
         )
+    }
+    val fallbackRecognizer = remember(fallbackScript) {
+        fallbackScript?.let { OcrEngineFactory.create(context.applicationContext, it) }
     }
     val cameraExecutor = remember { ContextCompat.getMainExecutor(context) }
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }
@@ -218,28 +235,41 @@ fun OcrTextExtractorCard(
         currentBitmap = null
     }
 
+    fun recognizeWithSelectedLanguage(bitmap: Bitmap, onResult: (String, Throwable?) -> Unit) {
+        primaryRecognizer.recognize(bitmap) { primaryResult ->
+            val primaryText = primaryResult.getOrNull()?.let { cleanOcrText(it, selectedMode) }.orEmpty()
+            if (primaryText.isNotBlank() || fallbackRecognizer == null) {
+                onResult(primaryText, primaryResult.exceptionOrNull())
+            } else {
+                // Auto only pays for the second offline model when the first model found no text.
+                fallbackRecognizer.recognize(bitmap) { fallbackResult ->
+                    val fallbackText = fallbackResult.getOrNull()?.let { cleanOcrText(it, selectedMode) }.orEmpty()
+                    onResult(fallbackText, fallbackResult.exceptionOrNull() ?: primaryResult.exceptionOrNull())
+                }
+            }
+        }
+    }
+
     fun recognize(bitmap: Bitmap, source: String) {
         processing = true
         status = "Recognizing text on this device..."
-        recognizer.recognize(bitmap) { result ->
-            result.onSuccess { rawText ->
-                val text = cleanOcrText(rawText, selectedMode)
-                if (text.isBlank()) {
-                    OcrBitmapMemory.recycle(bitmap)
-                    status = "No readable text found. Try better light or a tighter crop."
-                } else {
-                    val retained = OcrBitmapMemory.compactForRetention(bitmap)
-                    if (retained !== bitmap) OcrBitmapMemory.recycle(bitmap)
-                    currentBitmap = retained
-                    extractedText = text
-                    pages += OcrPage(bitmap = retained, text = text, source = source)
-                    selectedPageIndex = pages.lastIndex
-                    status = "${pages.size} page(s) captured privately. Review the text before export."
-                    selectedTab = OcrStudioTab.Text
-                }
-            }.onFailure {
+        recognizeWithSelectedLanguage(bitmap) { text, error ->
+            if (text.isBlank()) {
                 OcrBitmapMemory.recycle(bitmap)
-                status = "OCR could not process this image."
+                status = if (error == null) {
+                    "No readable text found. Try better light or a tighter crop."
+                } else {
+                    "OCR could not process this image."
+                }
+            } else {
+                val retained = OcrBitmapMemory.compactForRetention(bitmap)
+                if (retained !== bitmap) OcrBitmapMemory.recycle(bitmap)
+                currentBitmap = retained
+                extractedText = text
+                pages += OcrPage(bitmap = retained, text = text, source = source)
+                selectedPageIndex = pages.lastIndex
+                status = "${pages.size} page(s) captured privately. Review the text before export."
+                selectedTab = OcrStudioTab.Text
             }
             processing = false
         }
@@ -329,17 +359,11 @@ fun OcrTextExtractorCard(
             }
             val edited = prepareOcrBitmap(bitmap, rotation, selectedFilter, selectedMode)
             status = "Recognizing image ${index + 1}/${selected.size} on this device..."
-            recognizer.recognize(edited) { result ->
-                val raw = result.getOrNull()
-                if (raw != null) {
-                    val text = cleanOcrText(raw, selectedMode)
-                    if (text.isNotBlank()) {
-                        val retained = OcrBitmapMemory.compactForRetention(edited)
-                        if (retained !== edited) OcrBitmapMemory.recycle(edited)
-                        pages += OcrPage(retained, text, "Batch image ${index + 1}")
-                    } else {
-                        OcrBitmapMemory.recycle(edited)
-                    }
+            recognizeWithSelectedLanguage(edited) { text, _ ->
+                if (text.isNotBlank()) {
+                    val retained = OcrBitmapMemory.compactForRetention(edited)
+                    if (retained !== edited) OcrBitmapMemory.recycle(edited)
+                    pages += OcrPage(retained, text, "Batch image ${index + 1}")
                 } else {
                     OcrBitmapMemory.recycle(edited)
                 }
@@ -380,7 +404,12 @@ fun OcrTextExtractorCard(
         }
     }
 
-    DisposableEffect(recognizer) { onDispose { recognizer.close() } }
+    DisposableEffect(primaryRecognizer, fallbackRecognizer) {
+        onDispose {
+            primaryRecognizer.close()
+            fallbackRecognizer?.close()
+        }
+    }
     DisposableEffect(Unit) {
         onDispose {
             OcrBitmapMemory.recycle(pendingBitmap)
