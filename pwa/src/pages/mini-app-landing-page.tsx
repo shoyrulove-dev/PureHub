@@ -29,6 +29,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const { t } = useTranslation()
   const { lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
+  const seoLocale = normalizedLocale === 'es' ? 'en' : normalizedLocale
   const { favorites, toggleFavorite } = useToolPreferences()
   const favorite = favorites.includes(miniApp.id)
   const runtime = getMiniAppRuntime(miniApp.id)
@@ -87,7 +88,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
 
       <MiniAppEngagement miniAppId={miniApp.id} title={t(miniApp.titleKey)} />
 
-      {seoAppId ? <SeoLandingContent appId={seoAppId} lang={normalizedLocale} /> : null}
+      {seoAppId ? <SeoLandingContent appId={seoAppId} lang={seoLocale} /> : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-500/10 bg-slate-500/5 p-2.5 text-xs text-slate-500">
         <span className="flex items-center gap-1.5" title={`Isolated storage: ${runtime.storageNamespace}`}><HardDrive className="size-3.5" /> Local storage</span>

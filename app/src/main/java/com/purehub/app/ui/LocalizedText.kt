@@ -362,13 +362,29 @@ private val zhAudit = mapOf(
 
 private val viAll = vi + viMore + viAudit
 private val zhAll = zh + zhMore + zhAudit
+private val es = mapOf(
+    "Home" to "Inicio", "Tools" to "Herramientas", "Community" to "Comunidad", "Settings" to "Ajustes", "Help" to "Ayuda",
+    "Continue" to "Continuar", "Cancel" to "Cancelar", "Close" to "Cerrar", "Save" to "Guardar", "Delete" to "Eliminar",
+    "Scan" to "Escanear", "Image" to "Imagen", "History" to "Historial", "Language" to "Idioma", "Search" to "Buscar",
+    "Document" to "Documento", "Receipt" to "Recibo", "Note" to "Nota", "Original" to "Original", "Clean" to "Limpiar", "B&W" to "B/N",
+    "Allow camera" to "Permitir cámara", "Camera stays off until you allow it" to "La cámara permanecerá apagada hasta que la permitas",
+    "Back to tools" to "Volver a herramientas", "Scan settings" to "Controles de escaneo", "Document type" to "Tipo de documento",
+    "Document cleanup" to "Limpieza del documento", "Change recognition language" to "Cambiar idioma de reconocimiento",
+    "Hide current settings" to "Ocultar ajustes actuales", "Show current settings" to "Mostrar ajustes actuales",
+)
 
 fun translateUiText(text: String, language: AppLanguage): String {
     if (language == AppLanguage.English || text.isBlank()) return text
-    val dictionary = if (language == AppLanguage.Vietnamese) viAll else zhAll
+    val dictionary = when (language) {
+        AppLanguage.Vietnamese -> viAll
+        AppLanguage.Chinese -> zhAll
+        AppLanguage.Spanish -> es
+        AppLanguage.English -> emptyMap()
+    }
     dictionary[text]?.let { return it }
     val trimmed = text.trim()
     dictionary[trimmed]?.let { return text.replace(trimmed, it) }
+    if (language == AppLanguage.Spanish) return text
     return dynamicTranslation(text, language)
 }
 

@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ['en', 'vi', 'zh'] as const
+export const SUPPORTED_LOCALES = ['en', 'vi', 'zh', 'es'] as const
 
 export type LocaleCode = (typeof SUPPORTED_LOCALES)[number]
 

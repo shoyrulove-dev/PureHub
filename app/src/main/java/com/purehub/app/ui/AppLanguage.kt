@@ -8,6 +8,7 @@ enum class AppLanguage(val code: String, val label: String) {
     English("en", "English"),
     Vietnamese("vi", "Tiếng Việt"),
     Chinese("zh", "中文"),
+    Spanish("es", "Español"),
 }
 
 val LocalAppLanguage = staticCompositionLocalOf { AppLanguage.English }
@@ -32,14 +33,22 @@ fun Context.saveAppLanguage(language: AppLanguage) {
         .apply()
 }
 
-fun appText(language: AppLanguage, english: String, vietnamese: String, chinese: String): String = when (language) {
+fun appText(
+    language: AppLanguage,
+    english: String,
+    vietnamese: String,
+    chinese: String,
+    spanish: String = english,
+): String = when (language) {
     AppLanguage.English -> english
     AppLanguage.Vietnamese -> vietnamese
     AppLanguage.Chinese -> chinese
+    AppLanguage.Spanish -> spanish
 }
 
 fun AppLanguage.locale(): Locale = when (this) {
     AppLanguage.English -> Locale.ENGLISH
     AppLanguage.Vietnamese -> Locale.forLanguageTag("vi-VN")
     AppLanguage.Chinese -> Locale.SIMPLIFIED_CHINESE
+    AppLanguage.Spanish -> Locale.forLanguageTag("es-ES")
 }

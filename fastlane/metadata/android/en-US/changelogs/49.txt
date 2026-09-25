@@ -1,0 +1,1 @@
+OCR Studio now has a compact half-screen settings drawer, separate English, Vietnamese, Spanish, and Chinese recognition choices, and a more colorful full-screen scanner. PureHub also adds Spanish UI support and a one-time Google Play closed-test invitation with a permanent Settings entry.

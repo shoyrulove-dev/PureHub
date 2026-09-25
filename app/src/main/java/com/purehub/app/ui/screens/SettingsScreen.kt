@@ -32,6 +32,7 @@ fun SettingsScreen(
     onOpenHelp: () -> Unit,
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
+    onJoinPlayTesters: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -77,6 +78,9 @@ fun SettingsScreen(
             PermissionCenterCard()
             ToolVisibilityManagerCard()
             EncryptedBackupCard()
+            OutlinedButton(onClick = onJoinPlayTesters, modifier = Modifier.fillMaxWidth()) {
+                LocalizedText("🧪 " + appText(language, "Join Google Play testers", "Tham gia Tester CH Play", "加入 Google Play 测试", "Unirse a probadores de Google Play"))
+            }
         }
     }
 }

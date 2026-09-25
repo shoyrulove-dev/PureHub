@@ -22,7 +22,7 @@ export type WorkspaceId =
   | 'security-vault'
   | 'creative-everyday'
 
-type LocalizedText = Record<LocaleCode, string>
+type LocalizedText = { en: string } & Partial<Record<LocaleCode, string>>
 
 export type WorkspaceDefinition = {
   id: WorkspaceId

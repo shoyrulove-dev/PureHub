@@ -27,10 +27,13 @@ import {
   Wifi,
   Wrench,
 } from 'lucide-react'
-import { seoMeta, type SeoLanguage } from '../../config/seoMeta'
+import { seoMeta } from '../../config/seoMeta'
 import type { LocaleCode } from '../../i18n/locales'
 
-type LocalizedSlugMap = Record<LocaleCode, string>
+// Spanish shares reviewed English slugs until Spanish SEO pages are translated and
+// explicitly approved. The UI itself is localized at /es without creating a thin
+// duplicate URL inventory.
+type LocalizedSlugMap = Record<Exclude<LocaleCode, 'es'>, string> & Partial<Record<'es', string>>
 
 export type TabId =
   | 'zen-time'
@@ -90,7 +93,7 @@ export type MiniAppDefinition = {
 
 type SeoBackedMiniAppId = Exclude<MiniAppId, never>
 
-function seoSlugs(id: SeoBackedMiniAppId): Record<SeoLanguage, string> {
+function seoSlugs(id: SeoBackedMiniAppId): LocalizedSlugMap {
   return {
     en: seoMeta[id].en.slug,
     vi: seoMeta[id].vi.slug,

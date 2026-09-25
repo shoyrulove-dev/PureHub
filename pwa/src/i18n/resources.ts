@@ -338,4 +338,40 @@ export const resources = {
       },
     },
   },
+  es: {
+    translation: {
+      app: {
+        subtitle: 'Herramientas gratis y privadas para cada día',
+        phaseShell: 'Gratis · Sin anuncios · Código abierto',
+        miniAppMap: 'Explorar herramientas',
+        phaseDeferred: 'Todas las herramientas son gratuitas. Tus datos permanecen en tu dispositivo siempre que sea posible.',
+        localeLabel: 'Idioma',
+        openMiniApp: 'Abrir herramienta',
+        browseTab: 'Volver a la categoría',
+        searchPlaceholder: '¿Qué quieres hacer?',
+        favorites: 'Favoritos',
+        recent: 'Usado recientemente',
+        allTools: 'Todas las herramientas',
+      },
+      pwa: {
+        installIconLabel: 'Instalar app', installButton: 'Instalar app', installTitle: 'Instalar PureHub',
+        installBenefit: 'Abre más rápido y usa herramientas sin conexión.', installDescription: 'Fija PureHub para abrirlo rápidamente y tener una experiencia offline más nativa.',
+        installNow: 'Instalar ahora', later: 'Más tarde', openInChrome: 'Abrir en Chrome', copyLink: 'Copiar enlace', linkCopied: 'Enlace copiado',
+      },
+      nav: { home: 'Inicio', tools: 'Herramientas', results: 'Resultados', community: 'Comunidad', settings: 'Ajustes' },
+      dashboard: { collection: 'Herramientas para cada día', offline: 'Sin conexión', quickAccess: 'Acceso rápido', privacy: 'Privacidad', spells: '26 herramientas', onDevice: 'En el dispositivo' },
+      tabs: {
+        zenTime: { label: 'Zen y tiempo', short: 'Zen', description: 'Herramientas tranquilas de tiempo, hábitos, enfoque y respiración sin conexión.' },
+        measureTools: { label: 'Medición y herramientas', short: 'Medir', description: 'Utilidades rápidas del navegador con sensores locales y cálculos instantáneos.' },
+        vision: { label: 'Visión', short: 'Visión', description: 'Herramientas offline centradas en cámara para escanear, OCR y capturar colores.' },
+        securityAudio: { label: 'Seguridad y audio', short: 'Seguro', description: 'Herramientas privadas para sonido y secretos cifrados en el dispositivo.' },
+        financeCommunity: { label: 'Finanzas y comunidad', short: 'Finanzas', description: 'Herramientas privadas de dinero y comunidad de código abierto.' },
+      },
+      miniApps: {
+        ocrText: { title: 'OCR Studio', summary: 'Escanea, limpia, edita y exporta texto en tu dispositivo.' },
+        qrStudio: { title: 'Estudio QR', summary: 'Escanea, crea y conserva códigos QR privados.' },
+        unitConverter: { title: 'Convertidor de unidades', summary: 'Conversiones instantáneas sin depender de red.' },
+      },
+    },
+  },
 } as const

@@ -61,6 +61,7 @@ import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -137,7 +138,12 @@ import kotlin.math.min
 private enum class OcrStudioTab(val label: String) { Scan("Scan"), Text("Text"), Library("Library") }
 private enum class OcrMode(val label: String) { Document("Document"), Receipt("Receipt"), Note("Note") }
 private enum class OcrFilter(val label: String) { Original("Original"), Clean("Clean"), Mono("B&W") }
-private enum class OcrLanguage(val label: String) { Latin("English + Vietnamese"), Chinese("简体中文") }
+private enum class OcrLanguage(val label: String, val statusLabel: String) {
+    English("English", "EN"),
+    Vietnamese("Tiếng Việt", "VI"),
+    Spanish("Español", "ES"),
+    Chinese("简体中文", "中文"),
+}
 
 private data class OcrPage(
     val bitmap: Bitmap,
@@ -170,7 +176,7 @@ fun OcrTextExtractorCard(
     val expenseRepository = remember {
         ExpenseTrackerRepository(PureHubDatabaseProvider.get(context.applicationContext).expenseDao())
     }
-    var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.Latin) }
+    var selectedLanguage by rememberSaveable { mutableStateOf(OcrLanguage.English) }
     val recognizer = remember(selectedLanguage) {
         OcrEngineFactory.create(
             context.applicationContext,
@@ -680,6 +686,8 @@ private fun OcrScanContent(
     val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var modeOptionsOpen by rememberSaveable { mutableStateOf(false) }
+    var cleanupOptionsOpen by rememberSaveable { mutableStateOf(false) }
     var languageOptionsOpen by rememberSaveable { mutableStateOf(false) }
     var quickStatusVisible by rememberSaveable { mutableStateOf(true) }
 
@@ -701,42 +709,52 @@ private fun OcrScanContent(
             drawerState = drawerState,
             gesturesEnabled = drawerState.isOpen,
             drawerContent = {
-                ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.86f)) {
+                ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.52f)) {
                     Column(
-                        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = onExit) {
                                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to tools")
                             }
-                            LocalizedText("Scan settings", style = MaterialTheme.typography.titleLarge)
+                            LocalizedText("Scan settings", style = MaterialTheme.typography.titleMedium)
                         }
                         HorizontalDivider()
-                        LocalizedText("Document type", style = MaterialTheme.typography.titleSmall)
-                        Row(
-                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        OutlinedButton(
+                            onClick = { modeOptionsOpen = !modeOptionsOpen },
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
                         ) {
-                            OcrMode.entries.forEach { mode ->
-                                FilterChip(
-                                    selected = selectedMode == mode,
-                                    onClick = { onModeSelected(mode) },
-                                    label = { LocalizedText(mode.label) },
-                                )
+                            LocalizedText("Type · ${selectedMode.label}", modifier = Modifier.weight(1f))
+                            Icon(Icons.Rounded.Tune, "Change document type")
+                        }
+                        if (modeOptionsOpen) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OcrMode.entries.forEach { mode ->
+                                    FilterChip(
+                                        selected = selectedMode == mode,
+                                        onClick = { onModeSelected(mode); modeOptionsOpen = false },
+                                        label = { LocalizedText(mode.label) },
+                                    )
+                                }
                             }
                         }
-                        LocalizedText("Document cleanup", style = MaterialTheme.typography.titleSmall)
-                        Row(
-                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        OutlinedButton(
+                            onClick = { cleanupOptionsOpen = !cleanupOptionsOpen },
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
                         ) {
+                            LocalizedText("Cleanup · ${selectedFilter.label}", modifier = Modifier.weight(1f))
+                            Icon(Icons.Rounded.Tune, "Change document cleanup")
+                        }
+                        if (cleanupOptionsOpen) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             OcrFilter.entries.forEach { filter ->
                                 FilterChip(
                                     selected = selectedFilter == filter,
-                                    onClick = { onFilterSelected(filter) },
+                                    onClick = { onFilterSelected(filter); cleanupOptionsOpen = false },
                                     label = { LocalizedText(filter.label) },
                                 )
+                            }
                             }
                         }
                         OutlinedButton(
@@ -747,10 +765,7 @@ private fun OcrScanContent(
                             Icon(Icons.Rounded.Tune, "Change recognition language")
                         }
                         if (languageOptionsOpen) {
-                            Row(
-                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 OcrLanguage.entries.forEach { language ->
                                     FilterChip(
                                         selected = selectedLanguage == language,
@@ -758,7 +773,7 @@ private fun OcrScanContent(
                                             onLanguageSelected(language)
                                             languageOptionsOpen = false
                                         },
-                                        label = { LocalizedText(if (language == OcrLanguage.Chinese) "中文" else "EN + VI") },
+                                        label = { LocalizedText(language.label) },
                                     )
                                 }
                             }
@@ -840,7 +855,7 @@ private fun OcrScanContent(
                                 style = MaterialTheme.typography.labelMedium,
                             )
                             LocalizedText(
-                                "${if (selectedLanguage == OcrLanguage.Chinese) "中文" else "EN/VI"}${if (pageCount > 0) " · ${pageCount}p" else ""}",
+                                "${selectedLanguage.statusLabel}${if (pageCount > 0) " · ${pageCount}p" else ""}",
                                 color = Color.White.copy(alpha = .72f),
                                 style = MaterialTheme.typography.labelSmall,
                             )
@@ -869,7 +884,12 @@ private fun OcrScanContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.width(72.dp).height(46.dp)) {
+                Button(
+                    onClick = onChooseImage,
+                    enabled = !processing,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                    modifier = Modifier.width(72.dp).height(46.dp),
+                ) {
                     Icon(Icons.Rounded.AddPhotoAlternate, "Choose image")
                 }
                 Button(onClick = onCapture, enabled = hasCameraPermission && !processing, modifier = Modifier.width(82.dp).height(46.dp)) {

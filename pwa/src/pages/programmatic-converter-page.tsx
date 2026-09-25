@@ -18,17 +18,18 @@ import { AdsterraNativeBanner } from '../components/ads/AdsterraNativeBanner'
 export function ProgrammaticConverterPage({ converterSlug }: { converterSlug?: string }) {
   const { lang, pairSlug } = useParams()
   const locale = normalizeLocale(lang)
+  const seoLocale = locale === 'es' ? 'en' : locale
   const converter = getProgrammaticConverter(converterSlug ?? pairSlug ?? '')
   const [value, setValue] = useState('1')
 
   if (!converter) return null
 
-  const title = programmaticConverterTitle(converter, locale)
-  const description = programmaticConverterDescription(converter, locale)
+  const title = programmaticConverterTitle(converter, seoLocale)
+  const description = programmaticConverterDescription(converter, seoLocale)
   const result = formatProgrammaticValue(convertProgrammaticValue(converter, Number(value) || 0))
-  const unitConverterMeta = getSeoMetaByAppId('unit-converter', locale)
-  const canonicalUrl = `${SITE_ORIGIN}${buildProgrammaticConverterPath(locale, converter.slug)}`
-  const quickAnswer = programmaticConverterQuickAnswer(converter, locale)
+  const unitConverterMeta = getSeoMetaByAppId('unit-converter', seoLocale)
+  const canonicalUrl = `${SITE_ORIGIN}${buildProgrammaticConverterPath(seoLocale, converter.slug)}`
+  const quickAnswer = programmaticConverterQuickAnswer(converter, seoLocale)
   const labels = locale === 'vi'
     ? { table: 'Bảng quy đổi phổ biến', formula: 'Công thức', use: 'Dùng công cụ chuyển đổi', input: 'Giá trị', result: 'Kết quả', faq: 'Câu hỏi thường gặp', faqQ: `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?`, faqA: `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` }
     : locale === 'zh'
@@ -64,23 +65,23 @@ export function ProgrammaticConverterPage({ converterSlug }: { converterSlug?: s
           <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white"><Calculator className="size-5 text-sky-600" />{labels.use}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
             <label className="text-sm font-bold text-slate-700 dark:text-slate-200">{labels.input}<input value={value} onChange={(event) => setValue(event.target.value)} inputMode="decimal" className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-lg dark:border-slate-700 dark:bg-slate-900" /></label>
-            <span className="pb-3 text-center text-sm font-bold text-slate-500">{converter.from[locale]} → {converter.to[locale]}</span>
-            <div className="rounded-xl bg-slate-950 p-3 text-white"><span className="text-xs text-slate-400">{labels.result}</span><strong className="mt-1 block text-2xl tabular-nums">{result}</strong><span className="text-xs text-sky-300">{converter.to[locale]}</span></div>
+            <span className="pb-3 text-center text-sm font-bold text-slate-500">{converter.from[seoLocale]} → {converter.to[seoLocale]}</span>
+            <div className="rounded-xl bg-slate-950 p-3 text-white"><span className="text-xs text-slate-400">{labels.result}</span><strong className="mt-1 block text-2xl tabular-nums">{result}</strong><span className="text-xs text-sky-300">{converter.to[seoLocale]}</span></div>
           </div>
         </section>
 
         <section className="app-surface rounded-[18px] p-5">
           <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white"><Table2 className="size-5 text-emerald-600" />{labels.table}</h2>
-          <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[420px] text-left text-sm"><thead><tr className="border-b border-slate-200 dark:border-slate-700"><th className="px-3 py-2">{converter.from[locale]}</th><th className="px-3 py-2">{converter.to[locale]}</th></tr></thead><tbody>{converter.values.map((item) => <tr key={item} className="border-b border-slate-100 dark:border-slate-800"><td className="px-3 py-2">{formatProgrammaticValue(item)}</td><td className="px-3 py-2 font-semibold">{formatProgrammaticValue(convertProgrammaticValue(converter, item))}</td></tr>)}</tbody></table></div>
+          <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[420px] text-left text-sm"><thead><tr className="border-b border-slate-200 dark:border-slate-700"><th className="px-3 py-2">{converter.from[seoLocale]}</th><th className="px-3 py-2">{converter.to[seoLocale]}</th></tr></thead><tbody>{converter.values.map((item) => <tr key={item} className="border-b border-slate-100 dark:border-slate-800"><td className="px-3 py-2">{formatProgrammaticValue(item)}</td><td className="px-3 py-2 font-semibold">{formatProgrammaticValue(convertProgrammaticValue(converter, item))}</td></tr>)}</tbody></table></div>
         </section>
 
-        <section className="app-surface rounded-[18px] p-5"><h2 className="flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white"><Code2 className="size-5 text-violet-600" />{labels.formula}</h2><code className="mt-3 block rounded-xl bg-slate-950 p-4 text-sm text-emerald-200">{converter.formula[locale]}</code></section>
+        <section className="app-surface rounded-[18px] p-5"><h2 className="flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white"><Code2 className="size-5 text-violet-600" />{labels.formula}</h2><code className="mt-3 block rounded-xl bg-slate-950 p-4 text-sm text-emerald-200">{converter.formula[seoLocale]}</code></section>
 
         <section className="app-surface rounded-[18px] p-5"><h2 className="text-xl font-bold text-slate-950 dark:text-white">{labels.faq}</h2>{faq.map((item) => <details key={item.question} className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700"><summary className="cursor-pointer font-bold">{item.question}</summary><p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.answer}</p></details>)}</section>
 
         <AdsterraNativeBanner />
 
-        {unitConverterMeta ? <Link to={buildCanonicalUrl(locale, unitConverterMeta.slug)} className="flex items-center justify-between rounded-[18px] bg-slate-950 p-4 font-bold text-white dark:bg-emerald-950"><span className="flex items-center gap-2"><CheckCircle2 className="size-5 text-emerald-300" />{labels.use}</span><ArrowRight className="size-5" /></Link> : null}
+        {unitConverterMeta ? <Link to={buildCanonicalUrl(seoLocale, unitConverterMeta.slug)} className="flex items-center justify-between rounded-[18px] bg-slate-950 p-4 font-bold text-white dark:bg-emerald-950"><span className="flex items-center gap-2"><CheckCircle2 className="size-5 text-emerald-300" />{labels.use}</span><ArrowRight className="size-5" /></Link> : null}
       </main>
     </>
   )

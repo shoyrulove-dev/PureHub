@@ -10,6 +10,7 @@ import { TabLandingPage } from './tab-landing-page'
 export function LocalizedEntryPage() {
   const { appSlug, lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
+  const seoLocale = normalizedLocale === 'es' ? 'en' : normalizedLocale
 
   if (!appSlug) {
     return <Navigate to={buildTabPath(normalizedLocale, 'zen-time')} replace />
@@ -29,7 +30,7 @@ export function LocalizedEntryPage() {
     return <TabLandingPage tab={entry.item} />
   }
 
-  const seoEntry = getSeoMetaBySlug(normalizedLocale, appSlug)
+  const seoEntry = getSeoMetaBySlug(seoLocale, appSlug)
   const tab = TAB_BY_ID.get(entry.item.tabId)!
 
   return (

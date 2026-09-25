@@ -37,12 +37,12 @@ export function persistSelectedLocale(locale: LocaleCode) {
 
 export function buildTabPath(locale: LocaleCode, tabId: TabDefinition['id']) {
   const tab = TAB_BY_ID.get(tabId)
-  return `/${locale}/${tab?.segments[locale] ?? TAB_ITEMS[0].segments[locale]}`
+  return `/${locale}/${tab?.segments[locale] ?? tab?.segments.en ?? TAB_ITEMS[0].segments.en}`
 }
 
 export function buildMiniAppPath(locale: LocaleCode, miniAppId: MiniAppDefinition['id']) {
   const miniApp = MINI_APP_BY_ID.get(miniAppId)
-  return `/${locale}/${miniApp?.slugs[locale] ?? MINI_APP_ITEMS[0].slugs[locale]}`
+  return `/${locale}/${miniApp?.slugs[locale] ?? miniApp?.slugs.en ?? MINI_APP_ITEMS[0].slugs.en}`
 }
 
 export function resolveEntryBySlug(slug: string): ResolvedEntry | null {

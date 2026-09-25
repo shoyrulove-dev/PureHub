@@ -1,8 +1,9 @@
-import { Activity, ArrowRight, Check, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon } from 'lucide-react'
+import { Activity, ArrowRight, Check, ExternalLink, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon, TestTube2 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
 import { type ThemePreference, useAnonymousMetricsPreference, useThemePreference } from '../lib/preferences'
+import { PLAY_TESTER_GROUP_URL } from '../lib/play-testers'
 
 const themes: Array<{ id: ThemePreference; label: string; icon: typeof Sun }> = [
   { id: 'system', label: 'System', icon: SunMoon },
@@ -53,7 +54,7 @@ export function SettingsPage() {
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-center gap-3">
           <span className="tool-card__icon text-sky-500"><Languages className="size-5" /></span>
-          <div><h2 className="font-bold text-slate-950 dark:text-white">Language</h2><p className="text-sm text-slate-500">English is the default. Vietnamese and Chinese remain available.</p></div>
+          <div><h2 className="font-bold text-slate-950 dark:text-white">Language</h2><p className="text-sm text-slate-500">English, Vietnamese, Chinese, and Spanish are available.</p></div>
         </div>
         <div className="mt-4 flex gap-2">
           {SUPPORTED_LOCALES.map((item) => (
@@ -68,6 +69,8 @@ export function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <a href={PLAY_TESTER_GROUP_URL} target="_blank" rel="noreferrer" className="flex min-h-16 items-center gap-3 rounded-[18px] border border-violet-200 bg-violet-50 p-4 text-violet-950 dark:border-violet-900 dark:bg-violet-950/25 dark:text-violet-100"><TestTube2 className="size-6" /><span className="min-w-0 flex-1"><strong className="block">Join Google Play testers</strong><small className="text-violet-800 dark:text-violet-300">Open the tester group in your browser to receive the closed-test opt-in link.</small></span><ExternalLink className="size-5" /></a>
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start justify-between gap-4">

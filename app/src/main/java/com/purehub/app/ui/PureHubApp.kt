@@ -87,6 +87,10 @@ import com.purehub.app.ui.screens.QrStudioScreen
 import com.purehub.app.ui.screens.ScanScreen
 import com.purehub.app.ui.screens.ScreenRecorderCard
 import com.purehub.app.ui.screens.SettingsScreen
+import com.purehub.app.ui.screens.PlayTesterInviteSheet
+import com.purehub.app.ui.screens.dismissPlayTesterInvite
+import com.purehub.app.ui.screens.openPlayTesterGroup
+import com.purehub.app.ui.screens.shouldShowPlayTesterInvite
 import com.purehub.app.ui.screens.SmartFlashlightCard
 import com.purehub.app.ui.screens.SpeakerCleanerCard
 import com.purehub.app.ui.screens.ToolsScreen
@@ -112,7 +116,7 @@ private fun LanguageWelcomeScreen(
         ) {
             Text("PureHub", style = MaterialTheme.typography.displaySmall)
             Text("Choose your language", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Chọn ngôn ngữ · 选择语言", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+            Text("Chọn ngôn ngữ · 选择语言 · Elige idioma", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
             Spacer(Modifier.height(24.dp))
             AppLanguage.entries.forEach { language ->
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp), onClick = { onSelect(language) }) {
@@ -120,7 +124,7 @@ private fun LanguageWelcomeScreen(
                 }
             }
             Button(onClick = onContinue, modifier = Modifier.fillMaxWidth().padding(top = 20.dp)) {
-                Text(appText(selected, "Continue", "Tiếp tục", "继续"))
+                Text(appText(selected, "Continue", "Tiếp tục", "继续", "Continuar"))
             }
         }
     }
@@ -147,6 +151,9 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
         ?.let { value -> MiniAppId.entries.firstOrNull { it.name == value } }
     val snackbarHostState = remember { SnackbarHostState() }
     val currentMiniAppRoute = currentDestination?.route?.startsWith("$MINI_APP_ROUTE_PREFIX/") == true
+    var showTesterInvite by rememberSaveable {
+        mutableStateOf(initialMiniAppId == null && context.shouldShowPlayTesterInvite())
+    }
 
     CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState, LocalAppLanguage provides language) {
         Scaffold(
@@ -201,7 +208,22 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                 onOpenHelp = { navController.navigate(Help.route) },
                 language = language,
                 onLanguageChange = { next -> context.saveAppLanguage(next); language = next },
+                onJoinPlayTesters = { context.openPlayTesterGroup() },
                 initialMiniAppId = initialMiniAppId,
+            )
+        }
+        if (showTesterInvite && !currentMiniAppRoute) {
+            PlayTesterInviteSheet(
+                language = language,
+                onJoin = {
+                    context.dismissPlayTesterInvite()
+                    showTesterInvite = false
+                    context.openPlayTesterGroup()
+                },
+                onLater = {
+                    context.dismissPlayTesterInvite()
+                    showTesterInvite = false
+                },
             )
         }
     }
@@ -215,6 +237,7 @@ private fun PureHubNavHost(
     onOpenHelp: () -> Unit,
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
+    onJoinPlayTesters: () -> Unit,
     initialMiniAppId: MiniAppId? = null,
 ) {
     NavHost(
@@ -275,6 +298,7 @@ private fun PureHubNavHost(
                 onOpenHelp = onOpenHelp,
                 language = language,
                 onLanguageChange = onLanguageChange,
+                onJoinPlayTesters = onJoinPlayTesters,
             )
         }
         composable(Help.route) {

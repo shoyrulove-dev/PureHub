@@ -17,6 +17,14 @@
   &middot; <a href="https://t.me/purehubaaa">Community updates</a>
 </p>
 
+> 🧪 **Google Play closed test:** We are recruiting real testers before launch. Join the [PureHub tester group](https://groups.google.com/g/purehub-testers) to receive the Play opt-in link when the closed track is ready.
+>
+> 🇻🇳 **Thử nghiệm CH Play:** PureHub đang tuyển tester thật trước khi phát hành. Vào [nhóm tester PureHub](https://groups.google.com/g/purehub-testers) để nhận link opt-in khi closed test sẵn sàng.
+>
+> 🇨🇳 **Google Play 封闭测试：** PureHub 正在招募真实测试者。加入 [PureHub 测试群](https://groups.google.com/g/purehub-testers)，封闭测试准备好后即可收到加入链接。
+>
+> 🇪🇸 **Prueba cerrada de Google Play:** Estamos buscando personas reales para probar PureHub. Únete al [grupo de pruebas de PureHub](https://groups.google.com/g/purehub-testers) para recibir el enlace de acceso cuando esté listo.
+
 <p align="center">
   <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml"><img alt="Web CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml/badge.svg" /></a>
   <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/android-ci.yml"><img alt="Android CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/android-ci.yml/badge.svg" /></a>
@@ -94,7 +102,7 @@ Privacy-first does not mean every feature has completed an independent security 
 | Android | Kotlin, Jetpack Compose, CameraX, Room, ZXing, ML Kit/Tesseract flavors | Native offline-first app for Android 8.0+ |
 | Hosting/automation | Vercel, GitHub Actions | Web deployment, CI, signed Android releases, checksums, and privacy gates |
 
-The public app supports English, Vietnamese, and Chinese routes. User content is stored locally for tools designed around private on-device workflows. The operator backend is deployed separately from a private repository and is not required to use the mini apps.
+The public app supports English, Vietnamese, Chinese, and Spanish routes. Spanish uses reviewed English SEO canonicals until dedicated Spanish SEO content is complete, avoiding thin duplicate pages. User content is stored locally for tools designed around private on-device workflows. The operator backend is deployed separately from a private repository and is not required to use the mini apps.
 
 ## Run locally
 
@@ -148,7 +156,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.48. It keeps beta.47's blur-aware image diagnostics and automatic high-contrast retry, and fixes portrait-page review so the corner editor, guidance, and Recognize action remain reachable on phones. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is PureHub 1.0.0-beta.49. OCR Studio now uses a compact half-screen controls drawer, separate English/Vietnamese/Spanish/Chinese recognition choices, and a full-screen camera scanner. This candidate also adds Spanish UI routing and a respectful, one-time Google Play tester invitation. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
