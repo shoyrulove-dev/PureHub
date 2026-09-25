@@ -156,7 +156,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.49. OCR Studio now uses a compact half-screen controls drawer, separate English/Vietnamese/Spanish/Chinese recognition choices, and a full-screen camera scanner. This candidate also adds Spanish UI routing and a respectful, one-time Google Play tester invitation. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is PureHub 1.0.0-beta.50. OCR Studio now uses a compact half-screen controls drawer, full-screen camera scanner, separate English/Vietnamese/Spanish/Chinese choices, and an offline Auto mode that falls back between Latin and Chinese only when the first pass finds no text. This candidate also adds Spanish UI routing and a respectful, one-time Google Play tester invitation. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
