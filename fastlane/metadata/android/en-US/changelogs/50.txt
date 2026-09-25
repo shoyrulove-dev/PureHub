@@ -1,0 +1,2 @@
+OCR Auto detects the right offline script with a safe fallback between Latin and Chinese.
+Spanish support and the streamlined camera scanner are included.
