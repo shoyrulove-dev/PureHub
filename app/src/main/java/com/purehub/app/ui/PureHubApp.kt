@@ -157,7 +157,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                 }
             },
             topBar = {
-                if (currentMiniAppRoute) {
+                if (currentMiniAppRoute && currentMiniApp != MiniAppId.OCR_TEXT) {
                     MiniAppTopBar(
                         title = currentMiniApp?.title.orEmpty(),
                         onBack = { navController.popBackStack() },
@@ -285,6 +285,7 @@ private fun PureHubNavHost(
             MiniAppScreen(
                 innerPadding = innerPadding,
                 miniAppId = miniAppId,
+                onBack = { navController.popBackStack() },
             )
         }
     }
@@ -313,6 +314,7 @@ private fun MiniAppTopBar(
 private fun MiniAppScreen(
     innerPadding: PaddingValues,
     miniAppId: MiniAppId,
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     var hasCameraPermission by rememberSaveable {
@@ -363,6 +365,7 @@ private fun MiniAppScreen(
             OcrTextExtractorCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                onExit = onBack,
             )
         }
         MiniAppId.COLOR_GRABBER -> ScrollHost(innerPadding) {

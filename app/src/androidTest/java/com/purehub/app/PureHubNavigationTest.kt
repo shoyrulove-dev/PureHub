@@ -63,7 +63,18 @@ class PureHubNavigationTest {
         MiniAppId.entries.forEach { tool ->
             search.performTextInput(tool.title)
             composeRule.onNode(hasText(tool.title) and hasClickAction() and !hasSetTextAction()).performClick()
-            composeRule.onNodeWithContentDescription("Back", useUnmergedTree = true).assertIsDisplayed().performClick()
+            if (tool == MiniAppId.OCR_TEXT) {
+                composeRule.onNodeWithContentDescription("OCR options", useUnmergedTree = true)
+                    .assertIsDisplayed()
+                    .performClick()
+                composeRule.onNodeWithContentDescription("Back to tools", useUnmergedTree = true)
+                    .assertIsDisplayed()
+                    .performClick()
+            } else {
+                composeRule.onNodeWithContentDescription("Back", useUnmergedTree = true)
+                    .assertIsDisplayed()
+                    .performClick()
+            }
             search.performTextClearance()
         }
     }

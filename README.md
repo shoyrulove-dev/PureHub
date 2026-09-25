@@ -148,7 +148,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.47. It adds blur-aware image diagnostics and an automatic high-contrast retry for difficult OCR pages. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is PureHub 1.0.0-beta.48. It keeps beta.47's blur-aware image diagnostics and automatic high-contrast retry, and fixes portrait-page review so the corner editor, guidance, and Recognize action remain reachable on phones. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

@@ -39,11 +39,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.RotateRight
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -53,23 +55,30 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberDrawerState
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -149,6 +158,7 @@ private data class OcrHistoryItem(
 fun OcrTextExtractorCard(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
+    onExit: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -373,10 +383,16 @@ fun OcrTextExtractorCard(
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        modifier = if (selectedTab == OcrStudioTab.Scan) {
+            Modifier.fillMaxSize()
+        } else {
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+        },
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        OcrStudioHeader(selectedTab, onTabSelected = { selectedTab = it })
+        if (selectedTab != OcrStudioTab.Scan) {
+            OcrStudioHeader(selectedTab, onTabSelected = { selectedTab = it }, onExit = onExit)
+        }
         when (selectedTab) {
             OcrStudioTab.Scan -> OcrScanContent(
                 hasCameraPermission = hasCameraPermission,
@@ -419,6 +435,8 @@ fun OcrTextExtractorCard(
                 processing = processing,
                 status = status,
                 pageCount = pages.size,
+                onTabSelected = { selectedTab = it },
+                onExit = onExit,
                 onChooseImage = { imagePicker.launch(arrayOf("image/*")) },
                 onCapture = {
                     captureOcrPage(
@@ -577,7 +595,11 @@ fun OcrTextExtractorCard(
 }
 
 @Composable
-private fun OcrStudioHeader(selectedTab: OcrStudioTab, onTabSelected: (OcrStudioTab) -> Unit) {
+private fun OcrStudioHeader(
+    selectedTab: OcrStudioTab,
+    onTabSelected: (OcrStudioTab) -> Unit,
+    onExit: () -> Unit,
+) {
     Card(colors = CardDefaults.cardColors(containerColor = Color.Transparent), modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.background(
@@ -586,6 +608,9 @@ private fun OcrStudioHeader(selectedTab: OcrStudioTab, onTabSelected: (OcrStudio
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                IconButton(onClick = onExit) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to tools")
+                }
                 Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.onPrimaryContainer) {
                     Icon(Icons.Rounded.DocumentScanner, null, modifier = Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primaryContainer)
                 }
@@ -621,6 +646,7 @@ private fun OcrStudioHeader(selectedTab: OcrStudioTab, onTabSelected: (OcrStudio
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun OcrScanContent(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
@@ -646,110 +672,213 @@ private fun OcrScanContent(
     processing: Boolean,
     status: String,
     pageCount: Int,
+    onTabSelected: (OcrStudioTab) -> Unit,
+    onExit: () -> Unit,
     onChooseImage: () -> Unit,
     onCapture: () -> Unit,
 ) {
     val context = LocalContext.current
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OcrMode.entries.forEach { mode ->
-                FilterChip(selectedMode == mode, onClick = { onModeSelected(mode) }, label = { LocalizedText(mode.label) })
-            }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    var languageOptionsOpen by rememberSaveable { mutableStateOf(false) }
+    var quickStatusVisible by rememberSaveable { mutableStateOf(true) }
+
+    if (pendingBitmap != null) {
+        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            OcrPageReview(
+                bitmap = pendingBitmap,
+                corners = pendingCorners,
+                frameConfidence = frameConfidence,
+                onCornersChanged = onCornersChanged,
+                onAutoFrame = onAutoFrame,
+                onAccept = onAcceptReview,
+                onCancel = onCancelReview,
+            )
+            LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
-            if (pendingBitmap != null) {
-                OcrPageReview(
-                    bitmap = pendingBitmap,
-                    corners = pendingCorners,
-                    frameConfidence = frameConfidence,
-                    onCornersChanged = onCornersChanged,
-                    onAutoFrame = onAutoFrame,
-                    onAccept = onAcceptReview,
-                    onCancel = onCancelReview,
-                )
-            } else if (hasCameraPermission) {
-                Box(Modifier.fillMaxWidth().aspectRatio(1f).background(Color(0xFF07111E))) {
-                    AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
-                    LaunchedEffect(previewView) {
-                        bindOcrCaptureCamera(context, previewView, imageCapture, lifecycleOwner)
-                    }
-                    Box(
-                        Modifier.align(Alignment.Center).fillMaxWidth(0.82f).aspectRatio(0.72f)
-                            .clip(RoundedCornerShape(18.dp))
-                            .border(2.dp, Color(0xFF6EE7B7), RoundedCornerShape(18.dp)),
-                    )
-                    Surface(
-                        modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
-                        shape = RoundedCornerShape(50),
-                        color = Color(0xCC0F172A),
+    } else {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            gesturesEnabled = drawerState.isOpen,
+            drawerContent = {
+                ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.86f)) {
+                    Column(
+                        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Row(Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Security, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(16.dp))
-                            LocalizedText(" On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = onExit) {
+                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to tools")
+                            }
+                            LocalizedText("Scan settings", style = MaterialTheme.typography.titleLarge)
+                        }
+                        HorizontalDivider()
+                        LocalizedText("Document type", style = MaterialTheme.typography.titleSmall)
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OcrMode.entries.forEach { mode ->
+                                FilterChip(
+                                    selected = selectedMode == mode,
+                                    onClick = { onModeSelected(mode) },
+                                    label = { LocalizedText(mode.label) },
+                                )
+                            }
+                        }
+                        LocalizedText("Document cleanup", style = MaterialTheme.typography.titleSmall)
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OcrFilter.entries.forEach { filter ->
+                                FilterChip(
+                                    selected = selectedFilter == filter,
+                                    onClick = { onFilterSelected(filter) },
+                                    label = { LocalizedText(filter.label) },
+                                )
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = { languageOptionsOpen = !languageOptionsOpen },
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                        ) {
+                            LocalizedText(selectedLanguage.label, modifier = Modifier.weight(1f))
+                            Icon(Icons.Rounded.Tune, "Change recognition language")
+                        }
+                        if (languageOptionsOpen) {
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                OcrLanguage.entries.forEach { language ->
+                                    FilterChip(
+                                        selected = selectedLanguage == language,
+                                        onClick = {
+                                            onLanguageSelected(language)
+                                            languageOptionsOpen = false
+                                        },
+                                        label = { LocalizedText(if (language == OcrLanguage.Chinese) "中文" else "EN + VI") },
+                                    )
+                                }
+                            }
+                        }
+                        OutlinedButton(onClick = onRotate, enabled = !processing, modifier = Modifier.fillMaxWidth().height(44.dp)) {
+                            Icon(Icons.AutoMirrored.Rounded.RotateRight, null)
+                            LocalizedText("  Rotation $rotation°")
+                        }
+                        HorizontalDivider()
+                        OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.fillMaxWidth().height(44.dp)) {
+                            Icon(Icons.Rounded.AddPhotoAlternate, null)
+                            LocalizedText("  Image")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onTabSelected(OcrStudioTab.Text)
+                            },
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                        ) {
+                            Icon(Icons.Rounded.Description, null)
+                            LocalizedText("  Text")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onTabSelected(OcrStudioTab.Library)
+                            },
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                        ) {
+                            Icon(Icons.Rounded.History, null)
+                            LocalizedText("  History")
                         }
                     }
-                    if (pageCount > 0) {
-                        AssistChip(
-                            onClick = {},
-                            label = { LocalizedText("$pageCount page${if (pageCount == 1) "" else "s"}") },
-                            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
-                        )
-                    }
-                    Button(
-                        onClick = onCapture,
-                        enabled = !processing,
-                        modifier = Modifier.align(Alignment.BottomCenter).padding(18.dp).height(54.dp),
-                    ) {
-                        if (processing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                        else Icon(Icons.Rounded.DocumentScanner, null)
-                        LocalizedText(if (processing) "  Reading..." else "  Capture page")
-                    }
                 }
+            },
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF07111E)),
+            ) {
+            if (hasCameraPermission) {
+                AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+                LaunchedEffect(previewView) {
+                    bindOcrCaptureCamera(context, previewView, imageCapture, lifecycleOwner)
+                }
+                Box(
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth(0.88f)
+                        .aspectRatio(0.70f)
+                        .clip(RoundedCornerShape(22.dp))
+                        .border(2.dp, Color(0xFF6EE7B7), RoundedCornerShape(22.dp)),
+                )
             } else {
                 Column(
-                    Modifier.fillMaxWidth().padding(28.dp),
+                    Modifier.align(Alignment.Center).padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(Icons.Rounded.Security, null, Modifier.size(42.dp), tint = MaterialTheme.colorScheme.primary)
-                    LocalizedText("Camera stays off until you allow it", style = MaterialTheme.typography.titleMedium)
-                    LocalizedText("OCR runs locally after each capture.", style = MaterialTheme.typography.bodyMedium)
+                    Icon(Icons.Rounded.Security, null, Modifier.size(48.dp), tint = Color(0xFF6EE7B7))
+                    LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                 }
             }
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Rounded.AddPhotoAlternate, null)
-                LocalizedText("  Scan image")
-            }
-            OutlinedButton(onClick = onRotate, enabled = !processing, modifier = Modifier.weight(1f)) {
-                Icon(Icons.AutoMirrored.Rounded.RotateRight, null)
-                LocalizedText(if (pendingBitmap != null) "  Rotate current page" else "  Next image: $rotation deg")
-            }
-        }
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LocalizedText("Document cleanup", style = MaterialTheme.typography.titleSmall)
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OcrFilter.entries.forEach { filter ->
-                        FilterChip(selectedFilter == filter, onClick = { onFilterSelected(filter) }, label = { LocalizedText(filter.label) })
+
+            Surface(
+                modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
+                shape = RoundedCornerShape(22.dp),
+                color = Color(0xCC0F172A),
+            ) {
+                if (quickStatusVisible) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.padding(start = 12.dp, top = 7.dp, bottom = 7.dp)) {
+                            LocalizedText(
+                                "${selectedMode.label} · ${selectedFilter.label}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                            LocalizedText(
+                                "${if (selectedLanguage == OcrLanguage.Chinese) "中文" else "EN/VI"}${if (pageCount > 0) " · ${pageCount}p" else ""}",
+                                color = Color.White.copy(alpha = .72f),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                        IconButton(onClick = { quickStatusVisible = false }, modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.Rounded.Tune, "Hide current settings", tint = Color.White)
+                        }
+                    }
+                } else {
+                    IconButton(onClick = { quickStatusVisible = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Rounded.Tune, "Show current settings", tint = Color.White)
                     }
                 }
-                LocalizedText("Auto-frame runs locally. Review and drag all four corners before recognition.", style = MaterialTheme.typography.bodySmall)
+            }
+            Surface(
+                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                shape = RoundedCornerShape(50),
+                color = Color(0xCC0F172A),
+            ) {
+                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                    Icon(Icons.Rounded.Menu, "OCR options", tint = Color.White)
+                }
+            }
+            Row(
+                modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.width(72.dp).height(46.dp)) {
+                    Icon(Icons.Rounded.AddPhotoAlternate, "Choose image")
+                }
+                Button(onClick = onCapture, enabled = hasCameraPermission && !processing, modifier = Modifier.width(82.dp).height(46.dp)) {
+                    if (processing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    else Icon(Icons.Rounded.DocumentScanner, "Scan page")
+                }
+            }
             }
         }
-        LocalizedText("Recognition language", style = MaterialTheme.typography.titleSmall)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OcrLanguage.entries.forEach { language ->
-                FilterChip(
-                    selected = selectedLanguage == language,
-                    onClick = { onLanguageSelected(language) },
-                    label = { LocalizedText(language.label) },
-                )
-            }
-        }
-        LocalizedText(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -777,49 +906,57 @@ private fun OcrPageReview(
             }
             AssistChip(onClick = onAutoFrame, label = { LocalizedText("Auto-frame") }, leadingIcon = { Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(16.dp)) })
         }
-        BoxWithConstraints(
-            Modifier.fillMaxWidth().aspectRatio(bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1)).clip(RoundedCornerShape(16.dp)),
-        ) {
-            val widthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
-            val heightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
-            Image(bitmap.asImageBitmap(), "Page awaiting corner review", Modifier.fillMaxSize())
-            ComposeCanvas(
-                Modifier.fillMaxSize().pointerInput(Unit) {
-                    var activeCorner = -1
-                    detectDragGestures(
-                        onDragStart = { touch ->
-                            val values = currentCorners.value.points()
-                            activeCorner = values.indices.minByOrNull { index ->
-                                val dx = touch.x - values[index].x * widthPx
-                                val dy = touch.y - values[index].y * heightPx
-                                dx * dx + dy * dy
-                            } ?: -1
-                        },
-                        onDragEnd = { activeCorner = -1 },
-                        onDragCancel = { activeCorner = -1 },
-                    ) { change, _ ->
-                        if (activeCorner < 0) return@detectDragGestures
-                        change.consume()
-                        val point = NormalizedPoint(
-                            (change.position.x / widthPx).coerceIn(0f, 1f),
-                            (change.position.y / heightPx).coerceIn(0f, 1f),
-                        )
-                        currentOnCornersChanged.value(currentCorners.value.withPoint(activeCorner, point).sanitized())
-                    }
-                },
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val sourceRatio = bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1)
+            val previewHeight = minOf(maxWidth / sourceRatio, 280.dp)
+            val previewWidth = minOf(maxWidth, previewHeight * sourceRatio)
+            BoxWithConstraints(
+                Modifier
+                    .align(Alignment.Center)
+                    .size(previewWidth, previewHeight)
+                    .clip(RoundedCornerShape(16.dp)),
             ) {
-                val values = corners.points().map { point -> Offset(point.x * size.width, point.y * size.height) }
-                val outline = Path().apply {
-                    moveTo(values[0].x, values[0].y)
-                    lineTo(values[1].x, values[1].y)
-                    lineTo(values[2].x, values[2].y)
-                    lineTo(values[3].x, values[3].y)
-                    close()
-                }
-                drawPath(outline, Color(0xFF34D399), style = Stroke(width = 5f))
-                values.forEach { point ->
-                    drawCircle(Color.White, radius = 13f, center = point)
-                    drawCircle(Color(0xFF059669), radius = 9f, center = point)
+                val widthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
+                val heightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+                Image(bitmap.asImageBitmap(), "Page awaiting corner review", Modifier.fillMaxSize())
+                ComposeCanvas(
+                    Modifier.fillMaxSize().pointerInput(Unit) {
+                        var activeCorner = -1
+                        detectDragGestures(
+                            onDragStart = { touch ->
+                                val values = currentCorners.value.points()
+                                activeCorner = values.indices.minByOrNull { index ->
+                                    val dx = touch.x - values[index].x * widthPx
+                                    val dy = touch.y - values[index].y * heightPx
+                                    dx * dx + dy * dy
+                                } ?: -1
+                            },
+                            onDragEnd = { activeCorner = -1 },
+                            onDragCancel = { activeCorner = -1 },
+                        ) { change, _ ->
+                            if (activeCorner < 0) return@detectDragGestures
+                            change.consume()
+                            val point = NormalizedPoint(
+                                (change.position.x / widthPx).coerceIn(0f, 1f),
+                                (change.position.y / heightPx).coerceIn(0f, 1f),
+                            )
+                            currentOnCornersChanged.value(currentCorners.value.withPoint(activeCorner, point).sanitized())
+                        }
+                    },
+                ) {
+                    val values = corners.points().map { point -> Offset(point.x * size.width, point.y * size.height) }
+                    val outline = Path().apply {
+                        moveTo(values[0].x, values[0].y)
+                        lineTo(values[1].x, values[1].y)
+                        lineTo(values[2].x, values[2].y)
+                        lineTo(values[3].x, values[3].y)
+                        close()
+                    }
+                    drawPath(outline, Color(0xFF34D399), style = Stroke(width = 5f))
+                    values.forEach { point ->
+                        drawCircle(Color.White, radius = 13f, center = point)
+                        drawCircle(Color(0xFF059669), radius = 9f, center = point)
+                    }
                 }
             }
         }

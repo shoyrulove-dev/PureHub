@@ -1,0 +1,1 @@
+OCR Studio now opens as a full-screen camera scanner with compact image and scan controls. Settings, history, and extracted text move into a focused drawer; language choices stay collapsed until needed, and the two-line quick status can be hidden. Portrait-page review remains compact so corner editing and recognition stay reachable on phones.
