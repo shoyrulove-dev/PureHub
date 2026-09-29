@@ -76,6 +76,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -744,12 +745,17 @@ private fun OcrScanContent(
                         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = onExit) {
-                                Icon(Icons.Rounded.Home, "Home")
-                            }
-                            LocalizedText("Scan settings", style = MaterialTheme.typography.titleMedium)
-                        }
+                        LocalizedText("Scan settings", style = MaterialTheme.typography.titleSmall)
+                        NavigationDrawerItem(
+                            label = { LocalizedText("Home") },
+                            selected = false,
+                            icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onExit()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                        )
                         HorizontalDivider()
                         OutlinedButton(
                             onClick = { modeOptionsOpen = !modeOptionsOpen },
