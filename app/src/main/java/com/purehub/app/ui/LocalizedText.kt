@@ -543,6 +543,35 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     match("Batch OCR finished: (\\d+) image\\(s\\), (\\d+) page\\(s\\) in this document\\.")?.let {
         return when { vi -> "OCR hàng loạt hoàn tất: ${it[1]} ảnh, ${it[2]} trang trong tài liệu này."; zh -> "批量 OCR 已完成：${it[1]} 张图片，本文档共 ${it[2]} 页。"; es -> "OCR por lotes terminado: ${it[1]} imágenes y ${it[2]} páginas en este documento."; else -> null }
     }
+    when (text) {
+        "Ready to start" -> return when { vi -> "Sẵn sàng bắt đầu"; zh -> "准备开始"; es -> "Listo para comenzar"; else -> null }
+        "Choose a photo" -> return when { vi -> "Chọn ảnh"; zh -> "选择照片"; es -> "Elegir una foto"; else -> null }
+        "Recording" -> return when { vi -> "Đang quay"; zh -> "正在录制"; es -> "Grabando"; else -> null }
+        "Recording paused" -> return when { vi -> "Đã tạm dừng"; zh -> "录制已暂停"; es -> "Grabación pausada"; else -> null }
+        "Hide quality options" -> return when { vi -> "Ẩn tùy chọn chất lượng"; zh -> "隐藏质量选项"; es -> "Ocultar opciones de calidad"; else -> null }
+        "Record MP4 locally with Android's permission prompt." -> return when { vi -> "Quay MP4 trên máy với hộp thoại cấp quyền của Android."; zh -> "通过 Android 授权提示在本机录制 MP4。"; es -> "Graba MP4 localmente con el aviso de permiso de Android."; else -> null }
+        "Android asks for consent before recording. Videos are saved locally to Movies/PureHub." -> return when { vi -> "Android sẽ xin quyền trước khi quay. Video được lưu cục bộ trong Movies/PureHub."; zh -> "Android 会在录制前请求授权。视频保存在本机的 Movies/PureHub。"; es -> "Android solicita permiso antes de grabar. Los vídeos se guardan localmente en Movies/PureHub."; else -> null }
+        "Microphone permission was not granted. Video-only recording remains available." -> return when { vi -> "Chưa cấp quyền micro. Bạn vẫn có thể quay không có âm thanh."; zh -> "未授予麦克风权限。仍可录制无声音视频。"; es -> "No se concedió permiso de micrófono. La grabación solo de vídeo sigue disponible."; else -> null }
+        "Screen capture permission was cancelled." -> return when { vi -> "Đã hủy quyền quay màn hình."; zh -> "已取消屏幕录制授权。"; es -> "Se canceló el permiso para capturar pantalla."; else -> null }
+        "Choose a photo to remove its shareable metadata locally." -> return when { vi -> "Chọn ảnh để xóa metadata có thể chia sẻ ngay trên máy."; zh -> "选择照片以在本机移除可分享的元数据。"; es -> "Elige una foto para eliminar localmente sus metadatos compartibles."; else -> null }
+        "Reading metadata on this device..." -> return when { vi -> "Đang đọc metadata trên thiết bị..."; zh -> "正在设备上读取元数据..."; es -> "Leyendo metadatos en este dispositivo..."; else -> null }
+        "Ready to create a clean JPEG." -> return when { vi -> "Sẵn sàng tạo JPEG sạch."; zh -> "可以创建干净的 JPEG。"; es -> "Listo para crear un JPEG limpio."; else -> null }
+        "Creating your clean copy locally..." -> return when { vi -> "Đang tạo bản sao sạch trên máy..."; zh -> "正在本机创建干净副本..."; es -> "Creando tu copia limpia localmente..."; else -> null }
+        "Clean JPEG saved." -> return when { vi -> "Đã lưu JPEG sạch."; zh -> "干净的 JPEG 已保存。"; es -> "JPEG limpio guardado."; else -> null }
+        "Create a clean copy without location or camera metadata." -> return when { vi -> "Tạo bản sao sạch, không có vị trí hoặc metadata camera."; zh -> "创建不含位置或相机元数据的干净副本。"; es -> "Crea una copia limpia sin ubicación ni metadatos de cámara."; else -> null }
+        "Photo ready" -> return when { vi -> "Ảnh đã sẵn sàng"; zh -> "照片已准备好"; es -> "Foto lista"; else -> null }
+        "Original stays protected" -> return when { vi -> "Ảnh gốc luôn được bảo vệ"; zh -> "原始照片保持受保护"; es -> "El original permanece protegido"; else -> null }
+        "Only the new JPEG is saved. GPS, device and other EXIF fields are left out." -> return when { vi -> "Chỉ JPEG mới được lưu. GPS, thiết bị và các trường EXIF khác sẽ được loại bỏ."; zh -> "仅保存新的 JPEG。GPS、设备和其他 EXIF 字段不会写入。"; es -> "Solo se guarda el nuevo JPEG. Se excluyen GPS, dispositivo y otros campos EXIF."; else -> null }
+        "Metadata found" -> return when { vi -> "Đã tìm thấy metadata"; zh -> "已找到元数据"; es -> "Metadatos encontrados"; else -> null }
+        "Change" -> return when { vi -> "Đổi ảnh"; zh -> "更换"; es -> "Cambiar"; else -> null }
+        "Could not create the clean copy. Try a JPEG, PNG, or WebP image." -> return when { vi -> "Không thể tạo bản sao sạch. Hãy thử ảnh JPEG, PNG hoặc WebP."; zh -> "无法创建干净副本。请尝试 JPEG、PNG 或 WebP 图片。"; es -> "No se pudo crear la copia limpia. Prueba una imagen JPEG, PNG o WebP."; else -> null }
+    }
+    match("Quality: (.+)")?.let {
+        return when { vi -> "Chất lượng: ${translateUiText(it[1], language)}"; zh -> "质量：${translateUiText(it[1], language)}"; es -> "Calidad: ${translateUiText(it[1], language)}"; else -> null }
+    }
+    match("Starting in (\\d+)")?.let {
+        return when { vi -> "Bắt đầu sau ${it[1]}"; zh -> "将在 ${it[1]} 秒后开始"; es -> "Comienza en ${it[1]}"; else -> null }
+    }
     match("Recognizing image (\\d+)/(\\d+) on this device\\.\\.\\.")?.let {
         return when { vi -> "Đang nhận dạng ảnh ${it[1]}/${it[2]} trên thiết bị..."; zh -> "正在设备上识别图片 ${it[1]}/${it[2]}…"; es -> "Reconociendo imagen ${it[1]}/${it[2]} en este dispositivo..."; else -> null }
     }

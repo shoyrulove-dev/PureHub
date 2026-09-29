@@ -68,7 +68,7 @@ fun PhotoPrivacyScreen(
         status = if (uri == null) "No photo selected." else "Reading metadata on this device..."
         if (uri != null) scope.launch {
             metadataSummary = withContext(Dispatchers.IO) { inspectPhotoMetadata(context, uri) }
-            status = "Ready. Create a new JPEG without the original metadata."
+            status = "Ready to create a clean JPEG."
         }
     }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/jpeg")) { destination ->
@@ -91,7 +91,7 @@ fun PhotoPrivacyScreen(
             }
             isExporting = false
             status = if (result.isSuccess) {
-                "Clean JPEG saved. The original photo was not changed."
+                "Clean JPEG saved."
             } else {
                 "Could not create the clean copy. Try a JPEG, PNG, or WebP image."
             }
