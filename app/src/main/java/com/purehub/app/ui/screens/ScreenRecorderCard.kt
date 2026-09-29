@@ -47,8 +47,14 @@ private enum class RecorderPreset(
     SMOOTH("Smooth", "720-wide · 60 fps · 8 Mbps", 720, 60, 8_000_000),
 }
 
+enum class ScreenRecorderMenuAction { Start, Quality }
+
 @Composable
-fun ScreenRecorderCard(innerPadding: PaddingValues = PaddingValues(0.dp)) {
+fun ScreenRecorderCard(
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+    menuAction: ScreenRecorderMenuAction? = null,
+    onMenuActionHandled: () -> Unit = {},
+) {
     val context = LocalContext.current
     val runtime by ScreenRecorderRuntime.status.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
@@ -78,6 +84,15 @@ fun ScreenRecorderCard(innerPadding: PaddingValues = PaddingValues(0.dp)) {
     val isIdle = runtime.phase == ScreenRecordingPhase.IDLE
     val isRecording = runtime.phase == ScreenRecordingPhase.RECORDING
     val isPaused = runtime.phase == ScreenRecordingPhase.PAUSED
+
+    LaunchedEffect(menuAction) {
+        when (menuAction) {
+            ScreenRecorderMenuAction.Start -> if (isIdle) countdown = 3
+            ScreenRecorderMenuAction.Quality -> mode = SuiteMode.PRO
+            null -> return@LaunchedEffect
+        }
+        onMenuActionHandled()
+    }
 
     LaunchedEffect(countdown) {
         if (countdown > 0) {

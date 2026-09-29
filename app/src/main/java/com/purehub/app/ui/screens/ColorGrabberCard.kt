@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,7 +25,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,85 +49,108 @@ import com.purehub.app.feature.colorgrabber.GrabbedColor
 import com.purehub.app.ui.LocalSnackbarHostState
 import kotlinx.coroutines.launch
 
+enum class ColorGrabberMenuAction { Camera, CopyHex }
+
 @Composable
 fun ColorGrabberCard(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
+    menuAction: ColorGrabberMenuAction? = null,
+    onMenuActionHandled: () -> Unit = {},
     innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var color by remember { mutableStateOf(GrabbedColor(64, 112, 176)) }
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
+    val appLanguage = LocalAppLanguage.current
+    val colorToneLabel = translateUiText("tone", appLanguage)
 
-    Card(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
+    fun copyHex() {
+        val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("PureHub Color", color.hex))
+        scope.launch { snackbarHostState.showSnackbar("Color HEX copied locally.") }
+    }
+
+    LaunchedEffect(menuAction) {
+        when (menuAction) {
+            ColorGrabberMenuAction.Camera -> if (!hasCameraPermission) onRequestCameraPermission()
+            ColorGrabberMenuAction.CopyHex -> copyHex()
+            null -> return@LaunchedEffect
+        }
+        onMenuActionHandled()
+    }
+
+    Box(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Color(0xFF07111E))) {
+        if (hasCameraPermission) {
+            ColorGrabberPreview(
+                modifier = Modifier.fillMaxSize(),
+                onColorSampled = { sampled -> color = sampled },
+            )
+        } else {
+            Column(
+                modifier = Modifier.align(Alignment.Center).padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                Button(onClick = onRequestCameraPermission) { LocalizedText("Allow Camera for Color Grabber") }
+            }
+        }
+        Card(modifier = Modifier.align(Alignment.BottomCenter).padding(14.dp).fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FlagshipSuiteHeader(
-                eyebrow = "Creative Suite flagship",
-                title = "Color Grabber",
-                description = "Capture accurate HEX and RGB colors in real time while every camera frame stays on your device.",
-            )
-            if (hasCameraPermission) {
-                ColorGrabberPreview(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(260.dp),
-                    onColorSampled = { sampled ->
-                        color = sampled
-                    },
-                )
-            } else {
-                Button(onClick = onRequestCameraPermission) {
-                    LocalizedText("Allow Camera for Color Grabber")
-                }
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .background(
-                            color = Color(color.red, color.green, color.blue),
-                            shape = CircleShape,
-                        ),
-                )
+                Box(modifier = Modifier.size(56.dp).background(Color(color.red, color.green, color.blue), CircleShape))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LocalizedText(
                         text = color.hex,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
+                    /*
                     LocalizedText(
-                        text = "RGB ${color.red}, ${color.green}, ${color.blue}",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = color.hex,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                     )
+                    */
                     LocalizedText(
-                        text = "${ColorGrabberUtils.describeBrightness(color)} tone • R ${ColorGrabberUtils.toPercent(color.red)} • G ${ColorGrabberUtils.toPercent(color.green)} • B ${ColorGrabberUtils.toPercent(color.blue)}",
+                        text = "${translateUiText(ColorGrabberUtils.describeBrightness(color), appLanguage)} · $colorToneLabel · R ${ColorGrabberUtils.toPercent(color.red)} · G ${ColorGrabberUtils.toPercent(color.green)} · B ${ColorGrabberUtils.toPercent(color.blue)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    LocalizedText(
+                        text = "RGB ${color.red}, ${color.green}, ${color.blue}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    /*
+                    LocalizedText(
+                        text = "${translateUiText(ColorGrabberUtils.describeBrightness(color), appLanguage)} · ${translateUiText(\"tone\", appLanguage)} · R ${ColorGrabberUtils.toPercent(color.red)} · G ${ColorGrabberUtils.toPercent(color.green)} · B ${ColorGrabberUtils.toPercent(color.blue)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    */
                 }
             }
             Button(
+                modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(
-                        android.content.ClipData.newPlainText("PureHub Color", color.hex),
-                    )
-                    scope.launch { snackbarHostState.showSnackbar("Color HEX copied locally.") }
+                    copyHex()
                 },
             ) {
-                LocalizedText("Copy HEX")
+                LocalizedText("Copy")
             }
         }
+    }
     }
 }
 

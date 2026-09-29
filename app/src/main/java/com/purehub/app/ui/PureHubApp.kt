@@ -74,11 +74,13 @@ import com.purehub.app.ui.screens.BoostScreen
 import com.purehub.app.ui.screens.BubbleLevelCard
 import com.purehub.app.ui.screens.CleanerScreen
 import com.purehub.app.ui.screens.ColorGrabberCard
+import com.purehub.app.ui.screens.ColorGrabberMenuAction
 import com.purehub.app.ui.screens.CommunityScreen
 import com.purehub.app.ui.screens.CompassScreen
 import com.purehub.app.ui.screens.DecibelMeterCard
 import com.purehub.app.ui.screens.DecisionWheelCard
 import com.purehub.app.ui.screens.DocToPdfCard
+import com.purehub.app.ui.screens.DocToPdfMenuAction
 import com.purehub.app.ui.screens.ExpenseTrackerCard
 import com.purehub.app.ui.screens.FinanceFunScreen
 import com.purehub.app.ui.screens.HelpScreen
@@ -87,6 +89,7 @@ import com.purehub.app.ui.screens.LunarCalendarScreen
 import com.purehub.app.ui.screens.OcrTextExtractorCard
 import com.purehub.app.ui.screens.PasswordVaultCard
 import com.purehub.app.ui.screens.PhotoPrivacyScreen
+import com.purehub.app.ui.screens.PhotoPrivacyMenuAction
 import com.purehub.app.ui.screens.AuthenticatorVaultCard
 import com.purehub.app.ui.screens.FileStudioCard
 import com.purehub.app.ui.screens.PomodoroCard
@@ -95,6 +98,7 @@ import com.purehub.app.ui.screens.QrStudioTab
 import com.purehub.app.ui.screens.QrMenuRequest
 import com.purehub.app.ui.screens.ScanScreen
 import com.purehub.app.ui.screens.ScreenRecorderCard
+import com.purehub.app.ui.screens.ScreenRecorderMenuAction
 import com.purehub.app.ui.screens.SettingsScreen
 import com.purehub.app.ui.screens.PlayTesterInviteSheet
 import com.purehub.app.ui.screens.dismissPlayTesterInvite
@@ -462,16 +466,26 @@ private fun MiniAppScreen(
                 )
             }
         }
-        MiniAppId.DOC_TO_PDF -> VisionFullscreenShell(
-            title = "Doc to PDF",
-            onHome = onHome,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) { visionPadding ->
+        MiniAppId.DOC_TO_PDF -> {
+            var menuAction by rememberSaveable { mutableStateOf<DocToPdfMenuAction?>(null) }
+            VisionFullscreenShell(
+                title = "Doc to PDF",
+                onHome = onHome,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                drawerActions = { closeDrawer ->
+                    NavigationDrawerItem(label = { LocalizedText("Capture Page") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = DocToPdfMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Import images") }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = DocToPdfMenuAction.Images; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("PDF toolbox") }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = DocToPdfMenuAction.PdfToolbox; closeDrawer() }, modifier = Modifier.height(48.dp))
+                },
+            ) { visionPadding ->
             DocToPdfCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                menuAction = menuAction,
+                onMenuActionHandled = { menuAction = null },
                 innerPadding = visionPadding,
             )
+            }
         }
         MiniAppId.OCR_TEXT -> Box(
             modifier = Modifier
@@ -484,22 +498,37 @@ private fun MiniAppScreen(
                 onExit = onHome,
             )
         }
-        MiniAppId.COLOR_GRABBER -> VisionFullscreenShell(
-            title = "Color Grabber",
-            onHome = onHome,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) { visionPadding ->
+        MiniAppId.COLOR_GRABBER -> {
+            var menuAction by rememberSaveable { mutableStateOf<ColorGrabberMenuAction?>(null) }
+            VisionFullscreenShell(
+                title = "Color Grabber",
+                onHome = onHome,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                drawerActions = { closeDrawer ->
+                    NavigationDrawerItem(label = { LocalizedText("Camera") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ColorGrabberMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Copy HEX") }, selected = false, icon = { Icon(Icons.Rounded.Collections, null) }, onClick = { menuAction = ColorGrabberMenuAction.CopyHex; closeDrawer() }, modifier = Modifier.height(48.dp))
+                },
+            ) { visionPadding ->
             ColorGrabberCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                menuAction = menuAction,
+                onMenuActionHandled = { menuAction = null },
                 innerPadding = visionPadding,
             )
+            }
         }
-        MiniAppId.PHOTO_PRIVACY -> VisionFullscreenShell(
-            title = "Photo Privacy",
-            onHome = onHome,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) { visionPadding -> PhotoPrivacyScreen(innerPadding = visionPadding) }
+        MiniAppId.PHOTO_PRIVACY -> {
+            var menuAction by rememberSaveable { mutableStateOf<PhotoPrivacyMenuAction?>(null) }
+            VisionFullscreenShell(
+                title = "Photo Privacy",
+                onHome = onHome,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                drawerActions = { closeDrawer ->
+                    NavigationDrawerItem(label = { LocalizedText("Choose photo") }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = PhotoPrivacyMenuAction.ChoosePhoto; closeDrawer() }, modifier = Modifier.height(48.dp))
+                },
+            ) { visionPadding -> PhotoPrivacyScreen(innerPadding = visionPadding, menuAction = menuAction, onMenuActionHandled = { menuAction = null }) }
+        }
         MiniAppId.DEEP_CLEANER -> CleanerScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.SPEAKER_CLEANER -> ScrollHost(innerPadding) { SpeakerCleanerCard() }
         MiniAppId.WIFI_ANALYZER -> ScrollHost(innerPadding) { WifiAnalyzerCard() }
@@ -511,11 +540,18 @@ private fun MiniAppScreen(
         MiniAppId.EXPENSE_TRACKER -> ScrollHost(innerPadding) { ExpenseTrackerCard() }
         MiniAppId.DECISION_WHEEL -> ScrollHost(innerPadding) { DecisionWheelCard() }
         MiniAppId.COMMUNITY_UNLOCK -> CommunityScreen(innerPadding = innerPadding, embedded = false)
-        MiniAppId.SCREEN_RECORDER -> VisionFullscreenShell(
-            title = "Screen Recorder",
-            onHome = onHome,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) { visionPadding -> ScreenRecorderCard(innerPadding = visionPadding) }
+        MiniAppId.SCREEN_RECORDER -> {
+            var menuAction by rememberSaveable { mutableStateOf<ScreenRecorderMenuAction?>(null) }
+            VisionFullscreenShell(
+                title = "Screen Recorder",
+                onHome = onHome,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                drawerActions = { closeDrawer ->
+                    NavigationDrawerItem(label = { LocalizedText("Start recording") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Start; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Quality preset") }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Quality; closeDrawer() }, modifier = Modifier.height(48.dp))
+                },
+            ) { visionPadding -> ScreenRecorderCard(innerPadding = visionPadding, menuAction = menuAction, onMenuActionHandled = { menuAction = null }) }
+        }
     }
 }
 

@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,9 +42,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+enum class PhotoPrivacyMenuAction { ChoosePhoto }
+
 @Composable
 fun PhotoPrivacyScreen(
     innerPadding: PaddingValues,
+    menuAction: PhotoPrivacyMenuAction? = null,
+    onMenuActionHandled: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -85,6 +90,13 @@ fun PhotoPrivacyScreen(
             } else {
                 "Could not create the clean copy. Try a standard JPEG, PNG, or WebP image."
             }
+        }
+    }
+
+    LaunchedEffect(menuAction) {
+        if (menuAction == PhotoPrivacyMenuAction.ChoosePhoto) {
+            picker.launch(arrayOf("image/*"))
+            onMenuActionHandled()
         }
     }
 

@@ -60,10 +60,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+enum class DocToPdfMenuAction { Camera, Images, PdfToolbox }
+
 @Composable
 fun DocToPdfCard(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
+    menuAction: DocToPdfMenuAction? = null,
+    onMenuActionHandled: () -> Unit = {},
     innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val context = LocalContext.current
@@ -123,6 +127,16 @@ fun DocToPdfCard(
             exportMessage = "${imported.size} PDF file(s) opened privately."
             pdfBusy = false
         }
+    }
+
+    LaunchedEffect(menuAction) {
+        when (menuAction) {
+            DocToPdfMenuAction.Camera -> if (!hasCameraPermission) onRequestCameraPermission()
+            DocToPdfMenuAction.Images -> galleryPicker.launch(arrayOf("image/*"))
+            DocToPdfMenuAction.PdfToolbox -> pdfPicker.launch(arrayOf("application/pdf"))
+            null -> return@LaunchedEffect
+        }
+        onMenuActionHandled()
     }
 
     fun runPdfTool(message: String, action: () -> ExportedPdf) {
