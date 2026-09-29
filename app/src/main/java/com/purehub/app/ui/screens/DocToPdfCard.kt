@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -192,9 +193,10 @@ fun DocToPdfCard(
                 AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
                 Box(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth(0.78f)
-                        .aspectRatio(0.72f)
+                        .align(Alignment.TopCenter)
+                        .offset(y = 210.dp)
+                        .fillMaxWidth(0.9f)
+                        .aspectRatio(0.88f)
                         .border(3.dp, Color(0xFF43E6B5), RoundedCornerShape(24.dp)),
                 )
                 LaunchedEffect(previewView) {
