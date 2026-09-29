@@ -17,6 +17,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.AddPhotoAlternate
+import androidx.compose.material.icons.rounded.Collections
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -26,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
@@ -85,6 +91,8 @@ import com.purehub.app.ui.screens.AuthenticatorVaultCard
 import com.purehub.app.ui.screens.FileStudioCard
 import com.purehub.app.ui.screens.PomodoroCard
 import com.purehub.app.ui.screens.QrStudioScreen
+import com.purehub.app.ui.screens.QrStudioTab
+import com.purehub.app.ui.screens.QrMenuRequest
 import com.purehub.app.ui.screens.ScanScreen
 import com.purehub.app.ui.screens.ScreenRecorderCard
 import com.purehub.app.ui.screens.SettingsScreen
@@ -390,16 +398,69 @@ private fun MiniAppScreen(
         MiniAppId.DECIBEL_METER -> ScrollHost(innerPadding) { DecibelMeterCard() }
         MiniAppId.SMART_FLASHLIGHT -> ScrollHost(innerPadding) { SmartFlashlightCard() }
         MiniAppId.UNIT_CONVERTER -> ScrollHost(innerPadding) { UnitConverterCard() }
-        MiniAppId.QR_STUDIO -> VisionFullscreenShell(
-            title = "QR Studio",
-            onHome = onHome,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) { visionPadding ->
-            QrStudioScreen(
-                hasCameraPermission = hasCameraPermission,
-                onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                innerPadding = visionPadding,
-            )
+        MiniAppId.QR_STUDIO -> {
+            var selectedQrTab by rememberSaveable { mutableStateOf(QrStudioTab.Scan) }
+            var qrMenuRequest by rememberSaveable { mutableStateOf<QrMenuRequest?>(null) }
+            VisionFullscreenShell(
+                title = "QR Studio",
+                onHome = onHome,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                drawerActions = { closeDrawer ->
+                    NavigationDrawerItem(
+                        label = { LocalizedText("Scan") },
+                        selected = selectedQrTab == QrStudioTab.Scan,
+                        icon = { Icon(Icons.Rounded.QrCodeScanner, contentDescription = null) },
+                        onClick = { selectedQrTab = QrStudioTab.Scan; closeDrawer() },
+                        modifier = Modifier.height(48.dp),
+                    )
+                    NavigationDrawerItem(
+                        label = { LocalizedText("Create QR") },
+                        selected = selectedQrTab == QrStudioTab.Create,
+                        icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
+                        onClick = { selectedQrTab = QrStudioTab.Create; closeDrawer() },
+                        modifier = Modifier.height(48.dp),
+                    )
+                    NavigationDrawerItem(
+                        label = { LocalizedText("History") },
+                        selected = selectedQrTab == QrStudioTab.Library,
+                        icon = { Icon(Icons.Rounded.History, contentDescription = null) },
+                        onClick = { selectedQrTab = QrStudioTab.Library; closeDrawer() },
+                        modifier = Modifier.height(48.dp),
+                    )
+                    NavigationDrawerItem(
+                        label = { LocalizedText("Scan image") },
+                        selected = false,
+                        icon = { Icon(Icons.Rounded.AddPhotoAlternate, contentDescription = null) },
+                        onClick = {
+                            selectedQrTab = QrStudioTab.Scan
+                            qrMenuRequest = QrMenuRequest.Image
+                            closeDrawer()
+                        },
+                        modifier = Modifier.height(48.dp),
+                    )
+                    NavigationDrawerItem(
+                        label = { LocalizedText("Batch scan") },
+                        selected = false,
+                        icon = { Icon(Icons.Rounded.Collections, contentDescription = null) },
+                        onClick = {
+                            selectedQrTab = QrStudioTab.Scan
+                            qrMenuRequest = QrMenuRequest.Batch
+                            closeDrawer()
+                        },
+                        modifier = Modifier.height(48.dp),
+                    )
+                },
+            ) { visionPadding ->
+                QrStudioScreen(
+                    hasCameraPermission = hasCameraPermission,
+                    onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                    selectedTab = selectedQrTab,
+                    onTabSelected = { selectedQrTab = it },
+                    menuRequest = qrMenuRequest,
+                    onMenuRequestHandled = { qrMenuRequest = null },
+                    innerPadding = visionPadding,
+                )
+            }
         }
         MiniAppId.DOC_TO_PDF -> VisionFullscreenShell(
             title = "Doc to PDF",

@@ -111,7 +111,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.min
 
-private enum class QrStudioTab(val label: String) { Scan("Scan"), Create("Create"), Library("Library") }
+enum class QrStudioTab(val label: String) { Scan("Scan"), Create("Create"), Library("Library") }
+enum class QrMenuRequest { Image, Batch }
 private enum class QrTemplate(val label: String) {
     Website("Website"),
     Text("Text"),
@@ -132,13 +133,16 @@ private data class QrCreatorFields(val primary: String, val secondary: String = 
 fun QrStudioScreen(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
+    selectedTab: QrStudioTab,
+    onTabSelected: (QrStudioTab) -> Unit,
+    menuRequest: QrMenuRequest?,
+    onMenuRequestHandled: () -> Unit,
     innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val preferences = remember { context.getSharedPreferences("purehub.qr-studio.v2", 0) }
-    var selectedTab by rememberSaveable { mutableStateOf(QrStudioTab.Scan) }
     var selectedTemplate by rememberSaveable { mutableStateOf(QrTemplate.Website) }
     var creatorPrimary by rememberSaveable { mutableStateOf("https://hub.blissbiovn.com") }
     var creatorSecondary by rememberSaveable { mutableStateOf("") }
@@ -201,6 +205,14 @@ fun QrStudioScreen(
             scanStatus = "$found QR or barcode result(s) found in ${uris.take(20).size} images. ${if (saveScans) "Saved locally." else "Private session: not saved."}"
         }
     }
+    LaunchedEffect(menuRequest) {
+        when (menuRequest) {
+            QrMenuRequest.Image -> imagePicker.launch("image/*")
+            QrMenuRequest.Batch -> batchPicker.launch(arrayOf("image/*"))
+            null -> return@LaunchedEffect
+        }
+        onMenuRequestHandled()
+    }
 
     if (selectedTab == QrStudioTab.Scan && latestScan.isBlank()) {
         QrScannerContent(
@@ -220,8 +232,6 @@ fun QrStudioScreen(
             payloadInfo = payloadInfo,
             onCodeDetected = { acceptScan(it, "Camera") },
             onClearResult = { latestScan = ""; scanStatus = "Ready for another scan." },
-            onOpenCreate = { selectedTab = QrStudioTab.Create },
-            onOpenLibrary = { selectedTab = QrStudioTab.Library },
             immersive = true,
         )
     } else {
@@ -232,7 +242,7 @@ fun QrStudioScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            QrStudioHeader(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+            QrStudioHeader(selectedTab = selectedTab, onTabSelected = onTabSelected)
 
             when (selectedTab) {
                 QrStudioTab.Scan -> QrScannerContent(
@@ -255,8 +265,6 @@ fun QrStudioScreen(
                     latestScan = ""
                     scanStatus = "Ready for another scan."
                 },
-                onOpenCreate = { selectedTab = QrStudioTab.Create },
-                onOpenLibrary = { selectedTab = QrStudioTab.Library },
                 immersive = false,
             )
 
@@ -293,7 +301,7 @@ fun QrStudioScreen(
                     latestScan = it.value
                     scanSource = it.source
                     scanStatus = "Saved item opened from your private library."
-                    selectedTab = QrStudioTab.Scan
+                    onTabSelected(QrStudioTab.Scan)
                 },
                 onClear = {
                     history = emptyList()
@@ -367,8 +375,6 @@ private fun QrScannerContent(
     payloadInfo: QrPayloadInfo,
     onCodeDetected: (String) -> Unit,
     onClearResult: () -> Unit,
-    onOpenCreate: () -> Unit,
-    onOpenLibrary: () -> Unit,
     immersive: Boolean,
 ) {
     val context = LocalContext.current
@@ -390,34 +396,6 @@ private fun QrScannerContent(
                     Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(48.dp))
                     LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
-                }
-            }
-            Surface(
-                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xD90F172A),
-            ) {
-                Row {
-                    IconButton(onClick = onOpenCreate) { Icon(Icons.Rounded.AutoAwesome, "Create QR", tint = Color.White) }
-                    IconButton(onClick = onOpenLibrary) { Icon(Icons.Rounded.History, "QR history", tint = Color.White) }
-                }
-            }
-            Surface(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(20.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = Color(0xD90F172A),
-            ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedButton(onClick = onChooseImage) {
-                        Icon(Icons.Rounded.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.size(6.dp))
-                        LocalizedText("Image")
-                    }
-                    Button(onClick = onChooseBatch) { LocalizedText("Batch") }
                 }
             }
         }
@@ -705,17 +683,6 @@ private fun QrCameraPreview(
     Box(modifier = modifier.clip(RoundedCornerShape(24.dp)).background(Color(0xFF07111F))) {
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
         QrViewfinderOverlay(Modifier.fillMaxSize())
-        Surface(
-            shape = RoundedCornerShape(999.dp),
-            color = Color.Black.copy(alpha = .48f),
-            modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
-        ) {
-            Row(modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.Security, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(15.dp))
-                Spacer(Modifier.size(6.dp))
-                LocalizedText("On-device", color = Color.White, style = MaterialTheme.typography.labelMedium)
-            }
-        }
         if (camera != null) {
             Surface(
                 onClick = {

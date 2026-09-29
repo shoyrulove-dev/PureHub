@@ -2,9 +2,11 @@ package com.purehub.app.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
@@ -37,6 +39,7 @@ fun VisionFullscreenShell(
     title: String,
     onHome: () -> Unit,
     modifier: Modifier = Modifier,
+    drawerActions: @Composable ColumnScope.(closeDrawer: () -> Unit) -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -46,10 +49,12 @@ fun VisionFullscreenShell(
         modifier = modifier,
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.68f)) {
+            // Match the compact OCR drawer: it deliberately occupies only half
+            // of the handset, leaving the active camera/tool visible behind it.
+            ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.5f)) {
                 Column(Modifier.padding(16.dp)) {
-                    LocalizedText(title, style = MaterialTheme.typography.titleLarge)
-                    LocalizedText("Vision workspace", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LocalizedText(title, style = MaterialTheme.typography.titleSmall)
+                    LocalizedText("Vision workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     NavigationDrawerItem(
                         label = { LocalizedText("Home") },
                         selected = false,
@@ -58,8 +63,9 @@ fun VisionFullscreenShell(
                             scope.launch { drawerState.close() }
                             onHome()
                         },
-                        modifier = Modifier.padding(top = 18.dp),
+                        modifier = Modifier.padding(top = 14.dp).height(48.dp),
                     )
+                    drawerActions { scope.launch { drawerState.close() } }
                 }
             }
         },
