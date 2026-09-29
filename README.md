@@ -1,12 +1,8 @@
-<p align="center">
-  <img src="pwa/public/og-image.png" width="760" alt="PureHub - 26 private-first mini apps. Open source and community built." />
-</p>
-
 <h1 align="center">PureHub</h1>
 
 <p align="center">
   <strong>Small, practical utilities for focus, measurement, scanning, documents, privacy, audio, and personal finance.</strong><br />
-  Free to use. Core mini-apps remain ad-free. No mandatory account. Open source.
+  <strong>26 private-first mini apps.</strong> Free to use. Core mini-apps remain ad-free. No mandatory account. Open source.
 </p>
 
 <p align="center">
@@ -76,11 +72,13 @@ Some tools depend on device capabilities such as a camera, microphone, motion se
 
 ## Product preview
 
+Fresh screenshots below are captured from the signed Android `1.0.0-beta.50` build on a physical device. OCR Studio keeps the camera dominant, puts choices in a compact drawer, and supports offline Auto, English, Vietnamese, Spanish, and Simplified Chinese recognition.
+
 <table>
   <tr>
-    <td align="center"><img src="marketing/video/source/01-home.png" width="245" alt="PureHub home screen" /><br /><strong>One calm home</strong></td>
-    <td align="center"><img src="marketing/video/source/02-tools.png" width="245" alt="PureHub tools catalog" /><br /><strong>All tools</strong></td>
-    <td align="center"><img src="marketing/video/source/03-pomodoro.png" width="245" alt="Zen Pomodoro" /><br /><strong>Zen Pomodoro</strong></td>
+    <td align="center"><img src="marketing/product-preview/beta50-ocr-camera.png" width="245" alt="PureHub OCR Studio full-screen camera scanner" /><br /><strong>Full-screen OCR scanner</strong></td>
+    <td align="center"><img src="marketing/product-preview/beta50-ocr-options.png" width="245" alt="PureHub OCR Studio compact scan settings drawer" /><br /><strong>Compact scan controls</strong></td>
+    <td align="center"><img src="marketing/product-preview/beta50-ocr-languages.png" width="245" alt="PureHub OCR Studio offline language choices" /><br /><strong>Offline language choice</strong></td>
   </tr>
 </table>
 
@@ -156,7 +154,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.50. OCR Studio now uses a compact half-screen controls drawer, full-screen camera scanner, separate English/Vietnamese/Spanish/Chinese choices, and an offline Auto mode that falls back between Latin and Chinese only when the first pass finds no text. This candidate also adds Spanish UI routing and a respectful, one-time Google Play tester invitation. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is [PureHub 1.0.0-beta.50](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.50). OCR Studio now uses a compact half-screen controls drawer, full-screen camera scanner, separate English/Vietnamese/Spanish/Chinese choices, and an offline Auto mode that falls back between Latin and Chinese only when the first pass finds no text. This candidate also adds Spanish UI routing and a respectful, one-time Google Play tester invitation. Android Standard retains on-device ML Kit recognition and four-corner document correction; the F-Droid flavor remains strictly offline-only with bundled Tesseract language data. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
