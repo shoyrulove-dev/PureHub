@@ -13,13 +13,16 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,6 +44,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -100,6 +105,7 @@ fun DocToPdfCard(
     var signaturePage by rememberSaveable { mutableStateOf("1") }
     var pdfQuality by rememberSaveable { mutableStateOf(0.72f) }
     var pdfBusy by remember { mutableStateOf(false) }
+    var cameraMode by rememberSaveable { mutableStateOf(true) }
     val galleryPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) scope.launch {
             exportMessage = "Importing ${uris.size} image(s)..."
@@ -131,9 +137,18 @@ fun DocToPdfCard(
 
     LaunchedEffect(menuAction) {
         when (menuAction) {
-            DocToPdfMenuAction.Camera -> if (!hasCameraPermission) onRequestCameraPermission()
-            DocToPdfMenuAction.Images -> galleryPicker.launch(arrayOf("image/*"))
-            DocToPdfMenuAction.PdfToolbox -> pdfPicker.launch(arrayOf("application/pdf"))
+            DocToPdfMenuAction.Camera -> {
+                cameraMode = true
+                if (!hasCameraPermission) onRequestCameraPermission()
+            }
+            DocToPdfMenuAction.Images -> {
+                cameraMode = false
+                galleryPicker.launch(arrayOf("image/*"))
+            }
+            DocToPdfMenuAction.PdfToolbox -> {
+                cameraMode = false
+                pdfPicker.launch(arrayOf("application/pdf"))
+            }
             null -> return@LaunchedEffect
         }
         onMenuActionHandled()
@@ -164,7 +179,66 @@ fun DocToPdfCard(
         }
     }
 
-    Card(
+    if (cameraMode) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFF07111E)),
+        ) {
+            if (hasCameraPermission) {
+                AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+                LaunchedEffect(previewView) {
+                    bindDocumentCamera(
+                        context = context,
+                        previewView = previewView,
+                        lifecycleOwner = lifecycleOwner,
+                        imageCapture = imageCapture,
+                    )
+                }
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(14.dp)
+                        .fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        LocalizedText("Ready. Capture a page or choose an image.", style = MaterialTheme.typography.bodyMedium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(onClick = { galleryPicker.launch(arrayOf("image/*")) }) { LocalizedText("Image") }
+                            Button(onClick = {
+                                capturePage(
+                                    context = context,
+                                    repository = repository,
+                                    imageCapture = imageCapture,
+                                    executor = cameraExecutor,
+                                    onPageCaptured = {
+                                        pages += it
+                                        selectedPageIndex = pages.lastIndex
+                                        exportMessage = "${pages.size} page(s) staged locally."
+                                        cameraMode = false
+                                    },
+                                    onError = { message -> exportMessage = message },
+                                )
+                            }) { LocalizedText("Capture Page") }
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                    Button(onClick = onRequestCameraPermission) { LocalizedText("Allow Camera for Doc Capture") }
+                }
+            }
+        }
+    } else Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(innerPadding),
@@ -287,7 +361,7 @@ fun DocToPdfCard(
                 ) { LocalizedText("Export PDF") }
             }
 
-            if (hasCameraPermission) {
+            if (hasCameraPermission && cameraMode) {
                 AndroidView(
                     factory = { previewView },
                     modifier = Modifier

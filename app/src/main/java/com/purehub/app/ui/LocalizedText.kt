@@ -487,6 +487,17 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "PRIVATE MEDIA UTILITY" -> return when { vi -> "TIỆN ÍCH ẢNH RIÊNG TƯ"; zh -> "私密媒体工具"; es -> "UTILIDAD MULTIMEDIA PRIVADA"; else -> null }
         "CREATOR FLAGSHIP" -> return when { vi -> "CÔNG CỤ SÁNG TẠO"; zh -> "创作工具"; es -> "HERRAMIENTA DE CREACIÓN"; else -> null }
         "Capture pages, then export a local PDF." -> return when { vi -> "Chụp các trang rồi xuất PDF cục bộ."; zh -> "拍摄页面后导出本地 PDF。"; es -> "Captura páginas y luego exporta un PDF local."; else -> null }
+        "Allowed" -> return when { vi -> "Đã cho phép"; zh -> "已允许"; es -> "Permitido"; else -> null }
+        "Not allowed" -> return when { vi -> "Chưa cho phép"; zh -> "未允许"; es -> "No permitido"; else -> null }
+        "Microphone" -> return when { vi -> "Micro"; zh -> "麦克风"; es -> "Micrófono"; else -> null }
+        "Nearby Wi-Fi location" -> return when { vi -> "Vị trí Wi‑Fi lân cận"; zh -> "附近 Wi‑Fi 位置"; es -> "Ubicación de Wi‑Fi cercano"; else -> null }
+        "Notifications" -> return when { vi -> "Thông báo"; zh -> "通知"; es -> "Notificaciones"; else -> null }
+        "QR Studio, document scans and Color Grabber." -> return when { vi -> "Quét QR, quét tài liệu và Lấy mã màu."; zh -> "二维码扫描、文档扫描和取色器。"; es -> "Escáner QR, escaneos de documentos y selector de color."; else -> null }
+        "Decibel Meter and optional Screen Recorder narration. Speaker Cleaner plays tones and does not listen." -> return when { vi -> "Máy đo dB và phần thuyết minh tùy chọn khi quay màn hình. Loa dọn âm chỉ phát âm, không nghe."; zh -> "分贝仪和可选的屏幕录制旁白。扬声器清理器只播放音调，不会监听。"; es -> "Medidor de decibelios y narración opcional del grabador de pantalla. El limpiador de altavoz reproduce tonos y no escucha."; else -> null }
+        "Wi-Fi Analyzer on Android versions that require it." -> return when { vi -> "Wi‑Fi Analyzer trên các phiên bản Android yêu cầu quyền này."; zh -> "适用于需要此权限的 Android 版本上的 Wi‑Fi 分析器。"; es -> "Analizador Wi‑Fi en versiones de Android que lo requieren."; else -> null }
+        "Visible controls for an active Pomodoro timer or screen recording." -> return when { vi -> "Điều khiển hiển thị cho Pomodoro hoặc quay màn hình đang hoạt động."; zh -> "用于正在运行的番茄钟或屏幕录制的可见控件。"; es -> "Controles visibles para un temporizador Pomodoro o grabación de pantalla activos."; else -> null }
+        "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." -> return when { vi -> "Quyền chỉ được yêu cầu bởi công cụ cần dùng. Bản F-Droid này không có quyền INTERNET."; zh -> "只有需要的工具才会请求权限。此 F-Droid 版本没有 INTERNET 权限。"; es -> "Los permisos solo los solicita la herramienta que los necesita. Esta versión de F-Droid no tiene permiso de INTERNET."; else -> null }
+        "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." -> return when { vi -> "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chọn tính năng kết nối như cập nhật, Cộng đồng hoặc Minigame."; zh -> "PureHub 优先离线运行。只有当您选择更新、社区或小游戏等联网功能时才会使用互联网。"; es -> "PureHub funciona primero sin conexión. Internet solo se usa cuando eliges una función conectada, como actualizaciones, Comunidad o Minijuego."; else -> null }
     }
     fun source(value: String) = when (value) {
         "Camera" -> when { vi -> "Camera"; zh -> "相机"; es -> "Cámara"; else -> value }
@@ -547,6 +558,9 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     }
     match("Screen capture request starts in (\\d+)…")?.let {
         return when { vi -> "Yêu cầu quay màn hình sẽ bắt đầu sau ${it[1]}…"; zh -> "屏幕录制请求将在 ${it[1]} 后开始…"; es -> "La solicitud de captura de pantalla comienza en ${it[1]}…"; else -> null }
+    }
+    match("(.+) · (Allowed|Not allowed)")?.let {
+        return "${translateUiText(it[1], language)} · ${translateUiText(it[2], language)}"
     }
     return null
 }
