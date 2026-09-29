@@ -47,7 +47,7 @@ fun PermissionCenterCard() {
             }
             LocalizedText(
                 if (BuildConfig.INTERNET_ENABLED) {
-                    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame."
+                    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates or Community."
                 } else {
                     "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission."
                 },

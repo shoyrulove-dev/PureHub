@@ -80,7 +80,9 @@ android {
         create("standard") {
             dimension = "distribution"
             buildConfigField("boolean", "INTERNET_ENABLED", "true")
-            buildConfigField("boolean", "MINIGAME_ENABLED", "true")
+            // Kept in the codebase for a possible future campaign, but not shown
+            // in the international product build.
+            buildConfigField("boolean", "MINIGAME_ENABLED", "false")
         }
         create("fdroid") {
             dimension = "distribution"

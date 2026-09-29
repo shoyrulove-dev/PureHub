@@ -234,7 +234,7 @@ private val zhMore = mapOf(
 )
 
 private val viAudit = mapOf(
-    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." to "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chủ động chọn tính năng kết nối như cập nhật, Cộng đồng hoặc Minigame.",
+    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates or Community." to "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chủ động chọn tính năng kết nối như cập nhật hoặc Cộng đồng.",
     "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." to "Quyền chỉ được yêu cầu bởi công cụ cần dùng. Bản F-Droid này không có quyền INTERNET.",
     "Choose files with Android, review exact evidence locally, and approve every deletion yourself." to "Chọn tệp bằng Android, xem bằng chứng ngay trên máy và tự xác nhận từng lần xóa.",
     "Choose the files you want to review. PureHub does not request broad photo or video access and never inspects app data, messages, passwords, or system files." to "Chọn các tệp bạn muốn kiểm tra. PureHub không xin quyền truy cập toàn bộ ảnh/video và không đọc dữ liệu ứng dụng, tin nhắn, mật khẩu hay tệp hệ thống.",
@@ -303,7 +303,7 @@ private val viAudit = mapOf(
 )
 
 private val zhAudit = mapOf(
-    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." to "PureHub 优先离线运行。仅当你主动使用更新、社区或小游戏等联网功能时才使用网络。",
+    "PureHub works offline first. Internet is used only when you choose a connected feature such as updates or Community." to "PureHub 优先离线运行。仅当你主动使用更新或社区等联网功能时才使用网络。",
     "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." to "仅由需要的工具请求权限。此 F-Droid 版本没有 INTERNET 权限。",
     "Choose files with Android, review exact evidence locally, and approve every deletion yourself." to "通过 Android 选择文件，在本机查看明确依据，并亲自确认每次删除。",
     "Choose the files you want to review. PureHub does not request broad photo or video access and never inspects app data, messages, passwords, or system files." to "请选择要检查的文件。PureHub 不会请求全部照片或视频权限，也不会读取应用数据、消息、密码或系统文件。",
@@ -431,6 +431,16 @@ private val viAll = vi + viMore + viAudit + visionVi
 private val zhAll = zh + zhMore + zhAudit + visionZh
 private val es = mapOf(
     "Home" to "Inicio", "Tools" to "Herramientas", "Community" to "Comunidad", "Settings" to "Ajustes", "Help" to "Ayuda",
+    "Permission Center" to "Centro de permisos", "Open Android app settings" to "Abrir ajustes de Android",
+    "All tools" to "Todas las herramientas", "Zen & Time" to "Zen y tiempo", "Measure & Tools" to "Medición y herramientas", "Vision" to "Visión", "System & Security" to "Sistema y seguridad", "Finance & Community" to "Finanzas y comunidad",
+    "Lunar Calendar" to "Calendario lunar", "Zen Habit" to "Hábitos Zen", "Zen Pomodoro" to "Pomodoro Zen", "Zen Breath" to "Respiración Zen", "Compass" to "Brújula", "Bubble Level & Ruler" to "Nivel y regla", "Decibel Meter" to "Medidor de decibelios", "Smart Flashlight" to "Linterna inteligente", "Unit Converter" to "Convertidor de unidades",
+    "QR Studio" to "Estudio QR", "Doc to PDF" to "Documento a PDF", "OCR Studio" to "Estudio OCR", "Color Grabber" to "Selector de color", "Photo Privacy" to "Privacidad de fotos", "Deep Cleaner" to "Limpieza profunda", "Speaker Cleaner" to "Limpiador de altavoz", "WiFi Analyzer" to "Analizador Wi-Fi", "Password Vault" to "Bóveda de contraseñas", "Authenticator Vault" to "Bóveda de autenticación", "File Studio" to "Estudio de archivos", "Wallpaper Changer" to "Cambiador de fondo", "Bill Splitter" to "Divisor de cuentas", "Expense Tracker" to "Registro de gastos", "Decision Wheel" to "Ruleta de decisión", "PureHub Community" to "Comunidad PureHub", "Screen Recorder" to "Grabador de pantalla",
+    "FREE · NO ADS · OPEN SOURCE" to "GRATIS · SIN ANUNCIOS · CÓDIGO ABIERTO", "Useful, private tools for everyday life—built openly with the community." to "Herramientas útiles y privadas para cada día, creadas abiertamente con la comunidad.", "Offline-first" to "Primero sin conexión", "Private" to "Privado", "TODAY" to "HOY", "Lunar" to "Lunar", "Quick access" to "Acceso rápido", "Favorites" to "Favoritos", "Privacy & preferences" to "Privacidad y preferencias", "Review permissions, visible tools and local-only storage behavior." to "Revisa permisos, herramientas visibles y el comportamiento de almacenamiento solo local.",
+    "Free, private and ad-free utilities. Search by what you need to do." to "Utilidades gratuitas, privadas y sin anuncios. Busca según lo que necesites hacer.", "What do you want to do?" to "¿Qué quieres hacer?", "Manage Tools" to "Gestionar herramientas", "No tools enabled" to "No hay herramientas activadas", "No visible mini-apps." to "No hay mini-apps visibles.", "Search mini-app" to "Buscar mini-app", "Apply Now" to "Aplicar ahora", "Favorite" to "Favorito", "Unfavorite" to "Quitar favorito",
+    "Community flagship" to "Comunidad destacada", "PureHub belongs to everyone" to "PureHub pertenece a todos", "Join the conversation, report issues and shape free, no-ad, open-source tools together." to "Únete a la conversación, informa problemas y crea con nosotros herramientas gratuitas, sin anuncios y de código abierto.",
+    "Telegram community" to "Comunidad de Telegram", "Get updates, discuss useful tools and help other PureHub users." to "Recibe novedades, comenta herramientas útiles y ayuda a otros usuarios de PureHub.", "Open Telegram" to "Abrir Telegram",
+    "Open-source on GitHub" to "Código abierto en GitHub", "Read the code, report bugs, suggest a mini app, improve translations or submit a pull request." to "Lee el código, informa errores, sugiere una mini-app, mejora traducciones o envía un pull request.", "Open GitHub" to "Abrir GitHub", "Send feedback or report a bug" to "Enviar comentarios o informar un error", "For a bug, include the tool name, Android version and repeatable steps—never private files, passwords or API keys." to "Para informar un error, incluye la herramienta, la versión de Android y pasos repetibles; nunca archivos privados, contraseñas ni claves API.",
+    "Free for everyone" to "Gratis para todos", "Support is always voluntary. Community badges may celebrate contributors, but core tools remain available to every user." to "El apoyo siempre es voluntario. Las insignias pueden reconocer a quienes colaboran, pero las herramientas principales siguen disponibles para todas las personas.",
     "Continue" to "Continuar", "Cancel" to "Cancelar", "Close" to "Cerrar", "Save" to "Guardar", "Delete" to "Eliminar",
     "Scan" to "Escanear", "Image" to "Imagen", "History" to "Historial", "Language" to "Idioma", "Search" to "Buscar",
     "Document" to "Documento", "Receipt" to "Recibo", "Note" to "Nota", "Original" to "Original", "Clean" to "Limpiar", "B&W" to "B/N",
@@ -465,7 +475,36 @@ fun translateUiText(text: String, language: AppLanguage): String {
     val trimmed = text.trim()
     dictionary[trimmed]?.let { return text.replace(trimmed, it) }
     visionPatternTranslation(text, language)?.let { return it }
+    // Spanish must never inherit the Chinese fallback used by the legacy dynamic formatter.
+    // Unknown text stays readable in its source language while the common dynamic labels below
+    // are translated, rather than producing a mixed Spanish/Chinese interface.
+    if (language == AppLanguage.Spanish) return spanishDynamicTranslation(text)
     return dynamicTranslation(text, language)
+}
+
+private fun spanishDynamicTranslation(text: String): String {
+    fun match(pattern: String) = Regex(pattern).matchEntire(text)?.groupValues
+    match("(\\d+)% of (\\d+)-minute goal")?.let { return "${it[1]}% de la meta de ${it[2]} min" }
+    match("(\\d+) min")?.let { return "${it[1]} min" }
+    match("(\\d+) sec")?.let { return "${it[1]} s" }
+    match("(\\d+) image\\(s\\) selected")?.let { return "${it[1]} imágenes seleccionadas" }
+    match("(\\d+) pages?")?.let { return "${it[1]} páginas" }
+    match("(\\d+) words")?.let { return "${it[1]} palabras" }
+    match("Best streak (\\d+) days?")?.let { return "Mejor racha: ${it[1]} días" }
+    match("Pitch (-?[\\d.]+) deg")?.let { return "Inclinación ${it[1]}°" }
+    match("Roll (-?[\\d.]+) deg")?.let { return "Balanceo ${it[1]}°" }
+    match("Frequency ([\\d.]+) (Hz|MHz)")?.let { return "Frecuencia ${it[1]} ${it[2]}" }
+    match("Volume (\\d+)%")?.let { return "Volumen ${it[1]}%" }
+    match("Heading: (\\d+) deg (.+)")?.let { return "Rumbo: ${it[1]}° ${it[2]}" }
+    match("Delete (.+)\\?")?.let { return "¿Eliminar ${it[1]}?" }
+    match("Rotate (-?[\\d.]+)°")?.let { return "Girar ${it[1]}°" }
+    val replacements = listOf(
+        "Lunar " to "Lunar ", "Year " to "Año ", "Month " to "Mes ", "Day " to "Día ", " (Leap)" to " (bisiesto)",
+        "Active" to "Activo", "Selected" to "Seleccionado", "Updated " to "Actualizado ", "Target " to "Objetivo ",
+        "Recent " to "Reciente ", "No photo selected" to "No se seleccionó ninguna foto", "Photo selected" to "Foto seleccionada",
+        "Rotate " to "Girar ", "Person " to "Persona ", "Total:" to "Total:", "Could not create ZIP:" to "No se pudo crear el ZIP:",
+    )
+    return replacements.fold(text) { value, (source, target) -> value.replace(source, target) }
 }
 
 /** Dynamic OCR/QR status strings retain their numeric values while translating the surrounding copy. */
@@ -497,7 +536,7 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "Wi-Fi Analyzer on Android versions that require it." -> return when { vi -> "Wi‑Fi Analyzer trên các phiên bản Android yêu cầu quyền này."; zh -> "适用于需要此权限的 Android 版本上的 Wi‑Fi 分析器。"; es -> "Analizador Wi‑Fi en versiones de Android que lo requieren."; else -> null }
         "Visible controls for an active Pomodoro timer or screen recording." -> return when { vi -> "Điều khiển hiển thị cho Pomodoro hoặc quay màn hình đang hoạt động."; zh -> "用于正在运行的番茄钟或屏幕录制的可见控件。"; es -> "Controles visibles para un temporizador Pomodoro o grabación de pantalla activos."; else -> null }
         "Permissions are requested only by the tool that needs them. This F-Droid build has no INTERNET permission." -> return when { vi -> "Quyền chỉ được yêu cầu bởi công cụ cần dùng. Bản F-Droid này không có quyền INTERNET."; zh -> "只有需要的工具才会请求权限。此 F-Droid 版本没有 INTERNET 权限。"; es -> "Los permisos solo los solicita la herramienta que los necesita. Esta versión de F-Droid no tiene permiso de INTERNET."; else -> null }
-        "PureHub works offline first. Internet is used only when you choose a connected feature such as updates, Community or Minigame." -> return when { vi -> "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chọn tính năng kết nối như cập nhật, Cộng đồng hoặc Minigame."; zh -> "PureHub 优先离线运行。只有当您选择更新、社区或小游戏等联网功能时才会使用互联网。"; es -> "PureHub funciona primero sin conexión. Internet solo se usa cuando eliges una función conectada, como actualizaciones, Comunidad o Minijuego."; else -> null }
+        "PureHub works offline first. Internet is used only when you choose a connected feature such as updates or Community." -> return when { vi -> "PureHub ưu tiên ngoại tuyến. Internet chỉ được dùng khi bạn chọn tính năng kết nối như cập nhật hoặc Cộng đồng."; zh -> "PureHub 优先离线运行。只有当您选择更新或社区等联网功能时才会使用互联网。"; es -> "PureHub funciona primero sin conexión. Internet solo se usa cuando eliges una función conectada, como actualizaciones o Comunidad."; else -> null }
     }
     fun source(value: String) = when (value) {
         "Camera" -> when { vi -> "Camera"; zh -> "相机"; es -> "Cámara"; else -> value }

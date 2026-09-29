@@ -6,6 +6,7 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
 import { PlayTesterPrompt } from '../components/play/PlayTesterPrompt'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
+import { getUiCopy } from '../i18n/ui-copy'
 import {
   buildMiniAppPath,
   buildTabPath,
@@ -22,6 +23,7 @@ export function AppShell() {
   const location = useLocation()
   const { lang, appSlug } = useParams()
   const locale = normalizeLocale(lang)
+  const copy = getUiCopy(locale).shell
   const currentEntry = appSlug ? resolveEntryBySlug(appSlug) : null
   const { theme, setTheme } = useThemePreference()
 
@@ -66,7 +68,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen px-2 py-2 text-slate-800 sm:px-4 sm:py-4 dark:text-slate-100">
       <a href="#main-content" className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-xl transition focus:translate-y-0 dark:bg-white dark:text-slate-950">
-        Skip to content
+        {copy.skip}
       </a>
       <div className="mx-auto flex min-h-[calc(100vh-1rem)] w-full max-w-7xl gap-4 xl:items-start">
         <aside className="hidden w-[256px] shrink-0 xl:sticky xl:top-5 xl:block">
@@ -75,7 +77,7 @@ export function AppShell() {
               <span className="grid size-11 place-items-center rounded-[14px] bg-emerald-500 text-white shadow-sm">
                 <Sparkles className="size-5" />
               </span>
-              <span><strong className="block text-lg text-slate-950 dark:text-white">PureHub</strong><small className="text-slate-500">Community utilities</small></span>
+              <span><strong className="block text-lg text-slate-950 dark:text-white">PureHub</strong><small className="text-slate-500">{copy.communityUtilities}</small></span>
             </Link>
 
             <nav className="mt-3 space-y-1">
@@ -90,10 +92,10 @@ export function AppShell() {
             </nav>
 
             <div className="mt-4 rounded-[14px] bg-emerald-500/8 p-3">
-              <p className="text-sm font-bold text-slate-900 dark:text-white">Free forever</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">No ads. No mandatory account. Open source with the community.</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{copy.freeForever}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{copy.freePromise}</p>
               <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-link mt-3"><Code2 className="size-4" /> GitHub</a>
-              <Link to={`/${locale}/download`} className="text-link mt-2"><Download className="size-4" /> Android</Link>
+              <Link to={`/${locale}/download`} className="text-link mt-2"><Download className="size-4" /> {copy.android}</Link>
             </div>
           </div>
         </aside>
@@ -115,7 +117,7 @@ export function AppShell() {
                 <button
                   type="button"
                   className="grid size-10 place-items-center rounded-[13px] text-slate-500 transition hover:bg-slate-500/10 hover:text-slate-900 dark:hover:text-white"
-                  aria-label="Toggle theme"
+                  aria-label={copy.theme}
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 >
                   {theme === 'dark' ? <Sun className="size-4.5" /> : <Moon className="size-4.5" />}
@@ -139,9 +141,9 @@ export function AppShell() {
           <main id="main-content" tabIndex={-1} className="flex-1 px-3 pb-24 pt-4 outline-none sm:px-5 sm:pt-5">
             <div key={location.pathname} className="page-enter"><Outlet /></div>
             <footer className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-500/10 pt-4 text-xs text-slate-500">
-              <Link to={`/${locale}/privacy`} className="hover:text-slate-900 dark:hover:text-white">Privacy</Link>
-              <Link to={`/${locale}/terms`} className="hover:text-slate-900 dark:hover:text-white">Terms</Link>
-              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-white">Open source</a>
+              <Link to={`/${locale}/privacy`} className="hover:text-slate-900 dark:hover:text-white">{copy.privacy}</Link>
+              <Link to={`/${locale}/terms`} className="hover:text-slate-900 dark:hover:text-white">{copy.terms}</Link>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-white">{copy.openSource}</a>
             </footer>
           </main>
 

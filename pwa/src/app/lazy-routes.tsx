@@ -12,7 +12,6 @@ export const TermsPage = lazy(() => import('../pages/legal-pages').then((module)
 export const GrowthLandingPage = lazy(() => import('../pages/growth-landing-page').then((module) => ({ default: module.GrowthLandingPage })))
 export const ResultsPage = lazy(() => import('../pages/results-page').then((module) => ({ default: module.ResultsPage })))
 export const PrivacyCenterPage = lazy(() => import('../pages/privacy-center-page').then((module) => ({ default: module.PrivacyCenterPage })))
-export const MinigamePage = lazy(() => import('../pages/minigame-page').then((module) => ({ default: module.MinigamePage })))
 export const ProgrammaticConverterPage = lazy(() => import('../pages/programmatic-converter-page').then((module) => ({ default: module.ProgrammaticConverterPage })))
 
 export function RouteLoader({ children }: { children: ReactNode }) {

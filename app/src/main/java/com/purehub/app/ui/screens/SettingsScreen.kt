@@ -49,7 +49,7 @@ fun SettingsScreen(
                 tint = MaterialTheme.colorScheme.primary,
             )
             LocalizedText(
-                text = " " + appText(language, "Settings", "Cài đặt", "设置"),
+                text = " " + appText(language, "Settings", "Cài đặt", "设置", "Ajustes"),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -57,19 +57,19 @@ fun SettingsScreen(
             IconButton(onClick = onOpenHelp) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
-                    contentDescription = appText(language, "Help", "Trợ giúp", "帮助"),
+                    contentDescription = appText(language, "Help", "Trợ giúp", "帮助", "Ayuda"),
                 )
             }
         }
         LocalizedText(
-            text = appText(language, "Choose which tools appear in your catalog. Your preference stays on this device.", "Chọn công cụ hiển thị trong danh mục. Lựa chọn được lưu trên thiết bị này.", "选择在工具目录中显示的工具。选择仅保存在此设备上。"),
+            text = appText(language, "Choose which tools appear in your catalog. Your preference stays on this device.", "Chọn công cụ hiển thị trong danh mục. Lựa chọn được lưu trên thiết bị này.", "选择在工具目录中显示的工具。选择仅保存在此设备上。", "Elige qué herramientas aparecen en tu catálogo. Tu preferencia se guarda en este dispositivo."),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp),
         )
         Column(modifier = Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                LocalizedText(appText(language, "Language", "Ngôn ngữ", "语言"), fontWeight = FontWeight.SemiBold)
+                LocalizedText(appText(language, "Language", "Ngôn ngữ", "语言", "Idioma"), fontWeight = FontWeight.SemiBold)
                 FlowRow(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AppLanguage.entries.forEach { item ->
                         OutlinedButton(onClick = { onLanguageChange(item) }) { LocalizedText("${if (item == language) "✓ " else ""}${item.compactLabel}") }
