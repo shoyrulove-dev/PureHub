@@ -100,6 +100,7 @@ import com.purehub.app.ui.screens.WifiAnalyzerCard
 import com.purehub.app.ui.screens.ZenBreathCard
 import com.purehub.app.ui.screens.ZenHabitCard
 import com.purehub.app.ui.screens.ZenTimeScreen
+import com.purehub.app.ui.screens.VisionFullscreenShell
 
 private const val MINI_APP_ROUTE_PREFIX = "mini_app"
 
@@ -310,6 +311,7 @@ private fun PureHubNavHost(
                 innerPadding = innerPadding,
                 miniAppId = miniAppId,
                 onBack = { navController.popBackStack() },
+                onHome = { navController.navigate(Home.route) { launchSingleTop = true } },
             )
         }
     }
@@ -339,6 +341,7 @@ private fun MiniAppScreen(
     innerPadding: PaddingValues,
     miniAppId: MiniAppId,
     onBack: () -> Unit,
+    onHome: () -> Unit,
 ) {
     val context = LocalContext.current
     var hasCameraPermission by rememberSaveable {
@@ -365,20 +368,26 @@ private fun MiniAppScreen(
         MiniAppId.DECIBEL_METER -> ScrollHost(innerPadding) { DecibelMeterCard() }
         MiniAppId.SMART_FLASHLIGHT -> ScrollHost(innerPadding) { SmartFlashlightCard() }
         MiniAppId.UNIT_CONVERTER -> ScrollHost(innerPadding) { UnitConverterCard() }
-        MiniAppId.QR_STUDIO -> Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
+        MiniAppId.QR_STUDIO -> VisionFullscreenShell(
+            title = "QR Studio",
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        ) { visionPadding ->
             QrStudioScreen(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                innerPadding = visionPadding,
             )
         }
-        MiniAppId.DOC_TO_PDF -> ScrollHost(innerPadding) {
+        MiniAppId.DOC_TO_PDF -> VisionFullscreenShell(
+            title = "Doc to PDF",
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        ) { visionPadding ->
             DocToPdfCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                innerPadding = visionPadding,
             )
         }
         MiniAppId.OCR_TEXT -> Box(
@@ -389,16 +398,25 @@ private fun MiniAppScreen(
             OcrTextExtractorCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                onExit = onBack,
+                onExit = onHome,
             )
         }
-        MiniAppId.COLOR_GRABBER -> ScrollHost(innerPadding) {
+        MiniAppId.COLOR_GRABBER -> VisionFullscreenShell(
+            title = "Color Grabber",
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        ) { visionPadding ->
             ColorGrabberCard(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                innerPadding = visionPadding,
             )
         }
-        MiniAppId.PHOTO_PRIVACY -> PhotoPrivacyScreen(innerPadding = innerPadding)
+        MiniAppId.PHOTO_PRIVACY -> VisionFullscreenShell(
+            title = "Photo Privacy",
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        ) { visionPadding -> PhotoPrivacyScreen(innerPadding = visionPadding) }
         MiniAppId.DEEP_CLEANER -> CleanerScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.SPEAKER_CLEANER -> ScrollHost(innerPadding) { SpeakerCleanerCard() }
         MiniAppId.WIFI_ANALYZER -> ScrollHost(innerPadding) { WifiAnalyzerCard() }
@@ -410,7 +428,11 @@ private fun MiniAppScreen(
         MiniAppId.EXPENSE_TRACKER -> ScrollHost(innerPadding) { ExpenseTrackerCard() }
         MiniAppId.DECISION_WHEEL -> ScrollHost(innerPadding) { DecisionWheelCard() }
         MiniAppId.COMMUNITY_UNLOCK -> CommunityScreen(innerPadding = innerPadding, embedded = false)
-        MiniAppId.SCREEN_RECORDER -> ScrollHost(innerPadding) { ScreenRecorderCard() }
+        MiniAppId.SCREEN_RECORDER -> VisionFullscreenShell(
+            title = "Screen Recorder",
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        ) { visionPadding -> ScreenRecorderCard(innerPadding = visionPadding) }
     }
 }
 

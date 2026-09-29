@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -47,7 +48,7 @@ private enum class RecorderPreset(
 }
 
 @Composable
-fun ScreenRecorderCard() {
+fun ScreenRecorderCard(innerPadding: PaddingValues = PaddingValues(0.dp)) {
     val context = LocalContext.current
     val runtime by ScreenRecorderRuntime.status.collectAsStateWithLifecycle()
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
@@ -91,7 +92,7 @@ fun ScreenRecorderCard() {
         }
     }
 
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth().padding(innerPadding)) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             FlagshipSuiteHeader(
                 eyebrow = "Creator flagship",

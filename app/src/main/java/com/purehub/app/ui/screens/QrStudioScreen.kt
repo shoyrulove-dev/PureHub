@@ -202,17 +202,40 @@ fun QrStudioScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        QrStudioHeader(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+    if (selectedTab == QrStudioTab.Scan && latestScan.isBlank()) {
+        QrScannerContent(
+            hasCameraPermission = hasCameraPermission,
+            onRequestCameraPermission = onRequestCameraPermission,
+            onChooseImage = { imagePicker.launch("image/*") },
+            onChooseBatch = { batchPicker.launch(arrayOf("image/*")) },
+            latestScan = latestScan,
+            scanSource = scanSource,
+            scanStatus = scanStatus,
+            saveScans = saveScans,
+            onSaveScansChanged = {
+                saveScans = it
+                preferences.edit().putBoolean("save_scan_history", it).apply()
+                scanStatus = if (it) "Scan history is on. New results stay in your private library." else "Private session is on. New scan payloads will not be retained."
+            },
+            payloadInfo = payloadInfo,
+            onCodeDetected = { acceptScan(it, "Camera") },
+            onClearResult = { latestScan = ""; scanStatus = "Ready for another scan." },
+            onOpenCreate = { selectedTab = QrStudioTab.Create },
+            onOpenLibrary = { selectedTab = QrStudioTab.Library },
+            immersive = true,
+        )
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            QrStudioHeader(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
 
-        when (selectedTab) {
-            QrStudioTab.Scan -> QrScannerContent(
+            when (selectedTab) {
+                QrStudioTab.Scan -> QrScannerContent(
                 hasCameraPermission = hasCameraPermission,
                 onRequestCameraPermission = onRequestCameraPermission,
                 onChooseImage = { imagePicker.launch("image/*") },
@@ -232,6 +255,9 @@ fun QrStudioScreen(
                     latestScan = ""
                     scanStatus = "Ready for another scan."
                 },
+                onOpenCreate = { selectedTab = QrStudioTab.Create },
+                onOpenLibrary = { selectedTab = QrStudioTab.Library },
+                immersive = false,
             )
 
             QrStudioTab.Create -> QrCreatorContent(
@@ -275,7 +301,8 @@ fun QrStudioScreen(
                 },
             )
         }
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
+        }
     }
 }
 
@@ -340,9 +367,62 @@ private fun QrScannerContent(
     payloadInfo: QrPayloadInfo,
     onCodeDetected: (String) -> Unit,
     onClearResult: () -> Unit,
+    onOpenCreate: () -> Unit,
+    onOpenLibrary: () -> Unit,
+    immersive: Boolean,
 ) {
     val context = LocalContext.current
     var confirmOpen by remember(latestScan) { mutableStateOf(false) }
+    if (immersive) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07111F))) {
+            if (hasCameraPermission) {
+                QrCameraPreview(
+                    modifier = Modifier.fillMaxSize(),
+                    scanningEnabled = true,
+                    onCodeDetected = onCodeDetected,
+                )
+            } else {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(48.dp))
+                    LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                    Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
+                }
+            }
+            Surface(
+                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xD90F172A),
+            ) {
+                Row {
+                    IconButton(onClick = onOpenCreate) { Icon(Icons.Rounded.AutoAwesome, "Create QR", tint = Color.White) }
+                    IconButton(onClick = onOpenLibrary) { Icon(Icons.Rounded.History, "QR history", tint = Color.White) }
+                }
+            }
+            Surface(
+                modifier = Modifier.align(Alignment.BottomCenter).padding(20.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = Color(0xD90F172A),
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedButton(onClick = onChooseImage) {
+                        Icon(Icons.Rounded.AddPhotoAlternate, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(6.dp))
+                        LocalizedText("Image")
+                    }
+                    Button(onClick = onChooseBatch) { LocalizedText("Batch") }
+                }
+            }
+        }
+        return
+    }
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (hasCameraPermission) {

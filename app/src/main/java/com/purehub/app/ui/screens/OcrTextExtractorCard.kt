@@ -54,6 +54,7 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.PictureAsPdf
@@ -644,7 +645,7 @@ private fun OcrStudioHeader(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 IconButton(onClick = onExit) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to tools")
+                    Icon(Icons.Rounded.Home, "Home")
                 }
                 Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.onPrimaryContainer) {
                     Icon(Icons.Rounded.DocumentScanner, null, modifier = Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primaryContainer)
@@ -745,7 +746,7 @@ private fun OcrScanContent(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = onExit) {
-                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back to tools")
+                                Icon(Icons.Rounded.Home, "Home")
                             }
                             LocalizedText("Scan settings", style = MaterialTheme.typography.titleMedium)
                         }

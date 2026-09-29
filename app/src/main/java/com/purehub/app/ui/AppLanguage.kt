@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Locale
 
-enum class AppLanguage(val code: String, val label: String) {
-    English("en", "English"),
-    Vietnamese("vi", "Tiếng Việt"),
-    Chinese("zh", "中文"),
-    Spanish("es", "Español"),
+enum class AppLanguage(val code: String, val label: String, val compactLabel: String) {
+    English("en", "English", "EN"),
+    Vietnamese("vi", "Tiếng Việt", "VI"),
+    Chinese("zh", "中文", "ZH"),
+    Spanish("es", "Español", "ES"),
 }
 
 val LocalAppLanguage = staticCompositionLocalOf { AppLanguage.English }

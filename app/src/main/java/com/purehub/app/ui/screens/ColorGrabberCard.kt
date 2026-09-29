@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,13 +50,14 @@ import kotlinx.coroutines.launch
 fun ColorGrabberCard(
     hasCameraPermission: Boolean,
     onRequestCameraPermission: () -> Unit,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var color by remember { mutableStateOf(GrabbedColor(64, 112, 176)) }
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

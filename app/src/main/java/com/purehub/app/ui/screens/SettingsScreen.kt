@@ -1,6 +1,7 @@
 package com.purehub.app.ui.screens
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,9 +70,9 @@ fun SettingsScreen(
         Column(modifier = Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 LocalizedText(appText(language, "Language", "Ngôn ngữ", "语言"), fontWeight = FontWeight.SemiBold)
-                Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AppLanguage.entries.forEach { item ->
-                        OutlinedButton(onClick = { onLanguageChange(item) }) { LocalizedText("${if (item == language) "✓ " else ""}${item.label}") }
+                        OutlinedButton(onClick = { onLanguageChange(item) }) { LocalizedText("${if (item == language) "✓ " else ""}${item.compactLabel}") }
                     }
                 }
             }
