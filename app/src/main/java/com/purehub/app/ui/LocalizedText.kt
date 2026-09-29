@@ -360,8 +360,73 @@ private val zhAudit = mapOf(
     "This library item has text only. Add its original image before sending to Doc to PDF." to "此资料库项目仅包含文字，请添加原图后再发送到文档转 PDF。", "ZIP created locally." to "ZIP 已在本机创建。",
 )
 
-private val viAll = vi + viMore + viAudit
-private val zhAll = zh + zhMore + zhAudit
+/*
+ * OCR Studio and QR Studio are used as standalone camera experiences, so every
+ * visible control needs a real local translation rather than falling back to
+ * English. Keep this vocabulary together: it also makes future copy reviews
+ * for the Vision tools much less error-prone.
+ */
+private val visionVi = mapOf(
+    "QR Studio" to "Quét QR", "Vision workspace" to "Không gian quét", "Vision menu" to "Menu quét", "Create" to "Tạo mã", "Library" to "Thư viện", "Batch" to "Quét hàng loạt",
+    "Batch scan" to "Quét hàng loạt", "Create QR" to "Tạo QR", "Scan image" to "Quét ảnh", "Image" to "Ảnh",
+    "Scan settings" to "Cài đặt quét", "Type" to "Loại", "Cleanup" to "Làm sạch", "Rotation" to "Xoay",
+    "Text" to "Văn bản", "Auto" to "Tự động", "English" to "Tiếng Anh", "Spanish" to "Tiếng Tây Ban Nha",
+    "Chinese" to "Tiếng Trung", "Camera" to "Camera", "Imported image" to "Ảnh đã chọn", "Scanned page" to "Trang đã quét",
+    "PRIVATE BY DESIGN" to "RIÊNG TƯ THEO THIẾT KẾ", "Fast scans, safe previews, zero ads." to "Quét nhanh, xem trước an toàn, không quảng cáo.",
+    "Ready. Codes are processed only on this device." to "Sẵn sàng. Mã chỉ được xử lý trên thiết bị này.",
+    "Ready for another scan." to "Sẵn sàng quét mã khác.", "Scan history is on. New results stay in your private library." to "Đã bật lịch sử quét. Kết quả mới được lưu trong thư viện riêng tư.",
+    "Private session is on. New scan payloads will not be retained." to "Đang ở phiên riêng tư. Nội dung mã quét mới sẽ không được lưu.",
+    "Reading the selected image locally..." to "Đang đọc ảnh đã chọn trên thiết bị...", "No readable QR or barcode was found in that image." to "Không tìm thấy mã QR hoặc mã vạch đọc được trong ảnh.",
+    "That image could not be opened." to "Không thể mở ảnh đó.", "Saved locally." to "Đã lưu trên thiết bị.", "Private session: not saved." to "Phiên riêng tư: không lưu.",
+    "Generated QR self-test passed and was saved locally." to "QR tạo ra đã tự kiểm tra thành công và được lưu trên thiết bị.",
+    "Generated QR did not pass its local scan test. Adjust the content and try again." to "QR tạo ra không qua kiểm tra quét cục bộ. Hãy chỉnh nội dung và thử lại.",
+    "Saved item opened from your private library." to "Đã mở mục đã lưu từ thư viện riêng tư.", "Save scan history" to "Lưu lịch sử quét",
+    "Turn off for a private session with no QR payload retained." to "Tắt để dùng phiên riêng tư, không lưu nội dung QR.",
+    "Scan another" to "Quét mã khác", "Review domain, then " to "Kiểm tra tên miền, sau đó ", "processed locally" to "xử lý trên thiết bị",
+    "Create a code" to "Tạo mã", "Pick a format and fill in only the information people need." to "Chọn định dạng và chỉ điền thông tin cần thiết.",
+    "Website" to "Trang web", "Phone" to "Điện thoại", "Location" to "Vị trí", "Calendar" to "Lịch", "Contact" to "Liên hệ", "SMS" to "SMS", "Wi-Fi" to "Wi-Fi",
+    "Created offline with reliable error correction" to "Được tạo ngoại tuyến với khả năng sửa lỗi đáng tin cậy", "Share PNG" to "Chia sẻ PNG",
+    "Complete the first field to preview" to "Điền trường đầu tiên để xem trước", "Saved only on this phone." to "Chỉ lưu trên điện thoại này.",
+    "Created only" to "Chỉ mã đã tạo", "All codes" to "Tất cả mã", "Torch" to "Đèn flash", "Torch off" to "Tắt đèn flash",
+    "Camera stays off until you allow it" to "Camera sẽ tắt cho đến khi bạn cấp quyền", "Allow camera" to "Cho phép camera",
+    "OCR options" to "Tùy chọn OCR", "Choose image" to "Chọn ảnh", "Scan page" to "Quét trang",
+    "Hide current settings" to "Ẩn cài đặt hiện tại", "Show current settings" to "Hiện cài đặt hiện tại",
+    "Change document type" to "Đổi loại tài liệu", "Change document cleanup" to "Đổi cách làm sạch", "Change recognition language" to "Đổi ngôn ngữ nhận dạng",
+    "OCR Studio" to "OCR Studio", "Scan, clean and export text without uploading your documents." to "Quét, làm sạch và xuất văn bản mà không tải tài liệu lên mạng.",
+    "Recognizing text on this device..." to "Đang nhận dạng văn bản trên thiết bị...", "Ready. Capture a page or choose an image." to "Sẵn sàng. Chụp trang hoặc chọn ảnh.",
+    "No readable text found. Try better light or a tighter crop." to "Không tìm thấy văn bản rõ. Hãy thử đủ sáng hơn hoặc cắt sát hơn.",
+    "OCR could not process this image." to "OCR không thể xử lý ảnh này.", "The selected image could not be opened." to "Không thể mở ảnh đã chọn.",
+    "A scan can contain up to 20 pages. Export this document before starting another." to "Một lần quét tối đa 20 trang. Hãy xuất tài liệu này trước khi quét tài liệu khác.",
+    "No text yet" to "Chưa có văn bản", "Capture a page or choose an image to begin." to "Chụp một trang hoặc chọn ảnh để bắt đầu.",
+    "Start scanning" to "Bắt đầu quét", "Review page" to "Xem lại trang", "Auto-frame" to "Tự nhận diện khung", "Retake" to "Chụp lại", "Recognize" to "Nhận dạng",
+    "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "Kéo từng góc xanh đến mép trang. PureHub sẽ sửa phối cảnh trước khi OCR.",
+    "Recognized text" to "Văn bản đã nhận dạng", "Private library" to "Thư viện riêng tư", "Search scans" to "Tìm bản quét", "Quick actions" to "Thao tác nhanh",
+    "Open link" to "Mở liên kết", "Call" to "Gọi", "Table detected" to "Đã nhận diện bảng", "Receipt detected" to "Đã nhận diện hóa đơn",
+    "Move earlier" to "Chuyển lên", "Move later" to "Chuyển xuống", "Previous" to "Trước", "Next" to "Tiếp", "Page" to "Trang",
+    "On-device" to "Trên thiết bị", "Continue in Doc to PDF" to "Tiếp tục trong Tài liệu sang PDF", "Add page" to "Thêm trang",
+    "Delete page" to "Xóa trang", "New document" to "Tài liệu mới", "Save to Money Studio" to "Lưu vào Sổ chi tiêu",
+)
+
+private val visionZh = mapOf(
+    "QR Studio" to "二维码扫描", "Vision workspace" to "扫描工作区", "Vision menu" to "扫描菜单", "Create" to "创建", "Library" to "资料库", "Batch" to "批量", "Batch scan" to "批量扫描", "Create QR" to "创建二维码", "Scan image" to "扫描图片", "Image" to "图片",
+    "Scan settings" to "扫描设置", "Type" to "类型", "Cleanup" to "清理", "Rotation" to "旋转", "Text" to "文本", "Auto" to "自动", "English" to "英语", "Spanish" to "西班牙语", "Chinese" to "中文",
+    "Camera" to "相机", "Imported image" to "导入图片", "Scanned page" to "已扫描页面", "PRIVATE BY DESIGN" to "隐私优先", "Fast scans, safe previews, zero ads." to "快速扫描，安全预览，零广告。",
+    "Ready. Codes are processed only on this device." to "准备就绪。代码仅在此设备上处理。", "Ready for another scan." to "可以继续扫描。",
+    "Scan history is on. New results stay in your private library." to "扫描历史已开启。新结果将保留在您的私密资料库中。", "Private session is on. New scan payloads will not be retained." to "私密会话已开启。新的扫描内容不会被保留。",
+    "Reading the selected image locally..." to "正在本机读取所选图片…", "No readable QR or barcode was found in that image." to "该图片中未找到可读取的二维码或条形码。", "That image could not be opened." to "无法打开该图片。",
+    "Saved locally." to "已保存在本机。", "Private session: not saved." to "私密会话：未保存。", "Generated QR self-test passed and was saved locally." to "生成的二维码已通过本机自检并保存。",
+    "Generated QR did not pass its local scan test. Adjust the content and try again." to "生成的二维码未通过本机扫描测试。请调整内容后重试。", "Saved item opened from your private library." to "已从您的私密资料库打开保存的项目。",
+    "Save scan history" to "保存扫描历史", "Turn off for a private session with no QR payload retained." to "关闭后使用私密会话，不保留二维码内容。", "Scan another" to "扫描其他代码", "Review domain, then " to "检查域名，然后", "processed locally" to "在本机处理",
+    "Create a code" to "创建代码", "Pick a format and fill in only the information people need." to "选择格式，仅填写所需信息。", "Website" to "网站", "Phone" to "电话", "Location" to "位置", "Calendar" to "日历", "Contact" to "联系人", "SMS" to "短信", "Wi-Fi" to "Wi-Fi",
+    "Created offline with reliable error correction" to "离线创建并具备可靠纠错", "Share PNG" to "分享 PNG", "Complete the first field to preview" to "填写第一个字段以预览", "Saved only on this phone." to "仅保存在此手机上。", "Created only" to "仅已创建", "All codes" to "全部代码", "Torch" to "闪光灯", "Torch off" to "关闭闪光灯", "Camera stays off until you allow it" to "相机将在您授权前保持关闭", "Allow camera" to "允许相机",
+    "OCR options" to "OCR 选项", "Choose image" to "选择图片", "Scan page" to "扫描页面",
+    "Hide current settings" to "隐藏当前设置", "Show current settings" to "显示当前设置",
+    "Change document type" to "更改文档类型", "Change document cleanup" to "更改清理方式", "Change recognition language" to "更改识别语言",
+    "OCR Studio" to "OCR 文字扫描", "Scan, clean and export text without uploading your documents." to "无需上传文档，即可扫描、清理和导出文字。", "Recognizing text on this device..." to "正在设备上识别文字…", "Ready. Capture a page or choose an image." to "准备就绪。拍摄页面或选择图片。", "No readable text found. Try better light or a tighter crop." to "未找到可读文字。请改善光线或裁剪得更紧。", "OCR could not process this image." to "OCR 无法处理此图片。", "The selected image could not be opened." to "无法打开所选图片。", "A scan can contain up to 20 pages. Export this document before starting another." to "一次扫描最多包含 20 页。请先导出此文档，再开始新的扫描。", "No text yet" to "暂无文字", "Capture a page or choose an image to begin." to "拍摄页面或选择图片以开始。", "Start scanning" to "开始扫描", "Review page" to "检查页面", "Auto-frame" to "自动框选", "Retake" to "重拍", "Recognize" to "识别", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "将每个绿色角点拖到页面边缘。PureHub 会在 OCR 前校正透视。", "Recognized text" to "已识别文字", "Private library" to "私密资料库", "Search scans" to "搜索扫描件", "Quick actions" to "快捷操作", "Open link" to "打开链接", "Call" to "拨打电话", "Table detected" to "已识别表格", "Receipt detected" to "已识别收据", "Move earlier" to "上移", "Move later" to "下移", "Previous" to "上一页", "Next" to "下一页", "Page" to "页", "On-device" to "设备端", "Continue in Doc to PDF" to "继续到文档转 PDF", "Add page" to "添加页面", "Delete page" to "删除页面", "New document" to "新建文档", "Save to Money Studio" to "保存到记账本",
+)
+
+private val viAll = vi + viMore + viAudit + visionVi
+private val zhAll = zh + zhMore + zhAudit + visionZh
 private val es = mapOf(
     "Home" to "Inicio", "Tools" to "Herramientas", "Community" to "Comunidad", "Settings" to "Ajustes", "Help" to "Ayuda",
     "Continue" to "Continuar", "Cancel" to "Cancelar", "Close" to "Cerrar", "Save" to "Guardar", "Delete" to "Eliminar",
@@ -371,6 +436,18 @@ private val es = mapOf(
     "Back to tools" to "Volver a herramientas", "Scan settings" to "Controles de escaneo", "Document type" to "Tipo de documento",
     "Document cleanup" to "Limpieza del documento", "Change recognition language" to "Cambiar idioma de reconocimiento",
     "Hide current settings" to "Ocultar ajustes actuales", "Show current settings" to "Mostrar ajustes actuales",
+    "QR Studio" to "Escáner QR", "Vision workspace" to "Espacio de escaneo", "Vision menu" to "Menú de escaneo", "Create" to "Crear", "Library" to "Biblioteca", "Batch" to "Lote", "Batch scan" to "Escanear lote", "Create QR" to "Crear QR", "Scan image" to "Escanear imagen",
+    "Type" to "Tipo", "Cleanup" to "Limpieza", "Rotation" to "Rotación", "Text" to "Texto", "Auto" to "Automático", "English" to "Inglés", "Spanish" to "Español", "Chinese" to "Chino", "Camera" to "Cámara", "Imported image" to "Imagen importada", "Scanned page" to "Página escaneada",
+    "PRIVATE BY DESIGN" to "PRIVACIDAD POR DISEÑO", "Fast scans, safe previews, zero ads." to "Escaneos rápidos, vistas previas seguras y sin anuncios.",
+    "Ready. Codes are processed only on this device." to "Listo. Los códigos se procesan solo en este dispositivo.", "Ready for another scan." to "Listo para otro escaneo.",
+    "Scan history is on. New results stay in your private library." to "El historial está activo. Los nuevos resultados quedan en tu biblioteca privada.", "Private session is on. New scan payloads will not be retained." to "La sesión privada está activa. Los nuevos contenidos escaneados no se guardarán.",
+    "Reading the selected image locally..." to "Leyendo la imagen seleccionada en el dispositivo...", "No readable QR or barcode was found in that image." to "No se encontró ningún código QR ni de barras legible en esa imagen.", "That image could not be opened." to "No se pudo abrir esa imagen.",
+    "Saved locally." to "Guardado en el dispositivo.", "Private session: not saved." to "Sesión privada: no se guardó.", "Generated QR self-test passed and was saved locally." to "La prueba local del QR generado fue correcta y se guardó.", "Generated QR did not pass its local scan test. Adjust the content and try again." to "El QR generado no superó su prueba local. Ajusta el contenido e inténtalo de nuevo.", "Saved item opened from your private library." to "Elemento guardado abierto desde tu biblioteca privada.",
+    "Save scan history" to "Guardar historial de escaneos", "Turn off for a private session with no QR payload retained." to "Desactívalo para una sesión privada sin guardar el contenido QR.", "Scan another" to "Escanear otro", "Review domain, then " to "Revisa el dominio y luego ", "processed locally" to "procesado en el dispositivo",
+    "Create a code" to "Crear un código", "Pick a format and fill in only the information people need." to "Elige un formato e incluye solo la información necesaria.", "Website" to "Sitio web", "Phone" to "Teléfono", "Location" to "Ubicación", "Calendar" to "Calendario", "Contact" to "Contacto", "SMS" to "SMS", "Wi-Fi" to "Wi-Fi", "Created offline with reliable error correction" to "Creado sin conexión con corrección de errores fiable", "Share PNG" to "Compartir PNG", "Complete the first field to preview" to "Completa el primer campo para obtener una vista previa", "Saved only on this phone." to "Guardado solo en este teléfono.", "Created only" to "Solo creados", "All codes" to "Todos los códigos", "Torch" to "Linterna", "Torch off" to "Apagar linterna",
+    "OCR options" to "Opciones de OCR", "Choose image" to "Elegir imagen", "Scan page" to "Escanear página",
+    "Change document type" to "Cambiar tipo de documento", "Change document cleanup" to "Cambiar limpieza del documento", "Change recognition language" to "Cambiar idioma de reconocimiento",
+    "OCR Studio" to "OCR Studio", "Scan, clean and export text without uploading your documents." to "Escanea, limpia y exporta texto sin subir tus documentos.", "Recognizing text on this device..." to "Reconociendo texto en este dispositivo...", "Ready. Capture a page or choose an image." to "Listo. Captura una página o elige una imagen.", "No readable text found. Try better light or a tighter crop." to "No se encontró texto legible. Prueba con mejor luz o un recorte más ajustado.", "OCR could not process this image." to "OCR no pudo procesar esta imagen.", "The selected image could not be opened." to "No se pudo abrir la imagen seleccionada.", "A scan can contain up to 20 pages. Export this document before starting another." to "Un escaneo puede tener hasta 20 páginas. Exporta este documento antes de iniciar otro.", "No text yet" to "Aún no hay texto", "Capture a page or choose an image to begin." to "Captura una página o elige una imagen para empezar.", "Start scanning" to "Empezar a escanear", "Review page" to "Revisar página", "Auto-frame" to "Encuadre automático", "Retake" to "Repetir", "Recognize" to "Reconocer", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "Arrastra cada esquina verde al borde de la página. PureHub corrige la perspectiva antes del OCR.", "Recognized text" to "Texto reconocido", "Private library" to "Biblioteca privada", "Search scans" to "Buscar escaneos", "Quick actions" to "Acciones rápidas", "Open link" to "Abrir enlace", "Call" to "Llamar", "Table detected" to "Tabla detectada", "Receipt detected" to "Recibo detectado", "Move earlier" to "Mover antes", "Move later" to "Mover después", "Previous" to "Anterior", "Next" to "Siguiente", "Page" to "Página", "On-device" to "En el dispositivo", "Continue in Doc to PDF" to "Continuar en Documento a PDF", "Add page" to "Añadir página", "Delete page" to "Eliminar página", "New document" to "Documento nuevo", "Save to Money Studio" to "Guardar en Money Studio",
 )
 
 fun translateUiText(text: String, language: AppLanguage): String {
@@ -384,8 +461,74 @@ fun translateUiText(text: String, language: AppLanguage): String {
     dictionary[text]?.let { return it }
     val trimmed = text.trim()
     dictionary[trimmed]?.let { return text.replace(trimmed, it) }
-    if (language == AppLanguage.Spanish) return text
+    visionPatternTranslation(text, language)?.let { return it }
     return dynamicTranslation(text, language)
+}
+
+/** Dynamic OCR/QR status strings retain their numeric values while translating the surrounding copy. */
+private fun visionPatternTranslation(text: String, language: AppLanguage): String? {
+    fun match(pattern: String) = Regex(pattern).matchEntire(text)?.groupValues
+    val vi = language == AppLanguage.Vietnamese
+    val zh = language == AppLanguage.Chinese
+    val es = language == AppLanguage.Spanish
+    fun source(value: String) = when (value) {
+        "Camera" -> when { vi -> "Camera"; zh -> "相机"; es -> "Cámara"; else -> value }
+        "Image" -> when { vi -> "Ảnh"; zh -> "图片"; es -> "Imagen"; else -> value }
+        "Batch" -> when { vi -> "Hàng loạt"; zh -> "批量"; es -> "Lote"; else -> value }
+        else -> value
+    }
+    match("Type · (.+)")?.let {
+        val type = translateUiText(it[1], language)
+        return when { vi -> "Loại · $type"; zh -> "类型 · $type"; es -> "Tipo · $type"; else -> null }
+    }
+    match("Cleanup · (.+)")?.let {
+        val cleanup = translateUiText(it[1], language)
+        return when { vi -> "Làm sạch · $cleanup"; zh -> "清理 · $cleanup"; es -> "Limpieza · $cleanup"; else -> null }
+    }
+    match("Rotation (\\d+)°")?.let {
+        return when { vi -> "Xoay ${it[1]}°"; zh -> "旋转 ${it[1]}°"; es -> "Rotación ${it[1]}°"; else -> null }
+    }
+    match("(.+) scan complete\\. Saved to your private library\\.")?.let {
+        return when { vi -> "Đã quét ${source(it[1])}. Đã lưu vào thư viện riêng tư."; zh -> "${source(it[1])}扫描完成。已保存到私密资料库。"; es -> "Escaneo de ${source(it[1])} completado. Guardado en tu biblioteca privada."; else -> null }
+    }
+    match("(.+) scan complete\\. Private session: result was not saved\\.")?.let {
+        return when { vi -> "Đã quét ${source(it[1])}. Phiên riêng tư: kết quả không được lưu."; zh -> "${source(it[1])}扫描完成。私密会话：结果未保存。"; es -> "Escaneo de ${source(it[1])} completado. Sesión privada: el resultado no se guardó."; else -> null }
+    }
+    match("Reading (\\d+) images locally\\.\\.\\.")?.let {
+        return when { vi -> "Đang đọc ${it[1]} ảnh trên thiết bị..."; zh -> "正在本机读取 ${it[1]} 张图片…"; es -> "Leyendo ${it[1]} imágenes en el dispositivo..."; else -> null }
+    }
+    match("(\\d+) QR or barcode result\\(s\\) found in (\\d+) images\\. (.+)")?.let {
+        return when { vi -> "Tìm thấy ${it[1]} kết quả QR hoặc mã vạch trong ${it[2]} ảnh. ${translateUiText(it[3], language)}"; zh -> "在 ${it[2]} 张图片中找到 ${it[1]} 个二维码或条形码结果。${translateUiText(it[3], language)}"; es -> "Se encontraron ${it[1]} resultados QR o de barras en ${it[2]} imágenes. ${translateUiText(it[3], language)}"; else -> null }
+    }
+    match("(\\d+) page\\(s\\) captured privately\\. Review the text before export\\.")?.let {
+        return when { vi -> "Đã chụp riêng tư ${it[1]} trang. Hãy kiểm tra văn bản trước khi xuất."; zh -> "已私密拍摄 ${it[1]} 页。导出前请检查文字。"; es -> "Se capturaron ${it[1]} páginas de forma privada. Revisa el texto antes de exportar."; else -> null }
+    }
+    match("Page frame found \\((\\d+)%\\)\\. Adjust the four corners, then recognize\\.")?.let {
+        return when { vi -> "Đã tìm thấy khung trang (${it[1]}%). Điều chỉnh bốn góc rồi nhận dạng."; zh -> "已找到页面边框（${it[1]}%）。调整四个角后识别。"; es -> "Se detectó el marco de la página (${it[1]}%). Ajusta las cuatro esquinas y reconoce."; else -> null }
+    }
+    match("Check the four corners, then recognize\\. The full page is selected because no reliable frame was found\\.")?.let {
+        return when { vi -> "Kiểm tra bốn góc rồi nhận dạng. Toàn bộ trang được chọn vì không tìm thấy khung đáng tin cậy."; zh -> "请检查四个角后识别。由于未找到可靠边框，已选择整页。"; es -> "Revisa las cuatro esquinas y reconoce. Se seleccionó la página completa porque no se encontró un marco fiable."; else -> null }
+    }
+    match("Preparing (\\d+) image\\(s\\) for private batch OCR\\.\\.\\.")?.let {
+        return when { vi -> "Đang chuẩn bị ${it[1]} ảnh cho OCR hàng loạt riêng tư..."; zh -> "正在准备 ${it[1]} 张图片以进行私密批量 OCR…"; es -> "Preparando ${it[1]} imágenes para OCR privado por lotes..."; else -> null }
+    }
+    match("Batch OCR finished: (\\d+) image\\(s\\), (\\d+) page\\(s\\) in this document\\.")?.let {
+        return when { vi -> "OCR hàng loạt hoàn tất: ${it[1]} ảnh, ${it[2]} trang trong tài liệu này."; zh -> "批量 OCR 已完成：${it[1]} 张图片，本文档共 ${it[2]} 页。"; es -> "OCR por lotes terminado: ${it[1]} imágenes y ${it[2]} páginas en este documento."; else -> null }
+    }
+    match("Recognizing image (\\d+)/(\\d+) on this device\\.\\.\\.")?.let {
+        return when { vi -> "Đang nhận dạng ảnh ${it[1]}/${it[2]} trên thiết bị..."; zh -> "正在设备上识别图片 ${it[1]}/${it[2]}…"; es -> "Reconociendo imagen ${it[1]}/${it[2]} en este dispositivo..."; else -> null }
+    }
+    match("(\\d+) page\\(s\\) captured privately\\. Review the text before export\\.")?.let { return null }
+    match("(\\d+) words")?.let {
+        return when { vi -> "${it[1]} từ"; zh -> "${it[1]} 个词"; es -> "${it[1]} palabras"; else -> null }
+    }
+    match("(\\d+) row\\(s\\), (\\d+) column\\(s\\)\\. Review before exporting\\.")?.let {
+        return when { vi -> "${it[1]} hàng, ${it[2]} cột. Hãy kiểm tra trước khi xuất."; zh -> "${it[1]} 行，${it[2]} 列。导出前请检查。"; es -> "${it[1]} filas y ${it[2]} columnas. Revísalo antes de exportar."; else -> null }
+    }
+    match("Page (\\d+)/(\\d+)")?.let {
+        return when { vi -> "Trang ${it[1]}/${it[2]}"; zh -> "第 ${it[1]}/${it[2]} 页"; es -> "Página ${it[1]}/${it[2]}"; else -> null }
+    }
+    return null
 }
 
 private fun dynamicTranslation(text: String, language: AppLanguage): String {

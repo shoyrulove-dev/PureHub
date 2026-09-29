@@ -85,6 +85,7 @@ import androidx.compose.material3.rememberDrawerState
 import com.purehub.app.ui.LocalizedText
 import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.AppLanguage
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -717,6 +718,8 @@ private fun OcrScanContent(
     val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val appLanguage = LocalAppLanguage.current
+    fun localized(value: String) = translateUiText(value, appLanguage)
     var modeOptionsOpen by rememberSaveable { mutableStateOf(false) }
     var cleanupOptionsOpen by rememberSaveable { mutableStateOf(false) }
     var languageOptionsOpen by rememberSaveable { mutableStateOf(false) }
@@ -761,8 +764,8 @@ private fun OcrScanContent(
                             onClick = { modeOptionsOpen = !modeOptionsOpen },
                             modifier = Modifier.fillMaxWidth().height(42.dp),
                         ) {
-                            LocalizedText("Type · ${selectedMode.label}", modifier = Modifier.weight(1f))
-                            Icon(Icons.Rounded.Tune, "Change document type")
+                            LocalizedText("${localized("Type")} · ${localized(selectedMode.label)}", modifier = Modifier.weight(1f))
+                            Icon(Icons.Rounded.Tune, localized("Change document type"))
                         }
                         if (modeOptionsOpen) {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -779,8 +782,8 @@ private fun OcrScanContent(
                             onClick = { cleanupOptionsOpen = !cleanupOptionsOpen },
                             modifier = Modifier.fillMaxWidth().height(42.dp),
                         ) {
-                            LocalizedText("Cleanup · ${selectedFilter.label}", modifier = Modifier.weight(1f))
-                            Icon(Icons.Rounded.Tune, "Change document cleanup")
+                            LocalizedText("${localized("Cleanup")} · ${localized(selectedFilter.label)}", modifier = Modifier.weight(1f))
+                            Icon(Icons.Rounded.Tune, localized("Change document cleanup"))
                         }
                         if (cleanupOptionsOpen) {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -798,7 +801,7 @@ private fun OcrScanContent(
                             modifier = Modifier.fillMaxWidth().height(44.dp),
                         ) {
                             LocalizedText(selectedLanguage.label, modifier = Modifier.weight(1f))
-                            Icon(Icons.Rounded.Tune, "Change recognition language")
+                            Icon(Icons.Rounded.Tune, localized("Change recognition language"))
                         }
                         if (languageOptionsOpen) {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -816,7 +819,7 @@ private fun OcrScanContent(
                         }
                         OutlinedButton(onClick = onRotate, enabled = !processing, modifier = Modifier.fillMaxWidth().height(44.dp)) {
                             Icon(Icons.AutoMirrored.Rounded.RotateRight, null)
-                            LocalizedText("  Rotation $rotation°")
+                            LocalizedText("  ${localized("Rotation")} $rotation°")
                         }
                         HorizontalDivider()
                         OutlinedButton(onClick = onChooseImage, enabled = !processing, modifier = Modifier.fillMaxWidth().height(44.dp)) {
@@ -886,7 +889,7 @@ private fun OcrScanContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.padding(start = 12.dp, top = 7.dp, bottom = 7.dp)) {
                             LocalizedText(
-                                "${selectedMode.label} · ${selectedFilter.label}",
+                                "${localized(selectedMode.label)} · ${localized(selectedFilter.label)}",
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelMedium,
                             )
@@ -897,12 +900,12 @@ private fun OcrScanContent(
                             )
                         }
                         IconButton(onClick = { quickStatusVisible = false }, modifier = Modifier.size(40.dp)) {
-                            Icon(Icons.Rounded.Tune, "Hide current settings", tint = Color.White)
+                            Icon(Icons.Rounded.Tune, localized("Hide current settings"), tint = Color.White)
                         }
                     }
                 } else {
                     IconButton(onClick = { quickStatusVisible = true }, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.Rounded.Tune, "Show current settings", tint = Color.White)
+                        Icon(Icons.Rounded.Tune, localized("Show current settings"), tint = Color.White)
                     }
                 }
             }
@@ -912,7 +915,7 @@ private fun OcrScanContent(
                 color = Color(0xCC0F172A),
             ) {
                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                    Icon(Icons.Rounded.Menu, "OCR options", tint = Color.White)
+                    Icon(Icons.Rounded.Menu, localized("OCR options"), tint = Color.White)
                 }
             }
             Row(
@@ -926,11 +929,11 @@ private fun OcrScanContent(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
                     modifier = Modifier.width(72.dp).height(46.dp),
                 ) {
-                    Icon(Icons.Rounded.AddPhotoAlternate, "Choose image")
+                    Icon(Icons.Rounded.AddPhotoAlternate, localized("Choose image"))
                 }
                 Button(onClick = onCapture, enabled = hasCameraPermission && !processing, modifier = Modifier.width(82.dp).height(46.dp)) {
                     if (processing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                    else Icon(Icons.Rounded.DocumentScanner, "Scan page")
+                    else Icon(Icons.Rounded.DocumentScanner, localized("Scan page"))
                 }
             }
             }

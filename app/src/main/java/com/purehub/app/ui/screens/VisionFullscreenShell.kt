@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.translateUiText
 import kotlinx.coroutines.launch
 
 /**
@@ -44,6 +46,7 @@ fun VisionFullscreenShell(
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val menuDescription = translateUiText("Vision menu", LocalAppLanguage.current)
 
     ModalNavigationDrawer(
         modifier = modifier,
@@ -78,7 +81,7 @@ fun VisionFullscreenShell(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
             ) {
                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                    Icon(Icons.Rounded.Menu, contentDescription = "Vision menu")
+                    Icon(Icons.Rounded.Menu, contentDescription = menuDescription)
                 }
             }
         }
