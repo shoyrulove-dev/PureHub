@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.purehub.app.ui.LocalizedText
 import com.purehub.app.ui.LocalAppLanguage
@@ -56,10 +57,10 @@ fun VisionFullscreenShell(
             // of the handset, leaving the active camera/tool visible behind it.
             ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.5f)) {
                 Column(Modifier.padding(16.dp)) {
-                    LocalizedText(title, style = MaterialTheme.typography.titleSmall)
+                    LocalizedText(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                     LocalizedText("Vision workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     NavigationDrawerItem(
-                        label = { LocalizedText("Home") },
+                        label = { LocalizedText("Home", maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
                         selected = false,
                         icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
                         onClick = {

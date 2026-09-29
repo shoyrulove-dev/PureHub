@@ -473,9 +473,9 @@ private fun MiniAppScreen(
                 onHome = onHome,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 drawerActions = { closeDrawer ->
-                    NavigationDrawerItem(label = { LocalizedText("Capture Page") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = DocToPdfMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
-                    NavigationDrawerItem(label = { LocalizedText("Import images") }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = DocToPdfMenuAction.Images; closeDrawer() }, modifier = Modifier.height(48.dp))
-                    NavigationDrawerItem(label = { LocalizedText("PDF toolbox") }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = DocToPdfMenuAction.PdfToolbox; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Capture Page", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = DocToPdfMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Import images", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = DocToPdfMenuAction.Images; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("PDF toolbox", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = DocToPdfMenuAction.PdfToolbox; closeDrawer() }, modifier = Modifier.height(48.dp))
                 },
             ) { visionPadding ->
             DocToPdfCard(
@@ -505,8 +505,8 @@ private fun MiniAppScreen(
                 onHome = onHome,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 drawerActions = { closeDrawer ->
-                    NavigationDrawerItem(label = { LocalizedText("Camera") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ColorGrabberMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
-                    NavigationDrawerItem(label = { LocalizedText("Copy HEX") }, selected = false, icon = { Icon(Icons.Rounded.Collections, null) }, onClick = { menuAction = ColorGrabberMenuAction.CopyHex; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Camera", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ColorGrabberMenuAction.Camera; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Copy HEX", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.Collections, null) }, onClick = { menuAction = ColorGrabberMenuAction.CopyHex; closeDrawer() }, modifier = Modifier.height(48.dp))
                 },
             ) { visionPadding ->
             ColorGrabberCard(
@@ -525,7 +525,7 @@ private fun MiniAppScreen(
                 onHome = onHome,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 drawerActions = { closeDrawer ->
-                    NavigationDrawerItem(label = { LocalizedText("Choose photo") }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = PhotoPrivacyMenuAction.ChoosePhoto; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Choose photo", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.AddPhotoAlternate, null) }, onClick = { menuAction = PhotoPrivacyMenuAction.ChoosePhoto; closeDrawer() }, modifier = Modifier.height(48.dp))
                 },
             ) { visionPadding -> PhotoPrivacyScreen(innerPadding = visionPadding, menuAction = menuAction, onMenuActionHandled = { menuAction = null }) }
         }
@@ -547,8 +547,8 @@ private fun MiniAppScreen(
                 onHome = onHome,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 drawerActions = { closeDrawer ->
-                    NavigationDrawerItem(label = { LocalizedText("Start recording") }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Start; closeDrawer() }, modifier = Modifier.height(48.dp))
-                    NavigationDrawerItem(label = { LocalizedText("Quality preset") }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Quality; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Start recording", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.QrCodeScanner, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Start; closeDrawer() }, modifier = Modifier.height(48.dp))
+                    NavigationDrawerItem(label = { LocalizedText("Quality preset", maxLines = 1, softWrap = false) }, selected = false, icon = { Icon(Icons.Rounded.AutoAwesome, null) }, onClick = { menuAction = ScreenRecorderMenuAction.Quality; closeDrawer() }, modifier = Modifier.height(48.dp))
                 },
             ) { visionPadding -> ScreenRecorderCard(innerPadding = visionPadding, menuAction = menuAction, onMenuActionHandled = { menuAction = null }) }
         }
