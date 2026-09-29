@@ -12,21 +12,26 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.purehub.app.ui.PureHubApp
 import com.purehub.app.ui.theme.PureHubTheme
 import com.purehub.app.feature.catalog.MiniAppId
 
 class MainActivity : ComponentActivity() {
+    private var requestedMiniAppId by mutableStateOf<MiniAppId?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         installMiniAppShortcuts()
-        val initialMiniAppId = intent.getStringExtra(EXTRA_MINI_APP_ID)?.let { value ->
+        requestedMiniAppId = intent.getStringExtra(EXTRA_MINI_APP_ID)?.let { value ->
             MiniAppId.entries.firstOrNull { it.name == value }
         }
-        initialMiniAppId?.let(::reportMiniAppShortcutUsed)
+        requestedMiniAppId?.let(::reportMiniAppShortcutUsed)
 
         setContent {
             PureHubTheme {
@@ -34,10 +39,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    PureHubApp(initialMiniAppId = initialMiniAppId)
+                    PureHubApp(initialMiniAppId = requestedMiniAppId)
                 }
             }
         }
+    }
+
+    /**
+     * Launcher shortcuts and external intents may reach an already visible activity.
+     * Update Compose state for a recognised mini-app target so the app can navigate
+     * immediately instead of leaving the user on the screen they last viewed.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val miniAppId = intent.getStringExtra(EXTRA_MINI_APP_ID)?.let { value ->
+            MiniAppId.entries.firstOrNull { it.name == value }
+        } ?: return
+        requestedMiniAppId = miniAppId
+        reportMiniAppShortcutUsed(miniAppId)
     }
 
     private fun installMiniAppShortcuts() {

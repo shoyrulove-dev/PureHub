@@ -34,6 +34,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -104,6 +105,17 @@ import com.purehub.app.ui.screens.VisionFullscreenShell
 
 private const val MINI_APP_ROUTE_PREFIX = "mini_app"
 
+/** Vision tools own their immersive navigation, so they must not also receive the
+ * generic mini-app header from the application scaffold. */
+private val immersiveVisionTools = setOf(
+    MiniAppId.QR_STUDIO,
+    MiniAppId.DOC_TO_PDF,
+    MiniAppId.OCR_TEXT,
+    MiniAppId.COLOR_GRABBER,
+    MiniAppId.PHOTO_PRIVACY,
+    MiniAppId.SCREEN_RECORDER,
+)
+
 @Composable
 private fun LanguageWelcomeScreen(
     selected: AppLanguage,
@@ -156,6 +168,16 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
         mutableStateOf(initialMiniAppId == null && context.shouldShowPlayTesterInvite())
     }
 
+    // An app shortcut can arrive while MainActivity is already visible. Navigate from
+    // the retained NavController rather than relying only on NavHost's initial route.
+    LaunchedEffect(initialMiniAppId) {
+        initialMiniAppId?.let { miniAppId ->
+            navController.navigate(miniAppRoute(miniAppId)) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState, LocalAppLanguage provides language) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -165,7 +187,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                 }
             },
             topBar = {
-                if (currentMiniAppRoute && currentMiniApp != MiniAppId.OCR_TEXT) {
+                if (currentMiniAppRoute && currentMiniApp !in immersiveVisionTools) {
                     MiniAppTopBar(
                         title = currentMiniApp?.title.orEmpty(),
                         onBack = { navController.popBackStack() },
