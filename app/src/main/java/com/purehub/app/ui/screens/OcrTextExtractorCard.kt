@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -862,9 +863,10 @@ private fun OcrScanContent(
                 }
                 Box(
                     Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth(0.88f)
-                        .aspectRatio(0.70f)
+                        .align(Alignment.TopCenter)
+                        .offset(y = 60.dp)
+                        .fillMaxWidth(0.9f)
+                        .aspectRatio(0.52f)
                         .clip(RoundedCornerShape(22.dp))
                         .border(2.dp, Color(0xFF6EE7B7), RoundedCornerShape(22.dp)),
                 )
