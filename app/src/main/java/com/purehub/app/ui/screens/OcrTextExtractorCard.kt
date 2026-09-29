@@ -866,7 +866,7 @@ private fun OcrScanContent(
                         .align(Alignment.TopCenter)
                         .offset(y = 60.dp)
                         .fillMaxWidth(0.9f)
-                        .aspectRatio(0.52f)
+                        .aspectRatio(0.55f)
                         .clip(RoundedCornerShape(22.dp))
                         .border(2.dp, Color(0xFF6EE7B7), RoundedCornerShape(22.dp)),
                 )
