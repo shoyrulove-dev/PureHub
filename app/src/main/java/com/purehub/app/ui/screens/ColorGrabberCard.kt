@@ -1,9 +1,9 @@
 package com.purehub.app.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
-import android.content.ClipboardManager
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -11,23 +11,27 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.purehub.app.ui.LocalAppLanguage
-import com.purehub.app.ui.LocalizedText
-import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,7 +50,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.purehub.app.feature.colorgrabber.ColorGrabberUtils
 import com.purehub.app.feature.colorgrabber.GrabbedColor
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalSnackbarHostState
+import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.translateUiText
 import kotlinx.coroutines.launch
 
 enum class ColorGrabberMenuAction { Camera, CopyHex }
@@ -64,7 +71,6 @@ fun ColorGrabberCard(
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val appLanguage = LocalAppLanguage.current
-    val colorToneLabel = translateUiText("tone", appLanguage)
 
     fun copyHex() {
         val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
@@ -81,11 +87,19 @@ fun ColorGrabberCard(
         onMenuActionHandled()
     }
 
-    Box(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Color(0xFF07111E))) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07111E))) {
         if (hasCameraPermission) {
             ColorGrabberPreview(
                 modifier = Modifier.fillMaxSize(),
                 onColorSampled = { sampled -> color = sampled },
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = 60.dp)
+                    .fillMaxWidth(0.9f)
+                    .aspectRatio(0.59f)
+                    .border(3.dp, Color(0xFF43E6B5), RoundedCornerShape(24.dp)),
             )
         } else {
             Column(
@@ -93,64 +107,59 @@ fun ColorGrabberCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                Button(onClick = onRequestCameraPermission) { LocalizedText("Allow Camera for Color Grabber") }
+                LocalizedText(
+                    "Camera stays off until you allow it",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Button(onClick = onRequestCameraPermission) {
+                    LocalizedText("Allow Camera for Color Grabber")
+                }
             }
         }
-        Card(modifier = Modifier.align(Alignment.BottomCenter).padding(14.dp).fillMaxWidth()) {
-        Column(
+
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = Modifier.size(56.dp).background(Color(color.red, color.green, color.blue), CircleShape))
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .background(Color(color.red, color.green, color.blue), CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
                     LocalizedText(
                         text = color.hex,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    /*
-                    LocalizedText(
-                        text = color.hex,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    */
-                    LocalizedText(
-                        text = "${translateUiText(ColorGrabberUtils.describeBrightness(color), appLanguage)} · $colorToneLabel · R ${ColorGrabberUtils.toPercent(color.red)} · G ${ColorGrabberUtils.toPercent(color.green)} · B ${ColorGrabberUtils.toPercent(color.blue)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
                     )
                     LocalizedText(
                         text = "RGB ${color.red}, ${color.green}, ${color.blue}",
                         style = MaterialTheme.typography.bodySmall,
-                    )
-                    /*
-                    LocalizedText(
-                        text = "${translateUiText(ColorGrabberUtils.describeBrightness(color), appLanguage)} · ${translateUiText(\"tone\", appLanguage)} · R ${ColorGrabberUtils.toPercent(color.red)} · G ${ColorGrabberUtils.toPercent(color.green)} · B ${ColorGrabberUtils.toPercent(color.blue)}",
-                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    */
+                }
+                Button(onClick = ::copyHex, modifier = Modifier.height(42.dp)) {
+                    Icon(
+                        Icons.Rounded.ContentCopy,
+                        contentDescription = translateUiText("Copy HEX", appLanguage),
+                        modifier = Modifier.size(18.dp),
+                    )
+                    LocalizedText(" Copy")
                 }
             }
-            Button(
-                modifier = Modifier.align(Alignment.End),
-                onClick = {
-                    copyHex()
-                },
-            ) {
-                LocalizedText("Copy")
-            }
         }
-    }
     }
 }
 
@@ -167,10 +176,7 @@ private fun ColorGrabberPreview(
         }
     }
 
-    AndroidView(
-        factory = { previewView },
-        modifier = modifier,
-    )
+    AndroidView(factory = { previewView }, modifier = modifier)
 
     LaunchedEffect(previewView) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
@@ -192,9 +198,7 @@ private fun bindColorGrabberCamera(
     lifecycleOwner: androidx.lifecycle.LifecycleOwner,
     onColorSampled: (GrabbedColor) -> Unit,
 ) {
-    val preview = Preview.Builder().build().also {
-        it.surfaceProvider = previewView.surfaceProvider
-    }
+    val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
     val analyzer = ImageAnalysis.Builder()
         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -206,18 +210,10 @@ private fun bindColorGrabberCamera(
         }
 
     cameraProvider.unbindAll()
-    cameraProvider.bindToLifecycle(
-        lifecycleOwner,
-        CameraSelector.DEFAULT_BACK_CAMERA,
-        preview,
-        analyzer,
-    )
+    cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analyzer)
 }
 
-private fun processColorFrame(
-    imageProxy: ImageProxy,
-    onColorSampled: (GrabbedColor) -> Unit,
-) {
+private fun processColorFrame(imageProxy: ImageProxy, onColorSampled: (GrabbedColor) -> Unit) {
     val plane = imageProxy.planes.firstOrNull()
     if (plane == null) {
         imageProxy.close()
