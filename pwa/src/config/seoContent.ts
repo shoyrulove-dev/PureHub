@@ -59,6 +59,7 @@ const copy: Record<SeoLanguage, { features: string; steps: string; faq: string; 
   en: { features: 'What this tool helps you do', steps: 'How to use it', faq: 'Questions people ask', note: 'Important note', related: 'Continue with a related PureHub tool' },
   vi: { features: 'Công cụ này giúp bạn làm gì', steps: 'Cách sử dụng', faq: 'Câu hỏi thường gặp', note: 'Lưu ý quan trọng', related: 'Khám phá công cụ PureHub liên quan' },
   zh: { features: '这个工具可以帮助你做什么', steps: '使用方法', faq: '常见问题', note: '重要说明', related: '继续使用相关 PureHub 工具' },
+  es: { features: 'Qué puedes hacer con esta herramienta', steps: 'Cómo usarla', faq: 'Preguntas frecuentes', note: 'Nota importante', related: 'Continúa con una herramienta relacionada de PureHub' },
 }
 
 const genericFaqs: Record<SeoLanguage, SeoFaq[]> = {
@@ -77,6 +78,11 @@ const genericFaqs: Record<SeoLanguage, SeoFaq[]> = {
     { question: '工具支持离线使用吗？', answer: '只要浏览器或已安装的应用支持所需能力，流程会优先在本地运行。部分可选资源可能按需下载。' },
     { question: 'PureHub 会上传我的文件吗？', answer: '私人数据默认保留在设备上，除非你主动选择外部操作或可选的联网流程。' },
   ],
+  es: [
+    { question: '¿Esta herramienta de PureHub es gratis?', answer: 'Sí. Las herramientas de PureHub son gratuitas, sin muros publicitarios ni una cuenta obligatoria.' },
+    { question: '¿Funciona sin conexión?', answer: 'El flujo está diseñado para funcionar localmente cuando el navegador o la app instalada ofrece la capacidad necesaria. Algunos recursos opcionales pueden descargarse bajo demanda.' },
+    { question: '¿PureHub sube mis archivos?', answer: 'PureHub conserva los datos privados en el dispositivo salvo que elijas de forma explícita una acción externa o un flujo conectado opcional.' },
+  ],
 }
 
 export function getSeoContent(appId: SeoMiniAppId, lang: SeoLanguage): SeoContent {
@@ -87,22 +93,32 @@ export function getSeoContent(appId: SeoMiniAppId, lang: SeoLanguage): SeoConten
   const keywords = meta?.keywords ?? []
   return {
     intro: description,
-    benefits: profile[lang]?.benefits ?? profile.benefits ?? [
+    benefits: profile[lang]?.benefits ?? (lang === 'es' ? [
+      `${title} está diseñada para un flujo privado y claro.`,
+      ...keywords.slice(0, 2).map((keyword) => `Útil para: ${keyword}.`),
+      'Revisa el resultado y exporta o comparte solo cuando lo decidas.',
+    ] : profile.benefits ?? [
       `${title} is built for a focused, private workflow.`,
       ...(keywords.slice(0, 2).map((keyword) => `Useful for: ${keyword}.`)),
       'Use the result, review it, and export or share only when you choose.',
-    ],
-    steps: profile[lang]?.steps ?? profile.steps ?? [
+    ]),
+    steps: profile[lang]?.steps ?? (lang === 'es' ? [
+      'Abre la herramienta y elige la entrada o el modo que corresponde a tu tarea.',
+      'Revisa el resultado en este dispositivo antes de continuar.',
+      'Copia, exporta, guarda o comparte solo cuando el resultado esté listo.',
+    ] : profile.steps ?? [
       'Open the tool and choose the input or mode that matches your task.',
       'Review the result on this device before taking the next action.',
       'Copy, export, save, or share only when the result is ready.',
-    ],
+    ]),
     faqs: profile[lang]?.faqs ?? profile.faqs ?? genericFaqs[lang],
     note: profile[lang]?.note ?? profile.note ?? (lang === 'vi'
       ? 'Kết quả là thông tin hỗ trợ và nên được kiểm tra trước khi dùng cho quyết định quan trọng.'
       : lang === 'zh'
         ? '结果用于辅助参考。用于重要决定前，请先检查输入、设备和结果。'
-        : 'Results are provided as practical assistance. Review inputs and outputs before using them for an important decision.'),
+        : lang === 'es'
+          ? 'El resultado es una ayuda práctica. Revisa las entradas y las salidas antes de usarlo en una decisión importante.'
+          : 'Results are provided as practical assistance. Review inputs and outputs before using them for an important decision.'),
   }
 }
 

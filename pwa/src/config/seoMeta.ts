@@ -1,8 +1,16 @@
 export const SITE_ORIGIN = 'https://hub.blissbiovn.com'
 
-export const SEO_LANGUAGES = ['en', 'vi', 'zh'] as const
+// Keep every indexable page available in all supported product languages.
+// The fixed 500-URL inventory is enforced by the converter configuration.
+export const SEO_LANGUAGES = ['en', 'vi', 'zh', 'es'] as const
 
 export type SeoLanguage = (typeof SEO_LANGUAGES)[number]
+
+// URL routing remains compact (/zh), while hreflang can describe the actual
+// Simplified Chinese script more precisely to search engines.
+export function hreflangForLocale(locale: SeoLanguage) {
+  return locale === 'zh' ? 'zh-Hans' : locale
+}
 
 export const SEO_MINI_APP_IDS = [
   'lunar-calendar',
@@ -50,7 +58,7 @@ export type SeoSitePageId = (typeof SEO_SITE_PAGE_IDS)[number]
 
 export type SeoSiteMetaEntry = SeoMetaEntry & { segment: string }
 
-export const seoSiteMeta: Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaEntry>> = {
+const baseSeoSiteMeta = {
   home: {
     en: { segment: '', slug: '', title: 'PureHub – 26 Free Offline Mini Apps, No Ads', description: 'Use 26 free, ad-free mini apps for focus, files, scanning, privacy, finance and more. PureHub works offline and keeps data on your device.', keywords: ['free mini apps', 'offline tools', 'no ads apps', 'privacy-first PWA'] },
     vi: { segment: '', slug: '', title: 'PureHub – 26 Mini App Miễn Phí, Offline, Không Quảng Cáo', description: 'Dùng 26 mini app miễn phí cho tập trung, tệp, quét tài liệu, bảo mật và tài chính. PureHub chạy offline và giữ dữ liệu trên thiết bị.', keywords: ['mini app mien phi', 'cong cu offline', 'khong quang cao', 'PWA rieng tu'] },
@@ -78,7 +86,7 @@ export const seoSiteMeta: Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaE
   },
 }
 
-export const seoMeta: SeoMetaDictionary = {
+const baseSeoMeta = {
   'lunar-calendar': {
     en: {
       slug: 'lunar-calendar',
@@ -621,6 +629,51 @@ export const seoMeta: SeoMetaDictionary = {
     zh: { slug: 'ping-mu-lu-zhi', title: '免费私密屏幕录制 | 不上传云端', description: '经明确授权录制浏览器标签页、窗口或屏幕，并在本地预览和下载。', keywords: ['免费屏幕录制', '浏览器录屏', '私密屏幕捕获', '无广告录屏'] },
   },
 }
+
+const spanishSiteMeta: Record<SeoSitePageId, SeoSiteMetaEntry> = {
+  home: { segment: '', slug: '', title: 'PureHub: 26 mini apps gratis sin anuncios', description: 'Usa 26 mini apps gratuitas para concentración, archivos, escaneo, privacidad y finanzas. PureHub funciona sin conexión y conserva tus datos en el dispositivo.', keywords: ['mini apps gratis', 'herramientas sin conexión', 'apps sin anuncios', 'PWA privada'] },
+  tools: { segment: 'tools', slug: 'tools', title: 'Las 26 herramientas gratis sin conexión | PureHub', description: 'Explora las 26 mini apps de PureHub para concentración, archivos, visión, seguridad, audio y finanzas: gratis, privadas, sin conexión y sin anuncios.', keywords: ['herramientas gratis', 'apps sin conexión', 'herramientas privadas', 'mini apps sin anuncios'] },
+  community: { segment: 'community', slug: 'community', title: 'Comunidad de código abierto PureHub', description: 'Únete a la comunidad PureHub para obtener ayuda, sugerir mini apps, informar problemas y crear herramientas útiles que sigan siendo gratis y sin anuncios.', keywords: ['comunidad PureHub', 'comunidad código abierto', 'sugerir mini app', 'herramientas gratis'] },
+  download: { segment: 'download', slug: 'download', title: 'Descargar PureHub para Android | Gratis y sin anuncios', description: 'Descarga la app Android firmada de PureHub o instala la PWA para usar 26 mini apps privadas, sin anuncios y con gran soporte sin conexión.', keywords: ['descargar PureHub', 'APK gratis sin anuncios', 'PWA sin conexión', 'app Android firmada'] },
+  changelog: { segment: 'changelog', slug: 'changelog', title: 'Novedades y notas de versión de PureHub', description: 'Consulta lanzamientos, mejoras de experiencia, correcciones y nuevas mini apps de la plataforma de herramientas gratis, sin anuncios y de código abierto.', keywords: ['novedades PureHub', 'notas de versión', 'actualizaciones mini apps', 'versiones código abierto'] },
+}
+
+const spanishSeoMeta: Record<SeoMiniAppId, SeoMetaEntry> = {
+  'lunar-calendar': { slug: 'calendario-lunar', title: 'Calendario lunar gratis sin conexión | Sin anuncios', description: 'Consulta y convierte fechas solares y lunares sin conexión con un calendario privado, rápido y sin anuncios.', keywords: ['calendario lunar sin conexión', 'convertir fecha lunar', 'calendario sin anuncios', 'herramienta privada'] },
+  'zen-habit': { slug: 'habitos-zen', title: 'Seguimiento de hábitos sin conexión | Rachas privadas', description: 'Registra hábitos y rachas diarias con almacenamiento privado en el dispositivo y sin anuncios.', keywords: ['seguimiento hábitos sin conexión', 'contador de rachas', 'hábitos privados', 'hábitos sin anuncios'] },
+  'zen-pomodoro': { slug: 'pomodoro-zen', title: 'Temporizador Pomodoro sin conexión | Enfoque privado', description: 'Mantén sesiones de concentración con un temporizador Pomodoro local, simple y sin anuncios.', keywords: ['pomodoro sin conexión', 'temporizador de enfoque', 'productividad privada', 'pomodoro sin anuncios'] },
+  'zen-breath': { slug: 'respiracion-zen', title: 'Guía de respiración sin conexión | Privada y gratis', description: 'Sigue ejercicios de respiración con animaciones locales, sin cuenta, anuncios ni seguimiento.', keywords: ['ejercicios de respiración', 'respiración sin conexión', 'guía privada', 'sin anuncios'] },
+  compass: { slug: 'brujula', title: 'Brújula sin conexión gratis | Herramienta privada', description: 'Usa una brújula privada basada en sensores del navegador cuando tu dispositivo sea compatible.', keywords: ['brújula sin conexión', 'brújula móvil', 'herramienta privada', 'brújula sin anuncios'] },
+  'bubble-level': { slug: 'nivel-burbuja', title: 'Nivel de burbuja gratis sin conexión | Sin anuncios', description: 'Mide superficies planas o de canto, guarda la calibración local y revisa lecturas estables.', keywords: ['nivel de burbuja', 'nivel sin conexión', 'calibrar nivel', 'herramienta sin anuncios'] },
+  'decibel-meter': { slug: 'medidor-decibelios', title: 'Medidor de decibelios privado | Estimación local', description: 'Consulta estimaciones de sonido del micrófono sin subir audio ni crear una cuenta.', keywords: ['medidor de decibelios', 'medir ruido', 'medidor privado', 'sonido sin anuncios'] },
+  'smart-flashlight': { slug: 'linterna-inteligente', title: 'Linterna inteligente gratis | Sin anuncios', description: 'Abre una linterna sencilla y privada para tu móvil, sin cuenta ni anuncios.', keywords: ['linterna gratis', 'linterna móvil', 'linterna sin anuncios', 'herramienta privada'] },
+  'unit-converter': { slug: 'convertidor-unidades', title: 'Convertidor de unidades sin conexión | Gratis', description: 'Convierte longitud, peso, temperatura y más con cálculos rápidos y locales.', keywords: ['convertidor de unidades', 'convertir medidas', 'convertidor sin conexión', 'herramientas gratis'] },
+  'qr-studio': { slug: 'lector-qr', title: 'Lector QR y códigos de barras privado | Sin anuncios', description: 'Escanea códigos QR y de barras, revisa enlaces y guarda un historial privado en el dispositivo.', keywords: ['lector QR', 'escanear código de barras', 'QR privado', 'lector QR sin anuncios'] },
+  'doc-to-pdf': { slug: 'documento-a-pdf', title: 'Convertir documentos a PDF localmente | Gratis', description: 'Captura, ordena, gira y exporta páginas como PDF sin subir documentos a la nube.', keywords: ['documento a PDF', 'crear PDF local', 'escanear documento', 'PDF sin anuncios'] },
+  'ocr-text': { slug: 'ocr-texto', title: 'OCR gratis sin conexión | Extraer texto de imágenes', description: 'Extrae texto de fotos, recibos y documentos con un flujo privado y local.', keywords: ['OCR gratis', 'extraer texto de imagen', 'OCR sin conexión', 'escanear texto privado'] },
+  'color-grabber': { slug: 'selector-color', title: 'Selector de color HEX y RGB | Sin conexión', description: 'Obtén colores HEX y RGB desde imágenes o cámara con procesamiento local.', keywords: ['selector de color', 'obtener color HEX', 'color RGB', 'herramienta sin conexión'] },
+  'speaker-cleaner': { slug: 'limpiador-altavoz', title: 'Limpiador de altavoz | Tonos locales y seguros', description: 'Reproduce tonos locales con indicaciones de seguridad para ayudar a mover humedad ligera.', keywords: ['limpiador de altavoz', 'expulsar agua altavoz', 'tono altavoz', 'herramienta local'] },
+  'deep-cleaner': { slug: 'limpieza-profunda', title: 'Limpieza profunda del dispositivo | Guía privada', description: 'Revisa almacenamiento y acciones de limpieza con una guía clara y privada.', keywords: ['limpiar almacenamiento', 'limpieza móvil', 'herramienta privada', 'sin anuncios'] },
+  'photo-privacy': { slug: 'privacidad-fotos', title: 'Eliminar metadatos EXIF de fotos | Privado', description: 'Crea una copia JPEG para compartir sin GPS, cámara, autor ni metadatos EXIF.', keywords: ['eliminar EXIF', 'quitar GPS foto', 'privacidad fotos', 'limpiar metadatos'] },
+  'wifi-analyzer': { slug: 'analizador-wifi', title: 'Analizador Wi-Fi en el navegador | Prueba privada', description: 'Comprueba datos de conexión que el navegador permite mostrar y conoce sus límites reales.', keywords: ['analizador Wi-Fi', 'probar conexión', 'latencia navegador', 'herramienta privada'] },
+  'password-vault': { slug: 'boveda-contrasenas', title: 'Bóveda de contraseñas sin conexión | Cifrada', description: 'Guarda contraseñas localmente en una bóveda privada diseñada para uso sin conexión.', keywords: ['bóveda contraseñas', 'gestor contraseñas sin conexión', 'contraseñas privadas', 'sin anuncios'] },
+  'wallpaper-changer': { slug: 'fondo-pantalla', title: 'Preparar fondo de pantalla privado | Gratis', description: 'Previsualiza, recorta y prepara fondos de pantalla localmente sin subir imágenes.', keywords: ['fondo de pantalla', 'recortar fondo móvil', 'wallpaper privado', 'sin anuncios'] },
+  'bill-splitter': { slug: 'dividir-cuenta', title: 'Dividir cuentas gratis | Calculadora privada', description: 'Divide gastos entre personas con cálculos locales y fáciles de revisar.', keywords: ['dividir cuenta', 'repartir gastos', 'calculadora de propina', 'gastos privados'] },
+  'expense-tracker': { slug: 'control-gastos', title: 'Control de gastos sin conexión | Privado', description: 'Registra ingresos y gastos localmente sin cuenta, anuncios ni seguimiento.', keywords: ['control de gastos', 'presupuesto sin conexión', 'gastos privados', 'finanzas personales'] },
+  'decision-wheel': { slug: 'ruleta-decisiones', title: 'Ruleta para decidir sin conexión | Gratis', description: 'Gira una ruleta local para decisiones rápidas, sorteos y elecciones sencillas.', keywords: ['ruleta decisiones', 'selector aleatorio', 'ruleta online', 'decidir gratis'] },
+  'community-pro-unlock': { slug: 'comunidad', title: 'Comunidad PureHub | Herramientas abiertas', description: 'Sugiere herramientas, informa problemas y ayuda a mantener PureHub gratis y abierto.', keywords: ['comunidad PureHub', 'herramientas código abierto', 'sugerir herramienta', 'informar problema'] },
+  'authenticator-vault': { slug: 'autenticador-2fa', title: 'Autenticador sin conexión | Bóveda 2FA cifrada', description: 'Genera códigos TOTP sin conexión con secretos cifrados en el dispositivo.', keywords: ['autenticador sin conexión', 'generador TOTP', 'bóveda 2FA', 'autenticador sin anuncios'] },
+  'file-studio': { slug: 'estudio-archivos', title: 'Herramientas de archivos privadas | ZIP y SHA-256', description: 'Comprime, extrae, calcula hashes y comparte archivos localmente sin subirlos a la nube.', keywords: ['ZIP local', 'hash SHA-256', 'herramientas archivos', 'compartir archivos privado'] },
+  'screen-recorder': { slug: 'grabador-pantalla', title: 'Grabador de pantalla privado y gratis | Sin subir', description: 'Graba una pestaña, ventana o pantalla con permiso explícito y descarga el resultado localmente.', keywords: ['grabador de pantalla', 'grabar pantalla navegador', 'captura privada', 'grabador sin anuncios'] },
+}
+
+export const seoSiteMeta = Object.fromEntries(
+  SEO_SITE_PAGE_IDS.map((pageId) => [pageId, { ...baseSeoSiteMeta[pageId], es: spanishSiteMeta[pageId] }]),
+) as Record<SeoSitePageId, Record<SeoLanguage, SeoSiteMetaEntry>>
+
+export const seoMeta = Object.fromEntries(
+  SEO_MINI_APP_IDS.map((appId) => [appId, { ...baseSeoMeta[appId], es: spanishSeoMeta[appId] }]),
+) as SeoMetaDictionary
 
 export function getSeoMetaByAppId(appId: string, lang: SeoLanguage): SeoMetaEntry | null {
   if (!Object.prototype.hasOwnProperty.call(seoMeta, appId)) return null

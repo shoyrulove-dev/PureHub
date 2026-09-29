@@ -19,7 +19,6 @@ export function LocaleLayout() {
   const location = useLocation()
   const { lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
-  const seoLocale = normalizedLocale === 'es' ? 'en' : normalizedLocale
 
   useEffect(() => {
     void i18n.changeLanguage(normalizedLocale)
@@ -36,7 +35,7 @@ export function LocaleLayout() {
 
   return (
     <>
-      {seoPageId ? <SiteSeoHelmet lang={seoLocale} pageId={seoPageId} /> : null}
+      {seoPageId ? <SiteSeoHelmet lang={normalizedLocale} pageId={seoPageId} /> : null}
       {pageSegment === 'settings' ? (
         <Helmet>
           <title>PureHub Settings</title>

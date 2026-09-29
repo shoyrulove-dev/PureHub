@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 import { getSeoContent } from '../../config/seoContent'
-import { SEO_LANGUAGES, SITE_ORIGIN, seoMeta, type SeoLanguage, type SeoMiniAppId } from '../../config/seoMeta'
+import { SEO_LANGUAGES, SITE_ORIGIN, hreflangForLocale, seoMeta, type SeoLanguage, type SeoMiniAppId } from '../../config/seoMeta'
 
 type SeoHelmetProps = {
   title: string
@@ -45,7 +45,7 @@ export function SeoHelmet({
         <link
           key={alternateLang}
           rel="alternate"
-          hrefLang={alternateLang}
+          hrefLang={hreflangForLocale(alternateLang)}
           href={`${SITE_ORIGIN}/${alternateLang}/${seoMeta[appId][alternateLang].slug}`}
         />
       ))}

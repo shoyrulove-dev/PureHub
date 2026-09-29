@@ -3,6 +3,7 @@ import {
   SEO_LANGUAGES,
   SITE_ORIGIN,
   buildSitePageUrl,
+  hreflangForLocale,
   seoSiteMeta,
   type SeoLanguage,
   type SeoSitePageId,
@@ -41,7 +42,7 @@ export function SiteSeoHelmet({ lang, pageId }: SiteSeoHelmetProps) {
         <link
           key={alternateLang}
           rel="alternate"
-          hrefLang={alternateLang}
+          hrefLang={hreflangForLocale(alternateLang)}
           href={buildSitePageUrl(alternateLang, pageId)}
         />
       ))}

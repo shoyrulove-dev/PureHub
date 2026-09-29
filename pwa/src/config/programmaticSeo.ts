@@ -53,11 +53,26 @@ const units = {
 
 type UnitId = keyof typeof units
 
+const spanishUnits: Record<UnitId, string> = {
+  meter: 'metros', kilometer: 'kilómetros', centimeter: 'centímetros', millimeter: 'milímetros', mile: 'millas', yard: 'yardas', foot: 'pies',
+  celsius: 'grados Celsius', fahrenheit: 'grados Fahrenheit', kilogram: 'kilogramos', gram: 'gramos', pound: 'libras', ounce: 'onzas', ton: 'toneladas métricas', stone: 'stones',
+  liter: 'litros', milliliter: 'mililitros', gallon: 'galones estadounidenses', quart: 'cuartos estadounidenses', cup: 'tazas estadounidenses',
+  squareMeter: 'metros cuadrados', squareKilometer: 'kilómetros cuadrados', squareFoot: 'pies cuadrados', acre: 'acres',
+  metersPerSecond: 'metros por segundo', kilometersPerHour: 'kilómetros por hora', milesPerHour: 'millas por hora', knot: 'nudos',
+  kilobyte: 'kilobytes', second: 'segundos', minute: 'minutos', hour: 'horas', day: 'días', megabyte: 'megabytes', gigabyte: 'gigabytes',
+}
+
+function localizedUnit(unit: UnitId): ConverterLocaleText {
+  return { ...units[unit], es: spanishUnits[unit] }
+}
+
 function pair(slug: string, from: UnitId, to: UnitId, factor: number, offset = 0, values = [1, 5, 10, 50, 100, 1000]): ProgrammaticConverter {
+  const fromUnit = localizedUnit(from)
+  const toUnit = localizedUnit(to)
   return {
     slug,
-    from: { en: units[from].en, vi: units[from].vi, zh: units[from].zh },
-    to: { en: units[to].en, vi: units[to].vi, zh: units[to].zh },
+    from: fromUnit,
+    to: toUnit,
     factor,
     offset,
     values,
@@ -65,11 +80,13 @@ function pair(slug: string, from: UnitId, to: UnitId, factor: number, offset = 0
       en: `${units[to].en} = (${units[from].en} × ${factor})${offset ? ` + ${offset}` : ''}`,
       vi: `${units[to].vi} = (${units[from].vi} × ${factor})${offset ? ` + ${offset}` : ''}`,
       zh: `${units[to].zh} = (${units[from].zh} × ${factor})${offset ? ` + ${offset}` : ''}`,
+      es: `${toUnit.es} = (${fromUnit.es} × ${factor})${offset ? ` + ${offset}` : ''}`,
     },
     label: {
       en: `${units[from].en} to ${units[to].en}`,
       vi: `${units[from].vi} sang ${units[to].vi}`,
       zh: `${units[from].zh}转${units[to].zh}`,
+      es: `${fromUnit.es} a ${toUnit.es}`,
     },
   }
 }
@@ -103,15 +120,15 @@ const generatedConverters = matrixUnits.flatMap(([from, fromGroup, fromFactor]) 
     .map(([to, , toFactor]) => pair(`${from}-to-${to}`, from, to, fromFactor / toFactor, 0, [1, 5, 10, 50, 100])),
 )
 
-// Keep the first 125 reviewed matrix pairs so the complete inventory is exactly
-// 134 pairs × 3 locales + 98 core/site/growth URLs = 500 sitemap URLs.
+// Keep the first 85 reviewed matrix pairs so the complete inventory is exactly
+// 94 pairs × 4 locales + 124 core/site URLs = 500 controlled sitemap URLs.
 export const programmaticConverters: ProgrammaticConverter[] = [
   ...coreConverters,
-  ...generatedConverters.filter((converter) => !coreSlugs.has(converter.slug)).slice(0, 125),
+  ...generatedConverters.filter((converter) => !coreSlugs.has(converter.slug)).slice(0, 85),
 ]
 
-if (programmaticConverters.length !== 134) {
-  throw new Error(`SEO converter inventory must contain 134 fixed pairs; found ${programmaticConverters.length}`)
+if (programmaticConverters.length !== 94) {
+  throw new Error(`SEO converter inventory must contain 94 fixed pairs; found ${programmaticConverters.length}`)
 }
 
 export function getProgrammaticConverter(slug: string) {
@@ -129,6 +146,8 @@ export function programmaticConverterTitle(converter: ProgrammaticConverter, lan
     ? `Chuyển đổi ${from} sang ${to} chuẩn nhất`
     : lang === 'zh'
       ? `精准将${from}转换为${to}`
+      : lang === 'es'
+        ? `Convertir ${from} a ${to} con precisión`
       : `Convert ${from} to ${to} accurately`
 }
 
@@ -139,6 +158,8 @@ export function programmaticConverterDescription(converter: ProgrammaticConverte
     ? `Bảng chuyển đổi ${from} sang ${to} miễn phí, nhanh và không tạo URL theo số lượng. Nhập giá trị trên thiết bị để xem kết quả.`
     : lang === 'zh'
       ? `免费、快速地将${from}转换为${to}。页面只针对单位组合建立，不会为每个数量生成无限网址。`
+      : lang === 'es'
+        ? `Convierte ${from} a ${to} de forma gratis y rápida con una página fija por par de unidades. Introduce cualquier cantidad sin crear URL infinitas.`
       : `Free, fast ${from} to ${to} conversion with a fixed unit-pair page. Enter any amount in the local converter without creating infinite URLs.`
 }
 
@@ -150,6 +171,8 @@ export function programmaticConverterQuickAnswer(converter: ProgrammaticConverte
     ? `Để đổi 1 ${from} sang ${to}, nhân giá trị với ${converter.factor}${converter.offset ? ` rồi cộng ${converter.offset}` : ''}. Hiện tại, 1 ${from} = ${one} ${to}.`
     : lang === 'zh'
       ? `将${from}转换为${to}时，使用公式 ${converter.formula.zh}。目前 1 ${from} = ${one} ${to}。`
+      : lang === 'es'
+        ? `Para convertir 1 ${from} a ${to}, usa la fórmula ${converter.formula.es}. Actualmente, 1 ${from} = ${one} ${to}.`
       : `To convert 1 ${from} to ${to}, multiply by ${converter.factor}${converter.offset ? ` and add ${converter.offset}` : ''}. Currently, 1 ${from} = ${one} ${to}.`
 }
 

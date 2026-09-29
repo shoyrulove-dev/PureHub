@@ -8,6 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import {
   buildSeoSitemapPaths,
   buildSitePageUrl,
+  hreflangForLocale,
   SEO_LANGUAGES,
   SEO_SITE_PAGE_IDS,
   SITE_ORIGIN,
@@ -16,7 +17,7 @@ import {
   seoSiteMeta,
 } from './src/config/seoMeta.js'
 import { getSeoContent, getSeoCopy } from './src/config/seoContent.js'
-import { growthLandingPages, growthLandingRoutes } from './src/config/growthLandingPages.js'
+import { growthLandingPages } from './src/config/growthLandingPages.js'
 import {
   buildProgrammaticConverterPath,
   convertProgrammaticValue,
@@ -43,9 +44,12 @@ function renderStaticSeoContent(appId: Parameters<typeof getSeoContent>[0], lang
 }
 
 function renderStaticSiteContent(title: string, description: string, lang: string) {
-  const heading = lang === 'vi' ? 'Giới thiệu PureHub' : lang === 'zh' ? '关于 PureHub' : 'About PureHub'
-  const next = lang === 'vi' ? 'Mở danh mục công cụ' : lang === 'zh' ? '浏览工具目录' : 'Browse the tool collection'
-  return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><section><h2>${heading}</h2><p>PureHub provides free, private-first tools for focused everyday workflows. Use the browser app now, install the PWA for quick access, or choose Android when native capabilities are useful.</p></section><a href="/${lang}/tools">${next}</a></main>`
+  const heading = lang === 'vi' ? 'Giới thiệu PureHub' : lang === 'zh' ? '关于 PureHub' : lang === 'es' ? 'Acerca de PureHub' : 'About PureHub'
+  const next = lang === 'vi' ? 'Mở danh mục công cụ' : lang === 'zh' ? '浏览工具目录' : lang === 'es' ? 'Explorar la colección de herramientas' : 'Browse the tool collection'
+  const body = lang === 'es'
+    ? 'PureHub ofrece herramientas gratuitas y privadas para tareas cotidianas. Usa la aplicación web ahora, instala la PWA para acceso rápido o elige Android cuando necesites funciones nativas.'
+    : 'PureHub provides free, private-first tools for focused everyday workflows. Use the browser app now, install the PWA for quick access, or choose Android when native capabilities are useful.'
+  return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><section><h2>${heading}</h2><p>${body}</p></section><a href="/${lang}/tools">${next}</a></main>`
 }
 
 function renderStaticProgrammaticContent(converter: (typeof programmaticConverters)[number], lang: Parameters<typeof programmaticConverterTitle>[1]) {
@@ -55,9 +59,11 @@ function renderStaticProgrammaticContent(converter: (typeof programmaticConverte
     ? { table: 'Bảng quy đổi phổ biến', formula: 'Công thức', faq: 'Câu hỏi thường gặp', input: converter.from.vi, output: converter.to.vi }
     : lang === 'zh'
       ? { table: '常用换算表', formula: '计算公式', faq: '常见问题', input: converter.from.zh, output: converter.to.zh }
-      : { table: 'Common conversion table', formula: 'Formula', faq: 'Frequently asked questions', input: converter.from.en, output: converter.to.en }
-  const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
-  const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
+      : lang === 'es'
+        ? { table: 'Tabla de conversiones comunes', formula: 'Fórmula', faq: 'Preguntas frecuentes', input: converter.from.es, output: converter.to.es }
+        : { table: 'Common conversion table', formula: 'Formula', faq: 'Frequently asked questions', input: converter.from.en, output: converter.to.en }
+  const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : lang === 'es' ? `¿Cuántos ${converter.to.es} son 100 ${converter.from.es}?` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
+  const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : lang === 'es' ? `100 ${converter.from.es} equivalen a ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.es}.` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
   const rows = converter.values.map((value) => `<tr><td>${escapeHtml(formatProgrammaticValue(value))}</td><td>${escapeHtml(formatProgrammaticValue(convertProgrammaticValue(converter, value)))}</td></tr>`).join('')
   return `<main class="seo-static-content" aria-label="${escapeAttribute(title)}"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(programmaticConverterDescription(converter, lang))}</p><p><strong>${escapeHtml(quickAnswer)}</strong></p><section><h2>${escapeHtml(labels.table)}</h2><table><thead><tr><th>${escapeHtml(labels.input)}</th><th>${escapeHtml(labels.output)}</th></tr></thead><tbody>${rows}</tbody></table></section><section><h2>${escapeHtml(labels.formula)}</h2><p><code>${escapeHtml(converter.formula[lang])}</code></p></section><section><h2>${escapeHtml(labels.faq)}</h2><details><summary>${escapeHtml(faqQuestion)}</summary><p>${escapeHtml(faqAnswer)}</p></details></section></main>`
 }
@@ -119,7 +125,7 @@ function staticSeoPages() {
           description: meta.description,
           canonicalUrl,
           alternates: Object.fromEntries([
-            ...SEO_LANGUAGES.map((lang) => [lang, `${SITE_ORIGIN}/${lang}/${seoMeta[entry.appId][lang].slug}`]),
+            ...SEO_LANGUAGES.map((lang) => [hreflangForLocale(lang), `${SITE_ORIGIN}/${lang}/${seoMeta[entry.appId][lang].slug}`]),
             ['x-default', `${SITE_ORIGIN}/en/${seoMeta[entry.appId].en.slug}`],
           ]),
           schema: {
@@ -140,8 +146,8 @@ function staticSeoPages() {
           const canonicalUrl = `${SITE_ORIGIN}${path}`
           const title = programmaticConverterTitle(converter, lang)
           const description = programmaticConverterDescription(converter, lang)
-          const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
-          const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
+          const faqQuestion = lang === 'vi' ? `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?` : lang === 'zh' ? `100${converter.from.zh}等于多少${converter.to.zh}？` : lang === 'es' ? `¿Cuántos ${converter.to.es} son 100 ${converter.from.es}?` : `How many ${converter.to.en} are 100 ${converter.from.en}?`
+          const faqAnswer = lang === 'vi' ? `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` : lang === 'zh' ? `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` : lang === 'es' ? `100 ${converter.from.es} equivalen a ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.es}.` : `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.`
           pages.push({
             path,
             lang,
@@ -149,7 +155,7 @@ function staticSeoPages() {
             description,
             canonicalUrl,
             alternates: Object.fromEntries([
-              ...SEO_LANGUAGES.map((alternateLang) => [alternateLang, `${SITE_ORIGIN}${buildProgrammaticConverterPath(alternateLang, converter.slug)}`]),
+              ...SEO_LANGUAGES.map((alternateLang) => [hreflangForLocale(alternateLang), `${SITE_ORIGIN}${buildProgrammaticConverterPath(alternateLang, converter.slug)}`]),
               ['x-default', `${SITE_ORIGIN}${buildProgrammaticConverterPath('en', converter.slug)}`],
             ]),
             schema: {
@@ -175,7 +181,7 @@ function staticSeoPages() {
             description: meta.description,
             canonicalUrl,
             alternates: Object.fromEntries([
-              ...SEO_LANGUAGES.map((alternateLang) => [alternateLang, buildSitePageUrl(alternateLang, pageId)]),
+              ...SEO_LANGUAGES.map((alternateLang) => [hreflangForLocale(alternateLang), buildSitePageUrl(alternateLang, pageId)]),
               ['x-default', buildSitePageUrl('en', pageId)],
             ]),
             schema: {
@@ -227,7 +233,10 @@ export default defineConfig({
     tailwindcss(),
     Sitemap({
       hostname: SITE_ORIGIN,
-      dynamicRoutes: [...buildSeoSitemapPaths(), ...growthLandingRoutes, ...programmaticConverters.flatMap((converter) => SEO_LANGUAGES.map((lang) => buildProgrammaticConverterPath(lang, converter.slug)))],
+      // The fixed inventory prioritizes complete four-language utility pages.
+      // Time-boxed campaign landing pages stay reachable but are not added to
+      // the controlled organic sitemap.
+      dynamicRoutes: [...buildSeoSitemapPaths(), ...programmaticConverters.flatMap((converter) => SEO_LANGUAGES.map((lang) => buildProgrammaticConverterPath(lang, converter.slug)))],
       // Verification files are required for Search Console, but are not content
       // pages and must never be submitted for indexing.  Vercel's SPA fallback
       // serves the shell at the extensionless variant, which otherwise creates
