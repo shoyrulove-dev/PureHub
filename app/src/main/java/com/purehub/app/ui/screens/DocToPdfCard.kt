@@ -194,9 +194,9 @@ fun DocToPdfCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .offset(y = 85.dp)
+                        .offset(y = 60.dp)
                         .fillMaxWidth(0.9f)
-                        .aspectRatio(0.69f)
+                        .aspectRatio(0.63f)
                         .border(3.dp, Color(0xFF43E6B5), RoundedCornerShape(24.dp)),
                 )
                 LaunchedEffect(previewView) {
