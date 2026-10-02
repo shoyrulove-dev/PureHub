@@ -73,23 +73,31 @@ object WifiInsights {
         }
         .sortedWith(compareBy<WifiChannelInsight> { it.band }.thenBy { it.nearbyCount }.thenBy { it.channel })
 
-    fun recommendation(networks: List<NearbyWifiNetwork>, preferredBand: String? = null): String {
+    fun recommendation(
+        networks: List<NearbyWifiNetwork>,
+        preferredBand: String? = null,
+        countryCode: String = Locale.getDefault().country,
+    ): String {
         if (networks.isEmpty()) return "Scan nearby networks to compare channel pressure."
-        val rated = rateChannels(networks, preferredBand)
-            .ifEmpty { rateChannels(networks) }
+        val rated = rateChannels(networks, preferredBand, countryCode)
+            .ifEmpty { rateChannels(networks, countryCode = countryCode) }
         val quietest = rated.minByOrNull { it.pressure }
             ?: return "No channel recommendation is available yet."
         val scope = if (preferredBand == null) "across nearby bands" else "on $preferredBand"
         return "Best observed choice $scope: channel ${quietest.channel} (${quietest.qualityPercent}% quality). Width, overlap and signal strength are included."
     }
 
-    fun rateChannels(networks: List<NearbyWifiNetwork>, band: String? = null): List<WifiChannelRating> {
+    fun rateChannels(
+        networks: List<NearbyWifiNetwork>,
+        band: String? = null,
+        countryCode: String = Locale.getDefault().country,
+    ): List<WifiChannelRating> {
         val selected = networks.filter { band == null || bandForFrequency(it.frequencyMhz) == band }
         if (selected.isEmpty()) return emptyList()
         val bands = selected.map { bandForFrequency(it.frequencyMhz) }.distinct()
         return bands.flatMap { currentBand ->
             val bandNetworks = selected.filter { bandForFrequency(it.frequencyMhz) == currentBand }
-            val candidates = candidateChannels(currentBand, Locale.getDefault().country)
+            val candidates = candidateChannels(currentBand, countryCode)
                 .ifEmpty { bandNetworks.mapNotNull { channelForFrequency(it.frequencyMhz) }.distinct().sorted() }
             val raw = candidates.map { channel ->
                 channel to bandNetworks.sumOf { network -> interferenceAt(channel, network) }

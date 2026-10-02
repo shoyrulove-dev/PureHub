@@ -19,7 +19,7 @@ class WifiInsightsTest {
         assertEquals("WPA3", WifiInsights.securityLabel("[WPA3-SAE-CCMP][ESS]"))
         assertEquals("Open", WifiInsights.securityLabel("[ESS]"))
         val networks = listOf(network(2412, -45), network(2412, -70), network(2437, -65))
-        assertTrue(WifiInsights.recommendation(networks).contains("channel 11"))
+        assertTrue(WifiInsights.recommendation(networks, countryCode = "US").contains("channel 11"))
     }
 
     @Test
@@ -30,7 +30,7 @@ class WifiInsightsTest {
             network(2437, -80, width = 20),
         )
 
-        val ratings = WifiInsights.rateChannels(networks, "2.4 GHz")
+        val ratings = WifiInsights.rateChannels(networks, "2.4 GHz", countryCode = "US")
         assertEquals(listOf(1, 6, 11), ratings.map { it.channel })
         assertEquals(11, ratings.maxBy { it.qualityPercent }.channel)
     }
