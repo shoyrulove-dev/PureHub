@@ -1,5 +1,8 @@
 package com.purehub.app.feature.wifi
 
+import java.util.Locale
+import kotlin.math.exp
+
 data class WifiChannelInsight(
     val band: String,
     val channel: Int,
@@ -15,6 +18,20 @@ data class WifiChannelRating(
 )
 
 object WifiInsights {
+    fun estimatedSirDb(target: NearbyWifiNetwork, networks: List<NearbyWifiNetwork>): Double? {
+        val targetChannel = channelForFrequency(target.frequencyMhz) ?: return null
+        val interferencePower = networks.asSequence().filter { it.bssid != target.bssid }.sumOf { other ->
+            val otherChannel = channelForFrequency(other.frequencyMhz) ?: return@sumOf 0.0
+            if (bandForFrequency(other.frequencyMhz) != bandForFrequency(target.frequencyMhz)) return@sumOf 0.0
+            val separationMhz = kotlin.math.abs(targetChannel - otherChannel) * 5.0
+            val overlapRange = (target.channelWidthMhz / 2.0 + other.channelWidthMhz / 2.0).coerceAtLeast(20.0)
+            val overlap = (1.0 - separationMhz / overlapRange).coerceIn(0.0, 1.0)
+            Math.pow(10.0, other.rssi / 10.0) * overlap
+        }
+        if (interferencePower <= 0.0) return null
+        return 10.0 * kotlin.math.log10(Math.pow(10.0, target.rssi / 10.0) / interferencePower)
+    }
+
     fun channelForFrequency(frequencyMhz: Int): Int? = when (frequencyMhz) {
         2484 -> 14
         in 2412..2472 -> (frequencyMhz - 2407) / 5
@@ -56,11 +73,14 @@ object WifiInsights {
         }
         .sortedWith(compareBy<WifiChannelInsight> { it.band }.thenBy { it.nearbyCount }.thenBy { it.channel })
 
-    fun recommendation(networks: List<NearbyWifiNetwork>): String {
+    fun recommendation(networks: List<NearbyWifiNetwork>, preferredBand: String? = null): String {
         if (networks.isEmpty()) return "Scan nearby networks to compare channel pressure."
-        val quietest = rateChannels(networks).minByOrNull { it.pressure }
+        val rated = rateChannels(networks, preferredBand)
+            .ifEmpty { rateChannels(networks) }
+        val quietest = rated.minByOrNull { it.pressure }
             ?: return "No channel recommendation is available yet."
-        return "Best observed choice: ${quietest.band} channel ${quietest.channel} (${quietest.qualityPercent}% quality). Width, overlap and signal strength are included."
+        val scope = if (preferredBand == null) "across nearby bands" else "on $preferredBand"
+        return "Best observed choice $scope: channel ${quietest.channel} (${quietest.qualityPercent}% quality). Width, overlap and signal strength are included."
     }
 
     fun rateChannels(networks: List<NearbyWifiNetwork>, band: String? = null): List<WifiChannelRating> {
@@ -69,23 +89,37 @@ object WifiInsights {
         val bands = selected.map { bandForFrequency(it.frequencyMhz) }.distinct()
         return bands.flatMap { currentBand ->
             val bandNetworks = selected.filter { bandForFrequency(it.frequencyMhz) == currentBand }
-            val candidates = when (currentBand) {
-                "2.4 GHz" -> listOf(1, 6, 11)
-                else -> bandNetworks.mapNotNull { channelForFrequency(it.frequencyMhz) }.distinct().sorted()
-            }
+            val candidates = candidateChannels(currentBand, Locale.getDefault().country)
+                .ifEmpty { bandNetworks.mapNotNull { channelForFrequency(it.frequencyMhz) }.distinct().sorted() }
             val raw = candidates.map { channel ->
                 channel to bandNetworks.sumOf { network -> interferenceAt(channel, network) }
             }
-            val maxPressure = raw.maxOfOrNull { it.second }?.coerceAtLeast(0.0001) ?: 1.0
             raw.map { (channel, pressure) ->
                 WifiChannelRating(
                     band = currentBand,
                     channel = channel,
                     pressure = pressure,
-                    qualityPercent = (100.0 - (pressure / maxPressure * 85.0)).toInt().coerceIn(5, 100),
+                    qualityPercent = (100.0 * exp(-pressure / 180.0)).toInt().coerceIn(5, 100),
                 )
             }
         }.sortedWith(compareBy<WifiChannelRating> { it.band }.thenBy { it.channel })
+    }
+
+    internal fun candidateChannels(band: String, countryCode: String): List<Int> = when (band) {
+        "2.4 GHz" -> when (countryCode.uppercase(Locale.US)) {
+            "JP" -> listOf(1, 6, 11, 14)
+            "US", "CA", "MX" -> listOf(1, 6, 11)
+            else -> listOf(1, 5, 9, 13)
+        }
+        // Conservative non-DFS set. Upper UNII channels are included only in regions where they are commonly permitted.
+        "5 GHz" -> if (countryCode.uppercase(Locale.US) in setOf("US", "CA", "MX", "BR", "AU", "NZ")) {
+            listOf(36, 40, 44, 48, 149, 153, 157, 161)
+        } else {
+            listOf(36, 40, 44, 48)
+        }
+        // Preferred Scanning Channels keep the recommendation useful without rendering every 20 MHz channel.
+        "6 GHz" -> (5..229 step 16).toList()
+        else -> emptyList()
     }
 
     private fun interferenceAt(candidateChannel: Int, network: NearbyWifiNetwork): Double {

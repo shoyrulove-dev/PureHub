@@ -11,13 +11,16 @@ import { parseReceiptText } from '../../../lib/receipt-ocr'
 import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 import { trackProductEvent } from '../../../lib/community-api'
+import { detectDocumentQuad, warpDocument } from '../../../lib/document-perspective'
 
 const OCR_LANGUAGES = [
   { code: 'eng+vie', label: 'English + Vietnamese' },
   { code: 'eng+chi_sim', label: 'English + Chinese' },
+  { code: 'eng+spa', label: 'English + Spanish' },
   { code: 'eng', label: 'English' },
   { code: 'vie', label: 'Tiếng Việt' },
   { code: 'chi_sim', label: '简体中文' },
+  { code: 'spa', label: 'Español' },
 ] as const
 const OCR_PACK_CACHE_KEY = 'purehub.ocr.cached-languages.v1'
 const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
@@ -26,7 +29,17 @@ const OCR_CLOUD_ENDPOINT_KEY = 'purehub.ocr.cloud-endpoint.v1'
 function languageLabel(code: string, fallback: string) {
   if (code === 'vie') return 'Vietnamese'
   if (code === 'chi_sim') return 'Simplified Chinese'
+  if (code === 'spa') return 'Spanish'
   return fallback
+}
+
+function preferredOcrLanguage() {
+  if (typeof window === 'undefined') return 'eng+vie' as const
+  const locale = `${window.location.pathname} ${window.navigator.languages?.join(' ') ?? window.navigator.language}`.toLowerCase()
+  if (/(^|[\s/])zh(?:[-_/\s]|$)|chi_sim/.test(locale)) return 'chi_sim' as const
+  if (/(^|[\s/])es(?:[-_/\s]|$)|spa/.test(locale)) return 'spa' as const
+  if (/(^|[\s/])vi(?:[-_/\s]|$)|vie/.test(locale)) return 'eng+vie' as const
+  return 'eng' as const
 }
 
 type Tab = 'scan' | 'text' | 'library'
@@ -239,7 +252,7 @@ async function detectQrOrBarcode(blob: Blob) {
   } catch { return '' }
 }
 
-async function prepareImage(file: File, rotation: number, crop: number, filter: ImageFilter) {
+async function prepareImage(file: File, rotation: number, crop: number, filter: ImageFilter, autoPerspective: boolean) {
   const sourceUrl = URL.createObjectURL(file)
   try {
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -248,9 +261,12 @@ async function prepareImage(file: File, rotation: number, crop: number, filter: 
       node.onerror = reject
       node.src = sourceUrl
     })
+    const quad = autoPerspective ? await detectDocumentQuad(image).catch(() => null) : null
+    const corrected = quad ? warpDocument(image, quad) : null
+    const source = corrected ?? image
     const quarterTurn = rotation % 180 !== 0
-    const sourceWidth = image.naturalWidth
-    const sourceHeight = image.naturalHeight
+    const sourceWidth = source instanceof HTMLCanvasElement ? source.width : source.naturalWidth
+    const sourceHeight = source instanceof HTMLCanvasElement ? source.height : source.naturalHeight
     const insetX = Math.round(sourceWidth * crop)
     const insetY = Math.round(sourceHeight * crop)
     const croppedWidth = Math.max(1, sourceWidth - insetX * 2)
@@ -266,9 +282,9 @@ async function prepareImage(file: File, rotation: number, crop: number, filter: 
     context.translate(canvas.width / 2, canvas.height / 2)
     context.rotate(rotation * Math.PI / 180)
     context.filter = filter === 'B&W' ? 'grayscale(1) contrast(1.3)' : filter === 'Clean' ? 'grayscale(.72) contrast(1.18) brightness(1.05)' : 'none'
-    context.drawImage(image, insetX, insetY, croppedWidth, croppedHeight, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+    context.drawImage(source, insetX, insetY, croppedWidth, croppedHeight, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Image conversion failed')), 'image/jpeg', .92))
-    return { blob, previewUrl: URL.createObjectURL(blob) }
+    return { blob, previewUrl: URL.createObjectURL(blob), autoCorrected: Boolean(corrected) }
   } finally {
     URL.revokeObjectURL(sourceUrl)
   }
@@ -291,7 +307,7 @@ export default function OcrTextSurface() {
   const [tab, setTab] = useState<Tab>('scan')
   const [mode, setMode] = useState<ScanMode>('Document')
   const [filter, setFilter] = useState<ImageFilter>('Clean')
-  const [language, setLanguage] = useState<(typeof OCR_LANGUAGES)[number]['code']>(() => typeof window !== 'undefined' && window.location.pathname.startsWith('/zh') ? 'chi_sim' : 'eng+vie')
+  const [language, setLanguage] = useState<(typeof OCR_LANGUAGES)[number]['code']>(preferredOcrLanguage)
   const [rotation, setRotation] = useState(0)
   const [crop, setCrop] = useState(.02)
   const [pages, setPages] = useState<OcrPage[]>([])
@@ -363,8 +379,9 @@ export default function OcrTextSurface() {
         const nextPages: OcrPage[] = []
         for (let index = 0; index < files.length; index += 1) {
           setStatus(`Recognizing image ${index + 1}/${files.length} on this device...`)
-          const autoCrop = await estimateAutoCrop(files[index])
-          let prepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), filter)
+          const autoCrop = mode === 'Note' ? await estimateAutoCrop(files[index]) : 0
+          let prepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), filter, mode !== 'Note')
+          if (prepared.autoCorrected) setStatus(`Detected page edges and corrected perspective for image ${index + 1}/${files.length}...`)
           const code = await detectQrOrBarcode(prepared.blob)
           if (code) setDetectedCode(code)
           let cloudResult: { text: string; confidence: number; words?: OcrWord[] } | null = null
@@ -388,7 +405,7 @@ export default function OcrTextSurface() {
             }
             if (recognized.confidence < 70 && filter !== 'B&W') {
               setStatus(`Optimizing difficult image ${index + 1}/${files.length}...`)
-              const retryPrepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), 'B&W')
+              const retryPrepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), 'B&W', mode !== 'Note')
               const retry = await worker.recognize(retryPrepared.blob)
               const retryText = cleanText(retry.data.text, mode)
               const retryConfidence = Math.round(retry.data.confidence ?? 0)
@@ -585,6 +602,7 @@ export default function OcrTextSurface() {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-950">
               <div className="flex items-center gap-2"><Sparkles className="size-4 text-emerald-600" /><p className="text-sm font-black text-slate-900 dark:text-white">Document cleanup</p></div>
+              {mode !== 'Note' ? <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Auto page edges and perspective correction run when the boundary is clear.</p> : null}
               <div className="mt-3 flex gap-2 overflow-x-auto">{(['Original', 'Clean', 'B&W'] as ImageFilter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${filter === value ? 'border-emerald-400 bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-300 dark:border-slate-700'}`}>{value}</button>)}</div>
               <label className="mt-3 block text-xs font-bold text-slate-600 dark:text-slate-300">Edge crop {Math.round(crop * 100)}%<input type="range" min="0" max="0.16" step="0.01" value={crop} onChange={(event) => setCrop(Number(event.target.value))} className="mt-2 w-full accent-emerald-600" /></label>
             </div>

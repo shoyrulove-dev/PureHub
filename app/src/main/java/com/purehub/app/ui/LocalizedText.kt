@@ -514,6 +514,162 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     val zh = language == AppLanguage.Chinese
     val es = language == AppLanguage.Spanish
     when (text) {
+        "Speed server" -> return when { vi -> "Máy chủ đo tốc độ"; zh -> "测速服务器"; es -> "Servidor de velocidad"; else -> null }
+        "Auto select" -> return when { vi -> "Tự động chọn"; zh -> "自动选择"; es -> "Selección automática"; else -> null }
+        "Private endpoint" -> return when { vi -> "Máy chủ riêng"; zh -> "私有端点"; es -> "Servidor privado"; else -> null }
+        "Private speed endpoint" -> return when { vi -> "Máy chủ đo tốc độ riêng"; zh -> "私有测速端点"; es -> "Servidor privado de velocidad"; else -> null }
+        "Base URL" -> return when { vi -> "URL gốc"; zh -> "基础 URL"; es -> "URL base"; else -> null }
+        "Save" -> return when { vi -> "Lưu"; zh -> "保存"; es -> "Guardar"; else -> null }
+        "Controller connector" -> return when { vi -> "Kết nối bộ điều khiển"; zh -> "控制器连接"; es -> "Conector del controlador"; else -> null }
+        "Read-only controller" -> return when { vi -> "Bộ điều khiển chỉ đọc"; zh -> "只读控制器"; es -> "Controlador de solo lectura"; else -> null }
+        "Local controller URL" -> return when { vi -> "URL bộ điều khiển nội bộ"; zh -> "本地控制器 URL"; es -> "URL del controlador local"; else -> null }
+        "Controller ID" -> return when { vi -> "ID bộ điều khiển"; zh -> "控制器 ID"; es -> "ID del controlador"; else -> null }
+        "Username / account" -> return when { vi -> "Tên đăng nhập / tài khoản"; zh -> "用户名 / 帐户"; es -> "Usuario / cuenta"; else -> null }
+        "Password" -> return when { vi -> "Mật khẩu"; zh -> "密码"; es -> "Contraseña"; else -> null }
+        "Local API token" -> return when { vi -> "Token API nội bộ"; zh -> "本地 API 令牌"; es -> "Token de API local"; else -> null }
+        "Configure" -> return when { vi -> "Cấu hình"; zh -> "配置"; es -> "Configurar"; else -> null }
+        "Edit" -> return when { vi -> "Chỉnh sửa"; zh -> "编辑"; es -> "Editar"; else -> null }
+        "Test read-only" -> return when { vi -> "Kiểm tra chỉ đọc"; zh -> "只读测试"; es -> "Probar solo lectura"; else -> null }
+        "Connecting" -> return when { vi -> "Đang kết nối"; zh -> "正在连接"; es -> "Conectando"; else -> null }
+        "Scan refresh" -> return when { vi -> "Chu kỳ quét"; zh -> "扫描刷新"; es -> "Frecuencia de escaneo"; else -> null }
+        "Point capture" -> return when { vi -> "Đo tại điểm"; zh -> "测点采集"; es -> "Captura de punto"; else -> null }
+        "Signal only" -> return when { vi -> "Chỉ tín hiệu"; zh -> "仅信号"; es -> "Solo señal"; else -> null }
+        "Quick health" -> return when { vi -> "Kiểm tra nhanh"; zh -> "快速健康检查"; es -> "Estado rápido"; else -> null }
+        "Full test" -> return when { vi -> "Kiểm tra đầy đủ"; zh -> "完整测试"; es -> "Prueba completa"; else -> null }
+        "Compare with baseline" -> return when { vi -> "So sánh với mốc gốc"; zh -> "与基准比较"; es -> "Comparar con referencia"; else -> null }
+        "None" -> return when { vi -> "Không"; zh -> "无"; es -> "Ninguna"; else -> null }
+        "Average change" -> return when { vi -> "Thay đổi trung bình"; zh -> "平均变化"; es -> "Cambio promedio"; else -> null }
+        "Identity evidence" -> return when { vi -> "Bằng chứng nhận diện"; zh -> "识别依据"; es -> "Evidencia de identidad"; else -> null }
+        "Export incident timeline" -> return when { vi -> "Xuất dòng thời gian sự cố"; zh -> "导出事件时间线"; es -> "Exportar cronología de incidentes"; else -> null }
+        "Accuracy profile" -> return when { vi -> "Chế độ đo"; zh -> "测量模式"; es -> "Modo de medición"; else -> null }
+        "Data saver" -> return when { vi -> "Tiết kiệm dữ liệu"; zh -> "节省流量"; es -> "Ahorro de datos"; else -> null }
+        "Accurate" -> return when { vi -> "Chính xác"; zh -> "精确"; es -> "Preciso"; else -> null }
+        "Mesh & roaming" -> return when { vi -> "Mesh và chuyển vùng"; zh -> "Mesh 与漫游"; es -> "Mesh y roaming"; else -> null }
+        "Access points" -> return when { vi -> "Điểm truy cập"; zh -> "接入点"; es -> "Puntos de acceso"; else -> null }
+        "Clients" -> return when { vi -> "Thiết bị khách"; zh -> "客户端"; es -> "Clientes"; else -> null }
+        "Channel utilization" -> return when { vi -> "Mức sử dụng kênh"; zh -> "信道利用率"; es -> "Uso del canal"; else -> null }
+        "WAN status" -> return when { vi -> "Trạng thái WAN"; zh -> "WAN 状态"; es -> "Estado WAN"; else -> null }
+        "Online" -> return when { vi -> "Trực tuyến"; zh -> "在线"; es -> "En línea"; else -> null }
+        "Offline" -> return when { vi -> "Ngoại tuyến"; zh -> "离线"; es -> "Sin conexión"; else -> null }
+        "Channel overlap" -> return when { vi -> "Chồng lấn kênh"; zh -> "信道重叠"; es -> "Solapamiento de canal"; else -> null }
+        "Connection monitor" -> return when { vi -> "Giám sát kết nối"; zh -> "连接监控"; es -> "Monitor de conexión"; else -> null }
+        "Events" -> return when { vi -> "Sự kiện"; zh -> "事件"; es -> "Eventos"; else -> null }
+        "Uptime" -> return when { vi -> "Thời gian ổn định"; zh -> "在线率"; es -> "Disponibilidad"; else -> null }
+        "Stop and save report" -> return when { vi -> "Dừng và lưu báo cáo"; zh -> "停止并保存报告"; es -> "Detener y guardar informe"; else -> null }
+        "Local router" -> return when { vi -> "Router nội bộ"; zh -> "本地路由器"; es -> "Router local"; else -> null }
+        "Detect local router" -> return when { vi -> "Nhận diện router"; zh -> "检测本地路由器"; es -> "Detectar router local"; else -> null }
+        "Open router console" -> return when { vi -> "Mở trang quản trị router"; zh -> "打开路由器控制台"; es -> "Abrir consola del router"; else -> null }
+        "Inspecting gateway" -> return when { vi -> "Đang kiểm tra gateway"; zh -> "正在检查网关"; es -> "Inspeccionando puerta de enlace"; else -> null }
+        "Platform" -> return when { vi -> "Nền tảng"; zh -> "平台"; es -> "Plataforma"; else -> null }
+        "Response" -> return when { vi -> "Phản hồi"; zh -> "响应"; es -> "Respuesta"; else -> null }
+        "Measured layer" -> return when { vi -> "Lớp dữ liệu đo"; zh -> "测量图层"; es -> "Capa medida"; else -> null }
+        "Estimated SIR" -> return when { vi -> "SIR ước tính"; zh -> "估算 SIR"; es -> "SIR estimado"; else -> null }
+        "Download" -> return when { vi -> "Tải xuống"; zh -> "下载"; es -> "Descarga"; else -> null }
+        "Upload" -> return when { vi -> "Tải lên"; zh -> "上传"; es -> "Subida"; else -> null }
+        "Latency" -> return when { vi -> "Độ trễ"; zh -> "延迟"; es -> "Latencia"; else -> null }
+        "Packet loss" -> return when { vi -> "Mất gói"; zh -> "丢包"; es -> "Pérdida de paquetes"; else -> null }
+        "Last point diagnostics" -> return when { vi -> "Chẩn đoán tại điểm gần nhất"; zh -> "最近测点诊断"; es -> "Diagnóstico del último punto"; else -> null }
+        "Lost" -> return when { vi -> "Đã mất"; zh -> "已丢失"; es -> "Perdida"; else -> null }
+        "Show lost" -> return when { vi -> "Hiện mạng đã mất"; zh -> "显示已丢失"; es -> "Mostrar perdidas"; else -> null }
+        "Name" -> return when { vi -> "Tên"; zh -> "名称"; es -> "Nombre"; else -> null }
+        "Connected" -> return when { vi -> "Đang kết nối"; zh -> "已连接"; es -> "Conectada"; else -> null }
+        "Heatmap layer" -> return when { vi -> "Lớp bản đồ nhiệt"; zh -> "热力图图层"; es -> "Capa del mapa"; else -> null }
+        "Cancel test" -> return when { vi -> "Hủy kiểm tra"; zh -> "取消测试"; es -> "Cancelar prueba"; else -> null }
+        "Quick" -> return when { vi -> "Nhanh"; zh -> "快速"; es -> "Rápido"; else -> null }
+        "Custom" -> return when { vi -> "Tùy chỉnh"; zh -> "自定义"; es -> "Personalizado"; else -> null }
+        "Custom TCP scan" -> return when { vi -> "Quét TCP tùy chỉnh"; zh -> "自定义 TCP 扫描"; es -> "Escaneo TCP personalizado"; else -> null }
+        "Ports" -> return when { vi -> "Cổng"; zh -> "端口"; es -> "Puertos"; else -> null }
+        "Wake" -> return when { vi -> "Đánh thức"; zh -> "唤醒"; es -> "Activar"; else -> null }
+        "Wake device" -> return when { vi -> "Đánh thức thiết bị"; zh -> "唤醒设备"; es -> "Activar dispositivo"; else -> null }
+        "MAC address" -> return when { vi -> "Địa chỉ MAC"; zh -> "MAC 地址"; es -> "Dirección MAC"; else -> null }
+        "Devices" -> return when { vi -> "Thiết bị"; zh -> "设备"; es -> "Dispositivos"; else -> null }
+        "No selected open ports found" -> return when { vi -> "Không tìm thấy cổng đã chọn đang mở"; zh -> "未发现选定的开放端口"; es -> "No se encontraron abiertos los puertos seleccionados"; else -> null }
+        "Overview" -> return when { vi -> "Tổng quan"; zh -> "概览"; es -> "Resumen"; else -> null }
+        "Scan" -> return when { vi -> "Quét"; zh -> "扫描"; es -> "Escanear"; else -> null }
+        "Diagnose" -> return when { vi -> "Chẩn đoán"; zh -> "诊断"; es -> "Diagnóstico"; else -> null }
+        "Map" -> return when { vi -> "Bản đồ"; zh -> "地图"; es -> "Mapa"; else -> null }
+        "At a glance" -> return when { vi -> "Tổng quan nhanh"; zh -> "一目了然"; es -> "Vista rápida"; else -> null }
+        "PUREHUB WI-FI" -> return when { vi -> "WI-FI PUREHUB"; zh -> "PUREHUB 无线网络"; es -> "WI-FI PUREHUB"; else -> null }
+        "Network health" -> return when { vi -> "Tình trạng mạng"; zh -> "网络健康"; es -> "Estado de red"; else -> null }
+        "Security" -> return when { vi -> "Bảo mật"; zh -> "安全性"; es -> "Seguridad"; else -> null }
+        "Samples" -> return when { vi -> "Mẫu đo"; zh -> "样本"; es -> "Muestras"; else -> null }
+        "Link speed" -> return when { vi -> "Tốc độ liên kết"; zh -> "连接速率"; es -> "Velocidad de enlace"; else -> null }
+        "CONNECTION" -> return when { vi -> "KẾT NỐI"; zh -> "连接"; es -> "CONEXIÓN"; else -> null }
+        "TOOLS" -> return when { vi -> "CÔNG CỤ"; zh -> "工具"; es -> "HERRAMIENTAS"; else -> null }
+        "SCANNING" -> return when { vi -> "QUÉT"; zh -> "扫描"; es -> "ESCANEO"; else -> null }
+        "Scan networks" -> return when { vi -> "Quét mạng"; zh -> "扫描网络"; es -> "Escanear redes"; else -> null }
+        "Channel graph" -> return when { vi -> "Biểu đồ kênh"; zh -> "信道图"; es -> "Gráfico de canales"; else -> null }
+        "Network tests" -> return when { vi -> "Kiểm tra mạng"; zh -> "网络测试"; es -> "Pruebas de red"; else -> null }
+        "LAN devices" -> return when { vi -> "Thiết bị LAN"; zh -> "局域网设备"; es -> "Dispositivos LAN"; else -> null }
+        "Walk test" -> return when { vi -> "Kiểm tra khi di chuyển"; zh -> "漫游测试"; es -> "Prueba de recorrido"; else -> null }
+        "Survey" -> return when { vi -> "Khảo sát"; zh -> "勘测"; es -> "Estudio"; else -> null }
+        "Coverage survey" -> return when { vi -> "Khảo sát vùng phủ"; zh -> "覆盖勘测"; es -> "Estudio de cobertura"; else -> null }
+        "Choose floor plan" -> return when { vi -> "Chọn sơ đồ"; zh -> "选择平面图"; es -> "Elegir plano"; else -> null }
+        "Change floor plan" -> return when { vi -> "Đổi sơ đồ"; zh -> "更换平面图"; es -> "Cambiar plano"; else -> null }
+        "Undo point" -> return when { vi -> "Hoàn tác điểm"; zh -> "撤销测点"; es -> "Deshacer punto"; else -> null }
+        "Clear survey" -> return when { vi -> "Xóa khảo sát"; zh -> "清除勘测"; es -> "Borrar estudio"; else -> null }
+        "Export survey CSV" -> return when { vi -> "Xuất CSV khảo sát"; zh -> "导出勘测 CSV"; es -> "Exportar CSV"; else -> null }
+        "Current signal" -> return when { vi -> "Tín hiệu hiện tại"; zh -> "当前信号"; es -> "Señal actual"; else -> null }
+        "Survey points" -> return when { vi -> "Điểm khảo sát"; zh -> "勘测点"; es -> "Puntos medidos"; else -> null }
+        "Scan common ports" -> return when { vi -> "Quét cổng phổ biến"; zh -> "扫描常用端口"; es -> "Escanear puertos comunes"; else -> null }
+        "Scanning ports" -> return when { vi -> "Đang quét cổng"; zh -> "正在扫描端口"; es -> "Escaneando puertos"; else -> null }
+        "No common open ports found" -> return when { vi -> "Không tìm thấy cổng phổ biến đang mở"; zh -> "未发现开放的常用端口"; es -> "No se encontraron puertos comunes abiertos"; else -> null }
+        "Quick ports" -> return when { vi -> "Cổng nhanh"; zh -> "快速端口"; es -> "Puertos rápidos"; else -> null }
+        "Extended ports" -> return when { vi -> "Cổng mở rộng"; zh -> "扩展端口"; es -> "Puertos ampliados"; else -> null }
+        "Trust" -> return when { vi -> "Tin cậy"; zh -> "设为可信"; es -> "Confiar"; else -> null }
+        "Trusted" -> return when { vi -> "Đã tin cậy"; zh -> "可信"; es -> "Confiable"; else -> null }
+        "Roaming events" -> return when { vi -> "Sự kiện chuyển vùng"; zh -> "漫游事件"; es -> "Eventos de roaming"; else -> null }
+        "Loaded latency" -> return when { vi -> "Độ trễ khi tải"; zh -> "负载延迟"; es -> "Latencia con carga"; else -> null }
+        "Sampling signal… stay at this position." -> return when { vi -> "Đang lấy mẫu tín hiệu… hãy đứng yên tại vị trí này."; zh -> "正在采样信号…请停留在当前位置。"; es -> "Muestreando la señal… permanece en esta posición."; else -> null }
+        "Resume scan" -> return when { vi -> "Tiếp tục quét"; zh -> "继续扫描"; es -> "Reanudar escaneo"; else -> null }
+        "Pause scan" -> return when { vi -> "Tạm dừng quét"; zh -> "暂停扫描"; es -> "Pausar escaneo"; else -> null }
+        "Discover devices" -> return when { vi -> "Tìm thiết bị"; zh -> "发现设备"; es -> "Buscar dispositivos"; else -> null }
+        "Discovering" -> return when { vi -> "Đang tìm"; zh -> "正在发现"; es -> "Buscando"; else -> null }
+        "Start walk test" -> return when { vi -> "Bắt đầu kiểm tra"; zh -> "开始漫游测试"; es -> "Iniciar recorrido"; else -> null }
+        "Stop walk test" -> return when { vi -> "Dừng kiểm tra"; zh -> "停止漫游测试"; es -> "Detener recorrido"; else -> null }
+        "Run network test" -> return when { vi -> "Chạy kiểm tra mạng"; zh -> "运行网络测试"; es -> "Ejecutar prueba de red"; else -> null }
+        "Running test" -> return when { vi -> "Đang kiểm tra"; zh -> "正在测试"; es -> "Probando"; else -> null }
+        "Local IP" -> return when { vi -> "IP cục bộ"; zh -> "本地 IP"; es -> "IP local"; else -> null }
+        "Gateway" -> return when { vi -> "Cổng mạng"; zh -> "网关"; es -> "Puerta de enlace"; else -> null }
+        "Access point" -> return when { vi -> "Điểm truy cập"; zh -> "接入点"; es -> "Punto de acceso"; else -> null }
+        "New" -> return when { vi -> "Mới"; zh -> "新"; es -> "Nuevo"; else -> null }
+        "WI-FI INSIGHTS" -> return when { vi -> "THÔNG TIN WI-FI"; zh -> "WI-FI 洞察"; es -> "INFORMACIÓN WIFI"; else -> null }
+        "Live connection" -> return when { vi -> "Kết nối trực tiếp"; zh -> "实时连接"; es -> "Conexión en directo"; else -> null }
+        "Connection details" -> return when { vi -> "Chi tiết kết nối"; zh -> "连接详情"; es -> "Detalles de conexión"; else -> null }
+        "Current" -> return when { vi -> "Đang dùng"; zh -> "当前"; es -> "Actual"; else -> null }
+        "Signal" -> return when { vi -> "Tín hiệu"; zh -> "信号"; es -> "Señal"; else -> null }
+        "Channels" -> return when { vi -> "Kênh"; zh -> "信道"; es -> "Canales"; else -> null }
+        "Networks" -> return when { vi -> "Mạng"; zh -> "网络"; es -> "Redes"; else -> null }
+        "Excellent" -> return when { vi -> "Rất tốt"; zh -> "极佳"; es -> "Excelente"; else -> null }
+        "Good" -> return when { vi -> "Tốt"; zh -> "良好"; es -> "Buena"; else -> null }
+        "Fair" -> return when { vi -> "Trung bình"; zh -> "一般"; es -> "Regular"; else -> null }
+        "Weak" -> return when { vi -> "Yếu"; zh -> "较弱"; es -> "Débil"; else -> null }
+        "Link" -> return when { vi -> "Liên kết"; zh -> "链路"; es -> "Enlace"; else -> null }
+        "Band" -> return when { vi -> "Băng tần"; zh -> "频段"; es -> "Banda"; else -> null }
+        "Channel" -> return when { vi -> "Kênh"; zh -> "信道"; es -> "Canal"; else -> null }
+        "Frequency" -> return when { vi -> "Tần số"; zh -> "频率"; es -> "Frecuencia"; else -> null }
+        "Signal over time" -> return when { vi -> "Tín hiệu theo thời gian"; zh -> "信号变化"; es -> "Señal en el tiempo"; else -> null }
+        "Live samples" -> return when { vi -> "Mẫu trực tiếp"; zh -> "实时采样"; es -> "Muestras en vivo"; else -> null }
+        "Unlock nearby Wi-Fi" -> return when { vi -> "Mở quét Wi-Fi lân cận"; zh -> "启用附近 Wi-Fi"; es -> "Activar Wi-Fi cercano"; else -> null }
+        "Android requires Nearby Wi-Fi and Location permission to show local channel and network information." -> return when { vi -> "Android cần quyền Wi-Fi lân cận và Vị trí để hiển thị kênh và mạng cục bộ."; zh -> "Android 需要“附近 Wi-Fi”和位置权限，才能显示本地信道与网络信息。"; es -> "Android requiere permisos de Wi-Fi cercano y ubicación para mostrar canales y redes locales."; else -> null }
+        "Channel guide" -> return when { vi -> "Gợi ý kênh"; zh -> "信道指南"; es -> "Guía de canales"; else -> null }
+        "Recommended locally" -> return when { vi -> "Đề xuất trên thiết bị"; zh -> "本机建议"; es -> "Recomendado localmente"; else -> null }
+        "No channel ratings yet. Wait for the first local scan." -> return when { vi -> "Chưa có đánh giá kênh. Hãy chờ lần quét cục bộ đầu tiên."; zh -> "暂无信道评分，请等待首次本机扫描。"; es -> "Aún no hay calificaciones de canales. Espera el primer escaneo local."; else -> null }
+        "Quality uses observed signal, overlap and advertised channel width; it is guidance, not a guarantee." -> return when { vi -> "Chất lượng dựa trên tín hiệu, độ chồng lấn và độ rộng kênh được quảng bá; đây là gợi ý, không phải bảo đảm."; zh -> "质量依据观测到的信号、重叠和宣称的信道宽度，仅供参考，不作保证。"; es -> "La calidad usa señal observada, solapamiento y ancho de canal anunciado; es una guía, no una garantía."; else -> null }
+        "No nearby scan results yet. Keep Wi-Fi on and wait a few seconds." -> return when { vi -> "Chưa có kết quả quét lân cận. Hãy bật Wi-Fi và chờ vài giây."; zh -> "暂未获得附近扫描结果。请保持 Wi-Fi 开启并等待几秒。"; es -> "Aún no hay resultados cercanos. Mantén el Wi-Fi activo y espera unos segundos."; else -> null }
+        "Private local Wi-Fi analysis" -> return when { vi -> "Phân tích Wi-Fi cục bộ riêng tư"; zh -> "私密本地 Wi-Fi 分析"; es -> "Análisis Wi-Fi local privado"; else -> null }
+        "PureHub does not upload SSIDs, BSSIDs, signal history, or scan results." -> return when { vi -> "PureHub không tải SSID, BSSID, lịch sử tín hiệu hoặc kết quả quét lên mạng."; zh -> "PureHub 不会上传 SSID、BSSID、信号历史或扫描结果。"; es -> "PureHub no sube SSID, BSSID, historial de señal ni resultados de escaneo."; else -> null }
+        "Scan nearby networks to compare channel pressure." -> return when { vi -> "Quét mạng lân cận để so sánh mức độ đông kênh."; zh -> "扫描附近网络以比较信道拥挤度。"; es -> "Escanea redes cercanas para comparar la congestión de canales."; else -> null }
+        "No channel recommendation is available yet." -> return when { vi -> "Chưa có đề xuất kênh."; zh -> "暂时没有可用的信道建议。"; es -> "Aún no hay una recomendación de canal disponible."; else -> null }
+        "Open" -> return when { vi -> "Mở"; zh -> "开放"; es -> "Abierta"; else -> null }
+        "Enhanced open" -> return when { vi -> "Mở nâng cao"; zh -> "增强开放"; es -> "Abierta mejorada"; else -> null }
+        "Unavailable" -> return when { vi -> "Không khả dụng"; zh -> "不可用"; es -> "No disponible"; else -> null }
+        "Not connected" -> return when { vi -> "Chưa kết nối"; zh -> "未连接"; es -> "Sin conexión"; else -> null }
+        "Wi-Fi is currently turned off." -> return when { vi -> "Wi-Fi hiện đang tắt."; zh -> "Wi-Fi 当前已关闭。"; es -> "El Wi-Fi está desactivado."; else -> null }
+        "Wi-Fi details stay on-device. Grant Nearby Wi-Fi and Location to unlock nearby scan results." -> return when { vi -> "Thông tin Wi-Fi chỉ ở trên thiết bị. Cấp quyền Wi-Fi lân cận và Vị trí để xem kết quả quét."; zh -> "Wi-Fi 信息仅保留在设备上。授予附近 Wi-Fi 和位置权限即可查看扫描结果。"; es -> "Los datos de Wi-Fi permanecen en el dispositivo. Concede Wi-Fi cercano y ubicación para ver resultados."; else -> null }
+        "Grant Nearby Wi-Fi and Location to scan nearby networks and show signal ranking." -> return when { vi -> "Cấp quyền Wi-Fi lân cận và Vị trí để quét mạng gần đó và xếp hạng tín hiệu."; zh -> "授予附近 Wi-Fi 和位置权限，以扫描附近网络并显示信号排名。"; es -> "Concede Wi-Fi cercano y ubicación para escanear redes cercanas y mostrar la señal."; else -> null }
+        "Live signal history is updating. Nearby Wi-Fi scan refreshes locally every few seconds." -> return when { vi -> "Lịch sử tín hiệu đang cập nhật. Quét Wi-Fi lân cận làm mới cục bộ vài giây một lần."; zh -> "信号历史正在更新。附近 Wi-Fi 扫描每隔几秒在本机刷新。"; es -> "El historial de señal se actualiza. El escaneo cercano se refresca localmente cada pocos segundos."; else -> null }
+        "Live signal history is updating. Nearby Wi-Fi results are cached between local refreshes." -> return when { vi -> "Lịch sử tín hiệu đang cập nhật. Kết quả Wi-Fi lân cận được lưu tạm giữa các lần làm mới cục bộ."; zh -> "信号历史正在更新。附近 Wi-Fi 结果会在本机刷新之间暂存。"; es -> "El historial de señal se actualiza. Los resultados cercanos se conservan entre actualizaciones locales."; else -> null }
         "Bright" -> return when { vi -> "Sáng"; zh -> "明亮"; es -> "Brillante"; else -> null }
         "Balanced" -> return when { vi -> "Cân bằng"; zh -> "平衡"; es -> "Equilibrado"; else -> null }
         "Deep" -> return when { vi -> "Đậm"; zh -> "深色"; es -> "Oscuro"; else -> null }
@@ -554,6 +710,21 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     }
     match("Rotation (\\d+)°")?.let {
         return when { vi -> "Xoay ${it[1]}°"; zh -> "旋转 ${it[1]}°"; es -> "Rotación ${it[1]}°"; else -> null }
+    }
+    match("Scan (\\d+)")?.let {
+        return when { vi -> "Lần quét ${it[1]}"; zh -> "第 ${it[1]} 次扫描"; es -> "Escaneo ${it[1]}"; else -> null }
+    }
+    match("Channel (\\d+)")?.let {
+        return when { vi -> "Kênh ${it[1]}"; zh -> "信道 ${it[1]}"; es -> "Canal ${it[1]}"; else -> null }
+    }
+    match("(.+) · Ch (\\d+)")?.let {
+        return when { vi -> "${it[1]} · Kênh ${it[2]}"; zh -> "${it[1]} · 信道 ${it[2]}"; es -> "${it[1]} · Canal ${it[2]}"; else -> null }
+    }
+    match("(.+) · current")?.let {
+        return when { vi -> "${it[1]} · đang dùng"; zh -> "${it[1]} · 当前连接"; es -> "${it[1]} · actual"; else -> null }
+    }
+    match("Best observed choice on (.+): channel (\\d+) \\((\\d+)% quality\\)\\. Width, overlap and signal strength are included\\.")?.let {
+        return when { vi -> "Lựa chọn quan sát tốt nhất trên ${it[1]}: kênh ${it[2]} (chất lượng ${it[3]}%). Đã tính độ rộng, chồng lấn và cường độ tín hiệu."; zh -> "在 ${it[1]} 上观测到的最佳选择：信道 ${it[2]}（质量 ${it[3]}%）。已计入宽度、重叠和信号强度。"; es -> "Mejor opción observada en ${it[1]}: canal ${it[2]} (${it[3]}% de calidad). Incluye ancho, solapamiento e intensidad de señal."; else -> null }
     }
     match("(.+) scan complete\\. Saved to your private library\\.")?.let {
         return when { vi -> "Đã quét ${source(it[1])}. Đã lưu vào thư viện riêng tư."; zh -> "${source(it[1])}扫描完成。已保存到私密资料库。"; es -> "Escaneo de ${source(it[1])} completado. Guardado en tu biblioteca privada."; else -> null }

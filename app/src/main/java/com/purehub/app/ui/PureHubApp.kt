@@ -358,7 +358,7 @@ private fun MiniAppTopBar(
     onBack: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
-        title = { Text(title) },
+        title = { LocalizedText(if (title == "WiFi Analyzer") localizedWifiAnalyzerTitle() else title) },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
@@ -368,6 +368,14 @@ private fun MiniAppTopBar(
             }
         },
     )
+}
+
+@Composable
+private fun localizedWifiAnalyzerTitle(): String = when (LocalAppLanguage.current) {
+    AppLanguage.Vietnamese -> "Phân tích Wi-Fi"
+    AppLanguage.Chinese -> "Wi-Fi 分析"
+    AppLanguage.Spanish -> "Analizador Wi-Fi"
+    AppLanguage.English -> "WiFi Analyzer"
 }
 
 @Composable
@@ -531,7 +539,7 @@ private fun MiniAppScreen(
         }
         MiniAppId.DEEP_CLEANER -> CleanerScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.SPEAKER_CLEANER -> ScrollHost(innerPadding) { SpeakerCleanerCard() }
-        MiniAppId.WIFI_ANALYZER -> ScrollHost(innerPadding) { WifiAnalyzerCard() }
+        MiniAppId.WIFI_ANALYZER -> WifiAnalyzerCard(Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 8.dp, vertical = 6.dp))
         MiniAppId.PASSWORD_VAULT -> ScrollHost(innerPadding) { PasswordVaultCard() }
         MiniAppId.AUTHENTICATOR_VAULT -> ScrollHost(innerPadding) { AuthenticatorVaultCard() }
         MiniAppId.FILE_STUDIO -> ScrollHost(innerPadding) { FileStudioCard() }
