@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, Compass, Download, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck } from 'lucide-react'
+import { Activity, Camera, Compass, Download, Gauge, Lock, Maximize2, Mic, RotateCcw, ShieldCheck, Volume2, VolumeX } from 'lucide-react'
 import { ActionButton } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 
@@ -8,21 +8,22 @@ type PermissionState = 'idle' | 'active' | 'denied' | 'unsupported'
 
 export default function SensorSuiteSurface({ mode }: { mode: SensorMode }) {
   const suiteRef = useRef<HTMLElement>(null)
-  const title = mode === 'compass' ? 'Compass' : mode === 'level' ? 'Bubble Level' : 'Sound Meter'
   const locale = window.location.pathname.split('/')[1] || 'en'
+  const levelLocale = levelCopy[(locale in levelCopy ? locale : 'en') as LevelLocale]
+  const title = mode === 'compass' ? 'Compass' : mode === 'level' ? levelLocale.title : 'Sound Meter'
 
   return <section ref={suiteRef} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm fullscreen:overflow-auto dark:border-slate-700 dark:bg-slate-900">
     <header className="bg-gradient-to-br from-sky-50 via-white to-violet-50 p-5 dark:from-sky-950/40 dark:via-slate-900 dark:to-violet-950/30">
       <div className="flex items-start gap-3">
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-sky-600 text-white">{mode === 'compass' ? <Compass /> : mode === 'level' ? <Gauge /> : <Mic />}</span>
-        <div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-sky-700 dark:text-sky-300">SENSOR SUITE</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{title}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Clear live readings, local calibration, and private on-device processing.</p></div>
+        <div className="min-w-0 flex-1"><p className="text-[11px] font-black tracking-[.2em] text-sky-700 dark:text-sky-300">SENSOR SUITE</p><h2 className="text-2xl font-black text-slate-950 dark:text-white">{title}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{mode === 'level' ? levelLocale.description : 'Clear live readings, local calibration, and private on-device processing.'}</p></div>
         <ShieldCheck className="hidden size-5 text-emerald-600 sm:block" />
       </div>
       <nav className="mt-4 grid grid-cols-3 gap-2">{([['compass', 'Compass', Compass], ['level', 'Level', Gauge], ['sound', 'Sound', Mic]] as const).map(([id, label, Icon]) => <a key={id} href={`/${locale}/${id === 'level' ? 'bubble-level' : id === 'sound' ? 'decibel-meter' : 'compass'}`} className={`flex min-h-11 items-center justify-center gap-1 rounded-xl border text-xs font-black ${mode === id ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-800'}`}><Icon className="size-4" />{label}</a>)}</nav>
     </header>
     <div className="p-4 sm:p-5">
-      <button onClick={() => void suiteRef.current?.requestFullscreen?.()} className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-sky-200 text-xs font-black text-sky-800 dark:border-sky-800 dark:text-sky-200"><Maximize2 className="size-4" />Fullscreen instrument</button>
-      {mode === 'compass' ? <CompassPanel /> : mode === 'level' ? <LevelPanel /> : <SoundPanel />}
+      <button onClick={() => void suiteRef.current?.requestFullscreen?.()} className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-sky-200 text-xs font-black text-sky-800 dark:border-sky-800 dark:text-sky-200"><Maximize2 className="size-4" />{mode === 'level' ? levelLocale.fullscreen : 'Fullscreen instrument'}</button>
+      {mode === 'compass' ? <CompassPanel /> : mode === 'level' ? <LevelPanel locale={locale} /> : <SoundPanel />}
     </div>
   </section>
 }
@@ -72,18 +73,40 @@ function CompassPanel() {
   </div>
 }
 
-function LevelPanel() {
+type LevelLocale = 'en' | 'vi' | 'zh' | 'es'
+type LevelMode = 'surface' | 'edge' | 'camera'
+type LevelUnit = 'degrees' | 'percent'
+type LevelHistory = { id: number; mode: LevelMode; x: number; y: number; slope: number }
+
+const levelCopy: Record<LevelLocale, Record<string, string>> = {
+  en: { title: 'Bubble Level', description: 'Live angle, target slope, camera guide, and private local calibration.', fullscreen: 'Fullscreen instrument', surface: 'Surface', edge: 'Edge', camera: 'Camera', enable: 'Enable level', active: 'Level active', hold: 'Hold', resume: 'Resume', calibrate: 'Calibrate', reset: 'Reset', settings: 'Accuracy & settings', tolerance: 'Tolerance', target: 'Target slope', sound: 'Sound when aligned', history: 'Recent measurements', clear: 'Clear history', save: 'Save', level: 'Level confirmed', moving: 'Device moving · wait for a stable reading', inside: 'Inside tolerance · hold still to confirm', guide: 'Move the bubble into the target', left: 'Left / right', front: 'Front / back', slope: 'Slope', noHistory: 'No saved measurements yet.', cameraOff: 'Camera guide is off', accuracy: 'Calibrate on a known-flat reference. Phone sensors are useful estimates, not certified instruments.', unsupported: 'This browser does not expose the required sensor. Try PureHub on a supported phone.', denied: 'Sensor permission was not granted. Enable it in browser settings and try again.' },
+  vi: { title: 'Thước thủy', description: 'Góc trực tiếp, độ dốc mục tiêu, camera và hiệu chỉnh riêng tư trên máy.', fullscreen: 'Đo toàn màn hình', surface: 'Mặt phẳng', edge: 'Cạnh', camera: 'Camera', enable: 'Bật thước', active: 'Đang đo', hold: 'Giữ', resume: 'Đo tiếp', calibrate: 'Hiệu chỉnh', reset: 'Đặt lại', settings: 'Độ chính xác & cài đặt', tolerance: 'Sai số', target: 'Độ dốc mục tiêu', sound: 'Âm báo khi cân bằng', history: 'Số đo gần đây', clear: 'Xóa lịch sử', save: 'Lưu', level: 'Đã cân bằng', moving: 'Thiết bị đang di chuyển · chờ ổn định', inside: 'Trong sai số · giữ yên để xác nhận', guide: 'Di chuyển bóng vào vùng mục tiêu', left: 'Trái / phải', front: 'Trước / sau', slope: 'Độ dốc', noHistory: 'Chưa có số đo đã lưu.', cameraOff: 'Hướng dẫn camera đang tắt', accuracy: 'Hiệu chỉnh trên mặt phẳng chuẩn. Cảm biến điện thoại chỉ là ước lượng, không phải thiết bị đo được chứng nhận.', unsupported: 'Trình duyệt không cung cấp cảm biến cần thiết. Hãy thử PureHub trên điện thoại được hỗ trợ.', denied: 'Chưa cấp quyền cảm biến. Hãy bật quyền trong cài đặt trình duyệt rồi thử lại.' },
+  zh: { title: '水平仪', description: '实时角度、目标坡度、相机辅助与本地私密校准。', fullscreen: '全屏测量', surface: '平面', edge: '边缘', camera: '相机', enable: '启用水平仪', active: '测量中', hold: '保持', resume: '继续', calibrate: '校准', reset: '重置', settings: '精度与设置', tolerance: '容差', target: '目标坡度', sound: '对齐时提示音', history: '最近测量', clear: '清除历史', save: '保存', level: '已确认水平', moving: '设备正在移动 · 请等待稳定', inside: '已在容差内 · 保持稳定', guide: '将气泡移入目标区域', left: '左右', front: '前后', slope: '坡度', noHistory: '暂无已保存测量。', cameraOff: '相机辅助线已关闭', accuracy: '请在已知水平面上校准。手机传感器仅供估算，并非认证测量仪器。', unsupported: '浏览器未提供所需传感器。请在受支持的手机上使用 PureHub。', denied: '未授予传感器权限。请在浏览器设置中启用后重试。' },
+  es: { title: 'Nivel de burbuja', description: 'Ángulo en vivo, pendiente objetivo, guía de cámara y calibración privada local.', fullscreen: 'Instrumento a pantalla completa', surface: 'Superficie', edge: 'Borde', camera: 'Cámara', enable: 'Activar nivel', active: 'Nivel activo', hold: 'Fijar', resume: 'Reanudar', calibrate: 'Calibrar', reset: 'Restablecer', settings: 'Precisión y ajustes', tolerance: 'Tolerancia', target: 'Pendiente objetivo', sound: 'Sonido al nivelar', history: 'Mediciones recientes', clear: 'Borrar historial', save: 'Guardar', level: 'Nivel confirmado', moving: 'El dispositivo se mueve · espera una lectura estable', inside: 'Dentro de la tolerancia · mantenlo quieto', guide: 'Mueve la burbuja al objetivo', left: 'Izquierda / derecha', front: 'Frente / atrás', slope: 'Pendiente', noHistory: 'Aún no hay mediciones guardadas.', cameraOff: 'La guía de cámara está apagada', accuracy: 'Calibra sobre una referencia plana conocida. Los sensores del teléfono son estimaciones, no instrumentos certificados.', unsupported: 'El navegador no expone el sensor requerido. Prueba PureHub en un teléfono compatible.', denied: 'No se concedió el permiso del sensor. Actívalo en el navegador e inténtalo otra vez.' },
+}
+
+function LevelPanel({ locale }: { locale: string }) {
+  const t = levelCopy[(locale in levelCopy ? locale : 'en') as LevelLocale]
   const [raw, setRaw] = useState({ x: 0, y: 0 })
   const [zero, setZero] = useState(() => { try { return JSON.parse(localStorage.getItem('purehub.level.zero.v1') ?? '{"x":0,"y":0}') as { x: number; y: number } } catch { return { x: 0, y: 0 } } })
   const [held, setHeld] = useState<{ x: number; y: number } | null>(null)
   const [permission, setPermission] = useState<PermissionState>('idle')
-  const [levelMode, setLevelMode] = useState<'flat' | 'horizontal' | 'vertical'>('flat')
+  const [levelMode, setLevelMode] = useState<LevelMode>('surface')
   const [tolerance, setTolerance] = useState(() => Number(localStorage.getItem('purehub.level.tolerance.v1') || 0.5))
+  const [targetSlope, setTargetSlope] = useState(() => Number(localStorage.getItem('purehub.level.target.v1') || 0))
+  const [unit, setUnit] = useState<LevelUnit>(() => localStorage.getItem('purehub.level.unit.v1') === 'percent' ? 'percent' : 'degrees')
   const [settled, setSettled] = useState(false)
-  const [soundCue, setSoundCue] = useState(false)
+  const [soundCue, setSoundCue] = useState(() => localStorage.getItem('purehub.level.sound.v1') === 'true')
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [history, setHistory] = useState<LevelHistory[]>(() => { try { return JSON.parse(localStorage.getItem('purehub.level.history.v1') || '[]') as LevelHistory[] } catch { return [] } })
   const previous = useRef({ x: 0, y: 0, at: 0 })
   const [moving, setMoving] = useState(false)
   const angles = held ?? { x: Math.round((raw.x - zero.x) * 10) / 10, y: Math.round((raw.y - zero.y) * 10) / 10 }
+  const slopeDegrees = Math.hypot(angles.x, angles.y)
+  const slopePercent = Math.tan(slopeDegrees * Math.PI / 180) * 100
+  const targetDegrees = Math.atan(targetSlope / 100) * 180 / Math.PI
+  const isLevel = levelMode === 'surface' ? Math.abs(slopeDegrees - targetDegrees) <= tolerance : Math.abs(Math.abs(angles.x) - targetDegrees) <= tolerance
 
   useEffect(() => {
     if (permission !== 'active') return
@@ -91,17 +114,15 @@ function LevelPanel() {
     const listener = (event: DeviceOrientationEvent) => {
       const next = { x: event.gamma ?? 0, y: event.beta ?? 0 }
       const delta = Math.abs(next.x - previous.current.x) + Math.abs(next.y - previous.current.y)
-      if (previous.current.at && delta > 3) {
-        setMoving(true)
-        window.clearTimeout(movementTimer)
-        movementTimer = window.setTimeout(() => setMoving(false), 650)
-      }
-      previous.current = { ...next, at: Date.now() }
-      setRaw(next)
+      if (previous.current.at && delta > 3) { setMoving(true); window.clearTimeout(movementTimer); movementTimer = window.setTimeout(() => setMoving(false), 650) }
+      previous.current = { ...next, at: Date.now() }; setRaw(next)
     }
     window.addEventListener('deviceorientation', listener, { passive: true })
     return () => { window.clearTimeout(movementTimer); window.removeEventListener('deviceorientation', listener) }
   }, [permission])
+
+  useEffect(() => { if (videoRef.current) videoRef.current.srcObject = cameraStream }, [cameraStream])
+  useEffect(() => () => cameraStream?.getTracks().forEach((track) => track.stop()), [cameraStream])
 
   const start = async () => {
     if (!('DeviceOrientationEvent' in window)) { setPermission('unsupported'); return }
@@ -111,41 +132,38 @@ function LevelPanel() {
       setPermission('active')
     } catch { setPermission('denied') }
   }
-  const isLevel = levelMode === 'flat'
-    ? Math.abs(angles.x) <= tolerance && Math.abs(angles.y) <= tolerance
-    : levelMode === 'horizontal'
-      ? Math.abs(angles.x) <= tolerance
-      : Math.abs(angles.y) <= tolerance
+  const selectMode = async (next: LevelMode) => {
+    setLevelMode(next)
+    if (next !== 'camera') { cameraStream?.getTracks().forEach((track) => track.stop()); setCameraStream(null); return }
+    try { setCameraStream(await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })) } catch { setCameraStream(null) }
+  }
 
   useEffect(() => {
-    if (permission !== 'active' || moving || !isLevel || held) {
-      const resetTimer = window.setTimeout(() => setSettled(false), 0)
-      return () => window.clearTimeout(resetTimer)
-    }
+    if (permission !== 'active' || moving || !isLevel || held) { const resetTimer = window.setTimeout(() => setSettled(false), 0); return () => window.clearTimeout(resetTimer) }
     const timer = window.setTimeout(() => {
-      setSettled(true)
-      if ('vibrate' in navigator) navigator.vibrate(45)
-      if (soundCue) {
-        const audio = new AudioContext()
-        const oscillator = audio.createOscillator(); const gain = audio.createGain()
-        oscillator.frequency.value = 660; gain.gain.value = 0.035
-        oscillator.connect(gain).connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + 0.09)
-        oscillator.onended = () => void audio.close()
-      }
+      setSettled(true); if ('vibrate' in navigator) navigator.vibrate(45)
+      if (soundCue) { const audio = new AudioContext(); const oscillator = audio.createOscillator(); const gain = audio.createGain(); oscillator.frequency.value = 660; gain.gain.value = 0.035; oscillator.connect(gain).connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + 0.09); oscillator.onended = () => void audio.close() }
       markToolSuccess('bubble-level', { headline: 'Level confirmed', detail: `The ${levelMode} reading stayed within ±${tolerance}° long enough to confirm.`, shareText: `I checked a ${levelMode} surface with a private on-device bubble level.` })
     }, 1800)
     return () => window.clearTimeout(timer)
   }, [held, isLevel, levelMode, moving, permission, soundCue, tolerance])
 
+  const formatValue = (degrees: number) => unit === 'percent' ? `${(Math.tan(degrees * Math.PI / 180) * 100).toFixed(1)}%` : `${degrees.toFixed(1)}°`
+  const saveMeasurement = () => { const next = [{ id: Date.now(), mode: levelMode, x: angles.x, y: angles.y, slope: slopePercent }, ...history].slice(0, 12); setHistory(next); localStorage.setItem('purehub.level.history.v1', JSON.stringify(next)) }
+
   return <div>
-    <div className="mb-4 grid grid-cols-3 gap-2">{([['flat', 'Surface'], ['horizontal', 'Edge X'], ['vertical', 'Edge Y']] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setLevelMode(value)} className={`min-h-11 rounded-xl border text-xs font-black ${levelMode === value ? 'border-sky-500 bg-sky-600 text-white' : 'border-slate-200 dark:border-slate-700'}`}>{label}</button>)}</div>
-    <div className={`relative mx-auto aspect-square max-w-72 overflow-hidden rounded-[32px] border-8 transition-colors ${settled ? 'border-emerald-500 bg-emerald-50 shadow-[0_0_40px_rgba(16,185,129,.24)]' : isLevel ? 'border-emerald-300 bg-emerald-50' : 'border-slate-100 bg-sky-50'} dark:bg-slate-950`}><div className="absolute left-0 top-1/2 h-px w-full bg-slate-300" /><div className="absolute left-1/2 top-0 h-full w-px bg-slate-300" /><div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-emerald-500/60" /><span className={`absolute size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white shadow-xl transition-all duration-150 ${settled ? 'bg-emerald-500' : 'bg-sky-500'}`} style={{ left: `${50 + Math.max(-35, Math.min(35, levelMode === 'vertical' ? 0 : angles.x))}%`, top: `${50 + Math.max(-35, Math.min(35, levelMode === 'horizontal' ? 0 : angles.y))}%` }} /></div>
-    <PermissionNotice state={permission} />
-    <p role="status" className={`mt-3 rounded-xl px-3 py-2 text-center text-xs font-bold ${settled ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200' : moving ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200' : 'bg-slate-500/8 text-slate-600 dark:text-slate-300'}`}>{settled ? 'Level confirmed · reading held steady' : moving ? 'Device moving · wait for a stable reading' : isLevel ? 'Inside tolerance · hold still to confirm' : 'Move the bubble into the center target'}</p>
-    <div className="mt-3 grid grid-cols-2 gap-2 text-center"><Metric label="Left / right" value={`${angles.x}°`} /><Metric label="Front / back" value={`${angles.y}°`} /></div>
-    <div className="mt-4 grid grid-cols-2 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? 'Level active' : 'Enable level'}</ActionButton><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => setHeld((value) => value == null ? angles : null)}>{held == null ? 'Hold reading' : 'Resume live'}</ActionButton></div>
-    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => { setZero(raw); localStorage.setItem('purehub.level.zero.v1', JSON.stringify(raw)) }}>Save current zero</ActionButton><ActionButton tone="muted" onClick={() => { setZero({ x: 0, y: 0 }); localStorage.removeItem('purehub.level.zero.v1') }}><RotateCcw className="mr-1 inline size-4" />Reset zero</ActionButton></div>
-    <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">Accuracy & cues</summary><p className="mt-3 text-xs text-slate-500">Tolerance</p><div className="mt-2 grid grid-cols-3 gap-2">{[0.2, 0.5, 1].map((value) => <button key={value} type="button" onClick={() => { setTolerance(value); localStorage.setItem('purehub.level.tolerance.v1', String(value)) }} className={`min-h-10 rounded-xl border text-xs font-black ${tolerance === value ? 'border-violet-500 bg-violet-500/10 text-violet-700 dark:text-violet-300' : 'border-slate-200 dark:border-slate-700'}`}>±{value}°</button>)}</div><label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-xs font-bold"><span>Sound when level</span><input type="checkbox" checked={soundCue} onChange={(event) => setSoundCue(event.target.checked)} className="size-5 accent-violet-600" /></label><p className="mt-2 text-xs leading-5 text-slate-500">Calibrate on a known-flat reference. Phone sensors are useful estimates, not certified measurement tools.</p></details>
+    <div className="mb-3 grid grid-cols-3 gap-2">{([['surface', t.surface], ['edge', t.edge], ['camera', t.camera]] as const).map(([value, label]) => <button key={value} type="button" onClick={() => void selectMode(value)} className={`min-h-11 rounded-xl border text-xs font-black ${levelMode === value ? 'border-sky-500 bg-sky-600 text-white shadow-sm' : 'border-slate-200 dark:border-slate-700'}`}>{value === 'camera' && <Camera className="mr-1 inline size-4" />}{label}</button>)}</div>
+    <div className={`relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-[32px] border-8 transition-colors ${settled ? 'border-emerald-500 bg-emerald-50 shadow-[0_0_40px_rgba(16,185,129,.24)]' : isLevel ? 'border-emerald-300 bg-emerald-50' : 'border-slate-100 bg-sky-50'} dark:bg-slate-950`}>
+      {levelMode === 'camera' && (cameraStream ? <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 size-full object-cover opacity-75" /> : <div className="absolute inset-0 grid place-items-center bg-slate-950 text-xs font-bold text-white"><span><Camera className="mx-auto mb-2" />{t.cameraOff}</span></div>)}
+      <div className="absolute left-0 top-1/2 h-px w-full bg-slate-400/80" /><div className="absolute left-1/2 top-0 h-full w-px bg-slate-400/80" /><div className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-emerald-500" /><span className={`absolute size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white shadow-xl transition-all duration-150 ${settled ? 'bg-emerald-500' : 'bg-sky-500'}`} style={{ left: `${50 + Math.max(-35, Math.min(35, angles.x))}%`, top: `${50 + Math.max(-35, Math.min(35, levelMode === 'edge' ? 0 : angles.y))}%` }} /><span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-slate-950/75 px-4 py-2 text-sm font-black text-white backdrop-blur">{formatValue(slopeDegrees)}</span>
+    </div>
+    <PermissionNotice state={permission} unsupported={t.unsupported} denied={t.denied} />
+    <p role="status" className={`mt-3 rounded-xl px-3 py-2 text-center text-xs font-bold ${settled ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200' : moving ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200' : 'bg-slate-500/8 text-slate-600 dark:text-slate-300'}`}>{settled ? t.level : moving ? t.moving : isLevel ? t.inside : t.guide}</p>
+    <div className="mt-3 grid grid-cols-3 gap-2 text-center"><Metric label={t.left} value={formatValue(angles.x)} /><Metric label={t.front} value={formatValue(angles.y)} /><Metric label={t.slope} value={`${slopePercent.toFixed(1)}%`} /></div>
+    <div className="mt-4 grid grid-cols-3 gap-2"><ActionButton onClick={() => void start()}>{permission === 'active' ? t.active : t.enable}</ActionButton><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => setHeld((value) => value == null ? angles : null)}>{held == null ? t.hold : t.resume}</ActionButton><ActionButton tone="muted" disabled={permission !== 'active'} onClick={saveMeasurement}>{t.save}</ActionButton></div>
+    <div className="mt-2 grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={permission !== 'active'} onClick={() => { setZero(raw); localStorage.setItem('purehub.level.zero.v1', JSON.stringify(raw)) }}>{t.calibrate}</ActionButton><ActionButton tone="muted" onClick={() => { setZero({ x: 0, y: 0 }); localStorage.removeItem('purehub.level.zero.v1') }}><RotateCcw className="mr-1 inline size-4" />{t.reset}</ActionButton></div>
+    <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">{t.settings}</summary><p className="mt-3 text-xs font-bold text-slate-500">{t.tolerance}</p><div className="mt-2 grid grid-cols-3 gap-2">{[0.2, 0.5, 1].map((value) => <button key={value} type="button" onClick={() => { setTolerance(value); localStorage.setItem('purehub.level.tolerance.v1', String(value)) }} className={`min-h-10 rounded-xl border text-xs font-black ${tolerance === value ? 'border-violet-500 bg-violet-500/10 text-violet-700 dark:text-violet-300' : 'border-slate-200 dark:border-slate-700'}`}>±{value}°</button>)}</div><p className="mt-3 text-xs font-bold text-slate-500">{t.target}</p><div className="mt-2 grid grid-cols-4 gap-2">{[0, 1, 2, 5].map((value) => <button key={value} type="button" onClick={() => { setTargetSlope(value); localStorage.setItem('purehub.level.target.v1', String(value)) }} className={`min-h-10 rounded-xl border text-xs font-black ${targetSlope === value ? 'border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-300' : 'border-slate-200 dark:border-slate-700'}`}>{value}%</button>)}</div><div className="mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => { setUnit('degrees'); localStorage.setItem('purehub.level.unit.v1', 'degrees') }} className={`min-h-10 rounded-xl border text-xs font-bold ${unit === 'degrees' ? 'border-sky-500 bg-sky-500/10' : 'border-slate-200 dark:border-slate-700'}`}>°</button><button type="button" onClick={() => { setUnit('percent'); localStorage.setItem('purehub.level.unit.v1', 'percent') }} className={`min-h-10 rounded-xl border text-xs font-bold ${unit === 'percent' ? 'border-sky-500 bg-sky-500/10' : 'border-slate-200 dark:border-slate-700'}`}>%</button></div><label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-xs font-bold"><span>{soundCue ? <Volume2 className="mr-2 inline size-4" /> : <VolumeX className="mr-2 inline size-4" />}{t.sound}</span><input type="checkbox" checked={soundCue} onChange={(event) => { setSoundCue(event.target.checked); localStorage.setItem('purehub.level.sound.v1', String(event.target.checked)) }} className="size-5 accent-violet-600" /></label><p className="mt-2 text-xs leading-5 text-slate-500">{t.accuracy}</p></details>
+    <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-bold">{t.history} ({history.length})</summary>{history.length === 0 ? <p className="mt-3 text-xs text-slate-500">{t.noHistory}</p> : <div className="mt-3 space-y-2">{history.map((item) => <div key={item.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs dark:bg-slate-800"><strong>{t[item.mode]}</strong><span>{item.x.toFixed(1)}° · {item.y.toFixed(1)}° · {item.slope.toFixed(1)}%</span></div>)}<button type="button" onClick={() => { setHistory([]); localStorage.removeItem('purehub.level.history.v1') }} className="min-h-10 w-full rounded-xl border border-rose-200 text-xs font-bold text-rose-700">{t.clear}</button></div>}</details>
   </div>
 }
 
@@ -193,9 +211,9 @@ function SoundPanel() {
   </div>
 }
 
-function PermissionNotice({ state }: { state: PermissionState }) {
+function PermissionNotice({ state, unsupported, denied }: { state: PermissionState; unsupported?: string; denied?: string }) {
   if (state === 'idle' || state === 'active') return null
-  return <div role="status" className="mt-4 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-left text-xs leading-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-100"><Lock className="mt-0.5 size-4 shrink-0" />{state === 'unsupported' ? 'This browser does not expose the required sensor. Try PureHub on a supported phone.' : 'Permission was not granted. Enable sensor or microphone access in browser settings, then try again.'}</div>
+  return <div role="status" className="mt-4 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-left text-xs leading-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-100"><Lock className="mt-0.5 size-4 shrink-0" />{state === 'unsupported' ? unsupported ?? 'This browser does not expose the required sensor. Try PureHub on a supported phone.' : denied ?? 'Permission was not granted. Enable sensor or microphone access in browser settings, then try again.'}</div>
 }
 
 function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl border border-slate-200 p-3 text-center dark:border-slate-700"><span className="block text-xs text-slate-500">{label}</span><strong className="text-xl tabular-nums">{value}</strong></div> }

@@ -491,6 +491,7 @@ private val es = mapOf(
 
 fun translateUiText(text: String, language: AppLanguage): String {
     if (language == AppLanguage.English || text.isBlank()) return text
+    bubbleLevelTranslation(text, language)?.let { return it }
     val dictionary = when (language) {
         AppLanguage.Vietnamese -> viAll
         AppLanguage.Chinese -> zhAll
@@ -506,6 +507,88 @@ fun translateUiText(text: String, language: AppLanguage): String {
     // are translated, rather than producing a mixed Spanish/Chinese interface.
     if (language == AppLanguage.Spanish) return spanishDynamicTranslation(text)
     return dynamicTranslation(text, language)
+}
+
+private fun bubbleLevelTranslation(text: String, language: AppLanguage): String? {
+    val translations = when (language) {
+        AppLanguage.Vietnamese -> mapOf(
+            "Surface" to "Mặt phẳng", "Edge" to "Cạnh", "Camera" to "Camera", "Enable level" to "Bật thước",
+            "Live level" to "Thước thủy trực tiếp", "Private on-device sensor" to "Cảm biến riêng tư trên thiết bị",
+            "Options" to "Tùy chọn", "Start" to "Bắt đầu", "Calibrate zero" to "Hiệu chỉnh về 0",
+            "Hold" to "Giữ", "Resume" to "Đo tiếp", "Degrees" to "Độ", "Percent" to "Phần trăm",
+            "Clear history" to "Xóa lịch sử", "No saved measurements yet." to "Chưa có số đo đã lưu.",
+            "Move the bubble into the center target." to "Di chuyển bóng vào vùng mục tiêu.",
+            "Inside tolerance · keep the phone still." to "Trong sai số · giữ điện thoại ổn định.",
+            "Level confirmed · reading held steady." to "Đã cân bằng · số đo ổn định.",
+            "Place the phone on a known-flat surface, then tap Calibrate zero." to "Đặt điện thoại trên mặt phẳng chuẩn rồi nhấn Hiệu chỉnh về 0.",
+            "Calibrate zero on a known-flat surface for best results." to "Hiệu chỉnh về 0 trên mặt phẳng chuẩn để có kết quả tốt nhất.",
+            "Accelerometer accuracy is unreliable. Keep the device still." to "Cảm biến gia tốc chưa ổn định. Hãy giữ thiết bị yên.",
+            "Device is moving; wait for the reading to settle before calibrating." to "Thiết bị đang di chuyển; hãy chờ số đo ổn định trước khi hiệu chỉnh.",
+            "Open accuracy controls, target slope, history and the calibrated ruler." to "Mở cài đặt độ chính xác, độ dốc mục tiêu, lịch sử và thước đã hiệu chỉnh.",
+            "A precise full-size level with edge, slope, camera guide, calibration, and local history." to "Thước thủy toàn màn hình với chế độ cạnh, độ dốc, camera, hiệu chỉnh và lịch sử cục bộ.",
+        )
+        AppLanguage.Chinese -> mapOf(
+            "Surface" to "平面", "Edge" to "边缘", "Camera" to "相机", "Enable level" to "启用水平仪",
+            "Live level" to "实时水平仪", "Private on-device sensor" to "设备端私密传感器",
+            "Options" to "选项", "Start" to "开始", "Calibrate zero" to "校准零点",
+            "Hold" to "保持", "Resume" to "继续", "Degrees" to "角度", "Percent" to "百分比",
+            "Clear history" to "清除历史", "No saved measurements yet." to "暂无已保存测量。",
+            "Move the bubble into the center target." to "将气泡移入中心目标。",
+            "Inside tolerance · keep the phone still." to "已在容差内 · 请保持手机稳定。",
+            "Level confirmed · reading held steady." to "已确认水平 · 读数稳定。",
+            "Place the phone on a known-flat surface, then tap Calibrate zero." to "将手机放在已知水平面上，然后点击校准零点。",
+            "Calibrate zero on a known-flat surface for best results." to "请在已知水平面上校准零点以获得最佳结果。",
+            "Accelerometer accuracy is unreliable. Keep the device still." to "加速度传感器精度不可靠，请保持设备静止。",
+            "Device is moving; wait for the reading to settle before calibrating." to "设备正在移动；请等待读数稳定后再校准。",
+            "Open accuracy controls, target slope, history and the calibrated ruler." to "打开精度、目标坡度、历史和校准标尺设置。",
+            "A precise full-size level with edge, slope, camera guide, calibration, and local history." to "全尺寸精密水平仪，支持边缘、坡度、相机辅助、校准和本地历史。",
+        )
+        AppLanguage.Spanish -> mapOf(
+            "Surface" to "Superficie", "Edge" to "Borde", "Camera" to "Cámara", "Enable level" to "Activar nivel",
+            "Live level" to "Nivel en vivo", "Private on-device sensor" to "Sensor privado en el dispositivo",
+            "Options" to "Opciones", "Start" to "Iniciar", "Calibrate zero" to "Calibrar a cero",
+            "Hold" to "Fijar", "Resume" to "Reanudar", "Degrees" to "Grados", "Percent" to "Porcentaje",
+            "Clear history" to "Borrar historial", "No saved measurements yet." to "Aún no hay mediciones guardadas.",
+            "Move the bubble into the center target." to "Mueve la burbuja al objetivo central.",
+            "Inside tolerance · keep the phone still." to "Dentro de la tolerancia · mantén el teléfono quieto.",
+            "Level confirmed · reading held steady." to "Nivel confirmado · lectura estable.",
+            "Place the phone on a known-flat surface, then tap Calibrate zero." to "Coloca el teléfono sobre una superficie plana conocida y pulsa Calibrar.",
+            "Calibrate zero on a known-flat surface for best results." to "Calibra a cero sobre una superficie plana conocida para obtener mejores resultados.",
+            "Accelerometer accuracy is unreliable. Keep the device still." to "La precisión del acelerómetro no es fiable. Mantén el dispositivo quieto.",
+            "Device is moving; wait for the reading to settle before calibrating." to "El dispositivo se mueve; espera a que la lectura se estabilice antes de calibrar.",
+            "Open accuracy controls, target slope, history and the calibrated ruler." to "Abre precisión, pendiente objetivo, historial y regla calibrada.",
+            "A precise full-size level with edge, slope, camera guide, calibration, and local history." to "Nivel de pantalla completa con borde, pendiente, guía de cámara, calibración e historial local.",
+        )
+        AppLanguage.English -> emptyMap()
+    }
+    translations[text]?.let { return it }
+    return when {
+        text.startsWith("Target slope ") -> when (language) {
+            AppLanguage.Vietnamese -> text.replace("Target slope", "Độ dốc mục tiêu")
+            AppLanguage.Chinese -> text.replace("Target slope", "目标坡度")
+            AppLanguage.Spanish -> text.replace("Target slope", "Pendiente objetivo")
+            else -> text
+        }
+        text.startsWith("Slope ") -> when (language) {
+            AppLanguage.Vietnamese -> text.replace("Slope", "Độ dốc")
+            AppLanguage.Chinese -> text.replace("Slope", "坡度")
+            AppLanguage.Spanish -> text.replace("Slope", "Pendiente")
+            else -> text
+        }
+        text.startsWith("Pitch ") -> when (language) {
+            AppLanguage.Vietnamese -> text.replace("Pitch", "Nghiêng dọc")
+            AppLanguage.Chinese -> text.replace("Pitch", "俯仰")
+            AppLanguage.Spanish -> text.replace("Pitch", "Inclinación")
+            else -> text
+        }
+        text.startsWith("Roll ") -> when (language) {
+            AppLanguage.Vietnamese -> text.replace("Roll", "Nghiêng ngang")
+            AppLanguage.Chinese -> text.replace("Roll", "横滚")
+            AppLanguage.Spanish -> text.replace("Roll", "Balanceo")
+            else -> text
+        }
+        else -> null
+    }
 }
 
 private fun spanishDynamicTranslation(text: String): String {

@@ -1,17 +1,28 @@
 package com.purehub.app.ui.screens
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.ToneGenerator
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -34,20 +45,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
 import com.purehub.app.feature.bubblelevel.BubbleLevelViewModel
 import kotlinx.coroutines.delay
 
 private enum class LevelMode(val label: String) {
     Surface("Surface"),
-    EdgeX("Edge X"),
-    EdgeY("Edge Y"),
+    Edge("Edge"),
+    Camera("Camera"),
 }
+
+private enum class LevelUnit { Degrees, Percent }
 
 @Composable
 fun BubbleLevelCard(
@@ -55,22 +71,29 @@ fun BubbleLevelCard(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val preferences = remember { context.getSharedPreferences("purehub.level.pro.v2", 0) }
     val metrics = LocalResources.current.displayMetrics
     var rulerCentimeters by remember { mutableFloatStateOf(8f) }
     var rulerScale by rememberSaveable { mutableFloatStateOf(1f) }
     var sensorActive by rememberSaveable { mutableStateOf(false) }
     var levelMode by rememberSaveable { mutableStateOf(LevelMode.Surface) }
-    var tolerance by rememberSaveable { mutableFloatStateOf(0.5f) }
+    var tolerance by rememberSaveable { mutableFloatStateOf(preferences.getFloat("tolerance", 0.5f)) }
+    var targetSlope by rememberSaveable { mutableFloatStateOf(preferences.getFloat("target_slope", 0f)) }
+    var levelUnit by rememberSaveable { mutableStateOf(if (preferences.getString("unit", "degrees") == "percent") LevelUnit.Percent else LevelUnit.Degrees) }
     var settled by remember { mutableStateOf(false) }
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var heldMeasurement by rememberSaveable { mutableStateOf("") }
-    var soundCueEnabled by rememberSaveable { mutableStateOf(false) }
+    var soundCueEnabled by rememberSaveable { mutableStateOf(preferences.getBoolean("sound", false)) }
+    var hasCameraPermission by rememberSaveable { mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
+    var measurementHistory by rememberSaveable { mutableStateOf(preferences.getString("history", "").orEmpty().split("||").filter(String::isNotBlank)) }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCameraPermission = it }
     val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 55) }
     val colorScheme = MaterialTheme.colorScheme
+    val slopePercent = kotlin.math.tan(Math.toRadians(uiState.tiltMagnitude.toDouble())) * 100.0
+    val targetDegrees = Math.toDegrees(kotlin.math.atan((targetSlope / 100f).toDouble())).toFloat()
     val isLevel = when (levelMode) {
-        LevelMode.Surface -> uiState.tiltMagnitude <= tolerance
-        LevelMode.EdgeX -> kotlin.math.abs(uiState.roll) <= tolerance
-        LevelMode.EdgeY -> kotlin.math.abs(uiState.pitch) <= tolerance
+        LevelMode.Surface, LevelMode.Camera -> kotlin.math.abs(uiState.tiltMagnitude - targetDegrees) <= tolerance
+        LevelMode.Edge -> kotlin.math.abs(kotlin.math.abs(uiState.roll) - targetDegrees) <= tolerance
     }
     val levelColor = Color(0xFF10B981)
     val haptics = LocalHapticFeedback.current
@@ -99,16 +122,21 @@ fun BubbleLevelCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            FlagshipSuiteHeader(
-                eyebrow = "Sensor Suite",
-                title = "Bubble Level & Ruler",
-                description = "A calm two-axis level and quick ruler powered by private on-device readings.",
-            )
-            SuiteModeSwitch(mode, { mode = it }, "Adjust tolerance, hold/share a reading, and calibrate the on-screen ruler.")
-            Button(onClick = { sensorActive = !sensorActive }) {
-                LocalizedText(if (sensorActive) "Pause level sensor" else "Enable level sensor")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    LocalizedText("Live level", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    LocalizedText("Private on-device sensor", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FilterChip(
+                    selected = mode == SuiteMode.PRO,
+                    onClick = { mode = if (mode == SuiteMode.PRO) SuiteMode.QUICK else SuiteMode.PRO },
+                    label = { LocalizedText("Options", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) },
+                )
             }
-            Button(onClick = viewModel::calibrateZero, enabled = sensorActive) { LocalizedText("Calibrate zero") }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -116,36 +144,36 @@ fun BubbleLevelCard(
                 LevelMode.entries.forEach { mode ->
                     Button(
                         modifier = Modifier.weight(1f),
-                        onClick = { levelMode = mode },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                        onClick = {
+                            levelMode = mode
+                            if (mode == LevelMode.Camera && !hasCameraPermission) cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
                         enabled = levelMode != mode,
-                    ) { LocalizedText(mode.label) }
+                    ) { LocalizedText(mode.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) }
                 }
             }
             uiState.accuracyWarning?.let { LocalizedText(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                LocalizedText("Pitch ${uiState.pitch.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
-                LocalizedText("Roll ${uiState.roll.toInt()} deg", style = MaterialTheme.typography.bodyMedium)
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
+                    .height(320.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
             ) {
+                if (levelMode == LevelMode.Camera && hasCameraPermission) {
+                    BubbleCameraPreview(Modifier.matchParentSize())
+                }
                 Canvas(modifier = Modifier.matchParentSize()) {
                     val center = Offset(size.width / 2f, size.height / 2f)
                     val radius = size.minDimension * 0.36f
-                    val bubbleOffsetX = if (levelMode == LevelMode.EdgeY) 0f else (uiState.roll / 45f).coerceIn(-1f, 1f) * radius * 0.6f
-                    val bubbleOffsetY = if (levelMode == LevelMode.EdgeX) 0f else (uiState.pitch / 45f).coerceIn(-1f, 1f) * radius * 0.6f
+                    val bubbleOffsetX = (uiState.roll / 45f).coerceIn(-1f, 1f) * radius * 0.72f
+                    val bubbleOffsetY = if (levelMode == LevelMode.Edge) 0f else (uiState.pitch / 45f).coerceIn(-1f, 1f) * radius * 0.72f
                     val guideInset = 12.dp.toPx()
 
                     drawCircle(
-                        color = colorScheme.secondaryContainer,
+                        color = if (levelMode == LevelMode.Camera) Color.Black.copy(alpha = 0.18f) else colorScheme.secondaryContainer,
                         radius = radius,
                         center = center,
                     )
@@ -205,19 +233,48 @@ fun BubbleLevelCard(
                 fontWeight = if (settled) FontWeight.SemiBold else FontWeight.Normal,
             )
 
-            LocalizedText("Tolerance ±${"%.1f".format(tolerance)}°", style = MaterialTheme.typography.titleSmall)
-            Slider(value = tolerance, onValueChange = { tolerance = it }, valueRange = 0.1f..1.5f, steps = 13)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                LocalizedText("Pitch ${formatLevelValue(uiState.pitch, levelUnit)}", style = MaterialTheme.typography.bodySmall)
+                LocalizedText("Roll ${formatLevelValue(uiState.roll, levelUnit)}", style = MaterialTheme.typography.bodySmall)
+                LocalizedText("Slope ${"%.1f".format(slopePercent)}%", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp), onClick = { sensorActive = !sensorActive }) {
+                    LocalizedText(if (sensorActive) "Pause" else "Start", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium)
+                }
+                Button(modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp), onClick = {
+                    heldMeasurement = if (heldMeasurement.isBlank()) "${levelMode.label}: ${"%.1f".format(uiState.pitch)}° · ${"%.1f".format(uiState.roll)}°" else ""
+                }, enabled = sensorActive) { LocalizedText(if (heldMeasurement.isBlank()) "Hold" else "Resume", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) }
+                Button(modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp), onClick = {
+                    val entry = "${levelMode.label}: ${"%.1f".format(uiState.pitch)}° · ${"%.1f".format(uiState.roll)}° · ${"%.1f".format(slopePercent)}%"
+                    measurementHistory = (listOf(entry) + measurementHistory).take(12)
+                    preferences.edit().putString("history", measurementHistory.joinToString("||")).apply()
+                }, enabled = sensorActive) { LocalizedText("Save", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) }
+            }
+            Button(modifier = Modifier.fillMaxWidth(), onClick = viewModel::calibrateZero, enabled = sensorActive) { LocalizedText("Calibrate zero") }
 
             if (mode == SuiteMode.PRO) {
                 FilterChip(
                     selected = soundCueEnabled,
-                    onClick = { soundCueEnabled = !soundCueEnabled },
+                    onClick = {
+                        soundCueEnabled = !soundCueEnabled
+                        preferences.edit().putBoolean("sound", soundCueEnabled).apply()
+                    },
                     label = { LocalizedText(if (soundCueEnabled) "Level sound on" else "Level sound off") },
                 )
+                LocalizedText("Tolerance ±${"%.1f".format(tolerance)}°", style = MaterialTheme.typography.titleSmall)
+                Slider(value = tolerance, onValueChange = { tolerance = it; preferences.edit().putFloat("tolerance", it).apply() }, valueRange = 0.1f..1.5f, steps = 13)
+                LocalizedText("Target slope ${targetSlope.toInt()}%", style = MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(0f, 1f, 2f, 5f).forEach { target ->
+                        FilterChip(selected = targetSlope == target, onClick = { targetSlope = target; preferences.edit().putFloat("target_slope", target).apply() }, label = { LocalizedText("${target.toInt()}%") })
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = levelUnit == LevelUnit.Degrees, onClick = { levelUnit = LevelUnit.Degrees; preferences.edit().putString("unit", "degrees").apply() }, label = { LocalizedText("Degrees") })
+                    FilterChip(selected = levelUnit == LevelUnit.Percent, onClick = { levelUnit = LevelUnit.Percent; preferences.edit().putString("unit", "percent").apply() }, label = { LocalizedText("Percent") })
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = {
-                        heldMeasurement = "${levelMode.label}: pitch ${"%.1f".format(uiState.pitch)}°, roll ${"%.1f".format(uiState.roll)}°, tolerance ±${"%.1f".format(tolerance)}°"
-                    }, enabled = sensorActive) { LocalizedText("Hold reading") }
                     Button(onClick = {
                         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
@@ -228,8 +285,13 @@ fun BubbleLevelCard(
                 if (heldMeasurement.isNotBlank()) {
                     LocalizedText(heldMeasurement, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 }
+                LocalizedText("History", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (measurementHistory.isEmpty()) LocalizedText("No saved measurements yet.", style = MaterialTheme.typography.bodySmall)
+                measurementHistory.forEach { LocalizedText(it, style = MaterialTheme.typography.bodySmall) }
+                if (measurementHistory.isNotEmpty()) Button(onClick = { measurementHistory = emptyList(); preferences.edit().remove("history").apply() }) { LocalizedText("Clear history") }
             }
 
+            if (mode == SuiteMode.PRO) {
             val pxPerCm = (metrics.xdpi / 2.54f) * rulerScale
             val rulerWidth = ((pxPerCm * rulerCentimeters) / metrics.density).dp
             LocalizedText(
@@ -278,6 +340,7 @@ fun BubbleLevelCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            }
             PrivacyReceipt(
                 action = "Measurements remain local",
                 detail = "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share.",
@@ -290,5 +353,33 @@ fun BubbleLevelCard(
                 )
             }
         }
+    }
+}
+
+private fun formatLevelValue(value: Float, unit: LevelUnit): String = when (unit) {
+    LevelUnit.Degrees -> "${"%.1f".format(value)}°"
+    LevelUnit.Percent -> "${"%.1f".format(kotlin.math.tan(Math.toRadians(value.toDouble())) * 100.0)}%"
+}
+
+@Composable
+private fun BubbleCameraPreview(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val previewView = remember {
+        PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER }
+    }
+    AndroidView(factory = { previewView }, modifier = modifier)
+    DisposableEffect(previewView, lifecycleOwner) {
+        val future = ProcessCameraProvider.getInstance(context)
+        val listener = Runnable {
+            runCatching {
+                val provider = future.get()
+                val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
+                provider.unbindAll()
+                provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview)
+            }
+        }
+        future.addListener(listener, ContextCompat.getMainExecutor(context))
+        onDispose { runCatching { if (future.isDone) future.get().unbindAll() } }
     }
 }
