@@ -20,6 +20,15 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
+      - name: Configure Gradle memory
+        shell: bash
+        run: |
+          mkdir -p "${HOME}/.gradle"
+          cat >> "${HOME}/.gradle/gradle.properties" <<'EOF'
+          org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8
+          org.gradle.workers.max=2
+          org.gradle.parallel=false
+          EOF
       - run: ./gradlew testStandardDebugUnitTest testFdroidDebugUnitTest lintStandardDebug lintFdroidDebug assembleStandardDebug assembleFdroidDebug --stacktrace
       - name: Enforce FLOSS-only F-Droid dependencies
         shell: bash
