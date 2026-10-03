@@ -49,8 +49,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.purehub.app.BuildConfig
 import com.purehub.app.feature.wifi.*
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalSnackbarHostState
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.locale
+import com.purehub.app.ui.translateUiText
 import kotlinx.coroutines.launch
 
 /** Scanner-first surface: live connection first, technical discovery in compact tabs. */
@@ -66,6 +69,7 @@ fun WifiAnalyzerCard(modifier: Modifier = Modifier, viewModel: WifiAnalyzerViewM
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbar = LocalSnackbarHostState.current
+    val language = LocalAppLanguage.current
     val scope = rememberCoroutineScope()
     var hasPermission by remember { mutableStateOf(checkWifiScanPermission(context)) }
     var tab by rememberSaveable { mutableStateOf(WifiTab.SIGNAL) }
@@ -84,13 +88,13 @@ fun WifiAnalyzerCard(modifier: Modifier = Modifier, viewModel: WifiAnalyzerViewM
     val ratings = WifiInsights.rateChannels(state.nearbyNetworks, activeBand.takeIf(String::isNotBlank))
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         hasPermission = result.values.all { it }
-        scope.launch { snackbar.showSnackbar(if (hasPermission) "Nearby Wi-Fi scan is ready on this device." else "Without permission, PureHub only shows your current connection.") }
+        scope.launch { snackbar.showSnackbar(translateUiText(if (hasPermission) "Nearby Wi-Fi scan is ready on this device." else "Without permission, PureHub only shows your current connection.", language)) }
     }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val minutes = pendingMonitorMinutes
         pendingMonitorMinutes = null
         if (granted && minutes != null) viewModel.startMonitoring(minutes)
-        else if (!granted) scope.launch { snackbar.showSnackbar("Notification permission is required for reliable background monitoring.") }
+        else if (!granted) scope.launch { snackbar.showSnackbar(translateUiText("Notification permission is required for reliable background monitoring.", language)) }
     }
     fun startForegroundMonitor(minutes: Int) {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -390,7 +394,7 @@ private fun MultiApTrace(networks: List<NearbyWifiNetwork>, histories: Map<Strin
 }
 
 @Composable private fun DetailLine(label: String, value: String) = Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    LocalizedText(label, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = .58f)); Spacer(Modifier.weight(1f)); Text(value, style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    LocalizedText(label, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = .58f)); Spacer(Modifier.weight(1f)); LocalizedText(value, style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 @Composable
@@ -466,6 +470,7 @@ private fun NetworksPane(
     sort: WifiNetworkSort, onSort: (WifiNetworkSort) -> Unit, enable: () -> Unit,
 ) {
     if (!hasPermission) return NearbyPermissionPane(enable)
+    val language = LocalAppLanguage.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             LocalizedText("Nearby networks", style = MaterialTheme.typography.titleSmall, color = Color.White, fontWeight = FontWeight.Black); Spacer(Modifier.weight(1f)); LocalizedText("Scan $scanCount", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = .55f))
@@ -485,7 +490,7 @@ private fun NetworksPane(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { onPauseChanged(!paused) }) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); LocalizedText(if (paused) "Resume scan" else "Pause scan") }
-            TextButton(onClick = { exportNetworks(context, networks) }) { Icon(Icons.Rounded.FileDownload, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); LocalizedText("Export CSV") }
+            TextButton(onClick = { exportNetworks(context, networks, language) }) { Icon(Icons.Rounded.FileDownload, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); LocalizedText("Export CSV") }
         }
         if (networks.isEmpty()) LocalizedText("No nearby scan results yet. Keep Wi-Fi on and wait a few seconds.", color = Color.White.copy(alpha = .62f)) else networks.forEach { NearbyNetworkRow(it, it.bssid in comparedBssids, onCompare) }
     }
@@ -493,11 +498,11 @@ private fun NetworksPane(
 
 @Composable private fun NearbyNetworkRow(network: NearbyWifiNetwork, compared: Boolean, onCompare: (String) -> Unit) = Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
     Icon(Icons.Rounded.Wifi, null, tint = if (network.isActive) signalColor(network.rssi) else Color.White.copy(alpha = .28f), modifier = Modifier.size(24.dp))
-    Column(Modifier.padding(start = 12.dp).weight(1f)) { Text(network.ssid, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); LocalizedText("${network.channelLabel} · ${network.channelWidthMhz} MHz · ${network.securityLabel}", color = Color.White.copy(alpha = .55f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis); Text("${network.wifiStandard} · ${network.estimatedDistanceMeters?.let { "~%.1f m".format(java.util.Locale.US, it) } ?: "distance unavailable"}", color = Color.White.copy(alpha = .42f), style = MaterialTheme.typography.labelSmall, maxLines = 1); Text(network.vendor, color = WifiBlue.copy(alpha = .72f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    Column(Modifier.padding(start = 12.dp).weight(1f)) { if (network.ssid == "Hidden network") LocalizedText(network.ssid, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) else Text(network.ssid, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); LocalizedText("${network.channelLabel} · ${network.channelWidthMhz} MHz · ${network.securityLabel}", color = Color.White.copy(alpha = .55f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis); LocalizedText("${network.wifiStandard} · ${network.estimatedDistanceMeters?.let { "~%.1f m".format(java.util.Locale.US, it) } ?: "distance unavailable"}", color = Color.White.copy(alpha = .42f), style = MaterialTheme.typography.labelSmall, maxLines = 1); LocalizedText(network.vendor, color = WifiBlue.copy(alpha = .72f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     Column(horizontalAlignment = Alignment.End) { Text("${network.rssi} dBm", color = if (network.isActive) Color.White else Color.White.copy(alpha = .4f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold); network.estimatedSirDb?.let { Text("SIR ~%.1f dB".format(java.util.Locale.US, it), color = WifiBlue, style = MaterialTheme.typography.labelSmall) }; if (network.isCurrentConnection) LocalizedText("Current", style = MaterialTheme.typography.labelSmall, color = WifiMint) else if (!network.isActive) LocalizedText("Lost", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = .42f)); Checkbox(checked = compared, onCheckedChange = { onCompare(network.bssid) }, colors = CheckboxDefaults.colors(checkedColor = WifiMint)) }
 }
 
-private fun exportNetworks(context: android.content.Context, networks: List<NearbyWifiNetwork>) {
+private fun exportNetworks(context: android.content.Context, networks: List<NearbyWifiNetwork>, language: com.purehub.app.ui.AppLanguage) {
     val csv = buildString {
         appendLine("ssid,bssid,vendor,status,last_seen_epoch_ms,rssi_dbm,estimated_sir_db,band,channel,channel_width_mhz,wifi_standard,security")
         networks.forEach { network ->
@@ -519,7 +524,7 @@ private fun exportNetworks(context: android.content.Context, networks: List<Near
             )
         }
     }
-    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/csv"; putExtra(Intent.EXTRA_SUBJECT, "PureHub Wi-Fi scan"); putExtra(Intent.EXTRA_TEXT, csv) }, "Export Wi-Fi CSV"))
+    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/csv"; putExtra(Intent.EXTRA_SUBJECT, translateUiText("PureHub Wi-Fi scan", language)); putExtra(Intent.EXTRA_TEXT, csv) }, translateUiText("Export Wi-Fi CSV", language)))
 }
 
 @Composable
@@ -538,6 +543,7 @@ private fun DiagnosticsPane(
     onScanInterval: (Int) -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val language = LocalAppLanguage.current
     val result = state.latestDiagnostics
     var showSpeedServerDialog by rememberSaveable { mutableStateOf(false) }
     var customSpeedUrl by rememberSaveable(state.customSpeedBaseUrl) { mutableStateOf(state.customSpeedBaseUrl) }
@@ -644,7 +650,7 @@ private fun DiagnosticsPane(
         if (state.diagnosticHistory.isNotEmpty()) {
             LocalizedText("Local history · ${state.diagnosticHistory.size}/14", style = MaterialTheme.typography.labelMedium, color = WifiMint)
             state.diagnosticHistory.take(8).forEach { item -> DetailLine(
-                java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT).format(java.util.Date(item.timestamp)),
+                java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT, language.locale()).format(java.util.Date(item.timestamp)),
                 "↓ ${item.downloadMbps?.let { "%.1f".format(java.util.Locale.US, it) } ?: "--"} · ↑ ${item.uploadMbps?.let { "%.1f".format(java.util.Locale.US, it) } ?: "--"} Mbps",
             ) }
         }
@@ -652,7 +658,7 @@ private fun DiagnosticsPane(
         LocalizedText("Connection monitor", style = MaterialTheme.typography.titleSmall, color = Color.White, fontWeight = FontWeight.Black)
         LocalizedText("Foreground session survives screen-off and watches outages, roaming and latency spikes with a visible notification.", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = .62f))
         if (!state.isMonitoring) LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            items(listOf(10, 30, 60)) { seconds -> FilterChip(selected = state.monitorIntervalSeconds == seconds, onClick = { onMonitorInterval(seconds) }, label = { Text("${seconds}s sample") }) }
+            items(listOf(10, 30, 60)) { seconds -> FilterChip(selected = state.monitorIntervalSeconds == seconds, onClick = { onMonitorInterval(seconds) }, label = { LocalizedText("${seconds}s sample") }) }
         }
         if (state.isMonitoring) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -773,7 +779,7 @@ private fun DevicesPane(
                         Icon(Icons.Rounded.NetworkWifi, null, tint = if (device.isNew) WifiMint else WifiBlue, modifier = Modifier.size(20.dp))
                         Column(Modifier.padding(start = 10.dp).weight(1f)) {
                             Text(device.hostName, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${device.identityLabel} · ${device.identityConfidence}% confidence", color = WifiMint, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                            LocalizedText("${device.identityLabel} · ${device.identityConfidence}% confidence", color = WifiMint, style = MaterialTheme.typography.labelSmall, maxLines = 1)
                             Text(listOfNotNull(device.ipAddress, device.vendor?.takeUnless { it.startsWith("Vendor") }).joinToString(" · "), color = Color.White.copy(alpha = .55f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             device.macAddress?.let { Text(it, color = Color.White.copy(alpha = .38f), style = MaterialTheme.typography.labelSmall) }
                             Text(device.discoverySources.joinToString(" · "), color = WifiMint.copy(alpha = .72f), style = MaterialTheme.typography.labelSmall)
@@ -830,6 +836,7 @@ private fun SurveyPane(
     clear: () -> Unit,
     context: android.content.Context,
 ) {
+    val language = LocalAppLanguage.current
     var selectedSurveyBssid by rememberSaveable { mutableStateOf<String?>(null) }
     var surveyMetric by rememberSaveable { mutableStateOf(WifiSurveyMetric.SIGNAL) }
     var baselineProjectId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -894,7 +901,7 @@ private fun SurveyPane(
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             items(state.surveyProjects) { project ->
-                FilterChip(selected = project.id == state.activeSurveyProjectId, onClick = { selectProject(project.id) }, label = { Text("${project.name} · ${project.floor}", maxLines = 1) })
+                FilterChip(selected = project.id == state.activeSurveyProjectId, onClick = { selectProject(project.id) }, label = { LocalizedText("${project.name} · ${project.floor}", maxLines = 1) })
             }
             item { AssistChip(onClick = { showNewProject = true }, label = { LocalizedText("+ Project") }) }
         }
@@ -915,7 +922,7 @@ private fun SurveyPane(
                 items(state.surveyProjects.filterNot { it.id == state.activeSurveyProjectId }) { project -> FilterChip(
                     selected = baselineProjectId == project.id,
                     onClick = { baselineProjectId = project.id },
-                    label = { Text("${project.name} · ${project.floor}", maxLines = 1) },
+                    label = { LocalizedText("${project.name} · ${project.floor}", maxLines = 1) },
                 ) }
             }
             val baseline = state.surveyProjects.firstOrNull { it.id == baselineProjectId }
@@ -1005,8 +1012,8 @@ private fun SurveyPane(
         activeProject?.let { project ->
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = { exportSurvey(context, state.surveyPoints) }, enabled = state.surveyPoints.isNotEmpty(), modifier = Modifier.weight(1f)) { LocalizedText("CSV") }
-                OutlinedButton(onClick = { WifiSurveyExporter.exportAndShare(context, project, WifiSurveyExporter.Format.PNG) }, enabled = state.surveyPoints.isNotEmpty(), modifier = Modifier.weight(1f)) { LocalizedText("PNG") }
-                Button(onClick = { WifiSurveyExporter.exportAndShare(context, project, WifiSurveyExporter.Format.PDF) }, enabled = state.surveyPoints.isNotEmpty(), modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = WifiMint, contentColor = WifiInk)) { LocalizedText("PDF") }
+                OutlinedButton(onClick = { WifiSurveyExporter.exportAndShare(context, project, WifiSurveyExporter.Format.PNG, language) }, enabled = state.surveyPoints.isNotEmpty(), modifier = Modifier.weight(1f)) { LocalizedText("PNG") }
+                Button(onClick = { WifiSurveyExporter.exportAndShare(context, project, WifiSurveyExporter.Format.PDF, language) }, enabled = state.surveyPoints.isNotEmpty(), modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = WifiMint, contentColor = WifiInk)) { LocalizedText("PDF") }
             }
         }
         TextButton(onClick = clear, enabled = state.surveyPoints.isNotEmpty()) { LocalizedText("Clear active floor") }
@@ -1062,7 +1069,7 @@ private fun CompactMetric(label: String, value: String, modifier: Modifier = Mod
     shape = RoundedCornerShape(14.dp),
 ) {
     Column(Modifier.padding(horizontal = 10.dp, vertical = 9.dp)) {
-        Text(value, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        LocalizedText(value, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
         LocalizedText(label, color = Color.White.copy(alpha = .5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }

@@ -2,8 +2,85 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Archive, CheckCircle2, Clipboard, Code2, Download, Droplets, Gauge, Image, Lightbulb, Network, Palette, RefreshCw, Save, Share2, ShieldCheck, Sparkles, Trash2, Users, WandSparkles } from 'lucide-react'
 import { ActionButton, FlagshipHero, FormInput, FormTextArea, Panel } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
+import { normalizeLocale, type LocaleCode } from '../../../i18n/locales'
 
 type Mode = 'smart-flashlight' | 'unit-converter' | 'color-grabber' | 'deep-cleaner' | 'wifi-analyzer' | 'wallpaper-changer' | 'decision-wheel' | 'community'
+
+type WifiCopy = {
+  eyebrow: string
+  title: string
+  description: string
+  panelTitle: string
+  panelSubtitle: string
+  healthScore: string
+  status: string
+  online: string
+  offline: string
+  networkClass: string
+  notExposed: string
+  browserDownlink: string
+  browserRtt: string
+  averageLatency: string
+  notTested: string
+  jitter: string
+  requestLoss: string
+  dataSaver: string
+  enabled: string
+  disabled: string
+  runTest: string
+  checking: string
+  history: string
+  clearHistory: string
+  recommendation: string
+  recommendations: [string, string, string, string]
+  testNote: string
+  androidTitle: string
+  androidDescription: string
+  androidFeatures: [string, string, string, string]
+  installAndroid: string
+  successHeadline: string
+  successDetail: (latency: number, jitter: number) => string
+  successShare: (latency: number) => string
+}
+
+const WIFI_COPY: Record<LocaleCode, WifiCopy> = {
+  en: {
+    eyebrow: 'Connection Care flagship', title: 'Wi-Fi Analyzer', description: 'Understand the connection information your browser exposes, with honest platform limits.',
+    panelTitle: 'Connection health', panelSubtitle: 'A browser cannot scan nearby access points. PureHub only reports standards-based connection signals.', healthScore: 'HEALTH SCORE',
+    status: 'Status', online: 'Online', offline: 'Offline', networkClass: 'Network class', notExposed: 'Not exposed', browserDownlink: 'Browser downlink', browserRtt: 'Browser RTT', averageLatency: 'Average latency', notTested: 'Not tested', jitter: 'Jitter', requestLoss: 'Request loss', dataSaver: 'Data saver', enabled: 'Enabled', disabled: 'Disabled',
+    runTest: 'Run private connection check', checking: 'Checking ten samples…', history: 'Private test history', clearHistory: 'Clear history', recommendation: 'Network health recommendation', recommendations: ['Connection looks healthy for normal browsing.', 'Latency is elevated. Move closer to the router or pause heavy traffic.', 'Connection is unstable. Check router placement and competing traffic.', 'This device is offline. Reconnect before running a health check.'],
+    testNote: 'Ten small same-origin requests estimate browser latency, jitter and request loss. This is not ICMP packet loss, a full bandwidth test or a nearby Wi-Fi scan.',
+    androidTitle: 'Need native Wi-Fi tools?', androidDescription: 'Browsers cannot expose nearby SSIDs, channels, LAN devices, roaming events or floor-plan coverage. PureHub Android requests those permissions only when you use the matching feature.', androidFeatures: ['Nearby networks and channel analysis', 'LAN devices and vendor identification', 'Speed, outage and roaming diagnostics', 'Walk tests, surveys and heatmap reports'], installAndroid: 'Install PureHub Android',
+    successHeadline: 'Connection check complete', successDetail: (latency, jitter) => `${latency} ms average with ${jitter} ms jitter across ten local requests.`, successShare: (latency) => `I ran a private PureHub connection check: ${latency} ms average latency.`,
+  },
+  vi: {
+    eyebrow: 'Công cụ chăm sóc kết nối', title: 'Phân tích Wi-Fi', description: 'Hiểu dữ liệu kết nối mà trình duyệt cho phép hiển thị, với giới hạn nền tảng được giải thích rõ ràng.',
+    panelTitle: 'Sức khỏe kết nối', panelSubtitle: 'Trình duyệt không thể quét các điểm truy cập gần đó. PureHub chỉ hiển thị tín hiệu kết nối theo chuẩn web.', healthScore: 'ĐIỂM SỨC KHỎE',
+    status: 'Trạng thái', online: 'Đang kết nối', offline: 'Ngoại tuyến', networkClass: 'Loại mạng', notExposed: 'Không được cung cấp', browserDownlink: 'Tốc độ trình duyệt báo', browserRtt: 'RTT trình duyệt', averageLatency: 'Độ trễ trung bình', notTested: 'Chưa kiểm tra', jitter: 'Độ dao động', requestLoss: 'Lỗi yêu cầu', dataSaver: 'Tiết kiệm dữ liệu', enabled: 'Đang bật', disabled: 'Đang tắt',
+    runTest: 'Kiểm tra kết nối riêng tư', checking: 'Đang kiểm tra 10 mẫu…', history: 'Lịch sử kiểm tra riêng tư', clearHistory: 'Xóa lịch sử', recommendation: 'Khuyến nghị sức khỏe mạng', recommendations: ['Kết nối phù hợp cho nhu cầu duyệt web thông thường.', 'Độ trễ đang cao. Hãy đến gần router hoặc tạm dừng lưu lượng nặng.', 'Kết nối chưa ổn định. Hãy kiểm tra vị trí router và lưu lượng cạnh tranh.', 'Thiết bị đang ngoại tuyến. Hãy kết nối lại trước khi kiểm tra.'],
+    testNote: 'Mười yêu cầu nhỏ cùng tên miền giúp ước tính độ trễ, độ dao động và tỷ lệ yêu cầu lỗi. Đây không phải mất gói ICMP, phép đo toàn bộ băng thông hay quét Wi-Fi lân cận.',
+    androidTitle: 'Cần công cụ Wi-Fi native?', androidDescription: 'Trình duyệt không thể xem SSID, kênh, thiết bị LAN, sự kiện roaming hoặc vùng phủ trên sơ đồ. PureHub Android chỉ xin quyền khi bạn dùng đúng tính năng.', androidFeatures: ['Mạng lân cận và phân tích kênh', 'Thiết bị LAN và nhận diện nhà sản xuất', 'Tốc độ, gián đoạn và roaming', 'Walk test, khảo sát và báo cáo heatmap'], installAndroid: 'Cài PureHub Android',
+    successHeadline: 'Đã kiểm tra kết nối', successDetail: (latency, jitter) => `Trung bình ${latency} ms, dao động ${jitter} ms qua 10 yêu cầu cục bộ.`, successShare: (latency) => `Tôi đã kiểm tra kết nối riêng tư bằng PureHub: độ trễ trung bình ${latency} ms.`,
+  },
+  zh: {
+    eyebrow: '连接维护旗舰工具', title: 'Wi-Fi 分析', description: '了解浏览器可提供的连接信息，并清楚说明平台限制。',
+    panelTitle: '连接健康', panelSubtitle: '浏览器无法扫描附近接入点。PureHub 仅显示 Web 标准允许的连接信号。', healthScore: '健康评分',
+    status: '状态', online: '在线', offline: '离线', networkClass: '网络类型', notExposed: '未提供', browserDownlink: '浏览器下行估计', browserRtt: '浏览器 RTT', averageLatency: '平均延迟', notTested: '尚未测试', jitter: '抖动', requestLoss: '请求失败率', dataSaver: '流量节省', enabled: '已开启', disabled: '已关闭',
+    runTest: '运行私密连接检查', checking: '正在检查 10 个样本…', history: '私密测试历史', clearHistory: '清除历史', recommendation: '网络健康建议', recommendations: ['连接状况适合日常浏览。', '延迟偏高，请靠近路由器或暂停大流量任务。', '连接不稳定，请检查路由器位置和竞争流量。', '设备当前离线，请重新连接后再检查。'],
+    testNote: '通过 10 个同源小请求估算延迟、抖动和请求失败率。这不是 ICMP 丢包测试、完整带宽测试或附近 Wi-Fi 扫描。',
+    androidTitle: '需要原生 Wi-Fi 工具？', androidDescription: '浏览器无法读取附近 SSID、信道、局域网设备、漫游事件或楼层覆盖。PureHub Android 只在使用相应功能时请求权限。', androidFeatures: ['附近网络与信道分析', '局域网设备与厂商识别', '速度、中断与漫游诊断', '步行测试、覆盖调查与热力图报告'], installAndroid: '安装 PureHub Android',
+    successHeadline: '连接检查完成', successDetail: (latency, jitter) => `10 个本地请求的平均延迟为 ${latency} ms，抖动为 ${jitter} ms。`, successShare: (latency) => `我使用 PureHub 完成了私密连接检查：平均延迟 ${latency} ms。`,
+  },
+  es: {
+    eyebrow: 'Herramienta principal de conexión', title: 'Analizador Wi-Fi', description: 'Comprende la información de conexión que muestra el navegador, con límites de plataforma explicados claramente.',
+    panelTitle: 'Salud de la conexión', panelSubtitle: 'El navegador no puede escanear puntos de acceso cercanos. PureHub solo muestra señales permitidas por los estándares web.', healthScore: 'SALUD DE RED',
+    status: 'Estado', online: 'En línea', offline: 'Sin conexión', networkClass: 'Tipo de red', notExposed: 'No disponible', browserDownlink: 'Descarga estimada', browserRtt: 'RTT del navegador', averageLatency: 'Latencia media', notTested: 'Sin probar', jitter: 'Variación', requestLoss: 'Fallos de solicitud', dataSaver: 'Ahorro de datos', enabled: 'Activado', disabled: 'Desactivado',
+    runTest: 'Comprobar conexión privada', checking: 'Comprobando 10 muestras…', history: 'Historial privado', clearHistory: 'Borrar historial', recommendation: 'Recomendación de salud de red', recommendations: ['La conexión parece adecuada para la navegación normal.', 'La latencia es alta. Acércate al router o pausa el tráfico intenso.', 'La conexión es inestable. Revisa la ubicación del router y el tráfico simultáneo.', 'El dispositivo está sin conexión. Vuelve a conectarlo antes de comprobar.'],
+    testNote: 'Diez solicitudes pequeñas al mismo origen estiman latencia, variación y fallos. No es pérdida ICMP, una prueba completa de ancho de banda ni un escaneo Wi-Fi cercano.',
+    androidTitle: '¿Necesitas herramientas Wi-Fi nativas?', androidDescription: 'El navegador no puede ver SSID cercanos, canales, dispositivos LAN, eventos de roaming ni cobertura en planos. PureHub Android solicita permisos solo al usar cada función.', androidFeatures: ['Redes cercanas y análisis de canales', 'Dispositivos LAN e identificación del fabricante', 'Velocidad, cortes y diagnóstico de roaming', 'Recorridos, estudios e informes de mapa de calor'], installAndroid: 'Instalar PureHub Android',
+    successHeadline: 'Comprobación completada', successDetail: (latency, jitter) => `${latency} ms de media y ${jitter} ms de variación en 10 solicitudes locales.`, successShare: (latency) => `He realizado una comprobación privada con PureHub: ${latency} ms de latencia media.`,
+  },
+}
 
 const META: Record<Mode, { eyebrow: string; title: string; description: string; accent: 'emerald' | 'violet' | 'amber' | 'sky' }> = {
   'smart-flashlight': { eyebrow: 'Light Suite flagship', title: 'Smart Flashlight', description: 'A bright screen light with dimming, pulse and SOS controls that remain under your control.', accent: 'amber' },
@@ -17,7 +94,11 @@ const META: Record<Mode, { eyebrow: string; title: string; description: string; 
 }
 
 export default function EverydayFlagshipSurface({ mode }: { mode: Mode }) {
-  const meta = META[mode]
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
+  const wifiCopy = WIFI_COPY[locale]
+  const meta = mode === 'wifi-analyzer'
+    ? { eyebrow: wifiCopy.eyebrow, title: wifiCopy.title, description: wifiCopy.description, accent: 'sky' as const }
+    : META[mode]
   return <div className="space-y-4"><FlagshipHero {...meta} />{mode === 'smart-flashlight' ? <Flashlight /> : mode === 'unit-converter' ? <Converter /> : mode === 'color-grabber' ? <ColorStudio /> : mode === 'deep-cleaner' ? <Cleaner /> : mode === 'wifi-analyzer' ? <WifiAnalyzer /> : mode === 'wallpaper-changer' ? <WallpaperStudio /> : mode === 'decision-wheel' ? <DecisionWheel /> : <Community />}</div>
 }
 
@@ -102,6 +183,9 @@ function Cleaner() {
 }
 
 function WifiAnalyzer() {
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
+  const copy = WIFI_COPY[locale]
+  const dateLocale = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN', es: 'es-ES' }[locale]
   const getConnection = () => (navigator as Navigator & { connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean; addEventListener?: (name: string, fn: () => void) => void; removeEventListener?: (name: string, fn: () => void) => void } }).connection
   type WebTest = { at: number; latency: number | null; jitter: number | null; loss: number }
   const [version, setVersion] = useState(0); const [latency, setLatency] = useState<number | null>(null); const [jitter, setJitter] = useState<number | null>(null); const [loss, setLoss] = useState<number | null>(null); const [testing, setTesting] = useState(false)
@@ -111,19 +195,37 @@ function WifiAnalyzer() {
   const test = async () => {
     setTesting(true)
     const samples: number[] = []; let failed = 0
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < 10; index++) {
       const start = performance.now()
       try { const response = await fetch(`/favicon.ico?health=${Date.now()}-${index}`, { cache: 'no-store' }); if (!response.ok) throw new Error('request failed'); samples.push(Math.round(performance.now() - start)) } catch { failed++ }
     }
     const nextLatency = samples.length ? Math.round(samples.reduce((sum, value) => sum + value, 0) / samples.length) : null
     const differences = samples.slice(1).map((value, index) => Math.abs(value - samples[index]))
     const nextJitter = differences.length ? Math.round(differences.reduce((sum, value) => sum + value, 0) / differences.length) : null
-    const nextLoss = failed * 20; setLatency(nextLatency); setJitter(nextJitter); setLoss(nextLoss)
+    const nextLoss = failed * 10; setLatency(nextLatency); setJitter(nextJitter); setLoss(nextLoss)
     const row = { at: Date.now(), latency: nextLatency, jitter: nextJitter, loss: nextLoss }; const nextHistory = [row, ...history].slice(0, 10); setHistory(nextHistory); localStorage.setItem('purehub.wifi.web-tests.v1', JSON.stringify(nextHistory))
-    if (nextLatency != null) markToolSuccess('wifi-analyzer', { headline: 'Connection check complete', detail: `${nextLatency} ms average with ${nextJitter ?? 0} ms jitter across five local requests.`, shareText: `I ran a private PureHub connection check: ${nextLatency} ms average latency.` })
+    if (nextLatency != null) markToolSuccess('wifi-analyzer', { headline: copy.successHeadline, detail: copy.successDetail(nextLatency, nextJitter ?? 0), shareText: copy.successShare(nextLatency) })
     setTesting(false)
   }
-  return <Panel title="Connection health" subtitle="A browser cannot scan nearby access points; PureHub reports only standards-based connection signals."><div className="grid gap-4 lg:grid-cols-[.7fr_1.3fr]"><div className="grid place-items-center rounded-[24px] bg-slate-950 p-6 text-white"><Gauge className="size-8 text-sky-300" /><strong className="mt-3 text-6xl tabular-nums">{score}</strong><span className="text-xs font-black text-slate-400">HEALTH SCORE</span><div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-400" style={{ width: `${score}%` }} /></div></div><div className="grid grid-cols-2 gap-2"><Metric label="Status" value={online ? 'Online' : 'Offline'} /><Metric label="Network class" value={connection?.effectiveType?.toUpperCase() ?? 'Not exposed'} /><Metric label="Browser downlink" value={connection?.downlink ? `${connection.downlink} Mbps` : 'Not exposed'} /><Metric label="Average latency" value={latency == null ? 'Not tested' : `${latency} ms`} /><Metric label="Jitter" value={jitter == null ? 'Not tested' : `${jitter} ms`} /><Metric label="Request loss" value={loss == null ? 'Not tested' : `${loss}%`} /></div></div><ActionButton className="mt-4 w-full" disabled={testing || !online} onClick={() => void test()}><Network className="mr-2 inline size-4" />{testing ? 'Checking five samples…' : 'Run private connection check'}</ActionButton>{history.length ? <details className="mt-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-black">Private test history ({history.length}/10)</summary><div className="mt-2 space-y-2">{history.map((item) => <div key={item.at} className="flex justify-between gap-3 text-xs text-slate-500"><span>{new Date(item.at).toLocaleString()}</span><strong>{item.latency ?? '--'} ms · jitter {item.jitter ?? '--'} · loss {item.loss}%</strong></div>)}</div></details> : null}<p className="mt-3 text-xs leading-5 text-slate-500">Five small same-origin requests estimate browser latency, jitter and request loss. This is not ICMP packet loss, a full bandwidth test or a nearby Wi-Fi scan. Install PureHub Android for channel, LAN and coverage tools.</p></Panel>
+  const recommendation = !online ? copy.recommendations[3] : latency != null && (latency > 180 || (loss ?? 0) >= 20) ? copy.recommendations[2] : latency != null && latency > 90 ? copy.recommendations[1] : copy.recommendations[0]
+  const clearHistory = () => { setHistory([]); localStorage.removeItem('purehub.wifi.web-tests.v1') }
+  return <div className="space-y-4">
+    <Panel title={copy.panelTitle} subtitle={copy.panelSubtitle}>
+      <div className="grid gap-4 lg:grid-cols-[.7fr_1.3fr]">
+        <div className="grid place-items-center rounded-[24px] bg-slate-950 p-6 text-white"><Gauge className="size-8 text-sky-300" /><strong className="mt-3 text-6xl tabular-nums">{score}</strong><span className="text-xs font-black text-slate-400">{copy.healthScore}</span><div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-400" style={{ width: `${score}%` }} /></div></div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3"><Metric label={copy.status} value={online ? copy.online : copy.offline} /><Metric label={copy.networkClass} value={connection?.effectiveType?.toUpperCase() ?? copy.notExposed} /><Metric label={copy.browserDownlink} value={connection?.downlink ? `${connection.downlink} Mbps` : copy.notExposed} /><Metric label={copy.browserRtt} value={connection?.rtt ? `${connection.rtt} ms` : copy.notExposed} /><Metric label={copy.averageLatency} value={latency == null ? copy.notTested : `${latency} ms`} /><Metric label={copy.jitter} value={jitter == null ? copy.notTested : `${jitter} ms`} /><Metric label={copy.requestLoss} value={loss == null ? copy.notTested : `${loss}%`} /><Metric label={copy.dataSaver} value={connection?.saveData ? copy.enabled : copy.disabled} /></div>
+      </div>
+      <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sky-950 dark:border-sky-900 dark:bg-sky-950/35 dark:text-sky-100"><strong className="text-sm">{copy.recommendation}</strong><p className="mt-1 text-xs leading-5">{recommendation}</p></div>
+      <ActionButton className="mt-4 w-full" disabled={testing || !online} onClick={() => void test()}><Network className="mr-2 inline size-4" />{testing ? copy.checking : copy.runTest}</ActionButton>
+      {history.length ? <details className="mt-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"><summary className="cursor-pointer text-sm font-black">{copy.history} ({history.length}/10)</summary><div className="mt-2 space-y-2">{history.map((item) => <div key={item.at} className="flex justify-between gap-3 text-xs text-slate-500"><span>{new Date(item.at).toLocaleString(dateLocale)}</span><strong>{item.latency ?? '--'} ms · {copy.jitter.toLowerCase()} {item.jitter ?? '--'} · {copy.requestLoss.toLowerCase()} {item.loss}%</strong></div>)}</div><button type="button" className="mt-3 text-xs font-black text-rose-600 dark:text-rose-300" onClick={clearHistory}>{copy.clearHistory}</button></details> : null}
+      <p className="mt-3 text-xs leading-5 text-slate-500">{copy.testNote}</p>
+    </Panel>
+    <section className="rounded-[24px] border border-emerald-200 bg-gradient-to-br from-emerald-50 to-sky-50 p-5 dark:border-emerald-900 dark:from-emerald-950/45 dark:to-sky-950/35">
+      <div className="flex items-start gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-600 text-white"><Download className="size-5" /></span><div><h3 className="font-black">{copy.androidTitle}</h3><p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{copy.androidDescription}</p></div></div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">{copy.androidFeatures.map((feature) => <div key={feature} className="flex items-center gap-2 rounded-xl bg-white/80 p-3 text-xs font-bold dark:bg-slate-950/55"><CheckCircle2 className="size-4 shrink-0 text-emerald-600" />{feature}</div>)}</div>
+      <a href={`/${locale}/download?utm_source=wifi-pwa&utm_campaign=native-capability`} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-black text-white transition hover:bg-emerald-800"><Download className="mr-2 size-4" />{copy.installAndroid}</a>
+    </section>
+  </div>
 }
 
 function WallpaperStudio() {

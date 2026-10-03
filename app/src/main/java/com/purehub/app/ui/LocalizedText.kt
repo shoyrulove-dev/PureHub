@@ -435,14 +435,40 @@ private val es = mapOf(
     "All tools" to "Todas las herramientas", "Zen & Time" to "Zen y tiempo", "Measure & Tools" to "Medición y herramientas", "Vision" to "Visión", "System & Security" to "Sistema y seguridad", "Finance & Community" to "Finanzas y comunidad",
     "Lunar Calendar" to "Calendario lunar", "Zen Habit" to "Hábitos Zen", "Zen Pomodoro" to "Pomodoro Zen", "Zen Breath" to "Respiración Zen", "Compass" to "Brújula", "Bubble Level & Ruler" to "Nivel y regla", "Decibel Meter" to "Medidor de decibelios", "Smart Flashlight" to "Linterna inteligente", "Unit Converter" to "Convertidor de unidades",
     "QR Studio" to "Estudio QR", "Doc to PDF" to "Documento a PDF", "OCR Studio" to "Estudio OCR", "Color Grabber" to "Selector de color", "Photo Privacy" to "Privacidad de fotos", "Deep Cleaner" to "Limpieza profunda", "Speaker Cleaner" to "Limpiador de altavoz", "WiFi Analyzer" to "Analizador Wi-Fi", "Password Vault" to "Bóveda de contraseñas", "Authenticator Vault" to "Bóveda de autenticación", "File Studio" to "Estudio de archivos", "Wallpaper Changer" to "Cambiador de fondo", "Bill Splitter" to "Divisor de cuentas", "Expense Tracker" to "Registro de gastos", "Decision Wheel" to "Ruleta de decisión", "PureHub Community" to "Comunidad PureHub", "Screen Recorder" to "Grabador de pantalla",
+    "Vietnamese lunar dates, can-chi and traditional markers." to "Fechas lunares vietnamitas, can-chi y marcadores tradicionales.",
+    "Build simple habits without accounts or pressure." to "Crea hábitos sencillos sin cuentas ni presión.",
+    "A calm focus timer with local soundscapes." to "Un temporizador de concentración tranquilo con sonidos locales.",
+    "Guided breathing with gentle motion." to "Respiración guiada con movimiento suave.",
+    "Direction, bearing and sensor guidance." to "Dirección, rumbo y orientación mediante sensores.",
+    "Quick two-axis leveling and calibration." to "Nivelación rápida en dos ejes y calibración.",
+    "Private estimated sound-level monitoring." to "Medición privada y estimada del nivel de sonido.",
+    "Torch, screen light and safety patterns." to "Linterna, luz de pantalla y patrones de seguridad.",
+    "Fast offline unit conversion." to "Conversión rápida de unidades sin conexión.",
+    "Scan QR codes and barcodes, create codes, and keep a private local history." to "Escanea códigos QR y de barras, crea códigos y conserva un historial local privado.",
+    "Capture, arrange and export private PDFs." to "Captura, ordena y exporta PDF privados.",
+    "Scan, clean, edit and export private documents offline." to "Escanea, limpia, edita y exporta documentos privados sin conexión.",
+    "Sample and copy colors from the camera." to "Obtén y copia colores desde la cámara.",
+    "Create share-ready photos without GPS or EXIF metadata." to "Crea fotos listas para compartir sin GPS ni metadatos EXIF.",
+    "Review reclaimable files before deleting." to "Revisa los archivos recuperables antes de eliminarlos.",
+    "Play a controlled tone for residual water." to "Reproduce un tono controlado para expulsar agua residual.",
+    "Inspect nearby signals and Wi-Fi channels." to "Analiza señales cercanas y canales Wi-Fi.",
+    "Encrypted local credentials with device protection." to "Credenciales locales cifradas y protegidas por el dispositivo.",
+    "Offline 2FA codes protected by your device lock." to "Códigos 2FA sin conexión protegidos por el bloqueo del dispositivo.",
+    "Hash, archive and share local files privately." to "Calcula hashes, comprime y comparte archivos locales de forma privada.",
+    "Local wallpaper preview and rotation." to "Vista previa y rotación local de fondos de pantalla.",
+    "Split items, tax and tips for a group." to "Divide artículos, impuestos y propinas en un grupo.",
+    "Private offline expense ledger." to "Registro privado de gastos sin conexión.",
+    "A fair local picker for quick choices." to "Un selector local justo para decisiones rápidas.",
+    "Telegram, GitHub and the PureHub roadmap." to "Telegram, GitHub y la hoja de ruta de PureHub.",
+    "Record a local MP4 with Android's consent flow." to "Graba un MP4 local con el flujo de consentimiento de Android.",
     "FREE · NO ADS · OPEN SOURCE" to "GRATIS · SIN ANUNCIOS · CÓDIGO ABIERTO", "Useful, private tools for everyday life—built openly with the community." to "Herramientas útiles y privadas para cada día, creadas abiertamente con la comunidad.", "Offline-first" to "Primero sin conexión", "Private" to "Privado", "TODAY" to "HOY", "Lunar" to "Lunar", "Quick access" to "Acceso rápido", "Favorites" to "Favoritos", "Privacy & preferences" to "Privacidad y preferencias", "Review permissions, visible tools and local-only storage behavior." to "Revisa permisos, herramientas visibles y el comportamiento de almacenamiento solo local.",
     "Free, private and ad-free utilities. Search by what you need to do." to "Utilidades gratuitas, privadas y sin anuncios. Busca según lo que necesites hacer.", "What do you want to do?" to "¿Qué quieres hacer?", "Manage Tools" to "Gestionar herramientas", "No tools enabled" to "No hay herramientas activadas", "No visible mini-apps." to "No hay mini-apps visibles.", "Search mini-app" to "Buscar mini-app", "Apply Now" to "Aplicar ahora", "Favorite" to "Favorito", "Unfavorite" to "Quitar favorito",
     "Community flagship" to "Comunidad destacada", "PureHub belongs to everyone" to "PureHub pertenece a todos", "Join the conversation, report issues and shape free, no-ad, open-source tools together." to "Únete a la conversación, informa problemas y crea con nosotros herramientas gratuitas, sin anuncios y de código abierto.",
     "Telegram community" to "Comunidad de Telegram", "Get updates, discuss useful tools and help other PureHub users." to "Recibe novedades, comenta herramientas útiles y ayuda a otros usuarios de PureHub.", "Open Telegram" to "Abrir Telegram",
     "Open-source on GitHub" to "Código abierto en GitHub", "Read the code, report bugs, suggest a mini app, improve translations or submit a pull request." to "Lee el código, informa errores, sugiere una mini-app, mejora traducciones o envía un pull request.", "Open GitHub" to "Abrir GitHub", "Send feedback or report a bug" to "Enviar comentarios o informar un error", "For a bug, include the tool name, Android version and repeatable steps—never private files, passwords or API keys." to "Para informar un error, incluye la herramienta, la versión de Android y pasos repetibles; nunca archivos privados, contraseñas ni claves API.",
     "Free for everyone" to "Gratis para todos", "Support is always voluntary. Community badges may celebrate contributors, but core tools remain available to every user." to "El apoyo siempre es voluntario. Las insignias pueden reconocer a quienes colaboran, pero las herramientas principales siguen disponibles para todas las personas.",
-    "Continue" to "Continuar", "Cancel" to "Cancelar", "Close" to "Cerrar", "Save" to "Guardar", "Delete" to "Eliminar",
-    "Scan" to "Escanear", "Image" to "Imagen", "History" to "Historial", "Language" to "Idioma", "Search" to "Buscar",
+    "Continue" to "Continuar", "Cancel" to "Cancelar", "Close" to "Cerrar", "Save" to "Guardar", "Delete" to "Eliminar", "All" to "Todas", "Export CSV" to "Exportar CSV",
+    "Scan" to "Escanear", "Image" to "Imagen", "History" to "Historial", "Language" to "Idioma", "Search" to "Buscar", "Nearby networks" to "Redes cercanas",
     "Document" to "Documento", "Receipt" to "Recibo", "Note" to "Nota", "Original" to "Original", "Clean" to "Limpiar", "B&W" to "B/N",
     "Allow camera" to "Permitir cámara", "Camera stays off until you allow it" to "La cámara permanecerá apagada hasta que la permitas",
     "Back to tools" to "Volver a herramientas", "Scan settings" to "Controles de escaneo", "Document type" to "Tipo de documento",
@@ -514,6 +540,75 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     val zh = language == AppLanguage.Chinese
     val es = language == AppLanguage.Spanish
     when (text) {
+        "Nearby Wi-Fi scan is ready on this device." -> return when { vi -> "Thiết bị đã sẵn sàng quét Wi-Fi lân cận."; zh -> "此设备已可扫描附近的 Wi-Fi。"; es -> "El dispositivo está listo para escanear redes Wi-Fi cercanas."; else -> null }
+        "Without permission, PureHub only shows your current connection." -> return when { vi -> "Nếu không cấp quyền, PureHub chỉ hiển thị kết nối hiện tại."; zh -> "未授予权限时，PureHub 只能显示当前连接。"; es -> "Sin permiso, PureHub solo muestra la conexión actual."; else -> null }
+        "Notification permission is required for reliable background monitoring." -> return when { vi -> "Cần quyền thông báo để giám sát nền ổn định."; zh -> "可靠的后台监控需要通知权限。"; es -> "Se necesita permiso de notificaciones para una supervisión fiable en segundo plano."; else -> null }
+        "Nearby Wi-Fi scan is paused. Existing local results remain on this device." -> return when { vi -> "Đã tạm dừng quét Wi-Fi lân cận. Kết quả cục bộ hiện có vẫn nằm trên thiết bị này."; zh -> "附近 Wi-Fi 扫描已暂停。现有本地结果仍保留在此设备上。"; es -> "El escaneo Wi-Fi cercano está en pausa. Los resultados locales existentes permanecen en este dispositivo."; else -> null }
+        "Android deferred the latest scan request. Showing cached results until fresh data arrives." -> return when { vi -> "Android đã hoãn yêu cầu quét mới nhất. Đang hiển thị kết quả lưu tạm cho đến khi có dữ liệu mới."; zh -> "Android 延迟了最新扫描请求。在新数据到达前显示缓存结果。"; es -> "Android aplazó la última solicitud de escaneo. Se muestran resultados en caché hasta recibir datos nuevos."; else -> null }
+        "Live signal history is updating. Nearby Wi-Fi scan refreshes locally when Android allows it." -> return when { vi -> "Lịch sử tín hiệu đang cập nhật. Quét Wi-Fi lân cận sẽ làm mới cục bộ khi Android cho phép."; zh -> "实时信号历史正在更新。Android 允许时会在本机刷新附近 Wi-Fi 扫描。"; es -> "El historial de señal se actualiza. El escaneo Wi-Fi cercano se refresca localmente cuando Android lo permite."; else -> null }
+        "distance unavailable" -> return when { vi -> "không có khoảng cách"; zh -> "距离不可用"; es -> "distancia no disponible"; else -> null }
+        "Run a network test before sampling to attach metrics" -> return when { vi -> "Hãy kiểm tra mạng trước khi lấy mẫu để đính kèm chỉ số"; zh -> "采样前请运行网络测试以附加指标"; es -> "Ejecuta una prueba de red antes de tomar la muestra para adjuntar métricas"; else -> null }
+        "Network health recommendation" -> return when { vi -> "Khuyến nghị sức khỏe mạng"; zh -> "网络健康建议"; es -> "Recomendación de salud de red"; else -> null }
+        "Current roaming choice looks healthy." -> return when { vi -> "Lựa chọn chuyển vùng hiện tại đang tốt."; zh -> "当前漫游选择状态良好。"; es -> "La selección de roaming actual parece adecuada."; else -> null }
+        "A stronger access point is available. This device may be sticking to a weaker node." -> return when { vi -> "Có điểm truy cập mạnh hơn. Thiết bị này có thể đang bám vào một nút yếu hơn."; zh -> "有更强的接入点可用，此设备可能仍连接在较弱的节点上。"; es -> "Hay un punto de acceso más potente. Este dispositivo podría seguir conectado a un nodo más débil."; else -> null }
+        "Filter SSID or BSSID" -> return when { vi -> "Lọc SSID hoặc BSSID"; zh -> "筛选 SSID 或 BSSID"; es -> "Filtrar SSID o BSSID"; else -> null }
+        "Secured" -> return when { vi -> "Có bảo mật"; zh -> "已加密"; es -> "Seguras"; else -> null }
+        "Hidden network" -> return when { vi -> "Mạng ẩn"; zh -> "隐藏网络"; es -> "Red oculta"; else -> null }
+        "Private / randomized MAC" -> return when { vi -> "MAC riêng tư / ngẫu nhiên"; zh -> "私有 / 随机 MAC"; es -> "MAC privada / aleatoria"; else -> null }
+        "Runs only when you tap. Measures gateway, Internet reachability, DNS, loaded latency and adaptive throughput." -> return when { vi -> "Chỉ chạy khi bạn chạm. Đo gateway, khả năng truy cập Internet, DNS, độ trễ khi tải và thông lượng thích ứng."; zh -> "仅在您点击时运行，测量网关、互联网连通性、DNS、负载延迟和自适应吞吐量。"; es -> "Solo se ejecuta al tocar. Mide la puerta de enlace, el acceso a Internet, DNS, la latencia bajo carga y el rendimiento adaptativo."; else -> null }
+        "The connected build contacts Cloudflare speed endpoints and public DNS resolvers only during this test. No identifier is added by PureHub." -> return when { vi -> "Bản có kết nối chỉ liên hệ máy chủ đo tốc độ Cloudflare và DNS công cộng trong lúc kiểm tra. PureHub không thêm mã định danh."; zh -> "联网版本仅在测试期间连接 Cloudflare 测速端点和公共 DNS 解析器。PureHub 不会添加任何标识符。"; es -> "La versión conectada solo contacta los servidores de velocidad de Cloudflare y resolutores DNS públicos durante esta prueba. PureHub no añade identificadores."; else -> null }
+        "Auto · fastest configured endpoint" -> return when { vi -> "Tự động · máy chủ đã cấu hình nhanh nhất"; zh -> "自动 · 最快的已配置端点"; es -> "Automático · servidor configurado más rápido"; else -> null }
+        "Test mode" -> return when { vi -> "Chế độ kiểm tra"; zh -> "测试模式"; es -> "Modo de prueba"; else -> null }
+        "Download · Upload · Loaded latency" -> return when { vi -> "Tải xuống · Tải lên · Độ trễ khi tải"; zh -> "下载 · 上传 · 负载延迟"; es -> "Descarga · Subida · Latencia bajo carga"; else -> null }
+        "History" -> return when { vi -> "Lịch sử"; zh -> "历史"; es -> "Historial"; else -> null }
+        "14 runs · stored only on this device" -> return when { vi -> "14 lần chạy · chỉ lưu trên thiết bị này"; zh -> "14 次运行 · 仅保存在此设备上"; es -> "14 ejecuciones · guardadas solo en este dispositivo"; else -> null }
+        "Manage separate projects and floors. Measurements, scale and reports stay on this device." -> return when { vi -> "Quản lý riêng từng dự án và tầng. Số đo, tỷ lệ và báo cáo chỉ nằm trên thiết bị này."; zh -> "分别管理项目和楼层。测量、比例和报告均保留在此设备上。"; es -> "Gestiona proyectos y plantas por separado. Las mediciones, la escala y los informes permanecen en este dispositivo."; else -> null }
+        "Home survey" -> return when { vi -> "Khảo sát nhà"; zh -> "住宅勘测"; es -> "Estudio del hogar"; else -> null }
+        "Wi-Fi survey" -> return when { vi -> "Khảo sát Wi-Fi"; zh -> "Wi-Fi 勘测"; es -> "Estudio Wi-Fi"; else -> null }
+        "Floor 1" -> return when { vi -> "Tầng 1"; zh -> "1 楼"; es -> "Planta 1"; else -> null }
+        "Project" -> return when { vi -> "Dự án"; zh -> "项目"; es -> "Proyecto"; else -> null }
+        "Floor" -> return when { vi -> "Tầng"; zh -> "楼层"; es -> "Planta"; else -> null }
+        "+ Project" -> return when { vi -> "+ Dự án"; zh -> "+ 项目"; es -> "+ Proyecto"; else -> null }
+        "Calibrate scale" -> return when { vi -> "Hiệu chỉnh tỷ lệ"; zh -> "校准比例"; es -> "Calibrar escala"; else -> null }
+        "Cancel calibration" -> return when { vi -> "Hủy hiệu chỉnh"; zh -> "取消校准"; es -> "Cancelar calibración"; else -> null }
+        "Delete project" -> return when { vi -> "Xóa dự án"; zh -> "删除项目"; es -> "Eliminar proyecto"; else -> null }
+        "Add a floor plan to start mapping" -> return when { vi -> "Thêm sơ đồ tầng để bắt đầu lập bản đồ"; zh -> "添加平面图以开始绘制"; es -> "Añade un plano para comenzar el mapa"; else -> null }
+        "AP comparison" -> return when { vi -> "So sánh điểm truy cập"; zh -> "接入点比较"; es -> "Comparación de puntos de acceso"; else -> null }
+        "Calibrate real distance" -> return when { vi -> "Hiệu chỉnh khoảng cách thực"; zh -> "校准实际距离"; es -> "Calibrar distancia real"; else -> null }
+        "Clear active floor" -> return when { vi -> "Xóa dữ liệu tầng hiện tại"; zh -> "清除当前楼层数据"; es -> "Borrar la planta activa"; else -> null }
+        "Connected speed tests are unavailable in the offline F-Droid build." -> return when { vi -> "Đo tốc độ qua mạng không khả dụng trong bản F-Droid ngoại tuyến."; zh -> "离线 F-Droid 版本不支持联网测速。"; es -> "Las pruebas de velocidad conectadas no están disponibles en la versión F-Droid sin conexión."; else -> null }
+        "Credentials are encrypted on this device and sent only to this controller. PureHub never changes router settings." -> return when { vi -> "Thông tin đăng nhập được mã hóa trên thiết bị và chỉ gửi đến bộ điều khiển này. PureHub không bao giờ thay đổi cài đặt router."; zh -> "凭据在此设备上加密，仅发送到该控制器。PureHub 绝不会更改路由器设置。"; es -> "Las credenciales se cifran en este dispositivo y solo se envían a este controlador. PureHub nunca cambia los ajustes del router."; else -> null }
+        "Distance (meters)" -> return when { vi -> "Khoảng cách (mét)"; zh -> "距离（米）"; es -> "Distancia (metros)"; else -> null }
+        "Download speed curve" -> return when { vi -> "Đường tốc độ tải xuống"; zh -> "下载速度曲线"; es -> "Curva de velocidad de descarga"; else -> null }
+        "Enter a self-hosted endpoint compatible with /__down?bytes= and /__up. Auto selects the lowest preflight latency." -> return when { vi -> "Nhập máy chủ tự lưu trữ tương thích với /__down?bytes= và /__up. Chế độ tự động chọn máy chủ có độ trễ kiểm tra thấp nhất."; zh -> "输入兼容 /__down?bytes= 和 /__up 的自托管端点。自动模式会选择预检延迟最低的端点。"; es -> "Introduce un servidor propio compatible con /__down?bytes= y /__up. El modo automático selecciona la menor latencia previa."; else -> null }
+        "Enter the measured distance between the two selected points." -> return when { vi -> "Nhập khoảng cách đã đo giữa hai điểm được chọn."; zh -> "输入两个选定点之间的实测距离。"; es -> "Introduce la distancia medida entre los dos puntos seleccionados."; else -> null }
+        "Floor / area" -> return when { vi -> "Tầng / khu vực"; zh -> "楼层 / 区域"; es -> "Planta / zona"; else -> null }
+        "Foreground session survives screen-off and watches outages, roaming and latency spikes with a visible notification." -> return when { vi -> "Phiên chạy nền trước vẫn hoạt động khi tắt màn hình và theo dõi mất mạng, chuyển vùng, đột biến độ trễ bằng thông báo hiển thị."; zh -> "前台会话在熄屏后继续运行，并通过可见通知监测断网、漫游和延迟突增。"; es -> "La sesión en primer plano continúa con la pantalla apagada y vigila cortes, roaming y picos de latencia mediante una notificación visible."; else -> null }
+        "Latest result" -> return when { vi -> "Kết quả mới nhất"; zh -> "最新结果"; es -> "Último resultado"; else -> null }
+        "New survey project" -> return when { vi -> "Dự án khảo sát mới"; zh -> "新建勘测项目"; es -> "Nuevo proyecto de estudio"; else -> null }
+        "No local scan results yet." -> return when { vi -> "Chưa có kết quả quét mạng cục bộ."; zh -> "暂无本地扫描结果。"; es -> "Todavía no hay resultados del escaneo local."; else -> null }
+        "Optional local, read-only connector for UniFi Network, Omada Open API or OpenWrt ubus." -> return when { vi -> "Kết nối cục bộ chỉ đọc tùy chọn cho UniFi Network, Omada Open API hoặc OpenWrt ubus."; zh -> "可选的本地只读连接器，支持 UniFi Network、Omada Open API 或 OpenWrt ubus。"; es -> "Conector local opcional de solo lectura para UniFi Network, Omada Open API u OpenWrt ubus."; else -> null }
+        "Project name" -> return when { vi -> "Tên dự án"; zh -> "项目名称"; es -> "Nombre del proyecto"; else -> null }
+        "Read-only gateway fingerprint. PureHub does not log in, change settings or upload router details." -> return when { vi -> "Nhận diện gateway chỉ đọc. PureHub không đăng nhập, thay đổi cài đặt hay tải thông tin router lên mạng."; zh -> "只读网关识别。PureHub 不会登录、更改设置或上传路由器详情。"; es -> "Identificación de la puerta de enlace en modo de solo lectura. PureHub no inicia sesión, cambia ajustes ni sube datos del router."; else -> null }
+        "Save scale" -> return when { vi -> "Lưu tỷ lệ"; zh -> "保存比例"; es -> "Guardar escala"; else -> null }
+        "Scans only the current private /24 network after you tap the button. No cloud inventory or background monitoring." -> return when { vi -> "Chỉ quét mạng riêng /24 hiện tại sau khi bạn chạm nút. Không lưu danh mục trên đám mây hay giám sát nền."; zh -> "仅在点击按钮后扫描当前私有 /24 网络，不使用云端设备清单或后台监控。"; es -> "Solo escanea la red privada /24 actual al tocar el botón. No usa inventario en la nube ni supervisión en segundo plano."; else -> null }
+        "Tap two known points on the plan, then enter their real distance." -> return when { vi -> "Chạm hai điểm đã biết trên sơ đồ rồi nhập khoảng cách thực."; zh -> "在平面图上点击两个已知点，然后输入实际距离。"; es -> "Toca dos puntos conocidos del plano e introduce su distancia real."; else -> null }
+        "The background is an IDW estimate between measured points. It is coverage guidance, not an RF propagation prediction." -> return when { vi -> "Nền là nội suy IDW giữa các điểm đo. Đây là hướng dẫn vùng phủ, không phải dự đoán lan truyền RF."; zh -> "背景为测量点之间的 IDW 插值，仅用于覆盖参考，不是射频传播预测。"; es -> "El fondo es una estimación IDW entre puntos medidos. Sirve como guía de cobertura, no como predicción de propagación RF."; else -> null }
+        "Then tap your real position to capture a stable signal sample." -> return when { vi -> "Sau đó chạm vào vị trí thực để lấy mẫu tín hiệu ổn định."; zh -> "然后点击您的实际位置以采集稳定的信号样本。"; es -> "Después toca tu posición real para capturar una muestra de señal estable."; else -> null }
+        "Walk through your home for 1–3 minutes. PureHub records signal samples locally so you can find weak zones and roaming changes." -> return when { vi -> "Đi quanh nhà trong 1–3 phút. PureHub ghi mẫu tín hiệu cục bộ để tìm vùng yếu và thay đổi chuyển vùng."; zh -> "在家中行走 1–3 分钟。PureHub 会在本机记录信号样本，以发现弱覆盖区域和漫游变化。"; es -> "Recorre tu casa durante 1–3 minutos. PureHub guarda muestras de señal localmente para encontrar zonas débiles y cambios de roaming."; else -> null }
+        "PureHub Wi-Fi scan" -> return when { vi -> "Bản quét Wi-Fi PureHub"; zh -> "PureHub Wi-Fi 扫描"; es -> "Escaneo Wi-Fi de PureHub"; else -> null }
+        "Export Wi-Fi CSV" -> return when { vi -> "Xuất CSV Wi-Fi"; zh -> "导出 Wi-Fi CSV"; es -> "Exportar CSV de Wi-Fi"; else -> null }
+        "Private endpoint not configured" -> return when { vi -> "Chưa cấu hình máy chủ riêng"; zh -> "尚未配置私有端点"; es -> "Servidor privado sin configurar"; else -> null }
+        "Preparing" -> return when { vi -> "Đang chuẩn bị"; zh -> "正在准备"; es -> "Preparando"; else -> null }
+        "Profile / data" -> return when { vi -> "Chế độ / dữ liệu"; zh -> "模式 / 数据"; es -> "Perfil / datos"; else -> null }
+        "Internet" -> return when { vi -> "Internet"; zh -> "互联网"; es -> "Internet"; else -> null }
+        "Jitter" -> return when { vi -> "Dao động"; zh -> "抖动"; es -> "Variación"; else -> null }
+        "Loss" -> return when { vi -> "Mất gói"; zh -> "丢包"; es -> "Pérdida"; else -> null }
+        "Down" -> return when { vi -> "Tải xuống"; zh -> "下载"; es -> "Descarga"; else -> null }
+        "Connection loss was observed. Check router distance or ISP stability." -> return when { vi -> "Đã ghi nhận mất kết nối. Hãy kiểm tra khoảng cách đến router hoặc độ ổn định của nhà mạng."; zh -> "检测到连接丢失，请检查与路由器的距离或运营商稳定性。"; es -> "Se observó pérdida de conexión. Revisa la distancia al router o la estabilidad del proveedor."; else -> null }
+        "DNS response is slow. Try another resolver in Phase 2 settings." -> return when { vi -> "DNS phản hồi chậm. Hãy thử máy phân giải khác trong cài đặt Giai đoạn 2."; zh -> "DNS 响应较慢，请在第二阶段设置中尝试其他解析器。"; es -> "La respuesta DNS es lenta. Prueba otro resolutor en los ajustes de la fase 2."; else -> null }
+        "Local gateway latency is high. Check Wi-Fi interference or router load." -> return when { vi -> "Độ trễ gateway cục bộ cao. Hãy kiểm tra nhiễu Wi-Fi hoặc tải của router."; zh -> "本地网关延迟较高，请检查 Wi-Fi 干扰或路由器负载。"; es -> "La latencia de la puerta de enlace local es alta. Revisa las interferencias Wi-Fi o la carga del router."; else -> null }
+        "Connection path looks healthy from this device." -> return when { vi -> "Đường kết nối từ thiết bị này đang tốt."; zh -> "此设备的连接路径状态良好。"; es -> "La ruta de conexión parece adecuada desde este dispositivo."; else -> null }
         "Speed server" -> return when { vi -> "Máy chủ đo tốc độ"; zh -> "测速服务器"; es -> "Servidor de velocidad"; else -> null }
         "Auto select" -> return when { vi -> "Tự động chọn"; zh -> "自动选择"; es -> "Selección automática"; else -> null }
         "Private endpoint" -> return when { vi -> "Máy chủ riêng"; zh -> "私有端点"; es -> "Servidor privado"; else -> null }
@@ -717,8 +812,24 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     match("Channel (\\d+)")?.let {
         return when { vi -> "Kênh ${it[1]}"; zh -> "信道 ${it[1]}"; es -> "Canal ${it[1]}"; else -> null }
     }
+    match("Signal (\\d+)/100")?.let {
+        return when { vi -> "Tín hiệu ${it[1]}/100"; zh -> "信号 ${it[1]}/100"; es -> "Señal ${it[1]}/100"; else -> null }
+    }
+    match("(.+) · Ch (\\d+) · (\\d+) MHz · (.+)")?.let {
+        return when { vi -> "${it[1]} · Kênh ${it[2]} · ${it[3]} MHz · ${it[4]}"; zh -> "${it[1]} · 信道 ${it[2]} · ${it[3]} MHz · ${it[4]}"; es -> "${it[1]} · Canal ${it[2]} · ${it[3]} MHz · ${it[4]}"; else -> null }
+    }
+    match("(.+) · Ch (\\d+) · (\\d+) Mbps")?.let {
+        return when { vi -> "${it[1]} · Kênh ${it[2]} · ${it[3]} Mbps"; zh -> "${it[1]} · 信道 ${it[2]} · ${it[3]} Mbps"; es -> "${it[1]} · Canal ${it[2]} · ${it[3]} Mbps"; else -> null }
+    }
     match("(.+) · Ch (\\d+)")?.let {
         return when { vi -> "${it[1]} · Kênh ${it[2]}"; zh -> "${it[1]} · 信道 ${it[2]}"; es -> "${it[1]} · Canal ${it[2]}"; else -> null }
+    }
+    match("Local history · (\\d+)/(\\d+)")?.let {
+        return when { vi -> "Lịch sử cục bộ · ${it[1]}/${it[2]}"; zh -> "本地历史 · ${it[1]}/${it[2]}"; es -> "Historial local · ${it[1]}/${it[2]}"; else -> null }
+    }
+    match("(.+) · Floor (\\d+)")?.let {
+        val name = translateUiText(it[1], language)
+        return when { vi -> "$name · Tầng ${it[2]}"; zh -> "$name · ${it[2]} 楼"; es -> "$name · Planta ${it[2]}"; else -> null }
     }
     match("(.+) · current")?.let {
         return when { vi -> "${it[1]} · đang dùng"; zh -> "${it[1]} · 当前连接"; es -> "${it[1]} · actual"; else -> null }
@@ -800,6 +911,21 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
     }
     match("(.+) · (Allowed|Not allowed)")?.let {
         return "${translateUiText(it[1], language)} · ${translateUiText(it[2], language)}"
+    }
+    match("(.+) · distance unavailable")?.let {
+        return when { vi -> "${it[1]} · không có khoảng cách"; zh -> "${it[1]} · 距离不可用"; es -> "${it[1]} · distancia no disponible"; else -> null }
+    }
+    match("(\\d+)s sample")?.let {
+        return when { vi -> "Mẫu ${it[1]} giây"; zh -> "${it[1]} 秒采样"; es -> "Muestra de ${it[1]} s"; else -> null }
+    }
+    match("(.+) · (\\d+)% confidence")?.let {
+        return when { vi -> "${it[1]} · độ tin cậy ${it[2]}%"; zh -> "${it[1]} · 置信度 ${it[2]}%"; es -> "${it[1]} · ${it[2]}% de confianza"; else -> null }
+    }
+    match("([\\d.]+)% loss")?.let {
+        return when { vi -> "Mất ${it[1]}%"; zh -> "丢包 ${it[1]}%"; es -> "${it[1]}% de pérdida"; else -> null }
+    }
+    match("([\\d.]+) Mbps down")?.let {
+        return when { vi -> "Tải xuống ${it[1]} Mbps"; zh -> "下载 ${it[1]} Mbps"; es -> "Descarga ${it[1]} Mbps"; else -> null }
     }
     return null
 }

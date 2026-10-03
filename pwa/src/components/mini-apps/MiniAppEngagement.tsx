@@ -29,6 +29,13 @@ const completionCtas: Partial<Record<MiniAppId, CompletionCta>> = {
   'deep-cleaner': { label: 'Review storage safely on Android', detail: 'Plan a cleanup with clear controls instead of background file deletion.' },
 }
 
+const wifiCompletionCtas: Record<ReturnType<typeof normalizeLocale>, CompletionCta> = {
+  en: { label: 'Run a real Wi-Fi scan on Android', detail: 'Install Android for nearby networks, channels, LAN discovery, roaming and coverage surveys.' },
+  vi: { label: 'Quét Wi-Fi thực trên Android', detail: 'Cài Android để xem mạng lân cận, kênh, thiết bị LAN, roaming và khảo sát vùng phủ.' },
+  zh: { label: '在 Android 上运行真实 Wi-Fi 扫描', detail: '安装 Android 版以使用附近网络、信道、局域网发现、漫游和覆盖调查。' },
+  es: { label: 'Escanear Wi-Fi de verdad en Android', detail: 'Instala Android para ver redes cercanas, canales, dispositivos LAN, roaming y estudios de cobertura.' },
+}
+
 const testerSprintApps: MiniAppId[] = ['qr-studio', 'ocr-text', 'deep-cleaner']
 
 const NEXT_TOOL: Record<MiniAppId, MiniAppId> = {
@@ -73,7 +80,7 @@ export function MiniAppEngagement({ miniAppId, title }: MiniAppEngagementProps) 
   const [success, setSuccess] = useState<ToolSuccess | null>(null)
   const locale = normalizeLocale(window.location.pathname.split('/')[1])
   const nextTool = MINI_APP_BY_ID.get(NEXT_TOOL[miniAppId])
-  const completionCta = completionCtas[miniAppId] ?? {
+  const completionCta = miniAppId === 'wifi-analyzer' ? wifiCompletionCtas[locale] : completionCtas[miniAppId] ?? {
     label: `Keep ${title} available offline on Android`,
     detail: 'Continue this privacy-first workflow in the signed Android app.',
   }

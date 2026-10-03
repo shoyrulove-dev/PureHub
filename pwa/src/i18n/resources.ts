@@ -371,6 +371,7 @@ export const resources = {
         ocrText: { title: 'OCR Studio', summary: 'Escanea, limpia, edita y exporta texto en tu dispositivo.' },
         qrStudio: { title: 'Estudio QR', summary: 'Escanea, crea y conserva códigos QR privados.' },
         unitConverter: { title: 'Convertidor de unidades', summary: 'Conversiones instantáneas sin depender de red.' },
+        wifiAnalyzer: { title: 'Analizador Wi-Fi', summary: 'Comprueba la salud de la conexión y conoce con claridad los límites del navegador.' },
       },
     },
   },
