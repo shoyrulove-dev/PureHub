@@ -44,6 +44,16 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
+      - name: Tune Gradle memory for the release runner
+        shell: bash
+        run: |
+          mkdir -p "${HOME}/.gradle"
+          cat >> "${HOME}/.gradle/gradle.properties" <<'EOF'
+          org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8
+          org.gradle.workers.max=2
+          org.gradle.parallel=false
+          kotlin.compiler.execution.strategy=in-process
+          EOF
       - name: Resolve release version
         shell: bash
         run: |
