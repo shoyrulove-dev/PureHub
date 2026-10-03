@@ -109,12 +109,9 @@ def render(index: int, item: tuple[str, str, str, str, str, float]) -> Path:
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     demo_duration = 10.5
     total = 14.1
-    privacy_masks = "drawbox=x=92:y=112:w=320:h=40:color=0x0b1e2d:t=fill"
+    privacy_masks = "drawbox=x=88:y=125:w=335:h=58:color=0x0b1e2d:t=fill"
     if source_name == "wifi-scan.mp4":
-        privacy_masks += "".join(
-            f",drawbox=x=82:y={y}:w=330:h=32:color=0x06131f:t=fill"
-            for y in (450, 550, 650, 750, 850, 950, 1050)
-        )
+        privacy_masks += ",drawbox=x=80:y=680:w=370:h=455:color=0x06131f:t=fill"
     filters = (
         f"[0:v]scale={WIDTH}:{HEIGHT},setsar=1,fps=30[intro];"
         f"[1:v]crop=iw:ih-100:0:100,scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=decrease,"
