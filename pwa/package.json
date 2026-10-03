@@ -12,40 +12,39 @@
     "preview": "vite preview"
   },
   "overrides": {
-    "brace-expansion": "5.0.9"
+    "brace-expansion": "5.0.12"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.2",
+    "@tailwindcss/vite": "^4.3.3",
     "@zxing/browser": "^0.2.1",
-    "fflate": "^0.8.2",
-    "i18next": "^26.3.6",
+    "fflate": "^0.8.3",
+    "i18next": "^26.4.2",
     "i18next-browser-languagedetector": "^8.2.1",
     "idb": "^8.0.3",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
-    "lucide-react": "^1.24.0",
+    "lucide-react": "^1.51.0",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "react-helmet-async": "^3.0.0",
-    "react-i18next": "^17.0.9",
+    "react-i18next": "^17.0.15",
     "react-icons": "^5.7.0",
-    "react-router-dom": "7.18.2",
-    "tailwindcss": "^4.3.2",
+    "react-router-dom": "^7.18.4",
+    "tailwindcss": "^4.3.3",
     "tesseract.js": "^7.0.0",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.2",
-    "@types/node": "^24.13.2",
+    "@types/node": "^22.20.5",
     "@types/qrcode": "^1.5.6",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.0.3",
-    "oxlint": "^1.71.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.1.1",
+    "oxlint": "^1.86.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.2",
     "vite-plugin-pwa": "1.3.0",
     "vite-plugin-sitemap": "^0.8.2"
   }
