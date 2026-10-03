@@ -10,6 +10,7 @@ const ACTIVE_KEY = 'purehub.zen-pomodoro.active.v1'
 type DayStats = Record<string, { sessions: number; minutes: number }>
 type Soundscape = 'white' | 'brown' | 'rain'
 type ActiveSound = { context: AudioContext; source: AudioBufferSourceNode; gain: GainNode }
+type ActiveSession = { mode: 'focus' | 'break'; minutes: number; targetAt: number; task: string; remaining: number }
 
 const soundscapes: Array<{ id: Soundscape; label: string }> = [
   { id: 'white', label: 'White noise' },
@@ -25,28 +26,49 @@ function format(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
+function readActiveSession(): ActiveSession | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ACTIVE_KEY) ?? 'null') as Omit<ActiveSession, 'remaining' | 'task'> & { task?: string } | null
+    const now = Date.now()
+    if (!saved?.targetAt || saved.targetAt <= now) {
+      localStorage.removeItem(ACTIVE_KEY)
+      return null
+    }
+    return { ...saved, task: saved.task ?? '', remaining: Math.ceil((saved.targetAt - now) / 1000) }
+  } catch {
+    localStorage.removeItem(ACTIVE_KEY)
+    return null
+  }
+}
+
+function recentDays(stats: DayStats, anchor: number) {
+  return Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(anchor); date.setDate(date.getDate() - (6 - offset))
+    const key = date.toISOString().slice(0, 10)
+    return { key, label: date.toLocaleDateString(undefined, { weekday: 'short' }), ...(stats[key] ?? { sessions: 0, minutes: 0 }) }
+  })
+}
+
 export default function ZenPomodoroSurface() {
-  const [mode, setMode] = useState<'focus' | 'break'>('focus')
-  const [minutes, setMinutes] = useState(25)
-  const [remaining, setRemaining] = useState(25 * 60)
-  const [running, setRunning] = useState(false)
-  const [targetAt, setTargetAt] = useState<number | null>(null)
+  const [restoredSession] = useState(readActiveSession)
+  const [calendarAnchor] = useState(Date.now)
+  const [mode, setMode] = useState<'focus' | 'break'>(restoredSession?.mode ?? 'focus')
+  const [minutes, setMinutes] = useState(restoredSession?.minutes ?? 25)
+  const [remaining, setRemaining] = useState(restoredSession?.remaining ?? 25 * 60)
+  const [running, setRunning] = useState(Boolean(restoredSession))
+  const [targetAt, setTargetAt] = useState<number | null>(restoredSession?.targetAt ?? null)
   const [stats, setStats] = useState<DayStats>(readStats)
   const [soundscape, setSoundscape] = useState<Soundscape>('white')
   const [volume, setVolume] = useState(0.3)
   const [customMinutes, setCustomMinutes] = useState(35)
-  const [task, setTask] = useState('')
+  const [task, setTask] = useState(restoredSession?.task ?? '')
   const [notice, setNotice] = useState('')
   const completedRef = useRef(false)
   const soundRef = useRef<ActiveSound | null>(null)
   const totalSeconds = minutes * 60
   const elapsed = Math.max(0, totalSeconds - remaining)
   const progress = totalSeconds ? elapsed / totalSeconds : 0
-  const days = useMemo(() => Array.from({ length: 7 }, (_, offset) => {
-    const date = new Date(); date.setDate(date.getDate() - (6 - offset))
-    const key = date.toISOString().slice(0, 10)
-    return { key, label: date.toLocaleDateString(undefined, { weekday: 'short' }), ...(stats[key] ?? { sessions: 0, minutes: 0 }) }
-  }), [stats])
+  const days = useMemo(() => recentDays(stats, calendarAnchor), [calendarAnchor, stats])
   const week = useMemo(() => days.reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 }), [days])
 
   const stopSound = () => {
@@ -92,14 +114,6 @@ export default function ZenPomodoroSurface() {
   }
 
   useEffect(() => () => stopSound(), [])
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(ACTIVE_KEY) ?? 'null') as { mode: 'focus' | 'break'; minutes: number; targetAt: number; task?: string } | null
-      if (!saved?.targetAt || saved.targetAt <= Date.now()) return
-      setMode(saved.mode); setMinutes(saved.minutes); setRemaining(Math.ceil((saved.targetAt - Date.now()) / 1000)); setTargetAt(saved.targetAt); setTask(saved.task ?? ''); setRunning(true)
-    } catch { localStorage.removeItem(ACTIVE_KEY) }
-  }, [])
 
   useEffect(() => {
     if (running && targetAt) localStorage.setItem(ACTIVE_KEY, JSON.stringify({ mode, minutes, targetAt, task }))

@@ -106,12 +106,12 @@ function Flashlight() {
   const [active, setActive] = useState(false)
   const [brightness, setBrightness] = useState(100)
   const [mode, setMode] = useState<'steady' | 'pulse' | 'sos'>('steady')
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(false)
   const lightRef = useRef<HTMLDivElement>(null)
   const wakeLock = useRef<{ release: () => Promise<void> } | null>(null)
 
   useEffect(() => {
-    if (!active || mode === 'steady') { setVisible(active); return }
+    if (!active || mode === 'steady') return
     const sos = [200, 200, 200, 500, 500, 500, 200, 200, 200, 900]
     let index = 0
     const toggle = () => { setVisible((value) => !value); index = (index + 1) % sos.length; timer = window.setTimeout(toggle, mode === 'pulse' ? 450 : sos[index]) }
@@ -132,7 +132,7 @@ function Flashlight() {
   return <Panel title="Light controls" subtitle="Uses the display as a dependable fallback. Camera torch support varies by browser and device.">
     <div ref={lightRef} className={`relative grid min-h-72 place-items-center overflow-hidden rounded-[28px] transition ${active && visible ? 'bg-white' : 'bg-slate-950'}`} style={{ filter: active ? `brightness(${Math.max(.15, brightness / 100)})` : undefined }}><Lightbulb className={`size-24 ${active && visible ? 'text-amber-400' : 'text-slate-700'}`} /><span className={`absolute bottom-5 rounded-full px-4 py-2 text-xs font-black ${active ? 'bg-slate-950 text-white' : 'bg-white/10 text-slate-300'}`}>{active ? `${mode.toUpperCase()} · ${brightness}%` : 'LIGHT OFF'}</span></div>
     <label className="mt-4 block text-sm font-black">Brightness <span className="float-right text-amber-700 dark:text-amber-300">{brightness}%</span><input className="mt-3 w-full accent-amber-500" type="range" min="15" max="100" value={brightness} onChange={(event) => setBrightness(Number(event.target.value))} /></label>
-    <div className="mt-4 grid grid-cols-3 gap-2">{(['steady', 'pulse', 'sos'] as const).map((item) => <button key={item} onClick={() => setMode(item)} className={`min-h-11 rounded-xl border text-xs font-black uppercase ${mode === item ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{item}</button>)}</div>
+    <div className="mt-4 grid grid-cols-3 gap-2">{(['steady', 'pulse', 'sos'] as const).map((item) => <button key={item} onClick={() => { setMode(item); if (item === 'steady') setVisible(active) }} className={`min-h-11 rounded-xl border text-xs font-black uppercase ${mode === item ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{item}</button>)}</div>
     <ActionButton className="mt-4 w-full" onClick={() => void toggle()}>{active ? 'Turn light off' : 'Turn light on'}</ActionButton>
     <p className="mt-3 text-xs leading-5 text-slate-500">SOS is a visual attention pattern, not a certified emergency beacon. Avoid flashing modes around people sensitive to light.</p>
   </Panel>

@@ -47,7 +47,10 @@ export default function DeepCleanerFlagship() {
     })
   }, [])
 
-  useEffect(() => { void inspectStorage() }, [inspectStorage])
+  useEffect(() => {
+    const timer = window.setTimeout(() => void inspectStorage(), 0)
+    return () => window.clearTimeout(timer)
+  }, [inspectStorage])
 
   const duplicateIndexes = useMemo(() => {
     const grouped = new Map<string, number[]>()

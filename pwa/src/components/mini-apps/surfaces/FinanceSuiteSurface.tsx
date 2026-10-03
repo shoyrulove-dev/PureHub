@@ -28,6 +28,7 @@ export default function FinanceSuiteSurface({ mode }: { mode: Mode }) {
 }
 
 function ExpenseLedger({ ocrLanguage }: { ocrLanguage: string }) {
+  const [monthAnchor] = useState(() => new Date())
   const [records, setRecords] = useState<ExpenseRecord[]>([])
   const [title, setTitle] = useState(''); const [amount, setAmount] = useState(''); const [category, setCategory] = useState('Food'); const [note, setNote] = useState('')
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense'); const [wallet, setWallet] = useState('Cash')
@@ -41,8 +42,11 @@ function ExpenseLedger({ ocrLanguage }: { ocrLanguage: string }) {
   const [recordCategory, setRecordCategory] = useState('All')
   const money = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }), [currencyCode])
   const load = async () => setRecords((await expenseRepository.list()).reverse())
-  useEffect(() => { void load() }, [])
-  const monthRows = useMemo(() => { const now = new Date(); return records.filter((item) => { const date = new Date(item.createdAt); return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear() }) }, [records])
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
+  const monthRows = useMemo(() => records.filter((item) => { const date = new Date(item.createdAt); return date.getMonth() === monthAnchor.getMonth() && date.getFullYear() === monthAnchor.getFullYear() }), [monthAnchor, records])
   const monthExpenses = useMemo(() => monthRows.filter((item) => item.transactionType !== 'income').reduce((sum, item) => sum + item.amount, 0), [monthRows])
   const monthIncome = useMemo(() => monthRows.filter((item) => item.transactionType === 'income').reduce((sum, item) => sum + item.amount, 0), [monthRows])
   const totalExpenses = useMemo(() => records.filter((item) => item.transactionType !== 'income').reduce((sum, item) => sum + item.amount, 0), [records])

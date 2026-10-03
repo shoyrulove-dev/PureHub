@@ -21,19 +21,16 @@ function reloadBackendRoute() {
 }
 
 export function BackendRouteRecovery() {
-  const [manualRecovery, setManualRecovery] = useState(false)
+  const [manualRecovery] = useState(() => Boolean(window.sessionStorage.getItem(RECOVERY_KEY)))
 
   useEffect(() => {
-    if (window.sessionStorage.getItem(RECOVERY_KEY)) {
-      setManualRecovery(true)
-      return
-    }
+    if (manualRecovery) return
 
     window.sessionStorage.setItem(RECOVERY_KEY, 'attempted')
     void clearPwaNavigationControl()
       .catch(() => undefined)
       .finally(reloadBackendRoute)
-  }, [])
+  }, [manualRecovery])
 
   const retry = () => {
     window.sessionStorage.removeItem(RECOVERY_KEY)

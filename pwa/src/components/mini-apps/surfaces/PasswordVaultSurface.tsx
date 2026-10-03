@@ -22,14 +22,13 @@ export default function PasswordVaultSurface() {
   const [passphrase, setPassphrase] = useState('')
   const [label, setLabel] = useState('')
   const [secret, setSecret] = useState('')
-  const [items, setItems] = useState<VaultItem[]>([])
+  const [items, setItems] = useState<VaultItem[]>(() => parseVaultBackup(window.localStorage.getItem(STORAGE_KEY) ?? '[]'))
   const [preview, setPreview] = useState('')
   const [notice, setNotice] = useState('Locked. Enter your master passphrase when you need it.')
   const [query, setQuery] = useState('')
   const previewTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
-    setItems(parseVaultBackup(window.localStorage.getItem(STORAGE_KEY) ?? '[]'))
     return () => window.clearTimeout(previewTimer.current)
   }, [])
 

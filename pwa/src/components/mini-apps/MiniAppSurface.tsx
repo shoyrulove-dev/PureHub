@@ -103,7 +103,7 @@ function buildMoonDay(date: Date) {
 function LunarCalendarSurface() {
   const [cursor, setCursor] = useState(() => new Date())
   const [selected, setSelected] = useState(() => new Date())
-  const today = new Date()
+  const [today] = useState(() => new Date())
   const selectedLunar = buildMoonDay(selected)
   const conversionText = `${selected.toLocaleDateString()} → ${selectedLunar.day}/${selectedLunar.month}/${selectedLunar.year}${selectedLunar.leap ? ' (leap month)' : ''}`
   const copyConversion = async () => {
@@ -285,7 +285,8 @@ export function ExpenseTrackerSurface() {
   }
 
   useEffect(() => {
-    void loadRecords()
+    const timer = window.setTimeout(() => void loadRecords(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const total = records.reduce((sum, record) => sum + record.amount, 0)
@@ -521,7 +522,8 @@ export function DecibelMeterSurface() {
     }
   }, [running])
 
-  const averageSamples = samples.filter((sample) => sample.at >= Date.now() - averageWindow * 1000)
+  const latestSampleAt = samples.at(-1)?.at ?? 0
+  const averageSamples = samples.filter((sample) => sample.at >= latestSampleAt - averageWindow * 1000)
   const average = averageSamples.length
     ? Math.round(averageSamples.reduce((sum, sample) => sum + sample.value, 0) / averageSamples.length)
     : 0

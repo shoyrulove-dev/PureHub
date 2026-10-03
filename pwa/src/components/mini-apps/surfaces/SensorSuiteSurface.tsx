@@ -118,7 +118,10 @@ function LevelPanel() {
       : Math.abs(angles.y) <= tolerance
 
   useEffect(() => {
-    if (permission !== 'active' || moving || !isLevel || held) { setSettled(false); return }
+    if (permission !== 'active' || moving || !isLevel || held) {
+      const resetTimer = window.setTimeout(() => setSettled(false), 0)
+      return () => window.clearTimeout(resetTimer)
+    }
     const timer = window.setTimeout(() => {
       setSettled(true)
       if ('vibrate' in navigator) navigator.vibrate(45)

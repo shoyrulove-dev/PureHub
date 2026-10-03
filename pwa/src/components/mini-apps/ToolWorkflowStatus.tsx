@@ -1,21 +1,28 @@
 import { CheckCircle2, CircleDot, LockKeyhole, Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import type { MiniAppId } from '../../features/catalog/tabs'
 
 export function ToolWorkflowStatus({ miniAppId }: { miniAppId: MiniAppId }) {
-  const [completed, setCompleted] = useState(
-    () => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true',
-  )
-
-  useEffect(() => {
-    setCompleted(window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true')
+  const subscribe = useCallback((onStoreChange: () => void) => {
     const onComplete = (event: Event) => {
       const detail = (event as CustomEvent<{ miniAppId: MiniAppId }>).detail
-      if (detail?.miniAppId === miniAppId) setCompleted(true)
+      if (detail?.miniAppId === miniAppId) onStoreChange()
+    }
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === `purehub-completed-${miniAppId}`) onStoreChange()
     }
     window.addEventListener('purehub:product-complete', onComplete)
-    return () => window.removeEventListener('purehub:product-complete', onComplete)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('purehub:product-complete', onComplete)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [miniAppId])
+  const getSnapshot = useCallback(
+    () => window.localStorage.getItem(`purehub-completed-${miniAppId}`) === 'true',
+    [miniAppId],
+  )
+  const completed = useSyncExternalStore(subscribe, getSnapshot, () => false)
 
   const steps = [
     { label: 'Ready', detail: 'Choose input', icon: CircleDot, active: !completed },

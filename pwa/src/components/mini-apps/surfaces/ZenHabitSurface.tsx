@@ -28,6 +28,10 @@ function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+function createdAtIso() {
+  return new Date().toISOString()
+}
+
 function currentStreak(days: string[]) {
   const completed = new Set(days)
   let cursor = completed.has(localDay()) ? 0 : -1
@@ -96,12 +100,15 @@ export default function ZenHabitSurface() {
     setCheckIns(grouped.flat())
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const active = habits.filter((item) => !item.archivedAt)
   const archived = habits.filter((item) => item.archivedAt)
   const today = localDay()
-  const days = useMemo(weekDays, [])
+  const days = useMemo(() => weekDays(), [])
   const completedToday = active.filter((habit) => checkIns.some((item) => item.habitId === habit.id && item.completedOn === today)).length
   const weeklyDone = checkIns.filter((item) => active.some((habit) => habit.id === item.habitId) && days.some((day) => day.key === item.completedOn)).length
   const weeklyGoal = active.reduce((sum, habit) => sum + Math.max(1, habit.targetDaysPerWeek ?? 7), 0)
@@ -112,7 +119,7 @@ export default function ZenHabitSurface() {
     const existing = checkIns.find((item) => item.habitId === habitId && item.completedOn === day)
     if (existing) await habitCheckInRepository.remove(existing.id)
     else {
-      await habitCheckInRepository.upsert({ id: createId(), habitId, completedOn: day, createdAt: new Date().toISOString() })
+      await habitCheckInRepository.upsert({ id: createId(), habitId, completedOn: day, createdAt: createdAtIso() })
       const habit = habits.find((item) => item.id === habitId)
       markToolSuccess('zen-habit', { headline: 'Habit check-in saved', detail: `${habit?.name ?? 'Your habit'} is marked complete for ${day}, only on this device.`, shareText: 'I completed a private habit check-in with PureHub.' })
     }

@@ -10,6 +10,7 @@ export default function ScreenRecorderSurface() {
   const [recording, setRecording] = useState(false)
   const [includeMic, setIncludeMic] = useState(false)
   const [videoUrl, setVideoUrl] = useState('')
+  const [downloadName, setDownloadName] = useState('purehub-recording.webm')
   const [message, setMessage] = useState('Choose a screen or window. Recording stays in browser memory until you download it.')
 
   useEffect(() => () => {
@@ -39,6 +40,7 @@ export default function ScreenRecorderSurface() {
       next.onstop = () => {
         if (videoUrl) URL.revokeObjectURL(videoUrl)
         setVideoUrl(URL.createObjectURL(new Blob(chunks.current, { type: mimeType })))
+        setDownloadName(`purehub-recording-${Date.now()}.webm`)
         setMessage('Recording ready. Preview or download it locally.')
         markToolSuccess('screen-recorder', { headline: 'Screen recording ready', detail: 'Your recording is in browser memory and ready to preview or download.', shareText: 'I recorded my screen locally with PureHub.' })
       }
@@ -58,7 +60,7 @@ export default function ScreenRecorderSurface() {
         <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={includeMic} onChange={(event) => setIncludeMic(event.target.checked)} disabled={recording} />Include microphone</label>
         {!recording ? <ActionButton onClick={() => void start()}><MonitorUp className="mr-2 inline size-4" />Start</ActionButton> : <ActionButton tone="danger" onClick={stop}><Square className="mr-2 inline size-4" />Stop</ActionButton>}
       </div>
-      {videoUrl ? <div className="mt-4"><video src={videoUrl} controls className="max-h-[520px] w-full rounded-[14px] bg-black" /><a href={videoUrl} download={`purehub-recording-${Date.now()}.webm`} className="mt-3 inline-flex min-h-10 items-center rounded-[11px] bg-emerald-700 px-3.5 text-sm font-bold text-white"><Download className="mr-2 size-4" />Download recording</a></div> : null}
+      {videoUrl ? <div className="mt-4"><video src={videoUrl} controls className="max-h-[520px] w-full rounded-[14px] bg-black" /><a href={videoUrl} download={downloadName} className="mt-3 inline-flex min-h-10 items-center rounded-[11px] bg-emerald-700 px-3.5 text-sm font-bold text-white"><Download className="mr-2 size-4" />Download recording</a></div> : null}
     </Panel>
     <p className="rounded-[14px] bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">Screen capture always requires a browser permission prompt. PureHub cannot record silently or in the background.</p>
   </div>

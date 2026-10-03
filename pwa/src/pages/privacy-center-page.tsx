@@ -34,7 +34,10 @@ export function PrivacyCenterPage() {
     setPermissions(states)
   }
 
-  useEffect(() => { void inspect() }, [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => void inspect(), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const exportAll = async () => {
     setBusy(true)
