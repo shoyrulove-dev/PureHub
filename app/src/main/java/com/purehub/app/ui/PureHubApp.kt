@@ -214,12 +214,16 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = {
-                                    navController.navigate(destination.route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
+                                    if (destination == Home) {
+                                        navController.returnHome()
+                                    } else {
+                                        navController.navigate(destination.route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
                                 },
                                 icon = {
@@ -345,7 +349,7 @@ private fun PureHubNavHost(
                 innerPadding = innerPadding,
                 miniAppId = miniAppId,
                 onBack = { navController.popBackStack() },
-                onHome = { navController.navigate(Home.route) { launchSingleTop = true } },
+                onHome = { navController.returnHome() },
             )
         }
     }
@@ -582,3 +586,19 @@ private fun ScrollHost(
 }
 
 private fun miniAppRoute(miniAppId: MiniAppId): String = "$MINI_APP_ROUTE_PREFIX/${miniAppId.name}"
+
+/**
+ * Home is an exit destination, not another restorable tab state. Pop to the
+ * existing root when possible so a saved Settings state can never be restored
+ * over Home. Shortcut launches may not have Home on their back stack, so the
+ * fallback clears the graph and creates a fresh Home destination.
+ */
+private fun NavHostController.returnHome() {
+    if (currentDestination?.route == Home.route) return
+    if (popBackStack(Home.route, inclusive = false)) return
+    navigate(Home.route) {
+        popUpTo(graph.id)
+        launchSingleTop = true
+        restoreState = false
+    }
+}

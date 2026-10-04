@@ -55,9 +55,12 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         val miniAppId = intent.getStringExtra(EXTRA_MINI_APP_ID)?.let { value ->
             MiniAppId.entries.firstOrNull { it.name == value }
-        } ?: return
+        }
+        // A normal launcher tap must clear a previously delivered shortcut.
+        // Otherwise Compose can immediately reopen the old mini-app after the
+        // user deliberately returned Home.
         requestedMiniAppId = miniAppId
-        reportMiniAppShortcutUsed(miniAppId)
+        miniAppId?.let(::reportMiniAppShortcutUsed)
     }
 
     private fun installMiniAppShortcuts() {
