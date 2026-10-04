@@ -39,6 +39,18 @@ class BubbleLevelViewModel(
         _uiState.update { it.copy(pitch = 0f, roll = 0f, tiltMagnitude = 0f, isCalibrated = true, accuracyWarning = null) }
     }
 
+    fun resetCalibration() {
+        pitchOffset = 0f
+        rollOffset = 0f
+        preferences.edit().remove("bubble_pitch").remove("bubble_roll").apply()
+        _uiState.update {
+            it.copy(
+                isCalibrated = false,
+                accuracyWarning = "Place the phone on a known-flat surface, then tap Calibrate zero.",
+            )
+        }
+    }
+
     fun start() {
         if (sensorJob != null) return
         sensorJob = viewModelScope.launch {

@@ -24,10 +24,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -75,7 +77,7 @@ fun BubbleLevelCard(
     val metrics = LocalResources.current.displayMetrics
     var rulerCentimeters by remember { mutableFloatStateOf(8f) }
     var rulerScale by rememberSaveable { mutableFloatStateOf(1f) }
-    var sensorActive by rememberSaveable { mutableStateOf(false) }
+    var sensorActive by rememberSaveable { mutableStateOf(true) }
     var levelMode by rememberSaveable { mutableStateOf(LevelMode.Surface) }
     var tolerance by rememberSaveable { mutableFloatStateOf(preferences.getFloat("tolerance", 0.5f)) }
     var targetSlope by rememberSaveable { mutableFloatStateOf(preferences.getFloat("target_slope", 0f)) }
@@ -86,6 +88,7 @@ fun BubbleLevelCard(
     var soundCueEnabled by rememberSaveable { mutableStateOf(preferences.getBoolean("sound", false)) }
     var hasCameraPermission by rememberSaveable { mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
     var measurementHistory by rememberSaveable { mutableStateOf(preferences.getString("history", "").orEmpty().split("||").filter(String::isNotBlank)) }
+    var showCalibrationDialog by rememberSaveable { mutableStateOf(false) }
     val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCameraPermission = it }
     val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 55) }
     val colorScheme = MaterialTheme.colorScheme
@@ -124,37 +127,20 @@ fun BubbleLevelCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
-                    LocalizedText("Live level", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    LocalizedText("Private on-device sensor", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                FilterChip(
-                    selected = mode == SuiteMode.PRO,
-                    onClick = { mode = if (mode == SuiteMode.PRO) SuiteMode.QUICK else SuiteMode.PRO },
-                    label = { LocalizedText("Options", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) },
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 LevelMode.entries.forEach { mode ->
-                    Button(
+                    FilterChip(
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                        selected = levelMode == mode,
                         onClick = {
                             levelMode = mode
                             if (mode == LevelMode.Camera && !hasCameraPermission) cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         },
-                        enabled = levelMode != mode,
-                    ) { LocalizedText(mode.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) }
+                        label = { LocalizedText(mode.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) },
+                    )
                 }
             }
-            uiState.accuracyWarning?.let { LocalizedText(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -232,6 +218,7 @@ fun BubbleLevelCard(
                 color = if (settled) levelColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = if (settled) FontWeight.SemiBold else FontWeight.Normal,
             )
+            uiState.accuracyWarning?.let { LocalizedText(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 LocalizedText("Pitch ${formatLevelValue(uiState.pitch, levelUnit)}", style = MaterialTheme.typography.bodySmall)
@@ -251,7 +238,15 @@ fun BubbleLevelCard(
                     preferences.edit().putString("history", measurementHistory.joinToString("||")).apply()
                 }, enabled = sensorActive) { LocalizedText("Save", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) }
             }
-            Button(modifier = Modifier.fillMaxWidth(), onClick = viewModel::calibrateZero, enabled = sensorActive) { LocalizedText("Calibrate zero") }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(modifier = Modifier.weight(1f), onClick = { showCalibrationDialog = true }, enabled = sensorActive) { LocalizedText("Calibrate zero", maxLines = 1, softWrap = false) }
+                FilterChip(
+                    modifier = Modifier.weight(1f),
+                    selected = mode == SuiteMode.PRO,
+                    onClick = { mode = if (mode == SuiteMode.PRO) SuiteMode.QUICK else SuiteMode.PRO },
+                    label = { LocalizedText("Options", maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelMedium) },
+                )
+            }
 
             if (mode == SuiteMode.PRO) {
                 FilterChip(
@@ -353,6 +348,30 @@ fun BubbleLevelCard(
                 )
             }
         }
+    }
+
+    if (showCalibrationDialog) {
+        AlertDialog(
+            onDismissRequest = { showCalibrationDialog = false },
+            title = { LocalizedText("Calibrate level") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    LocalizedText("1. Remove a thick phone case if it rocks.")
+                    LocalizedText("2. Place the phone on a known-flat reference.")
+                    LocalizedText("3. Keep it still, then save this position as zero.")
+                    LocalizedText("Calibration stays only on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.calibrateZero(); showCalibrationDialog = false }) { LocalizedText("Save zero") }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { viewModel.resetCalibration(); showCalibrationDialog = false }) { LocalizedText("Reset zero") }
+                    TextButton(onClick = { showCalibrationDialog = false }) { LocalizedText("Cancel") }
+                }
+            },
+        )
     }
 }
 

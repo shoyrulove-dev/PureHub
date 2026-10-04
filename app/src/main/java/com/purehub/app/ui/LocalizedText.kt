@@ -515,6 +515,11 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Surface" to "Mặt phẳng", "Edge" to "Cạnh", "Camera" to "Camera", "Enable level" to "Bật thước",
             "Live level" to "Thước thủy trực tiếp", "Private on-device sensor" to "Cảm biến riêng tư trên thiết bị",
             "Options" to "Tùy chọn", "Start" to "Bắt đầu", "Calibrate zero" to "Hiệu chỉnh về 0",
+            "Calibrate level" to "Hiệu chỉnh thước", "Reset zero" to "Xóa mốc 0", "Save zero" to "Lưu mốc 0",
+            "1. Remove a thick phone case if it rocks." to "1. Tháo ốp dày nếu điện thoại bị cập kênh.",
+            "2. Place the phone on a known-flat reference." to "2. Đặt điện thoại trên một mặt phẳng chuẩn.",
+            "3. Keep it still, then save this position as zero." to "3. Giữ yên rồi lưu vị trí này làm mốc 0.",
+            "Calibration stays only on this device." to "Dữ liệu hiệu chỉnh chỉ lưu trên thiết bị này.",
             "Hold" to "Giữ", "Resume" to "Đo tiếp", "Degrees" to "Độ", "Percent" to "Phần trăm",
             "Clear history" to "Xóa lịch sử", "No saved measurements yet." to "Chưa có số đo đã lưu.",
             "Move the bubble into the center target." to "Di chuyển bóng vào vùng mục tiêu.",
@@ -531,6 +536,11 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Surface" to "平面", "Edge" to "边缘", "Camera" to "相机", "Enable level" to "启用水平仪",
             "Live level" to "实时水平仪", "Private on-device sensor" to "设备端私密传感器",
             "Options" to "选项", "Start" to "开始", "Calibrate zero" to "校准零点",
+            "Calibrate level" to "校准水平仪", "Reset zero" to "清除零点", "Save zero" to "保存零点",
+            "1. Remove a thick phone case if it rocks." to "1. 如果厚手机壳导致晃动，请将其取下。",
+            "2. Place the phone on a known-flat reference." to "2. 将手机放在已知水平面上。",
+            "3. Keep it still, then save this position as zero." to "3. 保持静止，然后将当前位置保存为零点。",
+            "Calibration stays only on this device." to "校准数据仅保存在此设备上。",
             "Hold" to "保持", "Resume" to "继续", "Degrees" to "角度", "Percent" to "百分比",
             "Clear history" to "清除历史", "No saved measurements yet." to "暂无已保存测量。",
             "Move the bubble into the center target." to "将气泡移入中心目标。",
@@ -547,6 +557,11 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Surface" to "Superficie", "Edge" to "Borde", "Camera" to "Cámara", "Enable level" to "Activar nivel",
             "Live level" to "Nivel en vivo", "Private on-device sensor" to "Sensor privado en el dispositivo",
             "Options" to "Opciones", "Start" to "Iniciar", "Calibrate zero" to "Calibrar a cero",
+            "Calibrate level" to "Calibrar nivel", "Reset zero" to "Borrar cero", "Save zero" to "Guardar cero",
+            "1. Remove a thick phone case if it rocks." to "1. Quita una funda gruesa si el teléfono se balancea.",
+            "2. Place the phone on a known-flat reference." to "2. Coloca el teléfono sobre una superficie plana conocida.",
+            "3. Keep it still, then save this position as zero." to "3. Mantenlo quieto y guarda esta posición como cero.",
+            "Calibration stays only on this device." to "La calibración solo se guarda en este dispositivo.",
             "Hold" to "Fijar", "Resume" to "Reanudar", "Degrees" to "Grados", "Percent" to "Porcentaje",
             "Clear history" to "Borrar historial", "No saved measurements yet." to "Aún no hay mediciones guardadas.",
             "Move the bubble into the center target." to "Mueve la burbuja al objetivo central.",
@@ -856,6 +871,9 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "Recordings are saved locally to Movies/PureHub." -> return when { vi -> "Bản quay được lưu cục bộ trong Movies/PureHub."; zh -> "录制内容保存在本机的 Movies/PureHub 中。"; es -> "Las grabaciones se guardan localmente en Movies/PureHub."; else -> null }
         "Preparing a private local recording…" -> return when { vi -> "Đang chuẩn bị bản quay cục bộ riêng tư…"; zh -> "正在准备私密本地录制…"; es -> "Preparando una grabación local privada…"; else -> null }
         "The essentials, ready immediately." -> return when { vi -> "Các chức năng thiết yếu, sẵn sàng ngay."; zh -> "核心功能，立即可用。"; es -> "Lo esencial, listo de inmediato."; else -> null }
+        "Pause" -> return when { vi -> "Tạm dừng"; zh -> "暂停"; es -> "Pausar"; else -> null }
+        "Measurements remain local" -> return when { vi -> "Số đo chỉ lưu trên máy"; zh -> "测量数据仅保留在本机"; es -> "Las mediciones permanecen en el dispositivo"; else -> null }
+        "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share." -> return when { vi -> "PureHub chỉ đọc cảm biến chuyển động khi bạn bật đo và chỉ chia sẻ giá trị đã giữ khi bạn chọn Chia sẻ."; zh -> "PureHub 仅在启用测量时读取运动传感器，且只会在你选择分享时分享已保留的读数。"; es -> "PureHub solo lee los sensores de movimiento mientras la medición está activa y solo comparte un valor guardado cuando eliges Compartir."; else -> null }
         "DOCUMENT SUITE" -> return when { vi -> "BỘ TÀI LIỆU"; zh -> "文档套件"; es -> "SUITE DE DOCUMENTOS"; else -> null }
         "PRIVATE MEDIA UTILITY" -> return when { vi -> "TIỆN ÍCH ẢNH RIÊNG TƯ"; zh -> "私密媒体工具"; es -> "UTILIDAD MULTIMEDIA PRIVADA"; else -> null }
         "CREATOR FLAGSHIP" -> return when { vi -> "CÔNG CỤ SÁNG TẠO"; zh -> "创作工具"; es -> "HERRAMIENTA DE CREACIÓN"; else -> null }
