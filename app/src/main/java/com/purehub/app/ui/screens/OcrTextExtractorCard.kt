@@ -868,7 +868,7 @@ private fun OcrScanContent(
                         .fillMaxWidth(0.9f)
                         .aspectRatio(0.55f)
                         .clip(RoundedCornerShape(22.dp))
-                        .border(2.dp, Color(0xFF6EE7B7), RoundedCornerShape(22.dp)),
+                        .border(2.dp, Color(0xFFC4A7FF), RoundedCornerShape(22.dp)),
                 )
             } else {
                 Column(
@@ -876,7 +876,7 @@ private fun OcrScanContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(Icons.Rounded.Security, null, Modifier.size(48.dp), tint = Color(0xFF6EE7B7))
+                    Icon(Icons.Rounded.Security, null, Modifier.size(48.dp), tint = Color(0xFFC4A7FF))
                     LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                 }
@@ -1013,10 +1013,10 @@ private fun OcrPageReview(
                         lineTo(values[3].x, values[3].y)
                         close()
                     }
-                    drawPath(outline, Color(0xFF34D399), style = Stroke(width = 5f))
+                    drawPath(outline, Color(0xFFA970FF), style = Stroke(width = 5f))
                     values.forEach { point ->
                         drawCircle(Color.White, radius = 13f, center = point)
-                        drawCircle(Color(0xFF059669), radius = 9f, center = point)
+                        drawCircle(Color(0xFF7C3AED), radius = 9f, center = point)
                     }
                 }
             }

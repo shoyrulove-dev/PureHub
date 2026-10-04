@@ -111,7 +111,7 @@ fun BubbleLevelCard(
         LevelMode.Surface, LevelMode.Camera -> kotlin.math.abs(uiState.tiltMagnitude - targetDegrees) <= tolerance
         LevelMode.Edge -> kotlin.math.abs(kotlin.math.abs(uiState.roll) - targetDegrees) <= tolerance
     }
-    val levelColor = Color(0xFF10B981)
+    val levelColor = Color(0xFF67E8F9)
     val haptics = LocalHapticFeedback.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()

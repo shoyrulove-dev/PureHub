@@ -200,7 +200,7 @@ fun DocToPdfCard(
                         .offset(y = 60.dp)
                         .fillMaxWidth(0.9f)
                         .aspectRatio(0.59f)
-                        .border(3.dp, Color(0xFF43E6B5), RoundedCornerShape(24.dp)),
+                        .border(3.dp, Color(0xFF67E8F9), RoundedCornerShape(24.dp)),
                 )
                 LaunchedEffect(previewView) {
                     bindDocumentCamera(

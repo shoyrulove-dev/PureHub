@@ -12,7 +12,7 @@ import { markToolSuccess } from '../../../lib/tool-success'
 
 type View = 'today' | 'insights' | 'manage'
 
-const COLORS = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#f43f5e']
+const COLORS = ['#8b5cf6', '#22d3ee', '#a970ff', '#f59e0b', '#f43f5e']
 const CATEGORIES = ['Wellness', 'Focus', 'Movement', 'Learning', 'Personal']
 
 function localDay(offset = 0) {
@@ -181,7 +181,7 @@ export default function ZenHabitSurface() {
   }
 
   return (
-    <section className="overflow-hidden rounded-[24px] border border-emerald-200/80 bg-white shadow-[0_22px_70px_-40px_rgba(5,150,105,0.55)] dark:border-emerald-900/60 dark:bg-slate-950">
+    <section className="overflow-hidden rounded-[24px] border border-emerald-200/80 bg-white shadow-[0_22px_70px_-40px_rgba(124,58,237,0.55)] dark:border-emerald-900/60 dark:bg-slate-950">
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-900 to-sky-900 px-5 py-6 text-white sm:px-7">
         <div className="absolute -right-12 -top-20 size-52 rounded-full bg-emerald-300/15 blur-3xl" />
         <div className="relative flex items-start justify-between gap-4">

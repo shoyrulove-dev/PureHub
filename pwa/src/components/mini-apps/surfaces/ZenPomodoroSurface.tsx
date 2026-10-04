@@ -181,7 +181,7 @@ export default function ZenPomodoroSurface() {
 
   const shareWeek = async () => {
     try {
-      setNotice(await shareCard({ title: 'Zen Pomodoro', headline: `${week.sessions} focus sessions · ${week.minutes} minutes this week`, detail: 'A private focus rhythm, stored only on this device.', accent: '#059669' }))
+      setNotice(await shareCard({ title: 'Zen Pomodoro', headline: `${week.sessions} focus sessions · ${week.minutes} minutes this week`, detail: 'A private focus rhythm, stored only on this device.', accent: '#8b5cf6' }))
       void trackProductEvent('zen-pomodoro', 'share')
     } catch (error) { if (!(error instanceof DOMException && error.name === 'AbortError')) setNotice('Could not create the progress card.') }
   }
@@ -199,7 +199,7 @@ export default function ZenPomodoroSurface() {
       </div>
       <details className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-bold"><Settings2 className="size-4" />Custom focus length</summary><div className="mt-2 flex gap-2"><FormInput aria-label="Custom focus minutes" type="number" min="1" max="180" value={customMinutes} onChange={(event) => setCustomMinutes(Math.max(1, Math.min(180, Number(event.target.value) || 1)))} /><ActionButton onClick={() => selectSession('focus', customMinutes)}>Use {customMinutes} min</ActionButton></div></details>
       <div className="mt-6 flex flex-col items-center text-center">
-        <div className="grid size-64 place-items-center rounded-full p-3 shadow-[0_24px_70px_rgba(16,185,129,.16)]" style={{ background: `conic-gradient(${mode === 'focus' ? '#10b981' : '#38bdf8'} ${progress * 360}deg, rgba(148,163,184,.16) 0deg)` }}>
+        <div className="grid size-64 place-items-center rounded-full p-3 shadow-[0_24px_70px_rgba(169,112,255,.2)]" style={{ background: `conic-gradient(${mode === 'focus' ? '#8b5cf6' : '#38bdf8'} ${progress * 360}deg, rgba(148,163,184,.16) 0deg)` }}>
           <div className="grid size-full place-items-center rounded-full bg-white dark:bg-[#111827]">
             <div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-700 dark:text-emerald-300">{running ? mode : remaining === 0 ? 'complete' : 'ready'}</p><p className="mt-2 text-5xl font-black tabular-nums tracking-tight text-slate-950 dark:text-white">{format(remaining)}</p></div>
           </div>

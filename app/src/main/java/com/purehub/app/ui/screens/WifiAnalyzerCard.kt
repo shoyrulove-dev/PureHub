@@ -61,7 +61,7 @@ private enum class WifiTab(val label: String) { SIGNAL("Overview"), CHANNELS("Ch
 private enum class WifiNetworkSort { SIGNAL, NAME, CHANNEL }
 private val WifiInk = Color(0xFF07131E)
 private val WifiPanel = Color(0xFF0D2230)
-private val WifiMint = Color(0xFF45E0B5)
+private val WifiMint = Color(0xFFA970FF)
 private val WifiBlue = Color(0xFF71B8FF)
 
 @Composable

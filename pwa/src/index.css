@@ -3,15 +3,15 @@
 
 :root {
   color: #24173d;
-  background: #f8f5ff;
+  background: #eee7ff;
   font-family:
     Inter, "SF Pro Text", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --surface: rgba(255, 255, 255, 0.92);
-  --surface-soft: rgba(247, 242, 255, 0.78);
+  --surface: rgba(250, 247, 255, 0.94);
+  --surface-soft: rgba(237, 227, 255, 0.84);
   --border: rgba(124, 58, 237, 0.18);
   --shadow: 0 20px 54px -34px rgba(109, 40, 217, 0.38);
   --color-emerald-50: #f7f2ff;
@@ -52,9 +52,9 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 12% -5%, rgba(169, 112, 255, 0.2), transparent 28rem),
-    radial-gradient(circle at 94% 10%, rgba(124, 58, 237, 0.12), transparent 25rem),
-    #f8f5ff;
+    radial-gradient(circle at 12% -5%, rgba(169, 112, 255, 0.34), transparent 30rem),
+    radial-gradient(circle at 94% 10%, rgba(103, 232, 249, 0.17), transparent 26rem),
+    linear-gradient(145deg, #eee7ff 0%, #f5efff 48%, #e9e2ff 100%);
 }
 
 .dark body {
@@ -95,6 +95,11 @@ select:focus-visible {
   background: var(--surface);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
+}
+
+:root:not(.dark) section.bg-white,
+:root:not(.dark) article.bg-white {
+  background-color: rgba(250, 247, 255, 0.95);
 }
 
 .hero-panel {
@@ -308,15 +313,15 @@ select:focus-visible {
 .filter-chip:hover,
 .filter-chip--active,
 .text-link:hover {
-  border-color: rgba(16, 185, 129, 0.28);
-  background: rgba(16, 185, 129, 0.09);
-  color: #047857;
+  border-color: rgba(169, 112, 255, 0.42);
+  background: rgba(169, 112, 255, 0.13);
+  color: #6d28d9;
 }
 
 .dark .filter-chip:hover,
 .dark .filter-chip--active,
 .dark .text-link:hover {
-  color: #6ee7b7;
+  color: #c4b5fd;
 }
 
 .empty-state {

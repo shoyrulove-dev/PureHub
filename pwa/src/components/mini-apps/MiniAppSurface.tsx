@@ -174,7 +174,7 @@ function LunarCalendarSurface() {
                   'min-w-0 rounded-xl border p-1.5 text-left transition hover:-translate-y-0.5 hover:shadow-sm sm:rounded-2xl sm:p-3',
                   date.toDateString() === selected.toDateString() ? 'ring-2 ring-violet-500' : '',
                   isToday
-                    ? 'border-emerald-300/45 bg-emerald-400/12 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.45)]'
+                    ? 'border-emerald-300/45 bg-emerald-400/12 shadow-[0_10px_30px_-16px_rgba(169,112,255,0.45)]'
                     : 'border-slate-500/15 bg-slate-500/5',
                   inMonth ? 'text-slate-950 dark:text-white' : 'text-slate-500',
                 ].join(' ')}
@@ -921,7 +921,7 @@ export function DecisionWheelSurface() {
         .filter(Boolean),
     [optionsText],
   )
-  const wheelColors = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#f43f5e', '#14b8a6']
+  const wheelColors = ['#8b5cf6', '#22d3ee', '#a970ff', '#f59e0b', '#f43f5e', '#60a5fa']
   const wheelGradient = options.length
     ? `conic-gradient(${options.map((_, index) => {
         const start = (index / options.length) * 360
@@ -962,7 +962,7 @@ export function DecisionWheelSurface() {
           <div className="relative">
             <div className="absolute left-1/2 top-[-10px] z-10 h-0 w-0 -translate-x-1/2 border-x-[12px] border-b-[18px] border-x-transparent border-b-rose-300" />
             <div
-              className="flex size-72 items-center justify-center rounded-full border border-slate-500/20 bg-[conic-gradient(from_90deg,#34d399,#22d3ee,#a855f7,#f59e0b,#34d399)] transition-transform duration-[2200ms] ease-out"
+              className="flex size-72 items-center justify-center rounded-full border border-slate-500/20 bg-[conic-gradient(from_90deg,#8b5cf6,#22d3ee,#a855f7,#f59e0b,#8b5cf6)] transition-transform duration-[2200ms] ease-out"
               style={{ transform: `rotate(${rotation}deg)`, background: wheelGradient }}
             >
               <div className="flex size-24 items-center justify-center rounded-full border border-slate-500/20 bg-white/90 dark:bg-slate-950/90 text-center text-sm text-slate-950 dark:text-white">

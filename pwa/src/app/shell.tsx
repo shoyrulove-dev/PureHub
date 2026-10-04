@@ -101,7 +101,7 @@ export function AppShell() {
         </aside>
 
         <div className="app-surface relative mx-auto flex min-h-[calc(100vh-1rem)] w-full max-w-4xl flex-1 flex-col overflow-hidden rounded-[20px]">
-          <header className="sticky top-0 z-30 border-b border-slate-500/10 bg-white/82 px-3 py-2 backdrop-blur-xl sm:px-5 dark:bg-[#131b26]/86">
+          <header className="sticky top-0 z-30 border-b border-violet-400/15 bg-violet-50/88 px-3 py-2 backdrop-blur-xl sm:px-5 dark:bg-[#211936]/90">
             <div className="flex items-center justify-between gap-3">
               <Link to={`/${locale}`} className="flex min-w-0 items-center gap-3 xl:hidden">
                 <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-emerald-500 text-white">
@@ -128,7 +128,7 @@ export function AppShell() {
                       key={item}
                       to={localizedTarget(item)}
                       onClick={() => persistSelectedLocale(item)}
-                      className={`rounded-[10px] px-2.5 py-1.5 text-[11px] font-bold uppercase ${item === locale ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500'}`}
+                      className={`rounded-[10px] px-2.5 py-1.5 text-[11px] font-bold uppercase ${item === locale ? 'bg-violet-100 text-violet-950 shadow-sm dark:bg-violet-800 dark:text-white' : 'text-slate-500'}`}
                     >
                       {item}
                     </Link>

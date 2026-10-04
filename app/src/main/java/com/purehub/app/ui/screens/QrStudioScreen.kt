@@ -393,7 +393,7 @@ private fun QrScannerContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(48.dp))
+                    Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFFC4A7FF), modifier = Modifier.size(48.dp))
                     LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                 }
@@ -415,7 +415,7 @@ private fun QrScannerContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFF6EE7B7), modifier = Modifier.size(48.dp))
+                        Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFFC4A7FF), modifier = Modifier.size(48.dp))
                         LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                         Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
                     }
@@ -746,7 +746,7 @@ private fun QrViewfinderOverlay(modifier: Modifier) {
         val left = (size.width - side) / 2
         val top = (size.height - side) / 2
         val length = side * .18f
-        val color = Color(0xFF6EE7B7)
+        val color = Color(0xFFC4A7FF)
         val width = 7.dp.toPx()
         val shade = Color.Black.copy(alpha = .34f)
         drawRect(shade, topLeft = Offset.Zero, size = androidx.compose.ui.geometry.Size(size.width, top))

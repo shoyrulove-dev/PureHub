@@ -125,14 +125,14 @@ export function PwaInstallPrompt() {
           }
           return next
         })}
-        className="flex min-h-10 items-center gap-1.5 rounded-[13px] border border-emerald-500/30 bg-emerald-500 px-3 text-sm font-black text-white shadow-[0_18px_50px_-22px_rgba(16,185,129,0.5)] transition hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-emerald-400/35"
+        className="flex min-h-10 items-center gap-1.5 rounded-[13px] border border-emerald-500/30 bg-emerald-500 px-3 text-sm font-black text-white shadow-[0_18px_50px_-22px_rgba(169,112,255,0.5)] transition hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-emerald-400/35"
       >
         <img src="/icons/app-icon-192.png" alt="" className="size-5 rounded-md" />
         <span>{t('pwa.installButton')}</span>
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-12 z-30 w-[min(22rem,calc(100vw-1.5rem))] rounded-[20px] border border-emerald-400/20 bg-slate-950/98 p-4 shadow-[0_28px_90px_-52px_rgba(16,185,129,0.55)] backdrop-blur-xl">
+        <div className="absolute right-0 top-12 z-30 w-[min(22rem,calc(100vw-1.5rem))] rounded-[20px] border border-emerald-400/20 bg-slate-950/98 p-4 shadow-[0_28px_90px_-52px_rgba(169,112,255,0.55)] backdrop-blur-xl">
           <div className="flex items-start justify-between gap-3">
             <div><p className="flex items-center gap-2 text-sm font-black text-white"><Smartphone className="size-4 text-emerald-300" />{t('pwa.installTitle')}</p><p className="mt-1 text-xs font-semibold text-emerald-200">{t('pwa.installBenefit')}</p></div>
             <button type="button" onClick={() => { trackInstallStep('pwa_install_dismissed'); setOpen(false) }} className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white" aria-label={t('pwa.later')}><X className="size-4" /></button>

@@ -207,21 +207,21 @@ private fun HabitHero(completedToday: Int, total: Int, strongestStreak: Int, wee
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Brush.linearGradient(listOf(Color(0xFF064E3B), Color(0xFF0F766E), Color(0xFF075985))))
+            .background(Brush.linearGradient(listOf(Color(0xFF4C1D95), Color(0xFF7C3AED), Color(0xFF0E7490))))
             .padding(22.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFA7F3D0), modifier = Modifier.size(18.dp))
-                        LocalizedText("PRIVATE DAILY RHYTHM", color = Color(0xFFA7F3D0), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                        Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFE9D5FF), modifier = Modifier.size(18.dp))
+                        LocalizedText("PRIVATE DAILY RHYTHM", color = Color(0xFFE9D5FF), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
                     }
                     LocalizedText("Zen Habit", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     LocalizedText("Build consistency without accounts, feeds, ads or guilt.", color = Color.White.copy(alpha = .78f), style = MaterialTheme.typography.bodyMedium)
                 }
                 Box(modifier = Modifier.size(48.dp).background(Color.White.copy(alpha = .1f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFA7F3D0))
+                    Icon(Icons.Rounded.Spa, contentDescription = null, tint = Color(0xFFE9D5FF))
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -237,7 +237,7 @@ private fun HabitHero(completedToday: Int, total: Int, strongestStreak: Int, wee
 private fun HeroStat(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier) {
     Column(modifier = modifier.background(Color.White.copy(alpha = .1f), RoundedCornerShape(16.dp)).padding(11.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(icon, contentDescription = null, tint = Color(0xFFD1FAE5), modifier = Modifier.size(14.dp))
+            Icon(icon, contentDescription = null, tint = Color(0xFFE9D5FF), modifier = Modifier.size(14.dp))
             LocalizedText(label.uppercase(), color = Color.White.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
         }
         LocalizedText(value, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
@@ -367,7 +367,7 @@ private fun EmptyHabitState(onAdd: () -> Unit) {
     }
 }
 
-private fun habitColor(hex: String): Color = runCatching { Color(parseColor(hex)) }.getOrDefault(Color(0xFF10B981))
+private fun habitColor(hex: String): Color = runCatching { Color(parseColor(hex)) }.getOrDefault(Color(0xFF8B5CF6))
 
 private fun shareHabitBackup(context: Context, summaries: List<HabitSummary>) {
     val habits = JSONArray()
