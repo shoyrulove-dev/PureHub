@@ -406,7 +406,10 @@ private fun MiniAppScreen(
         MiniAppId.ZEN_POMODORO -> ScrollHost(innerPadding) { PomodoroCard() }
         MiniAppId.ZEN_BREATH -> ScrollHost(innerPadding) { ZenBreathCard() }
         MiniAppId.COMPASS -> CompassScreen(innerPadding = innerPadding, embedded = false)
-        MiniAppId.BUBBLE_LEVEL -> ScrollHost(innerPadding) { BubbleLevelCard() }
+        MiniAppId.BUBBLE_LEVEL -> BubbleLevelCard(
+            onHome = onHome,
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        )
         MiniAppId.DECIBEL_METER -> ScrollHost(innerPadding) { DecibelMeterCard() }
         MiniAppId.SMART_FLASHLIGHT -> ScrollHost(innerPadding) { SmartFlashlightCard() }
         MiniAppId.UNIT_CONVERTER -> ScrollHost(innerPadding) { UnitConverterCard() }

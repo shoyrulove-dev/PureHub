@@ -872,6 +872,19 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "Preparing a private local recording…" -> return when { vi -> "Đang chuẩn bị bản quay cục bộ riêng tư…"; zh -> "正在准备私密本地录制…"; es -> "Preparando una grabación local privada…"; else -> null }
         "The essentials, ready immediately." -> return when { vi -> "Các chức năng thiết yếu, sẵn sàng ngay."; zh -> "核心功能，立即可用。"; es -> "Lo esencial, listo de inmediato."; else -> null }
         "Pause" -> return when { vi -> "Tạm dừng"; zh -> "暂停"; es -> "Pausar"; else -> null }
+        "Level tools" -> return when { vi -> "Công cụ đo"; zh -> "水平工具"; es -> "Herramientas"; else -> null }
+        "Mode" -> return when { vi -> "Chế độ"; zh -> "模式"; es -> "Modo"; else -> null }
+        "Calibrate" -> return when { vi -> "Hiệu chỉnh"; zh -> "校准"; es -> "Calibrar"; else -> null }
+        "Accuracy" -> return when { vi -> "Độ chính xác"; zh -> "精度"; es -> "Precisión"; else -> null }
+        "Target" -> return when { vi -> "Mục tiêu"; zh -> "目标"; es -> "Objetivo"; else -> null }
+        "Ruler" -> return when { vi -> "Thước"; zh -> "尺子"; es -> "Regla"; else -> null }
+        "Sound on" -> return when { vi -> "Bật âm"; zh -> "开启提示音"; es -> "Sonido activo"; else -> null }
+        "Sound off" -> return when { vi -> "Tắt âm"; zh -> "关闭提示音"; es -> "Sonido apagado"; else -> null }
+        "No measurements" -> return when { vi -> "Chưa có số đo"; zh -> "暂无测量"; es -> "Sin mediciones"; else -> null }
+        "Scale" -> return when { vi -> "Tỷ lệ"; zh -> "比例"; es -> "Escala"; else -> null }
+        "Offline · no ads · private" -> return when { vi -> "Ngoại tuyến · không quảng cáo · riêng tư"; zh -> "离线 · 无广告 · 私密"; es -> "Sin conexión · sin anuncios · privado"; else -> null }
+        "Hold still" -> return when { vi -> "Giữ yên"; zh -> "保持静止"; es -> "Mantén quieto"; else -> null }
+        "Center bubble" -> return when { vi -> "Đưa bóng vào giữa"; zh -> "将气泡移到中心"; es -> "Centra la burbuja"; else -> null }
         "Measurements remain local" -> return when { vi -> "Số đo chỉ lưu trên máy"; zh -> "测量数据仅保留在本机"; es -> "Las mediciones permanecen en el dispositivo"; else -> null }
         "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share." -> return when { vi -> "PureHub chỉ đọc cảm biến chuyển động khi bạn bật đo và chỉ chia sẻ giá trị đã giữ khi bạn chọn Chia sẻ."; zh -> "PureHub 仅在启用测量时读取运动传感器，且只会在你选择分享时分享已保留的读数。"; es -> "PureHub solo lee los sensores de movimiento mientras la medición está activa y solo comparte un valor guardado cuando eliges Compartir."; else -> null }
         "DOCUMENT SUITE" -> return when { vi -> "BỘ TÀI LIỆU"; zh -> "文档套件"; es -> "SUITE DE DOCUMENTOS"; else -> null }
