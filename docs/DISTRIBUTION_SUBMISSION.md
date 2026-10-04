@@ -1,6 +1,6 @@
 # PureHub distribution submission
 
-This dossier tracks the signed GitHub release, direct submission to the official F-Droid repository, and the future Google Play readiness gate.
+This dossier tracks signed GitHub releases and Google Play readiness. F-Droid build and publishing work is paused until further notice.
 
 ## Current release facts
 
@@ -10,8 +10,9 @@ This dossier tracks the signed GitHub release, direct submission to the official
 - Version code: `45`
 - License: MIT
 - Source: <https://github.com/shoyrulove-dev/PureHub>
-- Release: <https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.45>
-- F-Droid universal APK: <https://github.com/shoyrulove-dev/PureHub/releases/download/v1.0.0-beta.45/PureHub-1.0.0-beta.45-fdroid.apk>
+- Release candidate: `v1.0.0-beta.54`
+- Distribution assets: lightweight signed ARM64 APK, Play-ready AAB, checksums, and provenance
+- F-Droid artifacts: paused and intentionally excluded from current releases
 - Checksums: `SHA256SUMS.txt` on the same release
 - Website: <https://hub.blissbiovn.com/en>
 - Issue tracker: <https://github.com/shoyrulove-dev/PureHub/issues>
@@ -61,7 +62,7 @@ git checkout v1.0.0-beta.45
 ! grep -E 'com\.google\.android\.gms|com\.google\.mlkit|com\.google\.firebase' fdroid-dependencies.txt
 ```
 
-The release workflow repeats these checks, builds the F-Droid APKs, rejects the Android Internet permission, publishes SHA256 checksums, and creates build provenance.
+The active release workflow verifies the standard Android build, publishes one lightweight ARM64 APK plus the Play-ready AAB, writes SHA256 checksums, and creates build provenance. It does not build or publish F-Droid artifacts.
 
 ## Google Play readiness gate
 

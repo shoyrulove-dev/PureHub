@@ -138,9 +138,9 @@ On Windows PowerShell:
 .\gradlew.bat testFdroidDebugUnitTest lintFdroidDebug assembleFdroidDebug
 ```
 
-The standard flavor keeps ML Kit OCR for recognition quality. The `fdroid` flavor uses ZXing and Tesseract and its runtime dependency graph contains no ML Kit, Google Play Services, or Firebase. See the [F-Droid flavor architecture and verification guide](docs/FDROID_FLAVOR.md). APKs are written under `app/build/outputs/apk/<flavor>/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
+The standard flavor keeps ML Kit OCR for recognition quality. The legacy `fdroid` flavor remains in source for reproducibility, but F-Droid builds and publishing are paused while PureHub prepares its Google Play track. APKs are written under `app/build/outputs/apk/standard/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
 
-Official F-Droid submission is tracked directly through `fdroiddata`; PureHub does not claim a listing until a public F-Droid package page exists. Google Play is intentionally deferred until at least October 16, 2026 and will proceed only if tester coverage and every launch goal are complete. See the [distribution submission dossier](docs/DISTRIBUTION_SUBMISSION.md).
+F-Droid publishing is currently paused. The active distribution path is the signed GitHub APK plus the AAB prepared for Google Play testing. See the [distribution submission dossier](docs/DISTRIBUTION_SUBMISSION.md).
 
 ## Repository map
 
@@ -154,7 +154,7 @@ Official F-Droid submission is tracked directly through `fdroiddata`; PureHub do
 
 ## Releases
 
-The current release candidate is [PureHub 1.0.0-beta.53](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.53). This update completes the WiFi Analyzer localization and cross-platform handoff: Android now provides consistent English, Vietnamese, Simplified Chinese, and Spanish copy across live health, nearby scans, diagnostics, LAN discovery, monitoring, survey projects, and localized PNG/PDF reports. The PWA adds a private ten-sample connection check, local history, browser-exposed network signals, health recommendations, and a clear Android install path for nearby AP/channel, LAN/OUI, roaming, survey, and heatmap capabilities that browsers cannot provide. Spanish catalog summaries are complete for all 26 mini-apps. Network values remain honestly labelled when Android does not expose a real noise floor, and the F-Droid flavor remains offline-only. OCR Studio remains available with its camera-first scanner and offline recognition paths. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is PureHub 1.0.0-beta.54. This update unifies the violet Pure Earn visual system across Android and the PWA, completes another four-language interface audit, fixes deterministic Home navigation, and simplifies distribution to a lightweight signed ARM64 APK plus a Play-ready AAB. WiFi Analyzer, OCR Studio, QR Studio, Vision tools, Bubble Level, Home, Settings, downloads, and release-facing screens retain English, Vietnamese, Simplified Chinese, and Spanish coverage. F-Droid publishing is paused. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

@@ -83,8 +83,8 @@ private enum class LevelUnit { Degrees, Percent }
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun BubbleLevelCard(
-    viewModel: BubbleLevelViewModel = viewModel(),
     modifier: Modifier = Modifier,
+    viewModel: BubbleLevelViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
