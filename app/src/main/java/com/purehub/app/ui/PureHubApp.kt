@@ -229,7 +229,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                                 icon = {
                                     Icon(
                                         imageVector = destination.icon,
-                                        contentDescription = destination.route,
+                                        contentDescription = destination.labelFor(language),
                                     )
                                 },
                                 alwaysShowLabel = false,

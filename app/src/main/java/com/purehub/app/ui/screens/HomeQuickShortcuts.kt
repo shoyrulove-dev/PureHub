@@ -12,7 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +26,7 @@ fun HomeQuickShortcuts(
     favoriteTools: Set<MiniAppId>,
     onOpenTool: (MiniAppId) -> Unit,
 ) {
+    val language = LocalAppLanguage.current
     val pinnedVisible = favoriteTools.filter { it in visibleTools }
     val fallbackVisible = visibleTools.filterNot { it in favoriteTools }
     val quickTools = (pinnedVisible + fallbackVisible).take(6)
@@ -56,7 +59,7 @@ fun HomeQuickShortcuts(
                 ) {
                     Icon(
                         imageVector = tool.icon,
-                        contentDescription = tool.title,
+                        contentDescription = translateUiText(tool.title, language),
                         modifier = Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )

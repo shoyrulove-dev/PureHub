@@ -1,0 +1,15 @@
+PureHub tập hợp 26 tiện ích thiết thực trong một ứng dụng Android gọn gàng.
+
+Bạn có thể quét và tạo mã QR, nhận dạng chữ bằng OCR, tạo PDF, phân tích Wi-Fi, đo độ cân bằng, chạy Pomodoro, theo dõi thói quen và chi tiêu, xóa metadata ảnh và sử dụng nhiều công cụ cảm biến mà không cần cài từng ứng dụng riêng.
+
+Các quy trình chính được thiết kế để xử lý ngay trên thiết bị. Bản quét, thói quen, tài liệu, số đo, chi tiêu và dữ liệu kho lưu trữ chỉ rời khỏi thiết bị khi bạn chủ động xuất, chia sẻ hoặc chạy một tính năng cần kết nối.
+
+Tính năng nổi bật:
+• QR Studio, OCR Studio và chuyển tài liệu sang PDF
+• Phân tích Wi-Fi nâng cao và công cụ mạng cục bộ
+• Thước cân bằng, thước đo, la bàn, máy đo âm thanh và đèn pin
+• Pomodoro, bài thở, thói quen, lịch âm và vòng quay quyết định
+• Theo dõi chi tiêu, chia hóa đơn, bảo vệ ảnh và công cụ tệp
+• Giao diện tiếng Anh, Việt, Trung giản thể và Tây Ban Nha
+
+PureHub miễn phí, mã nguồn mở và không bắt buộc tài khoản. Quyền camera, micro, thiết bị lân cận, vị trí, thông báo và quay màn hình chỉ được hỏi khi một công cụ thực sự cần. Một số phép đo có kết nối cần Internet và chỉ chạy sau khi bạn chủ động bắt đầu.

@@ -19,7 +19,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.appText
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +48,7 @@ fun ToolsScreen(
     onOpenMiniApp: (MiniAppId) -> Unit,
     showAllTools: Boolean = false,
 ) {
+    val language = LocalAppLanguage.current
     val visibleTools = rememberVisibleTools()
     val favoriteTools = rememberFavoriteTools()
     val context = LocalContext.current
@@ -143,16 +147,21 @@ fun ToolsScreen(
                                 IconButton(onClick = {
                                     scope.launch { preferences.setToolFavorite(tool.name, tool !in favoriteTools) }
                                 }) {
+                                    val localizedTitle = translateUiText(tool.title, language)
                                     Icon(
                                         imageVector = if (tool in favoriteTools) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                        contentDescription = if (tool in favoriteTools) "Remove ${tool.title} from favorites" else "Add ${tool.title} to favorites",
+                                        contentDescription = if (tool in favoriteTools) {
+                                            appText(language, "Remove $localizedTitle from favorites", "Bỏ $localizedTitle khỏi yêu thích", "从收藏中移除${localizedTitle}", "Quitar $localizedTitle de favoritos")
+                                        } else {
+                                            appText(language, "Add $localizedTitle to favorites", "Thêm $localizedTitle vào yêu thích", "将${localizedTitle}加入收藏", "Añadir $localizedTitle a favoritos")
+                                        },
                                         tint = if (tool in favoriteTools) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(20.dp),
                                     )
                                 }
                                 Icon(
                                     imageVector = Icons.Rounded.ChevronRight,
-                                    contentDescription = "Open ${tool.title}",
+                                    contentDescription = appText(language, "Open ${translateUiText(tool.title, language)}", "Mở ${translateUiText(tool.title, language)}", "打开${translateUiText(tool.title, language)}", "Abrir ${translateUiText(tool.title, language)}"),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
                                 )

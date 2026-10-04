@@ -1,7 +1,15 @@
-PureHub is a free and open-source collection of 26 everyday Android utilities.
+PureHub brings 26 practical utilities into one calm Android app.
 
-The F-Droid build works fully offline and contains no ML Kit, Google Play Services, Firebase, ads, analytics, or tracking. QR scanning uses ZXing and OCR uses Tesseract with bundled English, Vietnamese, and Simplified Chinese language models.
+Scan and create QR codes, extract text with OCR, build PDFs, analyze Wi-Fi, check a surface level, run a Pomodoro timer, track habits and expenses, clean photo metadata, and use everyday sensor tools without installing a separate app for every task.
 
-Flagship tools include QR Studio, OCR Studio, Doc to PDF, Zen Pomodoro, Zen Habit, Speaker Cleaner, Expense Tracker, Bill Splitter, Sensor Suite, Password Vault, and more.
+Core workflows are designed for on-device use. Your scans, habits, documents, measurements, expenses, and vault data stay on your device unless you explicitly export, share, or start a connected feature.
 
-Your scans, habits, documents, expenses, and vault data remain on your device unless you explicitly export or share them.
+Highlights:
+• QR Studio, OCR Studio, and Doc to PDF
+• Advanced Wi-Fi analysis and local network tools
+• Bubble level, ruler, compass, sound meter, and flashlight
+• Pomodoro, breathing, habits, lunar calendar, and decisions
+• Expense tracking, bill splitting, photo privacy, and file tools
+• English, Vietnamese, Simplified Chinese, and Spanish interface
+
+PureHub is free, open source, and has no mandatory account. Camera, microphone, nearby-device, location, notification, and screen-capture permissions are requested only when a tool needs them. Some connected diagnostics require Internet access and run only after you start them.

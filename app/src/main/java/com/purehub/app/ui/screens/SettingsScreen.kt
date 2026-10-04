@@ -1,5 +1,7 @@
 package com.purehub.app.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.purehub.app.ui.AppLanguage
@@ -35,6 +38,7 @@ fun SettingsScreen(
     onLanguageChange: (AppLanguage) -> Unit,
     onJoinPlayTesters: () -> Unit,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,6 +83,19 @@ fun SettingsScreen(
             PermissionCenterCard()
             ToolVisibilityManagerCard()
             EncryptedBackupCard()
+            OutlinedButton(
+                onClick = {
+                    val privacyUrl = "https://hub.blissbiovn.com/${language.code}/privacy"
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(privacyUrl)).addCategory(Intent.CATEGORY_BROWSABLE),
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                LocalizedText(appText(language, "Privacy Policy", "Chính sách quyền riêng tư", "隐私政策", "Política de privacidad"))
+            }
             OutlinedButton(onClick = onJoinPlayTesters, modifier = Modifier.fillMaxWidth()) {
                 LocalizedText("🧪 " + appText(language, "Join Google Play testers", "Tham gia Tester CH Play", "加入 Google Play 测试", "Unirse a probadores de Google Play"))
             }

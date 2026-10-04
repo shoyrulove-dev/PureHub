@@ -1,0 +1,15 @@
+PureHub reúne 26 utilidades prácticas en una sola aplicación Android clara y tranquila.
+
+Escanea y crea códigos QR, extrae texto con OCR, genera PDF, analiza redes Wi-Fi, nivela superficies, usa un temporizador Pomodoro, registra hábitos y gastos, elimina metadatos de fotos y aprovecha herramientas de sensores sin instalar una aplicación distinta para cada tarea.
+
+Los flujos principales están diseñados para ejecutarse en el dispositivo. Tus escaneos, hábitos, documentos, mediciones, gastos y datos privados permanecen en tu teléfono salvo que decidas exportarlos, compartirlos o iniciar una función conectada.
+
+Funciones destacadas:
+• Estudio QR, OCR y conversión de documentos a PDF
+• Análisis Wi-Fi avanzado y herramientas de red local
+• Nivel, regla, brújula, sonómetro y linterna
+• Pomodoro, respiración, hábitos, calendario lunar y decisiones
+• Gastos, reparto de cuentas, privacidad de fotos y archivos
+• Interfaz en inglés, vietnamita, chino simplificado y español
+
+PureHub es gratis, de código abierto y no exige una cuenta. Los permisos de cámara, micrófono, dispositivos cercanos, ubicación, notificaciones y captura de pantalla solo se solicitan cuando una herramienta los necesita. Algunos diagnósticos conectados requieren Internet y solo se ejecutan cuando tú los inicias.

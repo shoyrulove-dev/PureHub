@@ -33,4 +33,4 @@ Never publish a debug APK or rotate the signing key casually. The same app-signi
 5. Publish a GitHub prerelease first, then promote it after community validation.
 6. Add the final asset URLs and checksum to Release Hub, generate channel drafts, review them, and approve only the English API posts you intend to publish.
 
-F-Droid publishing is paused. Keep the legacy `fdroid` flavor only for reproducibility; do not build or attach an F-Droid APK unless that distribution path is explicitly resumed.
+F-Droid publishing is discontinued. Keep the legacy `fdroid` flavor only to reproduce older releases; do not build, attach, or submit new F-Droid artifacts.

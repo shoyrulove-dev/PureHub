@@ -1,0 +1,1 @@
+Nueva interfaz violeta, mejor cobertura en cuatro idiomas, navegación fiable a Inicio, mejoras en el analizador Wi-Fi y el nivel, y un paquete Android más ligero.

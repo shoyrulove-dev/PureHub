@@ -22,7 +22,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.appText
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +70,7 @@ fun MiniAppIconStrip(
     selectedTool: MiniAppId? = null,
     onToolClick: ((MiniAppId) -> Unit)? = null,
 ) {
+    val language = LocalAppLanguage.current
     val tools = miniAppsByTab.getValue(tab).filter { it in visibleTools }
     if (tools.isEmpty()) return
 
@@ -83,7 +87,7 @@ fun MiniAppIconStrip(
                     ) {
                         Icon(
                             imageVector = tool.icon,
-                            contentDescription = tool.title,
+                            contentDescription = translateUiText(tool.title, language),
                             modifier = Modifier.size(20.dp),
                             tint = tab.accent,
                         )
@@ -101,7 +105,7 @@ fun MiniAppIconStrip(
                     ) {
                         Icon(
                             imageVector = tool.icon,
-                            contentDescription = tool.title,
+                            contentDescription = translateUiText(tool.title, language),
                             tint = if (tool == selectedTool) {
                                 MaterialTheme.colorScheme.surface
                             } else {
@@ -129,6 +133,7 @@ fun MiniAppEmptyState() {
 
 @Composable
 fun ToolVisibilityManagerCard() {
+    val language = LocalAppLanguage.current
     val context = LocalContext.current
     val repository = remember { ToolVisibilityRepository(context.applicationContext) }
     val hiddenIds = repository.hiddenToolIds.collectAsStateWithLifecycle(initialValue = emptySet())
@@ -160,7 +165,7 @@ fun ToolVisibilityManagerCard() {
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
-                        contentDescription = "Reset layout",
+                        contentDescription = appText(language, "Reset layout", "Đặt lại bố cục", "重置布局", "Restablecer diseño"),
                     )
                 }
             }
@@ -209,7 +214,7 @@ fun ToolVisibilityManagerCard() {
                             ) {
                                 Icon(
                                     imageVector = tool.icon,
-                                    contentDescription = tool.title,
+                                    contentDescription = translateUiText(tool.title, language),
                                     modifier = Modifier.size(20.dp),
                                 )
                                 LocalizedText(
@@ -229,7 +234,11 @@ fun ToolVisibilityManagerCard() {
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.PushPin,
-                                            contentDescription = if (favorite) "Unpin from Home" else "Pin to Home",
+                                            contentDescription = if (favorite) {
+                                                appText(language, "Unpin from Home", "Bỏ ghim khỏi Trang chủ", "从主页取消固定", "Desfijar de Inicio")
+                                            } else {
+                                                appText(language, "Pin to Home", "Ghim vào Trang chủ", "固定到主页", "Fijar en Inicio")
+                                            },
                                             tint = if (favorite) {
                                                 MaterialTheme.colorScheme.primary
                                             } else {
@@ -251,7 +260,11 @@ fun ToolVisibilityManagerCard() {
                                         } else {
                                             Icons.Outlined.VisibilityOff
                                         },
-                                        contentDescription = if (visible) "Hide tool" else "Show tool",
+                                        contentDescription = if (visible) {
+                                            appText(language, "Hide tool", "Ẩn công cụ", "隐藏工具", "Ocultar herramienta")
+                                        } else {
+                                            appText(language, "Show tool", "Hiện công cụ", "显示工具", "Mostrar herramienta")
+                                        },
                                         tint = if (visible) {
                                             MaterialTheme.colorScheme.primary
                                         } else {
