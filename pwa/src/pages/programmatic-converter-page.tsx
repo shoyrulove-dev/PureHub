@@ -18,7 +18,7 @@ import { AdsterraNativeBanner } from '../components/ads/AdsterraNativeBanner'
 export function ProgrammaticConverterPage({ converterSlug }: { converterSlug?: string }) {
   const { lang, pairSlug } = useParams()
   const locale = normalizeLocale(lang)
-  const seoLocale = locale === 'es' ? 'en' : locale
+  const seoLocale = locale
   const converter = getProgrammaticConverter(converterSlug ?? pairSlug ?? '')
   const [value, setValue] = useState('1')
 
@@ -34,7 +34,9 @@ export function ProgrammaticConverterPage({ converterSlug }: { converterSlug?: s
     ? { table: 'Bảng quy đổi phổ biến', formula: 'Công thức', use: 'Dùng công cụ chuyển đổi', input: 'Giá trị', result: 'Kết quả', faq: 'Câu hỏi thường gặp', faqQ: `100 ${converter.from.vi} bằng bao nhiêu ${converter.to.vi}?`, faqA: `100 ${converter.from.vi} bằng ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.vi}.` }
     : locale === 'zh'
       ? { table: '常用换算表', formula: '计算公式', use: '打开完整转换工具', input: '数值', result: '结果', faq: '常见问题', faqQ: `100${converter.from.zh}等于多少${converter.to.zh}？`, faqA: `100${converter.from.zh}等于${formatProgrammaticValue(convertProgrammaticValue(converter, 100))}${converter.to.zh}。` }
-      : { table: 'Common conversion table', formula: 'Formula', use: 'Open the full converter', input: 'Value', result: 'Result', faq: 'Frequently asked questions', faqQ: `How many ${converter.to.en} are 100 ${converter.from.en}?`, faqA: `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.` }
+      : locale === 'es'
+        ? { table: 'Tabla de conversiones comunes', formula: 'Fórmula', use: 'Abrir el convertidor completo', input: 'Valor', result: 'Resultado', faq: 'Preguntas frecuentes', faqQ: `¿Cuántos ${converter.to.es} son 100 ${converter.from.es}?`, faqA: `100 ${converter.from.es} equivalen a ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.es}.` }
+        : { table: 'Common conversion table', formula: 'Formula', use: 'Open the full converter', input: 'Value', result: 'Result', faq: 'Frequently asked questions', faqQ: `How many ${converter.to.en} are 100 ${converter.from.en}?`, faqA: `100 ${converter.from.en} equals ${formatProgrammaticValue(convertProgrammaticValue(converter, 100))} ${converter.to.en}.` }
 
   const faq = [{ question: labels.faqQ, answer: labels.faqA }]
 

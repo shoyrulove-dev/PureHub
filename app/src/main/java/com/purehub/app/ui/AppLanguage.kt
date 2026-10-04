@@ -15,7 +15,7 @@ val LocalAppLanguage = staticCompositionLocalOf { AppLanguage.English }
 
 // v2 intentionally re-opens the language welcome screen for users who installed
 // builds from before full English/Vietnamese/Chinese UI support was available.
-private const val LANGUAGE_PREFS = "purehub.app-language.v2"
+private const val LANGUAGE_PREFS = "purehub.app-language.v3"
 private const val LANGUAGE_KEY = "language"
 private const val LANGUAGE_CHOSEN_KEY = "language_chosen"
 

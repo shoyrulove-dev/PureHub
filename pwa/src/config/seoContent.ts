@@ -85,40 +85,58 @@ const genericFaqs: Record<SeoLanguage, SeoFaq[]> = {
   ],
 }
 
+const localizedDefaults = {
+  vi: {
+    benefits: (title: string, keywords: string[]) => [
+      `${title} được thiết kế cho thao tác rõ ràng và riêng tư.`,
+      `Phù hợp cho: ${keywords.slice(0, 2).join(', ') || 'công việc hằng ngày'}.`,
+      'Kiểm tra kết quả rồi chỉ lưu, xuất hoặc chia sẻ khi bạn chủ động chọn.',
+    ],
+    steps: ['Mở công cụ và chọn dữ liệu hoặc chế độ phù hợp.', 'Kiểm tra kết quả ngay trên thiết bị.', 'Chỉ sao chép, lưu, xuất hoặc chia sẻ khi kết quả đã sẵn sàng.'],
+    note: 'Kết quả là thông tin hỗ trợ. Hãy kiểm tra dữ liệu đầu vào, thiết bị và kết quả trước khi dùng cho quyết định quan trọng.',
+  },
+  zh: {
+    benefits: (title: string, keywords: string[]) => [
+      `${title} 专注于清晰、私密的操作流程。`,
+      `适用于：${keywords.slice(0, 2).join('、') || '日常任务'}。`,
+      '请先检查结果，仅在你主动选择时保存、导出或分享。',
+    ],
+    steps: ['打开工具并选择适合任务的输入或模式。', '直接在设备上检查结果。', '结果确认无误后，再复制、保存、导出或分享。'],
+    note: '结果仅供辅助参考。用于重要决定前，请检查输入内容、设备状态和最终结果。',
+  },
+  es: {
+    benefits: (title: string, keywords: string[]) => [
+      `${title} está diseñada para un flujo claro y privado.`,
+      `Útil para: ${keywords.slice(0, 2).join(', ') || 'tareas cotidianas'}.`,
+      'Revisa el resultado y guarda, exporta o comparte solo cuando tú lo decidas.',
+    ],
+    steps: ['Abre la herramienta y elige la entrada o el modo adecuado.', 'Revisa el resultado directamente en este dispositivo.', 'Copia, guarda, exporta o comparte solo cuando el resultado esté listo.'],
+    note: 'El resultado es una ayuda práctica. Revisa la entrada, el dispositivo y la salida antes de usarlo para una decisión importante.',
+  },
+} as const
+
 export function getSeoContent(appId: SeoMiniAppId, lang: SeoLanguage): SeoContent {
   const meta = getSeoMetaByAppId(appId, lang)
   const profile = profiles[appId] ?? {}
   const title = meta?.title ?? 'PureHub tool'
   const description = meta?.description ?? ''
   const keywords = meta?.keywords ?? []
+  if (lang !== 'en') {
+    const defaults = localizedDefaults[lang]
+    return {
+      intro: description,
+      benefits: profile[lang]?.benefits ?? defaults.benefits(title, keywords),
+      steps: profile[lang]?.steps ?? [...defaults.steps],
+      faqs: profile[lang]?.faqs ?? genericFaqs[lang],
+      note: profile[lang]?.note ?? defaults.note,
+    }
+  }
   return {
     intro: description,
-    benefits: profile[lang]?.benefits ?? (lang === 'es' ? [
-      `${title} está diseñada para un flujo privado y claro.`,
-      ...keywords.slice(0, 2).map((keyword) => `Útil para: ${keyword}.`),
-      'Revisa el resultado y exporta o comparte solo cuando lo decidas.',
-    ] : profile.benefits ?? [
-      `${title} is built for a focused, private workflow.`,
-      ...(keywords.slice(0, 2).map((keyword) => `Useful for: ${keyword}.`)),
-      'Use the result, review it, and export or share only when you choose.',
-    ]),
-    steps: profile[lang]?.steps ?? (lang === 'es' ? [
-      'Abre la herramienta y elige la entrada o el modo que corresponde a tu tarea.',
-      'Revisa el resultado en este dispositivo antes de continuar.',
-      'Copia, exporta, guarda o comparte solo cuando el resultado esté listo.',
-    ] : profile.steps ?? [
-      'Open the tool and choose the input or mode that matches your task.',
-      'Review the result on this device before taking the next action.',
-      'Copy, export, save, or share only when the result is ready.',
-    ]),
-    faqs: profile[lang]?.faqs ?? profile.faqs ?? genericFaqs[lang],
-    note: profile[lang]?.note ?? profile.note ?? (lang === 'vi'
-      ? 'Kết quả là thông tin hỗ trợ và nên được kiểm tra trước khi dùng cho quyết định quan trọng.'
-      : lang === 'zh'
-        ? '结果用于辅助参考。用于重要决定前，请先检查输入、设备和结果。'
-        : lang === 'es'
-          ? 'El resultado es una ayuda práctica. Revisa las entradas y las salidas antes de usarlo en una decisión importante.'
-          : 'Results are provided as practical assistance. Review inputs and outputs before using them for an important decision.'),
+    benefits: profile.benefits ?? [`${title} is built for a focused, private workflow.`, ...keywords.slice(0, 2).map((keyword) => `Useful for: ${keyword}.`), 'Review the result and export or share only when you choose.'],
+    steps: profile.steps ?? ['Open the tool and choose the input or mode that matches your task.', 'Review the result on this device before taking the next action.', 'Copy, export, save, or share only when the result is ready.'],
+    faqs: profile.faqs ?? genericFaqs.en,
+    note: profile.note ?? 'Results are practical assistance. Review inputs and outputs before using them for an important decision.',
   }
 }
 

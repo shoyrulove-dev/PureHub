@@ -31,7 +31,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const { lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
   const copy = getProductCopy(normalizedLocale).shell
-  const seoLocale = normalizedLocale === 'es' ? 'en' : normalizedLocale
+  const seoLocale = normalizedLocale
   const { favorites, toggleFavorite } = useToolPreferences()
   const favorite = favorites.includes(miniApp.id)
   const runtime = getMiniAppRuntime(miniApp.id)

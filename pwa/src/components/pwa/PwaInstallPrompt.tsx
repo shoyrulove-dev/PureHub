@@ -82,8 +82,8 @@ export function PwaInstallPrompt() {
       ? [t('pwa.installMetaMenuStep'), t('pwa.installMetaSafariStep'), t('pwa.installMetaIosStep')]
       : [t('pwa.installMetaMenuStep'), t('pwa.installMetaChromeStep'), t('pwa.installMetaAndroidStep')]
     : isIos
-      ? ['Tap the Share button in Safari.', 'Choose “Add to Home Screen”, then tap Add.']
-      : ['Open your browser menu.', 'Choose “Install app” or “Add to Home screen”.']
+      ? [t('pwa.installSafariStep'), t('pwa.installIosHomeStep')]
+      : [t('pwa.installBrowserStep'), t('pwa.installHomeStep')]
 
   const copyCurrentLink = async () => {
     const value = window.location.href
@@ -138,7 +138,7 @@ export function PwaInstallPrompt() {
             <button type="button" onClick={() => { trackInstallStep('pwa_install_dismissed'); setOpen(false) }} className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white" aria-label={t('pwa.later')}><X className="size-4" /></button>
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-300">{t('pwa.installDescription')}</p>
-          <p className="mt-2 text-xs font-semibold text-slate-400">Takes about 10 seconds · works offline · no account needed.</p>
+          <p className="mt-2 text-xs font-semibold text-slate-400">{t('pwa.installDuration')}</p>
           <div className="mt-3 flex items-start gap-2 rounded-[14px] bg-white/6 p-3 text-xs leading-5 text-slate-200">
             {isMetaBrowser ? <ExternalLink className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : isIos ? <Share2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : deferredPrompt ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : <MonitorDown className="mt-0.5 size-4 shrink-0 text-emerald-300" />}
             <span>{installHint}</span>
