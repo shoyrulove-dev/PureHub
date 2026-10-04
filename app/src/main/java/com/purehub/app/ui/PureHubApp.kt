@@ -363,7 +363,7 @@ private fun MiniAppTopBar(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = translateUiText("Back", LocalAppLanguage.current),
                 )
             }
         },
@@ -407,7 +407,6 @@ private fun MiniAppScreen(
         MiniAppId.ZEN_BREATH -> ScrollHost(innerPadding) { ZenBreathCard() }
         MiniAppId.COMPASS -> CompassScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.BUBBLE_LEVEL -> BubbleLevelCard(
-            onHome = onHome,
             modifier = Modifier.fillMaxSize().padding(innerPadding),
         )
         MiniAppId.DECIBEL_METER -> ScrollHost(innerPadding) { DecibelMeterCard() }

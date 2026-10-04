@@ -41,7 +41,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Menu
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
@@ -85,7 +84,6 @@ private enum class LevelUnit { Degrees, Percent }
 @OptIn(ExperimentalMaterial3Api::class)
 fun BubbleLevelCard(
     viewModel: BubbleLevelViewModel = viewModel(),
-    onHome: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -147,14 +145,7 @@ fun BubbleLevelCard(
                     Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    LocalizedText("Level tools", style = MaterialTheme.typography.titleSmall)
-                    NavigationDrawerItem(
-                        label = { LocalizedText("Home", maxLines = 1, softWrap = false) },
-                        selected = false,
-                        icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
-                        onClick = { scope.launch { drawerState.close() }; onHome() },
-                    )
-                    HorizontalDivider()
+                    LocalizedText("Options", style = MaterialTheme.typography.titleSmall)
                     LocalizedText("Mode", style = MaterialTheme.typography.labelMedium)
                     LevelMode.entries.forEach { item ->
                         NavigationDrawerItem(
@@ -197,7 +188,7 @@ fun BubbleLevelCard(
                     FilterChip(
                         selected = soundCueEnabled,
                         onClick = { soundCueEnabled = !soundCueEnabled; preferences.edit().putBoolean("sound", soundCueEnabled).apply() },
-                        label = { LocalizedText(if (soundCueEnabled) "Sound on" else "Sound off", maxLines = 1) },
+                        label = { LocalizedText("Sound", maxLines = 1) },
                     )
                     HorizontalDivider()
                     LocalizedText("History", style = MaterialTheme.typography.labelMedium)
@@ -216,9 +207,14 @@ fun BubbleLevelCard(
                     LocalizedText("Ruler", style = MaterialTheme.typography.labelMedium)
                     LocalizedText("${"%.1f".format(rulerCentimeters)} cm", style = MaterialTheme.typography.bodySmall)
                     Slider(value = rulerCentimeters, onValueChange = { rulerCentimeters = it }, valueRange = 2f..15f)
-                    LocalizedText("Scale ${"%.0f".format(rulerScale * 100)}%", style = MaterialTheme.typography.bodySmall)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        LocalizedText("Scale", style = MaterialTheme.typography.bodySmall)
+                        LocalizedText("${"%.0f".format(rulerScale * 100)}%", style = MaterialTheme.typography.bodySmall)
+                    }
                     Slider(value = rulerScale, onValueChange = { rulerScale = it }, valueRange = 0.85f..1.15f)
-                    LocalizedText("Offline · no ads · private", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },
@@ -353,7 +349,6 @@ fun BubbleLevelCard(
                     LocalizedText("1. Remove a thick phone case if it rocks.")
                     LocalizedText("2. Place the phone on a known-flat reference.")
                     LocalizedText("3. Keep it still, then save this position as zero.")
-                    LocalizedText("Calibration stays only on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             confirmButton = {

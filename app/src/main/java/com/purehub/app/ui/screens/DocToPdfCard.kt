@@ -64,6 +64,8 @@ import com.purehub.app.feature.docpdf.ImportedPdf
 import com.purehub.app.feature.docpdf.PdfToolboxRepository
 import com.purehub.app.feature.docpdf.VisualSignature
 import com.purehub.app.ui.LocalSnackbarHostState
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.translateUiText
 import java.util.concurrent.Executor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -84,6 +86,7 @@ fun DocToPdfCard(
     val repository = remember { DocPdfRepository(context.applicationContext) }
     val pdfToolbox = remember { PdfToolboxRepository(context.applicationContext) }
     val snackbarHostState = LocalSnackbarHostState.current
+    val appLanguage = LocalAppLanguage.current
     val scope = rememberCoroutineScope()
     val cameraExecutor = remember { ContextCompat.getMainExecutor(context) }
     val previewView = remember {
@@ -166,7 +169,7 @@ fun DocToPdfCard(
                 .onSuccess {
                     exportedPdf = it
                     exportMessage = "Saved locally to ${it.file.absolutePath}"
-                    snackbarHostState.showSnackbar("PDF ready locally.")
+                    snackbarHostState.showSnackbar(translateUiText("PDF ready locally.", appLanguage))
                 }
                 .onFailure { exportMessage = it.message ?: "The PDF operation could not be completed." }
             pdfBusy = false
@@ -367,7 +370,7 @@ fun DocToPdfCard(
                         exportedPdf = repository.exportPdf(pages, documentTitle)
                         val searchable = pages.count { it.recognizedText.isNotBlank() }
                         exportMessage = "Saved searchable PDF ($searchable OCR page(s)) to ${exportedPdf?.file?.absolutePath}"
-                        scope.launch { snackbarHostState.showSnackbar("PDF exported locally.") }
+                        scope.launch { snackbarHostState.showSnackbar(translateUiText("PDF exported locally.", appLanguage)) }
                     },
                 ) { LocalizedText("Export PDF") }
             }
@@ -422,7 +425,7 @@ fun DocToPdfCard(
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
                                 context.startActivity(Intent.createChooser(openIntent, "Open PDF"))
-                                scope.launch { snackbarHostState.showSnackbar("Opening exported PDF.") }
+                                scope.launch { snackbarHostState.showSnackbar(translateUiText("Opening exported PDF.", appLanguage)) }
                             },
                         ) {
                             LocalizedText("Open PDF")
@@ -435,7 +438,7 @@ fun DocToPdfCard(
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
                                 context.startActivity(Intent.createChooser(shareIntent, "Share PDF"))
-                                scope.launch { snackbarHostState.showSnackbar("PDF ready to share.") }
+                                scope.launch { snackbarHostState.showSnackbar(translateUiText("PDF ready to share.", appLanguage)) }
                             },
                         ) {
                             LocalizedText("Share PDF")
@@ -564,7 +567,7 @@ fun DocToPdfCard(
                         largeBitmap?.let {
                             Image(
                                 bitmap = it.asImageBitmap(),
-                                contentDescription = "Selected captured page",
+                                contentDescription = translateUiText("Selected captured page", appLanguage),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(220.dp),
@@ -588,7 +591,7 @@ fun DocToPdfCard(
                                     bitmap?.let {
                                         Image(
                                             bitmap = it.asImageBitmap(),
-                                            contentDescription = "Captured page",
+                                            contentDescription = translateUiText("Captured page", appLanguage),
                                             modifier = Modifier.size(100.dp),
                                         )
                                     }

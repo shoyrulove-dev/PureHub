@@ -402,7 +402,7 @@ fun OcrTextExtractorCard(
             persistHistory(listOf(item) + history.filterNot {
                 it.documentId == item.documentId || (it.documentId.isBlank() && it.text == item.text)
             })
-            scope.launch { snackbarHostState.showSnackbar("Complete document saved privately on this device.") }
+            scope.launch { snackbarHostState.showSnackbar(translateUiText("Complete document saved privately on this device.", appLanguage)) }
         }.onFailure {
             status = "The complete document could not be saved. Your current scan remains open."
         }
@@ -529,7 +529,7 @@ fun OcrTextExtractorCard(
                     } else {
                         val staged = documentRepository.stageOcrPages(pagePairs)
                         status = "${staged.size} searchable page(s) sent to Doc to PDF."
-                        scope.launch { snackbarHostState.showSnackbar("Document Suite is ready with ${staged.size} OCR page(s).") }
+                        scope.launch { snackbarHostState.showSnackbar(translateUiText("Document Suite is ready with ${staged.size} OCR page(s).", appLanguage)) }
                     }
                 },
                 onSave = ::saveCurrent,
@@ -551,7 +551,7 @@ fun OcrTextExtractorCard(
                             ).joinToString(" - "),
                         )
                         status = "Receipt saved to Money Studio. Review the category and wallet when convenient."
-                        snackbarHostState.showSnackbar("Receipt saved to Money Studio.")
+                        snackbarHostState.showSnackbar(translateUiText("Receipt saved to Money Studio.", appLanguage))
                     }
                 },
                 onSelectPage = { index ->
@@ -1084,7 +1084,7 @@ private fun OcrTextContent(
         bitmap?.let {
             Image(
                 bitmap = it.asImageBitmap(),
-                contentDescription = "Scanned document preview",
+                contentDescription = translateUiText("Scanned document preview", LocalAppLanguage.current),
                 modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(18.dp)),
             )
         }

@@ -12,6 +12,58 @@ import { ActionButton, FormInput, FormTextArea } from '../MiniAppPrimitives'
 import { markToolSuccess } from '../../../lib/tool-success'
 import { trackProductEvent } from '../../../lib/community-api'
 import { detectDocumentQuad, warpDocument } from '../../../lib/document-perspective'
+import { normalizeLocale } from '../../../i18n/locales'
+
+const OCR_UI = {
+  en: { title: 'OCR Studio', private: 'PRIVATE BY DESIGN', description: 'Scan, clean, and export text without uploading documents.', device: 'On-device', scan: 'Scan', text: 'Text', library: 'Library', frame: 'Frame one page at a time', noUpload: 'Nothing is uploaded by PureHub.', local: 'Local processing', reading: 'Reading…', capture: 'Capture page', image: 'Scan image', rotate: 'Rotate', cleanup: 'Document cleanup', edges: 'Automatic edges and perspective correction run when the boundary is clear.', language: 'Recognition language', ready: 'ready offline', download: 'first download', cloud: 'Cloud Assist (optional)', cloudHint: 'Use your own OCR endpoint for difficult pages. Upload only occurs when enabled.', enabled: 'Enabled', offline: 'Offline only' },
+  vi: { title: 'Xưởng OCR', private: 'XỬ LÝ RIÊNG TƯ', description: 'Quét, làm sạch và xuất văn bản mà không tải tài liệu lên.', device: 'Trên thiết bị', scan: 'Quét', text: 'Văn bản', library: 'Thư viện', frame: 'Căn từng trang vào khung', noUpload: 'PureHub không tải tài liệu lên.', local: 'Xử lý cục bộ', reading: 'Đang đọc…', capture: 'Chụp trang', image: 'Chọn ảnh', rotate: 'Xoay', cleanup: 'Làm sạch tài liệu', edges: 'Tự tìm cạnh và chỉnh phối cảnh khi đường biên đủ rõ.', language: 'Ngôn ngữ nhận dạng', ready: 'sẵn sàng ngoại tuyến', download: 'tải lần đầu', cloud: 'Hỗ trợ đám mây (tùy chọn)', cloudHint: 'Dùng máy chủ OCR của bạn cho trang khó. Chỉ tải lên khi bật.', enabled: 'Đã bật', offline: 'Chỉ ngoại tuyến' },
+  zh: { title: 'OCR 文字识别', private: '隐私设计', description: '扫描、清理并导出文字，无需上传文档。', device: '设备端处理', scan: '扫描', text: '文字', library: '资料库', frame: '每次对准一页', noUpload: 'PureHub 不会上传文档。', local: '本地处理', reading: '正在识别…', capture: '拍摄页面', image: '选择图片', rotate: '旋转', cleanup: '文档清理', edges: '边界清晰时自动检测页面边缘并校正透视。', language: '识别语言', ready: '离线包已就绪', download: '首次下载', cloud: '云端辅助（可选）', cloudHint: '困难页面可使用您自己的 OCR 服务，仅在开启后上传。', enabled: '已开启', offline: '仅离线' },
+  es: { title: 'Estudio OCR', private: 'PRIVADO POR DISEÑO', description: 'Escanea, limpia y exporta texto sin subir tus documentos.', device: 'En el dispositivo', scan: 'Escanear', text: 'Texto', library: 'Biblioteca', frame: 'Encuadra una página cada vez', noUpload: 'PureHub no sube ningún documento.', local: 'Proceso local', reading: 'Leyendo…', capture: 'Capturar página', image: 'Elegir imagen', rotate: 'Girar', cleanup: 'Limpieza del documento', edges: 'Los bordes y la perspectiva se corrigen cuando el límite es claro.', language: 'Idioma de reconocimiento', ready: 'listo sin conexión', download: 'primera descarga', cloud: 'Asistencia en la nube (opcional)', cloudHint: 'Usa tu propio servidor OCR para páginas difíciles. Solo se sube al activarlo.', enabled: 'Activado', offline: 'Solo sin conexión' },
+} as const
+
+const OCR_DEEP = {
+  en: { sections: 'OCR Studio sections', document: 'Document', receipt: 'Receipt', note: 'Note', original: 'Original', clean: 'Clean', bw: 'B&W', edgeCrop: 'Edge crop', endpoint: 'OCR endpoint', endpointHint: 'The endpoint should accept image, language and mode, then return text and confidence.', progress: 'OCR pack and recognition', page: 'page', pages: 'pages', words: 'words', confidence: 'OCR confidence', imageQuality: 'image quality', previous: 'Previous', next: 'Next', moveEarlier: 'Move earlier', moveLater: 'Move later', documentTitle: 'Document title', recognizedText: 'Recognized text', quick: 'Quick actions', openLink: 'Open link', call: 'Call', contactDetected: 'Contact card detected', contact: 'Contact', exportContact: 'Export contact card', codeDetected: 'QR / barcode detected', copyCode: 'Copy code', receiptDetected: 'Receipt detected', total: 'Total', totalReview: 'Total needs review', saveMoney: 'Save to Money Studio', tableDetected: 'Table detected', rows: 'rows', columns: 'columns', reviewExport: 'Review before exporting.', formDetected: 'Form fields detected', fieldsFound: 'structured fields found.', exportLayout: 'Export OCR layout JSON', copy: 'Copy', share: 'Share', pdfPassword: 'PDF password (optional, 8+ characters)', pdfPlaceholder: 'Leave empty for a normal PDF', save: 'Save', continuePdf: 'Continue in Doc to PDF', addPage: 'Add page', deletePage: 'Delete page', newDocument: 'New document', noText: 'No text yet', noTextHint: 'Capture a page or choose an image to begin.', start: 'Start scanning', privateLibrary: 'Private library', libraryHint: 'Searchable and stored only in this browser.', clearLibrary: 'Clear library', search: 'Search scans' },
+  vi: { sections: 'Các mục OCR', document: 'Tài liệu', receipt: 'Hóa đơn', note: 'Ghi chú', original: 'Gốc', clean: 'Sạch', bw: 'Đen trắng', edgeCrop: 'Cắt viền', endpoint: 'Máy chủ OCR', endpointHint: 'Máy chủ nhận ảnh, ngôn ngữ và chế độ rồi trả về văn bản cùng độ tin cậy.', progress: 'Gói OCR và nhận dạng', page: 'trang', pages: 'trang', words: 'từ', confidence: 'độ tin cậy OCR', imageQuality: 'chất lượng ảnh', previous: 'Trước', next: 'Sau', moveEarlier: 'Chuyển lên', moveLater: 'Chuyển xuống', documentTitle: 'Tên tài liệu', recognizedText: 'Văn bản nhận dạng', quick: 'Thao tác nhanh', openLink: 'Mở liên kết', call: 'Gọi', contactDetected: 'Đã nhận dạng danh thiếp', contact: 'Liên hệ', exportContact: 'Xuất danh thiếp', codeDetected: 'Đã nhận dạng QR / mã vạch', copyCode: 'Sao chép mã', receiptDetected: 'Đã nhận dạng hóa đơn', total: 'Tổng', totalReview: 'Cần kiểm tra tổng tiền', saveMoney: 'Lưu vào Sổ chi tiêu', tableDetected: 'Đã nhận dạng bảng', rows: 'hàng', columns: 'cột', reviewExport: 'Hãy kiểm tra trước khi xuất.', formDetected: 'Đã nhận dạng trường biểu mẫu', fieldsFound: 'trường có cấu trúc được tìm thấy.', exportLayout: 'Xuất bố cục OCR JSON', copy: 'Sao chép', share: 'Chia sẻ', pdfPassword: 'Mật khẩu PDF (không bắt buộc, từ 8 ký tự)', pdfPlaceholder: 'Để trống nếu dùng PDF thường', save: 'Lưu', continuePdf: 'Tiếp tục trong Tài liệu sang PDF', addPage: 'Thêm trang', deletePage: 'Xóa trang', newDocument: 'Tài liệu mới', noText: 'Chưa có văn bản', noTextHint: 'Chụp trang hoặc chọn ảnh để bắt đầu.', start: 'Bắt đầu quét', privateLibrary: 'Thư viện riêng tư', libraryHint: 'Có thể tìm kiếm và chỉ lưu trong trình duyệt này.', clearLibrary: 'Xóa thư viện', search: 'Tìm bản quét' },
+  zh: { sections: 'OCR 栏目', document: '文档', receipt: '收据', note: '笔记', original: '原图', clean: '清晰', bw: '黑白', edgeCrop: '边缘裁剪', endpoint: 'OCR 服务地址', endpointHint: '服务应接收图片、语言和模式，并返回文字与置信度。', progress: 'OCR 包与识别进度', page: '页', pages: '页', words: '个词', confidence: 'OCR 置信度', imageQuality: '图像质量', previous: '上一页', next: '下一页', moveEarlier: '前移', moveLater: '后移', documentTitle: '文档标题', recognizedText: '识别文字', quick: '快捷操作', openLink: '打开链接', call: '拨打', contactDetected: '检测到联系人卡片', contact: '联系人', exportContact: '导出联系人卡片', codeDetected: '检测到二维码 / 条码', copyCode: '复制代码', receiptDetected: '检测到收据', total: '总计', totalReview: '总额需要检查', saveMoney: '保存到账本', tableDetected: '检测到表格', rows: '行', columns: '列', reviewExport: '导出前请检查。', formDetected: '检测到表单字段', fieldsFound: '个结构化字段。', exportLayout: '导出 OCR 布局 JSON', copy: '复制', share: '分享', pdfPassword: 'PDF 密码（可选，至少 8 个字符）', pdfPlaceholder: '普通 PDF 请留空', save: '保存', continuePdf: '继续到文档转 PDF', addPage: '添加页面', deletePage: '删除页面', newDocument: '新建文档', noText: '暂无文字', noTextHint: '拍摄页面或选择图片即可开始。', start: '开始扫描', privateLibrary: '私密资料库', libraryHint: '可搜索且仅保存在此浏览器中。', clearLibrary: '清空资料库', search: '搜索扫描' },
+  es: { sections: 'Secciones de OCR', document: 'Documento', receipt: 'Recibo', note: 'Nota', original: 'Original', clean: 'Limpio', bw: 'B/N', edgeCrop: 'Recorte de bordes', endpoint: 'Servidor OCR', endpointHint: 'El servidor debe recibir imagen, idioma y modo, y devolver texto y confianza.', progress: 'Paquete OCR y reconocimiento', page: 'página', pages: 'páginas', words: 'palabras', confidence: 'confianza OCR', imageQuality: 'calidad de imagen', previous: 'Anterior', next: 'Siguiente', moveEarlier: 'Mover antes', moveLater: 'Mover después', documentTitle: 'Título del documento', recognizedText: 'Texto reconocido', quick: 'Acciones rápidas', openLink: 'Abrir enlace', call: 'Llamar', contactDetected: 'Tarjeta de contacto detectada', contact: 'Contacto', exportContact: 'Exportar contacto', codeDetected: 'QR / código de barras detectado', copyCode: 'Copiar código', receiptDetected: 'Recibo detectado', total: 'Total', totalReview: 'El total necesita revisión', saveMoney: 'Guardar en Registro de gastos', tableDetected: 'Tabla detectada', rows: 'filas', columns: 'columnas', reviewExport: 'Revisa antes de exportar.', formDetected: 'Campos de formulario detectados', fieldsFound: 'campos estructurados encontrados.', exportLayout: 'Exportar diseño OCR JSON', copy: 'Copiar', share: 'Compartir', pdfPassword: 'Contraseña PDF (opcional, 8+ caracteres)', pdfPlaceholder: 'Déjalo vacío para un PDF normal', save: 'Guardar', continuePdf: 'Continuar en Documento a PDF', addPage: 'Añadir página', deletePage: 'Eliminar página', newDocument: 'Documento nuevo', noText: 'Aún no hay texto', noTextHint: 'Captura una página o elige una imagen para empezar.', start: 'Empezar a escanear', privateLibrary: 'Biblioteca privada', libraryHint: 'Se puede buscar y solo se guarda en este navegador.', clearLibrary: 'Vaciar biblioteca', search: 'Buscar escaneos' },
+} as const
+
+const OCR_QUALITY = {
+  en: { retake: 'Retake suggestion', brightness: 'Brightness', contrast: 'contrast', sharpness: 'sharpness', latestPage: 'Latest scanned page', scannedPage: 'Scanned page', unavailable: 'Image analysis unavailable', dark: 'too dark', bright: 'overexposed', lowContrast: 'low contrast', blurred: 'blurred or out of focus', soft: 'slightly soft focus', resolution: 'low resolution' },
+  vi: { retake: 'Gợi ý chụp lại', brightness: 'Độ sáng', contrast: 'độ tương phản', sharpness: 'độ nét', latestPage: 'Trang quét mới nhất', scannedPage: 'Trang đã quét', unavailable: 'Không thể phân tích ảnh', dark: 'ảnh quá tối', bright: 'ảnh bị cháy sáng', lowContrast: 'độ tương phản thấp', blurred: 'ảnh mờ hoặc mất nét', soft: 'ảnh hơi thiếu nét', resolution: 'độ phân giải thấp' },
+  zh: { retake: '重拍建议', brightness: '亮度', contrast: '对比度', sharpness: '清晰度', latestPage: '最新扫描页面', scannedPage: '已扫描页面', unavailable: '无法分析图片', dark: '图片过暗', bright: '图片过曝', lowContrast: '对比度过低', blurred: '图片模糊或失焦', soft: '图片稍显模糊', resolution: '分辨率过低' },
+  es: { retake: 'Sugerencia para repetir', brightness: 'Brillo', contrast: 'contraste', sharpness: 'nitidez', latestPage: 'Última página escaneada', scannedPage: 'Página escaneada', unavailable: 'No se pudo analizar la imagen', dark: 'imagen demasiado oscura', bright: 'imagen sobreexpuesta', lowContrast: 'contraste bajo', blurred: 'imagen borrosa o desenfocada', soft: 'enfoque algo suave', resolution: 'resolución baja' },
+} as const
+
+const OCR_EMAIL = { en: 'Email', vi: 'Email', zh: '邮件', es: 'Correo' } as const
+
+function localizedQualityIssue(issue: string, locale: keyof typeof OCR_QUALITY) {
+  const labels: Record<string, keyof typeof OCR_QUALITY.en> = {
+    'Image analysis unavailable': 'unavailable',
+    'too dark': 'dark',
+    overexposed: 'bright',
+    'low contrast': 'lowContrast',
+    'blurred or out of focus': 'blurred',
+    'slightly soft focus': 'soft',
+    'low resolution': 'resolution',
+  }
+  const key = labels[issue]
+  return key ? OCR_QUALITY[locale][key] : issue
+}
+
+const OCR_STATUS = {
+  en: { title: 'My scan', ready: 'Ready. Capture a page or choose an image.', limit: 'A scan can contain up to 20 pages. Export it before starting another.', cloudFail: 'Cloud Assist failed; continuing with on-device OCR…', noText: 'No readable text found. Try better light or a tighter crop.', failed: 'OCR could not finish. The selected language pack may need its first download.', receipt: 'Receipt saved to Money Studio.', saved: 'Saved to your private OCR library.', reset: 'Ready for a new document.' },
+  vi: { title: 'Bản quét của tôi', ready: 'Sẵn sàng. Hãy chụp trang hoặc chọn ảnh.', limit: 'Mỗi bản quét tối đa 20 trang. Hãy xuất tài liệu trước khi tạo bản mới.', cloudFail: 'Hỗ trợ đám mây thất bại; đang tiếp tục OCR trên thiết bị…', noText: 'Không tìm thấy văn bản rõ. Hãy tăng ánh sáng hoặc cắt sát hơn.', failed: 'OCR chưa hoàn tất. Gói ngôn ngữ có thể cần tải lần đầu.', receipt: 'Đã lưu hóa đơn vào Money Studio.', saved: 'Đã lưu vào thư viện OCR riêng tư.', reset: 'Sẵn sàng cho tài liệu mới.' },
+  zh: { title: '我的扫描', ready: '准备就绪。请拍摄页面或选择图片。', limit: '一次扫描最多 20 页，请先导出当前文档。', cloudFail: '云端辅助失败，正在继续设备端 OCR…', noText: '未找到清晰文字，请改善光线或缩小裁剪范围。', failed: 'OCR 未能完成，所选语言包可能需要首次下载。', receipt: '收据已保存到 Money Studio。', saved: '已保存到私密 OCR 资料库。', reset: '已准备好扫描新文档。' },
+  es: { title: 'Mi escaneo', ready: 'Listo. Captura una página o elige una imagen.', limit: 'Un escaneo admite hasta 20 páginas. Expórtalo antes de empezar otro.', cloudFail: 'Falló la asistencia en la nube; se continúa con OCR local…', noText: 'No se encontró texto legible. Mejora la luz o recorta más cerca.', failed: 'El OCR no pudo terminar. Puede que el paquete de idioma necesite su primera descarga.', receipt: 'Recibo guardado en Money Studio.', saved: 'Guardado en tu biblioteca OCR privada.', reset: 'Listo para un documento nuevo.' },
+} as const
+
+const OCR_DYNAMIC = {
+  en: { preparing: (mode: string) => `Preparing ${mode.toLowerCase()} locally...`, pack: (name: string) => `Loading the ${name} OCR pack...`, recognizing: (page: number, total: number) => `Recognizing image ${page}/${total} on this device...`, corrected: (page: number, total: number) => `Detected page edges and corrected perspective for image ${page}/${total}...`, cloud: (page: number, total: number) => `Cloud Assist processing image ${page}/${total}...`, optimizing: (page: number, total: number) => `Optimizing difficult image ${page}/${total}...`, result: (read: number, total: number, low: number) => low ? `${read}/${total} page(s) read. ${low} page(s) may need better light or a retake.` : `Batch OCR finished: ${read}/${total} readable page(s). Review before export.`, opened: 'Opened with original scan pages from your private library.', legacy: 'Opened text-only legacy library item.', noMatch: 'No matching document.', empty: 'Saved OCR documents will appear here.', imagesSaved: 'images saved', delete: 'Delete' },
+  vi: { preparing: (mode: string) => `Đang chuẩn bị chế độ ${mode.toLowerCase()} trên thiết bị...`, pack: (name: string) => `Đang tải gói OCR ${name}...`, recognizing: (page: number, total: number) => `Đang nhận dạng ảnh ${page}/${total} trên thiết bị...`, corrected: (page: number, total: number) => `Đã tìm cạnh và chỉnh phối cảnh ảnh ${page}/${total}...`, cloud: (page: number, total: number) => `Hỗ trợ đám mây đang xử lý ảnh ${page}/${total}...`, optimizing: (page: number, total: number) => `Đang tối ưu ảnh khó ${page}/${total}...`, result: (read: number, total: number, low: number) => low ? `Đã đọc ${read}/${total} trang. ${low} trang có thể cần thêm sáng hoặc chụp lại.` : `Đã OCR xong ${read}/${total} trang. Hãy kiểm tra trước khi xuất.`, opened: 'Đã mở các trang quét gốc từ thư viện riêng tư.', legacy: 'Đã mở mục thư viện cũ chỉ có văn bản.', noMatch: 'Không có tài liệu phù hợp.', empty: 'Tài liệu OCR đã lưu sẽ xuất hiện tại đây.', imagesSaved: 'đã lưu ảnh', delete: 'Xóa' },
+  zh: { preparing: (mode: string) => `正在本机准备${mode}模式...`, pack: (name: string) => `正在加载 ${name} OCR 包...`, recognizing: (page: number, total: number) => `正在设备上识别图片 ${page}/${total}...`, corrected: (page: number, total: number) => `已检测边缘并校正图片 ${page}/${total} 的透视...`, cloud: (page: number, total: number) => `云端辅助正在处理图片 ${page}/${total}...`, optimizing: (page: number, total: number) => `正在优化困难图片 ${page}/${total}...`, result: (read: number, total: number, low: number) => low ? `已读取 ${read}/${total} 页，其中 ${low} 页可能需要更好光线或重新拍摄。` : `批量 OCR 已完成：${read}/${total} 页可读。导出前请检查。`, opened: '已从私密资料库打开原始扫描页面。', legacy: '已打开仅含文字的旧资料库项目。', noMatch: '没有匹配的文档。', empty: '保存的 OCR 文档会显示在这里。', imagesSaved: '图片已保存', delete: '删除' },
+  es: { preparing: (mode: string) => `Preparando ${mode.toLowerCase()} localmente...`, pack: (name: string) => `Cargando el paquete OCR ${name}...`, recognizing: (page: number, total: number) => `Reconociendo imagen ${page}/${total} en este dispositivo...`, corrected: (page: number, total: number) => `Bordes detectados y perspectiva corregida en la imagen ${page}/${total}...`, cloud: (page: number, total: number) => `La asistencia en la nube procesa la imagen ${page}/${total}...`, optimizing: (page: number, total: number) => `Optimizando imagen difícil ${page}/${total}...`, result: (read: number, total: number, low: number) => low ? `Se leyeron ${read}/${total} página(s). ${low} pueden necesitar más luz o repetirse.` : `OCR múltiple terminado: ${read}/${total} página(s) legibles. Revisa antes de exportar.`, opened: 'Se abrieron las páginas originales desde tu biblioteca privada.', legacy: 'Se abrió un elemento antiguo que solo contiene texto.', noMatch: 'No hay documentos coincidentes.', empty: 'Los documentos OCR guardados aparecerán aquí.', imagesSaved: 'imágenes guardadas', delete: 'Eliminar' },
+} as const
 
 const OCR_LANGUAGES = [
   { code: 'eng+vie', label: 'English + Vietnamese' },
@@ -26,11 +78,14 @@ const OCR_PACK_CACHE_KEY = 'purehub.ocr.cached-languages.v1'
 const DOCUMENT_HANDOFF_KEY = 'purehub.document-suite.ocr-handoff.v1'
 const OCR_CLOUD_ENDPOINT_KEY = 'purehub.ocr.cloud-endpoint.v1'
 
-function languageLabel(code: string, fallback: string) {
-  if (code === 'vie') return 'Vietnamese'
-  if (code === 'chi_sim') return 'Simplified Chinese'
-  if (code === 'spa') return 'Spanish'
-  return fallback
+function languageLabel(code: string, fallback: string, locale: keyof typeof OCR_DEEP) {
+  const names = {
+    en: { eng: 'English', vie: 'Vietnamese', chi_sim: 'Simplified Chinese', spa: 'Spanish', 'eng+vie': 'English + Vietnamese', 'eng+chi_sim': 'English + Chinese', 'eng+spa': 'English + Spanish' },
+    vi: { eng: 'Tiếng Anh', vie: 'Tiếng Việt', chi_sim: 'Tiếng Trung giản thể', spa: 'Tiếng Tây Ban Nha', 'eng+vie': 'Tiếng Anh + Tiếng Việt', 'eng+chi_sim': 'Tiếng Anh + Tiếng Trung', 'eng+spa': 'Tiếng Anh + Tiếng Tây Ban Nha' },
+    zh: { eng: '英语', vie: '越南语', chi_sim: '简体中文', spa: '西班牙语', 'eng+vie': '英语 + 越南语', 'eng+chi_sim': '英语 + 中文', 'eng+spa': '英语 + 西班牙语' },
+    es: { eng: 'Inglés', vie: 'Vietnamita', chi_sim: 'Chino simplificado', spa: 'Español', 'eng+vie': 'Inglés + vietnamita', 'eng+chi_sim': 'Inglés + chino', 'eng+spa': 'Inglés + español' },
+  } as const
+  return names[locale][code as keyof typeof names.en] ?? fallback
 }
 
 function preferredOcrLanguage() {
@@ -304,6 +359,13 @@ function safeName(title: string) {
 }
 
 export default function OcrTextSurface() {
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
+  const ui = OCR_UI[locale]
+  const deep = OCR_DEEP[locale]
+  const qualityCopy = OCR_QUALITY[locale]
+  const emailCopy = OCR_EMAIL[locale]
+  const statusCopy = OCR_STATUS[locale]
+  const dynamic = OCR_DYNAMIC[locale]
   const [tab, setTab] = useState<Tab>('scan')
   const [mode, setMode] = useState<ScanMode>('Document')
   const [filter, setFilter] = useState<ImageFilter>('Clean')
@@ -313,8 +375,8 @@ export default function OcrTextSurface() {
   const [pages, setPages] = useState<OcrPage[]>([])
   const [selectedPageIndex, setSelectedPageIndex] = useState(-1)
   const [ocrText, setOcrText] = useState('')
-  const [title, setTitle] = useState('My scan')
-  const [status, setStatus] = useState('Ready. Capture a page or choose an image.')
+  const [title, setTitle] = useState<string>(statusCopy.title)
+  const [status, setStatus] = useState<string>(statusCopy.ready)
   const [running, setRunning] = useState(false)
   const [cloudAssist, setCloudAssist] = useState(false)
   const [cloudEndpoint, setCloudEndpoint] = useState(() => localStorage.getItem(OCR_CLOUD_ENDPOINT_KEY) ?? '')
@@ -353,15 +415,15 @@ export default function OcrTextSurface() {
     const files = Array.from(event.target.files ?? []).slice(0, Math.max(0, 20 - pages.length))
     if (!files.length) return
     if (pages.length >= 20) {
-      setStatus('A scan can contain up to 20 pages. Export this document before starting another.')
+      setStatus(statusCopy.limit)
       event.target.value = ''
       return
     }
     setRunning(true)
-    setStatus(`Preparing ${mode.toLowerCase()} locally...`)
+    setStatus(dynamic.preparing(mode))
     try {
       const selectedLanguage = OCR_LANGUAGES.find((item) => item.code === language)
-      setStatus(`Loading the ${languageLabel(language, selectedLanguage?.label ?? language)} OCR pack...`)
+      setStatus(dynamic.pack(languageLabel(language, selectedLanguage?.label ?? language, locale)))
       setPackProgress(0)
       const { createWorker, OEM } = await import('tesseract.js')
       const worker = await createWorker(language, OEM.LSTM_ONLY, {
@@ -378,19 +440,19 @@ export default function OcrTextSurface() {
         })
         const nextPages: OcrPage[] = []
         for (let index = 0; index < files.length; index += 1) {
-          setStatus(`Recognizing image ${index + 1}/${files.length} on this device...`)
+          setStatus(dynamic.recognizing(index + 1, files.length))
           const autoCrop = mode === 'Note' ? await estimateAutoCrop(files[index]) : 0
           let prepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), filter, mode !== 'Note')
-          if (prepared.autoCorrected) setStatus(`Detected page edges and corrected perspective for image ${index + 1}/${files.length}...`)
+          if (prepared.autoCorrected) setStatus(dynamic.corrected(index + 1, files.length))
           const code = await detectQrOrBarcode(prepared.blob)
           if (code) setDetectedCode(code)
           let cloudResult: { text: string; confidence: number; words?: OcrWord[] } | null = null
           if (cloudAssist && cloudEndpoint.trim()) {
             try {
-              setStatus(`Cloud Assist processing image ${index + 1}/${files.length}...`)
+              setStatus(dynamic.cloud(index + 1, files.length))
               cloudResult = await recognizeWithCloud(cloudEndpoint.trim(), prepared.blob, language, mode)
             } catch {
-              setStatus('Cloud Assist failed; continuing with on-device OCR...')
+              setStatus(statusCopy.cloudFail)
             }
           }
           let recognized: { text: string; confidence: number; words: OcrWord[] }
@@ -404,7 +466,7 @@ export default function OcrTextSurface() {
               words: normalizeWords('words' in initial.data ? initial.data.words : []),
             }
             if (recognized.confidence < 70 && filter !== 'B&W') {
-              setStatus(`Optimizing difficult image ${index + 1}/${files.length}...`)
+              setStatus(dynamic.optimizing(index + 1, files.length))
               const retryPrepared = await prepareImage(files[index], rotation, Math.max(crop, autoCrop), 'B&W', mode !== 'Note')
               const retry = await worker.recognize(retryPrepared.blob)
               const retryText = cleanText(retry.data.text, mode)
@@ -428,17 +490,17 @@ export default function OcrTextSurface() {
           setSelectedPageIndex(nextIndex)
           setOcrText(nextPages.at(-1)?.text ?? '')
           const lowConfidence = nextPages.filter((page) => page.confidence < 70).length
-          setStatus(lowConfidence ? `${nextPages.length}/${files.length} page(s) read. ${lowConfidence} page(s) may need better light or a retake.` : `Batch OCR finished: ${nextPages.length}/${files.length} readable page(s). Review before export.`)
+          setStatus(dynamic.result(nextPages.length, files.length, lowConfidence))
           setTab('text')
           markToolSuccess('ocr-text', { headline: 'Text extracted locally', detail: `${nextPages.length} page(s) recognized locally. Review the text before exporting or sharing.`, shareText: 'I turned images into editable text locally with PureHub.' })
         } else {
-          setStatus('No readable text found. Try better light or a tighter crop.')
+          setStatus(statusCopy.noText)
         }
       } finally {
         await worker.terminate()
       }
     } catch {
-      setStatus('OCR could not finish. The selected language pack may need its first download.')
+      setStatus(statusCopy.failed)
     } finally {
       setRunning(false)
       setPackProgress(0)
@@ -492,7 +554,7 @@ export default function OcrTextSurface() {
       createdAt: new Date().toISOString(),
     }
     await expenseRepository.put(record)
-    setStatus('Receipt saved to Money Studio. Review its category and wallet when convenient.')
+    setStatus(statusCopy.receipt)
   }
 
   const saveDocument = async () => {
@@ -508,7 +570,7 @@ export default function OcrTextSurface() {
     }
     await ocrDocumentRepository.put(record)
     setDocuments((current) => [record, ...current])
-    setStatus('Saved to your private OCR library.')
+    setStatus(statusCopy.saved)
     markToolSuccess('ocr-text', { headline: 'OCR document saved', detail: 'Searchable text was saved only in this browser library.', shareText: 'I saved a private OCR document with PureHub.' })
   }
 
@@ -558,7 +620,7 @@ export default function OcrTextSurface() {
 
   const resetDocument = () => {
     pages.forEach((page) => URL.revokeObjectURL(page.previewUrl))
-    setPages([]); setSelectedPageIndex(-1); setOcrText(''); setTitle('My scan'); setStatus('Ready for a new document.'); setTab('scan')
+    setPages([]); setSelectedPageIndex(-1); setOcrText(''); setTitle(statusCopy.title); setStatus(statusCopy.reset); setTab('scan')
   }
 
   return (
@@ -567,15 +629,15 @@ export default function OcrTextSurface() {
         <div className="flex items-start gap-3">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-slate-950 text-emerald-300 dark:bg-emerald-300 dark:text-slate-950"><ScanText className="size-6" /></span>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black tracking-[.2em] text-emerald-700 dark:text-emerald-300">PRIVATE BY DESIGN</p>
-            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">OCR Studio</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Scan, clean and export text without uploading your documents.</p>
+            <p className="text-[11px] font-black tracking-[.2em] text-emerald-700 dark:text-emerald-300">{ui.private}</p>
+            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">{ui.title}</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{ui.description}</p>
           </div>
-          <span className="hidden items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 text-xs font-bold text-emerald-800 sm:flex dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"><ShieldCheck className="size-3.5" /> On-device</span>
+          <span className="hidden items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 text-xs font-bold text-emerald-800 sm:flex dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"><ShieldCheck className="size-3.5" /> {ui.device}</span>
         </div>
-        <nav className="mt-4 grid grid-cols-3 gap-2" aria-label="OCR Studio sections">
+        <nav className="mt-4 grid grid-cols-3 gap-2" aria-label={deep.sections}>
           {([['scan', Camera], ['text', FileText], ['library', History]] as const).map(([value, Icon]) => (
-            <button key={value} onClick={() => setTab(value)} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-2 text-sm font-bold capitalize transition ${tab === value ? 'border-emerald-300 bg-emerald-700 text-white shadow-sm dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-200 bg-white/80 text-slate-700 hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}><Icon className="size-4" />{value}</button>
+            <button key={value} onClick={() => setTab(value)} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-2 text-sm font-bold transition ${tab === value ? 'border-emerald-300 bg-emerald-700 text-white shadow-sm dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950' : 'border-slate-200 bg-white/80 text-slate-700 hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}><Icon className="size-4" />{{ scan: ui.scan, text: ui.text, library: ui.library }[value]}</button>
           ))}
         </nav>
       </header>
@@ -583,64 +645,64 @@ export default function OcrTextSurface() {
       <div className="p-4 sm:p-5">
         {tab === 'scan' ? (
           <div className="space-y-4">
-            <div className="flex gap-2 overflow-x-auto pb-1">{(['Document', 'Receipt', 'Note'] as ScanMode[]).map((value) => <button key={value} onClick={() => setMode(value)} className={`rounded-full border px-3 py-2 text-xs font-bold ${mode === value ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'}`}>{value}</button>)}</div>
+            <div className="flex gap-2 overflow-x-auto pb-1">{(['Document', 'Receipt', 'Note'] as ScanMode[]).map((value) => <button key={value} onClick={() => setMode(value)} className={`rounded-full border px-3 py-2 text-xs font-bold ${mode === value ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'}`}>{{ Document: deep.document, Receipt: deep.receipt, Note: deep.note }[value]}</button>)}</div>
             <div className="relative overflow-hidden rounded-[22px] bg-slate-950">
-              {currentPreview ? <img src={currentPreview} alt="Latest scanned page" className="aspect-[4/5] w-full object-contain" /> : (
+              {currentPreview ? <img src={currentPreview} alt={qualityCopy.latestPage} className="aspect-[4/5] w-full object-contain" /> : (
                 <div className="grid aspect-[4/5] place-items-center bg-[radial-gradient(circle_at_center,_#193448,_#07111e_68%)] text-center text-white">
-                  <div><ScanText className="mx-auto size-14 text-emerald-300" /><p className="mt-3 font-bold">Frame one page at a time</p><p className="mt-1 text-sm text-slate-300">Nothing is uploaded by PureHub.</p></div>
+                  <div><ScanText className="mx-auto size-14 text-emerald-300" /><p className="mt-3 font-bold">{ui.frame}</p><p className="mt-1 text-sm text-slate-300">{ui.noUpload}</p></div>
                 </div>
               )}
-              <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-slate-950/80 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><LockKeyhole className="size-3.5" /> Local processing</span>
-              {pages.length ? <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-bold text-slate-900">{pages.length} page{pages.length === 1 ? '' : 's'}</span> : null}
-              <button disabled={running} onClick={() => cameraInputRef.current?.click()} className="absolute bottom-4 left-1/2 flex min-h-12 -translate-x-1/2 items-center gap-2 rounded-full bg-emerald-500 px-5 font-black text-slate-950 shadow-lg disabled:opacity-60">{running ? <LoaderCircle className="size-5 animate-spin" /> : <Camera className="size-5" />}{running ? 'Reading...' : 'Capture page'}</button>
+              <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-slate-950/80 px-2.5 py-1.5 text-xs font-bold text-emerald-300"><LockKeyhole className="size-3.5" /> {ui.local}</span>
+              {pages.length ? <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-bold text-slate-900">{pages.length} {pages.length === 1 ? deep.page : deep.pages}</span> : null}
+              <button disabled={running} onClick={() => cameraInputRef.current?.click()} className="absolute bottom-4 left-1/2 flex min-h-12 -translate-x-1/2 items-center gap-2 rounded-full bg-emerald-500 px-5 font-black text-slate-950 shadow-lg disabled:opacity-60">{running ? <LoaderCircle className="size-5 animate-spin" /> : <Camera className="size-5" />}{running ? ui.reading : ui.capture}</button>
               <input ref={cameraInputRef} hidden type="file" accept="image/*" capture="environment" onChange={(event) => void handleFile(event, 'Camera')} />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <ActionButton tone="muted" onClick={() => imageInputRef.current?.click()} disabled={running}><ImagePlus className="mr-2 inline size-4" />Scan image</ActionButton>
-              <ActionButton tone="muted" onClick={() => setRotation((value) => (value + 90) % 360)} disabled={running}><RotateCw className="mr-2 inline size-4" />Rotate {rotation}°</ActionButton>
+              <ActionButton tone="muted" onClick={() => imageInputRef.current?.click()} disabled={running}><ImagePlus className="mr-2 inline size-4" />{ui.image}</ActionButton>
+              <ActionButton tone="muted" onClick={() => setRotation((value) => (value + 90) % 360)} disabled={running}><RotateCw className="mr-2 inline size-4" />{ui.rotate} {rotation}°</ActionButton>
               <input ref={imageInputRef} hidden multiple type="file" accept="image/*" onChange={(event) => void handleFile(event, 'Image')} />
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-950">
-              <div className="flex items-center gap-2"><Sparkles className="size-4 text-emerald-600" /><p className="text-sm font-black text-slate-900 dark:text-white">Document cleanup</p></div>
-              {mode !== 'Note' ? <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Auto page edges and perspective correction run when the boundary is clear.</p> : null}
-              <div className="mt-3 flex gap-2 overflow-x-auto">{(['Original', 'Clean', 'B&W'] as ImageFilter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${filter === value ? 'border-emerald-400 bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-300 dark:border-slate-700'}`}>{value}</button>)}</div>
-              <label className="mt-3 block text-xs font-bold text-slate-600 dark:text-slate-300">Edge crop {Math.round(crop * 100)}%<input type="range" min="0" max="0.16" step="0.01" value={crop} onChange={(event) => setCrop(Number(event.target.value))} className="mt-2 w-full accent-emerald-600" /></label>
+              <div className="flex items-center gap-2"><Sparkles className="size-4 text-emerald-600" /><p className="text-sm font-black text-slate-900 dark:text-white">{ui.cleanup}</p></div>
+              {mode !== 'Note' ? <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{ui.edges}</p> : null}
+              <div className="mt-3 flex gap-2 overflow-x-auto">{(['Original', 'Clean', 'B&W'] as ImageFilter[]).map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${filter === value ? 'border-emerald-400 bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' : 'border-slate-300 dark:border-slate-700'}`}>{{ Original: deep.original, Clean: deep.clean, 'B&W': deep.bw }[value]}</button>)}</div>
+              <label className="mt-3 block text-xs font-bold text-slate-600 dark:text-slate-300">{deep.edgeCrop} {Math.round(crop * 100)}%<input type="range" min="0" max="0.16" step="0.01" value={crop} onChange={(event) => setCrop(Number(event.target.value))} className="mt-2 w-full accent-emerald-600" /></label>
             </div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">Recognition language<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{languageLabel(item.code, item.label)}{cachedLanguages.includes(item.code) ? ' · ready offline' : ' · first download'}</option>)}</select><span className="mt-1 block text-xs font-medium text-slate-500">Usually 10–30 seconds per page after the language pack is ready; first use can take longer.</span></label>
-            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5 dark:border-sky-900 dark:bg-sky-950/30"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-black text-sky-950 dark:text-sky-100">Cloud Assist (optional)</p><p className="mt-1 text-xs text-sky-800 dark:text-sky-200">Use your own OCR endpoint for difficult pages. Nothing is uploaded unless you enable this switch.</p></div><button type="button" role="switch" aria-checked={cloudAssist} onClick={() => setCloudAssist((value) => !value)} className={`min-h-10 rounded-full px-3 text-xs font-black ${cloudAssist ? 'bg-sky-700 text-white' : 'bg-white text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}>{cloudAssist ? 'Enabled' : 'Offline only'}</button></div>{cloudAssist ? <label className="mt-3 block text-xs font-bold text-sky-900 dark:text-sky-100">OCR endpoint<input value={cloudEndpoint} onChange={(event) => { setCloudEndpoint(event.target.value); localStorage.setItem(OCR_CLOUD_ENDPOINT_KEY, event.target.value) }} placeholder="https://your-server.example/ocr" className="mt-1.5 min-h-11 w-full rounded-xl border border-sky-200 bg-white px-3 text-sm font-normal dark:border-sky-800 dark:bg-slate-950" inputMode="url" /><span className="mt-1 block font-medium">The endpoint should accept JSON with image_base64, language, mode and return {`{ text, confidence }`}.</span></label> : null}</div>
-            {running && packProgress > 0 ? <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/30"><div className="flex justify-between text-xs font-bold text-emerald-800 dark:text-emerald-200"><span>OCR pack and recognition</span><span>{packProgress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${packProgress}%` }} /></div></div> : null}
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-200">{ui.language}<select value={language} disabled={running} onChange={(event) => setLanguage(event.target.value as typeof language)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-950">{OCR_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{languageLabel(item.code, item.label, locale)} · {cachedLanguages.includes(item.code) ? ui.ready : ui.download}</option>)}</select></label>
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5 dark:border-sky-900 dark:bg-sky-950/30"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-black text-sky-950 dark:text-sky-100">{ui.cloud}</p><p className="mt-1 text-xs text-sky-800 dark:text-sky-200">{ui.cloudHint}</p></div><button type="button" role="switch" aria-checked={cloudAssist} onClick={() => setCloudAssist((value) => !value)} className={`min-h-10 rounded-full px-3 text-xs font-black ${cloudAssist ? 'bg-sky-700 text-white' : 'bg-white text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}>{cloudAssist ? ui.enabled : ui.offline}</button></div>{cloudAssist ? <label className="mt-3 block text-xs font-bold text-sky-900 dark:text-sky-100">{deep.endpoint}<input value={cloudEndpoint} onChange={(event) => { setCloudEndpoint(event.target.value); localStorage.setItem(OCR_CLOUD_ENDPOINT_KEY, event.target.value) }} placeholder="https://your-server.example/ocr" className="mt-1.5 min-h-11 w-full rounded-xl border border-sky-200 bg-white px-3 text-sm font-normal dark:border-sky-800 dark:bg-slate-950" inputMode="url" /><span className="mt-1 block font-medium">{deep.endpointHint}</span></label> : null}</div>
+            {running && packProgress > 0 ? <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/30"><div className="flex justify-between text-xs font-bold text-emerald-800 dark:text-emerald-200"><span>{deep.progress}</span><span>{packProgress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${packProgress}%` }} /></div></div> : null}
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
           </div>
         ) : null}
 
         {tab === 'text' ? (
           ocrText ? <div className="space-y-3">
-            {currentPreview ? <img src={currentPreview} alt="Scanned page" className="h-44 w-full rounded-2xl bg-slate-100 object-contain dark:bg-slate-950" /> : null}
-            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} page{pages.length === 1 ? '' : 's'}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} words</span><span className={`rounded-full px-2.5 py-1 ${(currentPage?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage?.confidence ?? 0}% OCR confidence</span>{currentPage?.quality ? <span className={`rounded-full px-2.5 py-1 ${currentPage.quality.score >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage.quality.score}% image quality</span> : null}</div>
-            {currentPage?.quality?.issues.length ? <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Retake suggestion: {currentPage.quality.issues.join(', ')}.{currentPage.quality.brightness != null ? ` Brightness ${currentPage.quality.brightness}/255 · contrast ${currentPage.quality.contrast} · sharpness ${currentPage.quality.sharpness}.` : ''}</p> : null}
-            {pages.length > 1 && selectedPageIndex >= 0 ? <div className="space-y-2"><div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => selectPage(selectedPageIndex - 1)}>Previous</ActionButton><span className="text-xs font-black">Page {selectedPageIndex + 1}/{pages.length}</span><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => selectPage(selectedPageIndex + 1)}>Next</ActionButton></div><div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => movePage(-1)}>Move earlier</ActionButton><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => movePage(1)}>Move later</ActionButton></div></div> : null}
-            <FormInput value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Document title" />
-            <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => updateCurrentText(event.target.value)} aria-label="Recognized text" />
-            {detectedUrl || detectedEmail || detectedPhone ? <div className="flex flex-wrap gap-2 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/30"><span className="w-full text-xs font-black text-sky-900 dark:text-sky-200">QUICK ACTIONS</span>{detectedUrl ? <a className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={detectedUrl} target="_blank" rel="noreferrer">Open link</a> : null}{detectedEmail ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`mailto:${detectedEmail}`}><Mail className="size-3" />Email</a> : null}{detectedPhone ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`tel:${detectedPhone.replace(/[^+\d]/g, '')}`}><Phone className="size-3" />Call</a> : null}</div> : null}
-            {detectedContact.email || detectedContact.phone ? <div className="rounded-2xl border border-violet-200 bg-violet-50 p-3.5 text-violet-950 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-100"><p className="text-xs font-black tracking-wide">CONTACT CARD DETECTED</p><p className="mt-1 text-sm">{detectedContact.name || 'Contact'}{detectedContact.email ? ` · ${detectedContact.email}` : ''}{detectedContact.phone ? ` · ${detectedContact.phone}` : ''}</p><ActionButton className="mt-3 w-full justify-center" onClick={() => { const vcard = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${detectedContact.name || 'Contact'}`, detectedContact.phone ? `TEL:${detectedContact.phone.replace(/[^+\d]/g, '')}` : '', detectedContact.email ? `EMAIL:${detectedContact.email}` : '', 'END:VCARD'].filter(Boolean).join('\n'); downloadBlob(new Blob([vcard], { type: 'text/vcard;charset=utf-8' }), `${safeName(detectedContact.name || title)}.vcf`) }}>Export contact card</ActionButton></div> : null}
-            {detectedCode ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"><p className="text-xs font-black tracking-wide">QR / BARCODE DETECTED</p><p className="mt-1 break-all text-sm font-bold">{detectedCode}</p><button className="mt-3 min-h-10 rounded-xl bg-white px-3 text-xs font-black text-emerald-800" onClick={() => void navigator.clipboard.writeText(detectedCode)}>Copy code</button></div> : null}
-            {detectedReceipt ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><p className="text-xs font-black tracking-wide">RECEIPT DETECTED</p><p className="mt-1 font-bold">{detectedReceipt.merchant}</p><p className="text-lg font-black">{detectedReceipt.total != null ? `Total ${detectedReceipt.total}` : 'Total needs review'}</p><ActionButton className="mt-3 w-full justify-center" disabled={detectedReceipt.total == null} onClick={() => void saveReceiptToMoneyStudio()}>Save to Money Studio</ActionButton></div> : null}
-            {detectedTable.length > 0 ? <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-3.5 text-indigo-950 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-100"><p className="text-xs font-black tracking-wide">TABLE DETECTED</p><p className="mt-1 text-sm">{detectedTable.length} row(s), {Math.max(...detectedTable.map((row) => row.length))} column(s). Review before exporting.</p><ActionButton className="mt-3 w-full justify-center" onClick={() => downloadCsv(detectedTable, `${safeName(title)}.csv`)}>Export CSV</ActionButton></div> : null}
-            {detectedFields.length > 0 ? <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5 text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100"><p className="text-xs font-black tracking-wide">FORM FIELDS DETECTED</p><p className="mt-1 text-sm">{detectedFields.length} structured field(s) found.</p><ActionButton className="mt-3 w-full justify-center" onClick={() => downloadBlob(new Blob([JSON.stringify(detectedFields, null, 2)], { type: 'application/json;charset=utf-8' }), `${safeName(title)}-fields.json`)}>Export JSON</ActionButton></div> : null}
-            {pages.some((page) => page.words?.length) ? <ActionButton tone="muted" className="w-full justify-center" onClick={() => downloadLayout(pages, title)}>Export OCR layout JSON</ActionButton> : null}
-            <div className="grid grid-cols-2 gap-2"><ActionButton onClick={() => void navigator.clipboard.writeText(ocrText)}><Clipboard className="mr-2 inline size-4" />Copy</ActionButton><ActionButton tone="muted" onClick={() => void shareText()}><Share2 className="mr-2 inline size-4" />Share</ActionButton></div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">PDF password (optional, 8+ characters)<FormInput type="password" minLength={8} maxLength={128} value={pdfPassword} onChange={(event) => setPdfPassword(event.target.value)} placeholder="Leave empty for a normal PDF" className="mt-1" /></label>
-            <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => downloadBlob(new Blob([allText], { type: 'text/plain;charset=utf-8' }), `${safeName(title)}.txt`)}><Download className="mr-1 inline size-4" />TXT</ActionButton><ActionButton tone="muted" onClick={() => void exportPdf()}><FileText className="mr-1 inline size-4" />PDF</ActionButton><ActionButton tone="muted" onClick={() => void saveDocument()}><History className="mr-1 inline size-4" />Save</ActionButton></div>
-            <ActionButton className="w-full justify-center" onClick={() => void sendToDocumentSuite()}><ScanText className="size-4" />Continue in Doc to PDF</ActionButton>
-            <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => setTab('scan')}>Add page</ActionButton><ActionButton tone="danger" disabled={!pages.length} onClick={deleteCurrentPage}>Delete page</ActionButton><ActionButton tone="danger" onClick={resetDocument}>New document</ActionButton></div>
+            {currentPreview ? <img src={currentPreview} alt={qualityCopy.scannedPage} className="h-44 w-full rounded-2xl bg-slate-100 object-contain dark:bg-slate-950" /> : null}
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-600 dark:text-slate-300"><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{Math.max(1, pages.length)} {pages.length === 1 ? deep.page : deep.pages}</span><span className="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-slate-800">{ocrText.split(/\s+/).filter(Boolean).length} {deep.words}</span><span className={`rounded-full px-2.5 py-1 ${(currentPage?.confidence ?? 0) >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage?.confidence ?? 0}% {deep.confidence}</span>{currentPage?.quality ? <span className={`rounded-full px-2.5 py-1 ${currentPage.quality.score >= 75 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}`}>{currentPage.quality.score}% {deep.imageQuality}</span> : null}</div>
+            {currentPage?.quality?.issues.length ? <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">{qualityCopy.retake}: {currentPage.quality.issues.map((issue) => localizedQualityIssue(issue, locale)).join(', ')}.{currentPage.quality.brightness != null ? ` ${qualityCopy.brightness} ${currentPage.quality.brightness}/255 · ${qualityCopy.contrast} ${currentPage.quality.contrast} · ${qualityCopy.sharpness} ${currentPage.quality.sharpness}.` : ''}</p> : null}
+            {pages.length > 1 && selectedPageIndex >= 0 ? <div className="space-y-2"><div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => selectPage(selectedPageIndex - 1)}>{deep.previous}</ActionButton><span className="text-xs font-black">{deep.page} {selectedPageIndex + 1}/{pages.length}</span><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => selectPage(selectedPageIndex + 1)}>{deep.next}</ActionButton></div><div className="grid grid-cols-2 gap-2"><ActionButton tone="muted" disabled={selectedPageIndex === 0} onClick={() => movePage(-1)}>{deep.moveEarlier}</ActionButton><ActionButton tone="muted" disabled={selectedPageIndex === pages.length - 1} onClick={() => movePage(1)}>{deep.moveLater}</ActionButton></div></div> : null}
+            <FormInput value={title} onChange={(event) => setTitle(event.target.value)} aria-label={deep.documentTitle} />
+            <FormTextArea className="min-h-64 resize-y" value={ocrText} onChange={(event) => updateCurrentText(event.target.value)} aria-label={deep.recognizedText} />
+            {detectedUrl || detectedEmail || detectedPhone ? <div className="flex flex-wrap gap-2 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/30"><span className="w-full text-xs font-black text-sky-900 dark:text-sky-200">{deep.quick}</span>{detectedUrl ? <a className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={detectedUrl} target="_blank" rel="noreferrer">{deep.openLink}</a> : null}{detectedEmail ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`mailto:${detectedEmail}`}><Mail className="size-3" />{emailCopy}</a> : null}{detectedPhone ? <a className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-800" href={`tel:${detectedPhone.replace(/[^+\d]/g, '')}`}><Phone className="size-3" />{deep.call}</a> : null}</div> : null}
+            {detectedContact.email || detectedContact.phone ? <div className="rounded-2xl border border-violet-200 bg-violet-50 p-3.5 text-violet-950 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-100"><p className="text-xs font-black tracking-wide">{deep.contactDetected}</p><p className="mt-1 text-sm">{detectedContact.name || deep.contact}{detectedContact.email ? ` · ${detectedContact.email}` : ''}{detectedContact.phone ? ` · ${detectedContact.phone}` : ''}</p><ActionButton className="mt-3 w-full justify-center" onClick={() => { const vcard = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${detectedContact.name || deep.contact}`, detectedContact.phone ? `TEL:${detectedContact.phone.replace(/[^+\d]/g, '')}` : '', detectedContact.email ? `EMAIL:${detectedContact.email}` : '', 'END:VCARD'].filter(Boolean).join('\n'); downloadBlob(new Blob([vcard], { type: 'text/vcard;charset=utf-8' }), `${safeName(detectedContact.name || title)}.vcf`) }}>{deep.exportContact}</ActionButton></div> : null}
+            {detectedCode ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"><p className="text-xs font-black tracking-wide">{deep.codeDetected}</p><p className="mt-1 break-all text-sm font-bold">{detectedCode}</p><button className="mt-3 min-h-10 rounded-xl bg-white px-3 text-xs font-black text-emerald-800" onClick={() => void navigator.clipboard.writeText(detectedCode)}>{deep.copyCode}</button></div> : null}
+            {detectedReceipt ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><p className="text-xs font-black tracking-wide">{deep.receiptDetected}</p><p className="mt-1 font-bold">{detectedReceipt.merchant}</p><p className="text-lg font-black">{detectedReceipt.total != null ? `${deep.total} ${detectedReceipt.total}` : deep.totalReview}</p><ActionButton className="mt-3 w-full justify-center" disabled={detectedReceipt.total == null} onClick={() => void saveReceiptToMoneyStudio()}>{deep.saveMoney}</ActionButton></div> : null}
+            {detectedTable.length > 0 ? <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-3.5 text-indigo-950 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-100"><p className="text-xs font-black tracking-wide">{deep.tableDetected}</p><p className="mt-1 text-sm">{detectedTable.length} {deep.rows}, {Math.max(...detectedTable.map((row) => row.length))} {deep.columns}. {deep.reviewExport}</p><ActionButton className="mt-3 w-full justify-center" onClick={() => downloadCsv(detectedTable, `${safeName(title)}.csv`)}>CSV</ActionButton></div> : null}
+            {detectedFields.length > 0 ? <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5 text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100"><p className="text-xs font-black tracking-wide">{deep.formDetected}</p><p className="mt-1 text-sm">{detectedFields.length} {deep.fieldsFound}</p><ActionButton className="mt-3 w-full justify-center" onClick={() => downloadBlob(new Blob([JSON.stringify(detectedFields, null, 2)], { type: 'application/json;charset=utf-8' }), `${safeName(title)}-fields.json`)}>JSON</ActionButton></div> : null}
+            {pages.some((page) => page.words?.length) ? <ActionButton tone="muted" className="w-full justify-center" onClick={() => downloadLayout(pages, title)}>{deep.exportLayout}</ActionButton> : null}
+            <div className="grid grid-cols-2 gap-2"><ActionButton onClick={() => void navigator.clipboard.writeText(ocrText)}><Clipboard className="mr-2 inline size-4" />{deep.copy}</ActionButton><ActionButton tone="muted" onClick={() => void shareText()}><Share2 className="mr-2 inline size-4" />{deep.share}</ActionButton></div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">{deep.pdfPassword}<FormInput type="password" minLength={8} maxLength={128} value={pdfPassword} onChange={(event) => setPdfPassword(event.target.value)} placeholder={deep.pdfPlaceholder} className="mt-1" /></label>
+            <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => downloadBlob(new Blob([allText], { type: 'text/plain;charset=utf-8' }), `${safeName(title)}.txt`)}><Download className="mr-1 inline size-4" />TXT</ActionButton><ActionButton tone="muted" onClick={() => void exportPdf()}><FileText className="mr-1 inline size-4" />PDF</ActionButton><ActionButton tone="muted" onClick={() => void saveDocument()}><History className="mr-1 inline size-4" />{deep.save}</ActionButton></div>
+            <ActionButton className="w-full justify-center" onClick={() => void sendToDocumentSuite()}><ScanText className="size-4" />{deep.continuePdf}</ActionButton>
+            <div className="grid grid-cols-3 gap-2"><ActionButton tone="muted" onClick={() => setTab('scan')}>{deep.addPage}</ActionButton><ActionButton tone="danger" disabled={!pages.length} onClick={deleteCurrentPage}>{deep.deletePage}</ActionButton><ActionButton tone="danger" onClick={resetDocument}>{deep.newDocument}</ActionButton></div>
             <p role="status" className="text-sm font-semibold text-slate-600 dark:text-slate-300">{status}</p>
-          </div> : <div className="py-12 text-center"><FileText className="mx-auto size-12 text-emerald-600" /><h3 className="mt-3 text-lg font-black">No text yet</h3><p className="mt-1 text-sm text-slate-500">Capture a page or choose an image to begin.</p><ActionButton className="mt-4" onClick={() => setTab('scan')}>Start scanning</ActionButton></div>
+          </div> : <div className="py-12 text-center"><FileText className="mx-auto size-12 text-emerald-600" /><h3 className="mt-3 text-lg font-black">{deep.noText}</h3><p className="mt-1 text-sm text-slate-500">{deep.noTextHint}</p><ActionButton className="mt-4" onClick={() => setTab('scan')}>{deep.start}</ActionButton></div>
         ) : null}
 
         {tab === 'library' ? <div className="space-y-3">
-          <div className="flex items-center justify-between"><div><h3 className="text-lg font-black">Private library</h3><p className="text-sm text-slate-500">Searchable and stored only in this browser.</p></div>{documents.length ? <button title="Clear library" onClick={() => void ocrDocumentRepository.clear().then(() => setDocuments([]))} className="grid size-10 place-items-center rounded-xl border border-rose-200 text-rose-600"><Trash2 className="size-4" /></button> : null}</div>
-          <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-slate-400" /><FormInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scans" className="pl-10" /></label>
-          {filteredDocuments.length ? filteredDocuments.map((item) => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FileImage className="size-5" /></span><button className="min-w-0 flex-1 text-left" onClick={() => { pages.forEach((page) => URL.revokeObjectURL(page.previewUrl)); const restored = (item.pages ?? []).map((page) => ({ ...page, previewUrl: page.imageDataUrl ?? '' })); setPages(restored); setSelectedPageIndex(restored.length ? 0 : -1); setTitle(item.title); setOcrText(restored[0]?.text ?? item.text); setStatus(restored.length ? 'Opened with original scan pages from your private library.' : 'Opened text-only legacy library item.'); setTab('text') }}><strong className="block truncate text-sm">{item.title}</strong><span className="line-clamp-2 text-xs text-slate-500">{item.text.replace(/\s+/g, ' ')}</span><span className="mt-1 block text-[11px] font-bold text-emerald-700">{item.source}{item.pages?.length ? ' · images saved' : ''}</span></button><button title="Delete" onClick={() => void ocrDocumentRepository.remove(item.id).then(() => setDocuments((current) => current.filter((row) => row.id !== item.id)))} className="grid size-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"><Trash2 className="size-4" /></button></article>) : <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-700">{documents.length ? 'No matching document.' : 'Saved OCR documents will appear here.'}</div>}
+          <div className="flex items-center justify-between"><div><h3 className="text-lg font-black">{deep.privateLibrary}</h3><p className="text-sm text-slate-500">{deep.libraryHint}</p></div>{documents.length ? <button title={deep.clearLibrary} aria-label={deep.clearLibrary} onClick={() => void ocrDocumentRepository.clear().then(() => setDocuments([]))} className="grid size-10 place-items-center rounded-xl border border-rose-200 text-rose-600"><Trash2 className="size-4" /></button> : null}</div>
+          <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-slate-400" /><FormInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder={deep.search} className="pl-10" /></label>
+          {filteredDocuments.length ? filteredDocuments.map((item) => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FileImage className="size-5" /></span><button className="min-w-0 flex-1 text-left" onClick={() => { pages.forEach((page) => URL.revokeObjectURL(page.previewUrl)); const restored = (item.pages ?? []).map((page) => ({ ...page, previewUrl: page.imageDataUrl ?? '' })); setPages(restored); setSelectedPageIndex(restored.length ? 0 : -1); setTitle(item.title); setOcrText(restored[0]?.text ?? item.text); setStatus(restored.length ? dynamic.opened : dynamic.legacy); setTab('text') }}><strong className="block truncate text-sm">{item.title}</strong><span className="line-clamp-2 text-xs text-slate-500">{item.text.replace(/\s+/g, ' ')}</span><span className="mt-1 block text-[11px] font-bold text-emerald-700">{item.source}{item.pages?.length ? ` · ${dynamic.imagesSaved}` : ''}</span></button><button title={dynamic.delete} aria-label={dynamic.delete} onClick={() => void ocrDocumentRepository.remove(item.id).then(() => setDocuments((current) => current.filter((row) => row.id !== item.id)))} className="grid size-9 place-items-center rounded-lg text-rose-600 hover:bg-rose-50"><Trash2 className="size-4" /></button></article>) : <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-700">{documents.length ? dynamic.noMatch : dynamic.empty}</div>}
         </div> : null}
       </div>
     </section>

@@ -13,6 +13,7 @@ import { getMiniAppRuntime } from '../features/miniapps/runtime'
 import { WorkspaceNavigator } from '../components/mini-apps/WorkspaceNavigator'
 import { SeoLandingContent } from '../components/seo/SeoLandingContent'
 import { SEO_MINI_APP_IDS, type SeoMiniAppId } from '../config/seoMeta'
+import { getProductCopy } from '../i18n/product-copy'
 
 const MiniAppSurface = lazy(() =>
   import('../components/mini-apps/MiniAppSurface').then((module) => ({
@@ -29,15 +30,16 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
   const { t } = useTranslation()
   const { lang } = useParams()
   const normalizedLocale = normalizeLocale(lang)
+  const copy = getProductCopy(normalizedLocale).shell
   const seoLocale = normalizedLocale === 'es' ? 'en' : normalizedLocale
   const { favorites, toggleFavorite } = useToolPreferences()
   const favorite = favorites.includes(miniApp.id)
   const runtime = getMiniAppRuntime(miniApp.id)
   const capabilityLabel = miniApp.id === 'community-pro-unlock'
-    ? 'Community online'
+    ? copy.communityOnline
     : miniApp.id === 'ocr-text'
-      ? 'Pack on demand'
-      : 'Offline ready'
+      ? copy.packOnDemand
+      : copy.offlineReady
   const CapabilityIcon = miniApp.id === 'community-pro-unlock' || miniApp.id === 'ocr-text' ? Wifi : WifiOff
   const seoAppId = (SEO_MINI_APP_IDS as readonly string[]).includes(miniApp.id) ? miniApp.id as SeoMiniAppId : null
 
@@ -58,15 +60,15 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
           </h1>
           <p className="mt-0.5 line-clamp-2 max-w-2xl text-sm leading-5 text-slate-500 dark:text-slate-400">{t(miniApp.summaryKey)}</p>
         </div>
-        <button type="button" className="grid size-11 shrink-0 place-items-center rounded-[14px] border border-slate-500/15" onClick={() => toggleFavorite(miniApp.id)} aria-label="Favorite tool">
+        <button type="button" className="grid size-11 shrink-0 place-items-center rounded-[14px] border border-slate-500/15" onClick={() => toggleFavorite(miniApp.id)} aria-label={copy.favorite}>
           <Heart className={`size-5 ${favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2" aria-label="PureHub promises">
+      <div className="grid grid-cols-3 gap-2" aria-label={copy.promises}>
         {[
-          { label: 'No ads', icon: Sparkles },
-          { label: 'Private first', icon: ShieldCheck },
+          { label: copy.noAds, icon: Sparkles },
+          { label: copy.privateFirst, icon: ShieldCheck },
           { label: capabilityLabel, icon: CapabilityIcon },
         ].map(({ label, icon: Icon }) => (
           <div key={label} title={label} className="flex min-h-10 items-center justify-center gap-1.5 rounded-[11px] border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
@@ -81,7 +83,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       <WorkspaceNavigator miniAppId={miniApp.id} />
 
       <MiniAppErrorBoundary key={miniApp.id} appId={miniApp.id}>
-        <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label="Loading tool" />}>
+        <Suspense fallback={<div className="app-surface min-h-56 animate-pulse rounded-[18px]" aria-label={copy.loading} />}>
           <MiniAppSurface miniAppId={miniApp.id} />
         </Suspense>
       </MiniAppErrorBoundary>
@@ -91,7 +93,7 @@ export function MiniAppLandingPage({ miniApp, tab }: MiniAppLandingPageProps) {
       {seoAppId ? <SeoLandingContent appId={seoAppId} lang={seoLocale} /> : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-500/10 bg-slate-500/5 p-2.5 text-xs text-slate-500">
-        <span className="flex items-center gap-1.5" title={`Isolated storage: ${runtime.storageNamespace}`}><HardDrive className="size-3.5" /> Local storage</span>
+        <span className="flex items-center gap-1.5" title={`${copy.isolatedStorage}: ${runtime.storageNamespace}`}><HardDrive className="size-3.5" /> {copy.localStorage}</span>
         <Link to={buildTabPath(normalizedLocale, tab.id)} className="text-link min-h-9"><ArrowLeft className="size-3.5" />{t('app.browseTab')}</Link>
       </div>
     </section>

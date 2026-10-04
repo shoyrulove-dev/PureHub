@@ -5,11 +5,13 @@ import { WORKSPACE_BY_TOOL, workspaceText } from '../../features/catalog/workspa
 import { normalizeLocale } from '../../i18n/locales'
 import { buildMiniAppPath } from '../../i18n/routing'
 import { useTranslation } from 'react-i18next'
+import { getProductCopy } from '../../i18n/product-copy'
 
 export function WorkspaceNavigator({ miniAppId }: { miniAppId: MiniAppId }) {
   const { lang } = useParams()
   const { t } = useTranslation()
   const locale = normalizeLocale(lang)
+  const copy = getProductCopy(locale).workspace
   const workspace = WORKSPACE_BY_TOOL.get(miniAppId)
   if (!workspace || workspace.toolIds.length < 2) return null
 
@@ -20,11 +22,11 @@ export function WorkspaceNavigator({ miniAppId }: { miniAppId: MiniAppId }) {
     .slice(0, 4)
 
   return (
-    <aside className={`rounded-[16px] border border-slate-500/10 bg-gradient-to-r ${workspace.surfaceClass} p-3`} aria-label="Related workflow tools">
+    <aside className={`rounded-[16px] border border-slate-500/10 bg-gradient-to-r ${workspace.surfaceClass} p-3`} aria-label={copy.related}>
       <div className="flex items-center gap-2">
         <Layers3 className={`size-4 ${workspace.accentClass}`} />
         <div className="min-w-0 flex-1">
-          <span className="block text-[10px] font-black uppercase tracking-[.16em] text-slate-500">Workspace</span>
+          <span className="block text-[10px] font-black uppercase tracking-[.16em] text-slate-500">{copy.workspace}</span>
           <strong className="block text-sm text-slate-950 dark:text-white">{workspaceText(workspace.title, locale)}</strong>
         </div>
       </div>

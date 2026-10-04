@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/validate-prerender.mjs",
+    "build": "node scripts/validate-locales.mjs && tsc -b && vite build && node scripts/validate-prerender.mjs",
+    "locales:check": "node scripts/validate-locales.mjs",
     "seo:check": "node scripts/validate-prerender.mjs",
     "lint": "oxlint",
     "preview": "vite preview"

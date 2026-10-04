@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
 import { Ban, LockKeyhole, Sparkles, WifiOff } from 'lucide-react'
+import { normalizeLocale } from '../../i18n/locales'
+import { getProductCopy } from '../../i18n/product-copy'
 
 type PanelProps = {
   title: string
@@ -23,14 +25,15 @@ const heroAccent = {
 }
 
 export function FlagshipHero({ eyebrow, title, description, children, accent = 'emerald' }: FlagshipHeroProps) {
+  const copy = getProductCopy(normalizeLocale(window.location.pathname.split('/')[1])).shell
   return <section className={`overflow-hidden rounded-[20px] border border-slate-200/80 bg-gradient-to-br p-4 shadow-sm dark:border-slate-700/70 ${heroAccent[accent]}`}>
     <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[.2em]"><Sparkles className="size-4" />{eyebrow}</p>
     <div className="mt-2 flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
       <div><h1 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl dark:text-white">{title}</h1><p className="mt-1 max-w-2xl text-sm leading-5 text-slate-600 dark:text-slate-300">{description}</p></div>
-      <div className="flex gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300" aria-label="Offline, private, and ad-free">
-        <span title="Offline ready" className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><WifiOff className="size-3.5" /><span className="sr-only">Offline ready</span></span>
-        <span title="Private" className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><LockKeyhole className="size-3.5" /><span className="sr-only">Private</span></span>
-        <span title="No ads" className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><Ban className="size-3.5" /><span className="sr-only">No ads</span></span>
+      <div className="flex gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300" aria-label={`${copy.offlineReady}, ${copy.privateFirst}, ${copy.noAds}`}>
+        <span title={copy.offlineReady} className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><WifiOff className="size-3.5" /><span className="sr-only">{copy.offlineReady}</span></span>
+        <span title={copy.privateFirst} className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><LockKeyhole className="size-3.5" /><span className="sr-only">{copy.privateFirst}</span></span>
+        <span title={copy.noAds} className="grid size-8 place-items-center rounded-full bg-white/75 dark:bg-slate-950/45"><Ban className="size-3.5" /><span className="sr-only">{copy.noAds}</span></span>
       </div>
     </div>
     {children ? <div className="mt-3">{children}</div> : null}
@@ -38,6 +41,7 @@ export function FlagshipHero({ eyebrow, title, description, children, accent = '
 }
 
 export function Panel({ title, subtitle, children }: PanelProps) {
+  const copy = getProductCopy(normalizeLocale(window.location.pathname.split('/')[1])).shell
   return (
     <section className="app-surface overflow-hidden rounded-[16px] border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
       <div className="border-b border-slate-200/70 bg-gradient-to-r from-emerald-50 via-white to-sky-50 px-3.5 py-3 dark:border-slate-700/70 dark:from-emerald-950/35 dark:via-slate-900 dark:to-sky-950/25">
@@ -46,7 +50,7 @@ export function Panel({ title, subtitle, children }: PanelProps) {
             <h2 className="text-base font-bold tracking-tight text-slate-950 dark:text-white">{title}</h2>
             {subtitle ? <p className="mt-0.5 max-w-2xl text-xs leading-5 text-slate-600 dark:text-slate-300">{subtitle}</p> : null}
           </div>
-          <span title="Private by design" className="grid size-8 shrink-0 place-items-center rounded-full border border-emerald-200 bg-white/80 text-emerald-800 dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200"><LockKeyhole className="size-3.5" aria-hidden="true" /><span className="sr-only">Private by design</span></span>
+          <span title={copy.privateFirst} className="grid size-8 shrink-0 place-items-center rounded-full border border-emerald-200 bg-white/80 text-emerald-800 dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200"><LockKeyhole className="size-3.5" aria-hidden="true" /><span className="sr-only">{copy.privateFirst}</span></span>
         </div>
       </div>
       <div className="p-3.5">{children}</div>

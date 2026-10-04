@@ -401,6 +401,7 @@ private val visionVi = mapOf(
     "Start scanning" to "Bắt đầu quét", "Review page" to "Xem lại trang", "Auto-frame" to "Tự nhận diện khung", "Retake" to "Chụp lại", "Recognize" to "Nhận dạng",
     "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "Kéo từng góc xanh đến mép trang. PureHub sẽ sửa phối cảnh trước khi OCR.",
     "Recognized text" to "Văn bản đã nhận dạng", "Private library" to "Thư viện riêng tư", "Search scans" to "Tìm bản quét", "Quick actions" to "Thao tác nhanh",
+    "Saved OCR documents will appear here." to "Tài liệu OCR đã lưu sẽ xuất hiện tại đây.", "No matching document." to "Không có tài liệu phù hợp.",
     "Open link" to "Mở liên kết", "Call" to "Gọi", "Table detected" to "Đã nhận diện bảng", "Receipt detected" to "Đã nhận diện hóa đơn",
     "Move earlier" to "Chuyển lên", "Move later" to "Chuyển xuống", "Previous" to "Trước", "Next" to "Tiếp", "Page" to "Trang",
     "On-device" to "Trên thiết bị", "Continue in Doc to PDF" to "Tiếp tục trong Tài liệu sang PDF", "Add page" to "Thêm trang",
@@ -423,7 +424,7 @@ private val visionZh = mapOf(
     "OCR options" to "OCR 选项", "Choose image" to "选择图片", "Scan page" to "扫描页面",
     "Hide current settings" to "隐藏当前设置", "Show current settings" to "显示当前设置",
     "Change document type" to "更改文档类型", "Change document cleanup" to "更改清理方式", "Change recognition language" to "更改识别语言",
-    "OCR Studio" to "OCR 文字扫描", "Scan, clean and export text without uploading your documents." to "无需上传文档，即可扫描、清理和导出文字。", "Recognizing text on this device..." to "正在设备上识别文字…", "Ready. Capture a page or choose an image." to "准备就绪。拍摄页面或选择图片。", "No readable text found. Try better light or a tighter crop." to "未找到可读文字。请改善光线或裁剪得更紧。", "OCR could not process this image." to "OCR 无法处理此图片。", "The selected image could not be opened." to "无法打开所选图片。", "A scan can contain up to 20 pages. Export this document before starting another." to "一次扫描最多包含 20 页。请先导出此文档，再开始新的扫描。", "No text yet" to "暂无文字", "Capture a page or choose an image to begin." to "拍摄页面或选择图片以开始。", "Start scanning" to "开始扫描", "Review page" to "检查页面", "Auto-frame" to "自动框选", "Retake" to "重拍", "Recognize" to "识别", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "将每个绿色角点拖到页面边缘。PureHub 会在 OCR 前校正透视。", "Recognized text" to "已识别文字", "Private library" to "私密资料库", "Search scans" to "搜索扫描件", "Quick actions" to "快捷操作", "Open link" to "打开链接", "Call" to "拨打电话", "Table detected" to "已识别表格", "Receipt detected" to "已识别收据", "Move earlier" to "上移", "Move later" to "下移", "Previous" to "上一页", "Next" to "下一页", "Page" to "页", "On-device" to "设备端", "Continue in Doc to PDF" to "继续到文档转 PDF", "Add page" to "添加页面", "Delete page" to "删除页面", "New document" to "新建文档", "Save to Money Studio" to "保存到记账本",
+    "OCR Studio" to "OCR 文字扫描", "Scan, clean and export text without uploading your documents." to "无需上传文档，即可扫描、清理和导出文字。", "Recognizing text on this device..." to "正在设备上识别文字…", "Ready. Capture a page or choose an image." to "准备就绪。拍摄页面或选择图片。", "No readable text found. Try better light or a tighter crop." to "未找到可读文字。请改善光线或裁剪得更紧。", "OCR could not process this image." to "OCR 无法处理此图片。", "The selected image could not be opened." to "无法打开所选图片。", "A scan can contain up to 20 pages. Export this document before starting another." to "一次扫描最多包含 20 页。请先导出此文档，再开始新的扫描。", "No text yet" to "暂无文字", "Capture a page or choose an image to begin." to "拍摄页面或选择图片以开始。", "Start scanning" to "开始扫描", "Review page" to "检查页面", "Auto-frame" to "自动框选", "Retake" to "重拍", "Recognize" to "识别", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "将每个绿色角点拖到页面边缘。PureHub 会在 OCR 前校正透视。", "Recognized text" to "已识别文字", "Private library" to "私密资料库", "Search scans" to "搜索扫描件", "Quick actions" to "快捷操作", "Saved OCR documents will appear here." to "保存的 OCR 文档会显示在这里。", "No matching document." to "没有匹配的文档。", "Open link" to "打开链接", "Call" to "拨打电话", "Table detected" to "已识别表格", "Receipt detected" to "已识别收据", "Move earlier" to "上移", "Move later" to "下移", "Previous" to "上一页", "Next" to "下一页", "Page" to "页", "On-device" to "设备端", "Continue in Doc to PDF" to "继续到文档转 PDF", "Add page" to "添加页面", "Delete page" to "删除页面", "New document" to "新建文档", "Save to Money Studio" to "保存到记账本",
     "Doc to PDF" to "文档转 PDF", "Document Suite" to "文档套件", "PDF toolbox" to "PDF 工具箱", "Add PDFs" to "添加 PDF", "Merge PDFs" to "合并 PDF", "Clear PDFs" to "清空 PDF", "Import images" to "导入图片", "Capture Page" to "拍摄页面", "Quality preset" to "质量预设", "Screen Recorder" to "屏幕录制", "Start recording" to "开始录制", "Photo Privacy" to "照片隐私", "Choose photo" to "选择照片", "Create copy" to "创建副本", "Creating..." to "正在创建...", "Color Grabber" to "取色器", "Copy HEX" to "复制 HEX", "Creative Suite flagship" to "创意工具", "Creator flagship" to "创作工具", "Private media utility" to "私密媒体工具", "Capture, crop, reorder, and export clean PDF pages. Pair it with OCR Studio for searchable text." to "拍摄、裁剪、排序并导出干净的 PDF 页面；可搭配 OCR Studio 获得可搜索文字。", "Capture accurate HEX and RGB colors in real time while every camera frame stays on your device." to "实时提取准确的 HEX 和 RGB 颜色；所有相机画面始终留在设备上。", "Remove location and camera metadata by re-encoding a new share-ready photo locally." to "通过在本机重新编码生成可分享的新照片，移除位置和相机元数据。", "Capture local MP4 video with quality controls and Android's visible consent flow." to "通过质量控制和 Android 明确的授权流程录制本地 MP4 视频。", "Allow Camera for Color Grabber" to "允许相机取色", "Color HEX copied locally." to "HEX 颜色已在本机复制。", "Choose a photo. PureHub creates a separate clean copy and never changes the original." to "选择一张照片。PureHub 会创建单独的干净副本，绝不修改原图。", "Inspecting privacy metadata locally..." to "正在本机检查隐私元数据…", "Photo ready. Review the metadata summary, then create a clean JPEG." to "照片已准备好。请查看元数据摘要，然后创建干净的 JPEG。", "Clean JPEG saved. GPS, camera, author, and original EXIF blocks were not copied." to "干净的 JPEG 已保存。未复制 GPS、相机、作者和原始 EXIF 信息。", "Could not create the clean copy. Try a standard JPEG, PNG, or WebP image." to "无法创建干净副本。请尝试标准 JPEG、PNG 或 WebP 图片。", "Metadata removed" to "元数据已移除", "Original protected" to "原图已保护", "The exported JPEG does not copy GPS, device model, capture time, author, or original EXIF fields." to "导出的 JPEG 不会复制 GPS、设备型号、拍摄时间、作者或原始 EXIF 字段。", "The source remains untouched. You choose the destination and decide when to share the clean copy." to "源文件保持不变。您自行选择保存位置和分享干净副本的时间。", "Quick" to "快速", "Pro" to "专业", "Efficient" to "省空间", "Balanced" to "平衡", "Smooth" to "流畅", "Include microphone" to "包含麦克风", "Stop & save" to "停止并保存", "Visible, local recording" to "可见的本地录制", "Android always asks for screen and microphone consent and shows a foreground notification. Recordings stay local." to "Android 始终会请求屏幕和麦克风授权，并显示前台通知。录制内容保留在本机。",
 )
 
@@ -485,12 +486,13 @@ private val es = mapOf(
     "Create a code" to "Crear un código", "Pick a format and fill in only the information people need." to "Elige un formato e incluye solo la información necesaria.", "Website" to "Sitio web", "Phone" to "Teléfono", "Location" to "Ubicación", "Calendar" to "Calendario", "Contact" to "Contacto", "SMS" to "SMS", "Wi-Fi" to "Wi-Fi", "Created offline with reliable error correction" to "Creado sin conexión con corrección de errores fiable", "Share PNG" to "Compartir PNG", "Complete the first field to preview" to "Completa el primer campo para obtener una vista previa", "Saved only on this phone." to "Guardado solo en este teléfono.", "Created only" to "Solo creados", "All codes" to "Todos los códigos", "Torch" to "Linterna", "Torch off" to "Apagar linterna",
     "OCR options" to "Opciones de OCR", "Choose image" to "Elegir imagen", "Scan page" to "Escanear página",
     "Change document type" to "Cambiar tipo de documento", "Change document cleanup" to "Cambiar limpieza del documento", "Change recognition language" to "Cambiar idioma de reconocimiento",
-    "OCR Studio" to "OCR Studio", "Scan, clean and export text without uploading your documents." to "Escanea, limpia y exporta texto sin subir tus documentos.", "Recognizing text on this device..." to "Reconociendo texto en este dispositivo...", "Ready. Capture a page or choose an image." to "Listo. Captura una página o elige una imagen.", "No readable text found. Try better light or a tighter crop." to "No se encontró texto legible. Prueba con mejor luz o un recorte más ajustado.", "OCR could not process this image." to "OCR no pudo procesar esta imagen.", "The selected image could not be opened." to "No se pudo abrir la imagen seleccionada.", "A scan can contain up to 20 pages. Export this document before starting another." to "Un escaneo puede tener hasta 20 páginas. Exporta este documento antes de iniciar otro.", "No text yet" to "Aún no hay texto", "Capture a page or choose an image to begin." to "Captura una página o elige una imagen para empezar.", "Start scanning" to "Empezar a escanear", "Review page" to "Revisar página", "Auto-frame" to "Encuadre automático", "Retake" to "Repetir", "Recognize" to "Reconocer", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "Arrastra cada esquina verde al borde de la página. PureHub corrige la perspectiva antes del OCR.", "Recognized text" to "Texto reconocido", "Private library" to "Biblioteca privada", "Search scans" to "Buscar escaneos", "Quick actions" to "Acciones rápidas", "Open link" to "Abrir enlace", "Call" to "Llamar", "Table detected" to "Tabla detectada", "Receipt detected" to "Recibo detectado", "Move earlier" to "Mover antes", "Move later" to "Mover después", "Previous" to "Anterior", "Next" to "Siguiente", "Page" to "Página", "On-device" to "En el dispositivo", "Continue in Doc to PDF" to "Continuar en Documento a PDF", "Add page" to "Añadir página", "Delete page" to "Eliminar página", "New document" to "Documento nuevo", "Save to Money Studio" to "Guardar en Money Studio",
+    "OCR Studio" to "OCR Studio", "Scan, clean and export text without uploading your documents." to "Escanea, limpia y exporta texto sin subir tus documentos.", "Recognizing text on this device..." to "Reconociendo texto en este dispositivo...", "Ready. Capture a page or choose an image." to "Listo. Captura una página o elige una imagen.", "No readable text found. Try better light or a tighter crop." to "No se encontró texto legible. Prueba con mejor luz o un recorte más ajustado.", "OCR could not process this image." to "OCR no pudo procesar esta imagen.", "The selected image could not be opened." to "No se pudo abrir la imagen seleccionada.", "A scan can contain up to 20 pages. Export this document before starting another." to "Un escaneo puede tener hasta 20 páginas. Exporta este documento antes de iniciar otro.", "No text yet" to "Aún no hay texto", "Capture a page or choose an image to begin." to "Captura una página o elige una imagen para empezar.", "Start scanning" to "Empezar a escanear", "Review page" to "Revisar página", "Auto-frame" to "Encuadre automático", "Retake" to "Repetir", "Recognize" to "Reconocer", "Drag each green corner to the page edge. PureHub corrects perspective before OCR." to "Arrastra cada esquina verde al borde de la página. PureHub corrige la perspectiva antes del OCR.", "Recognized text" to "Texto reconocido", "Private library" to "Biblioteca privada", "Search scans" to "Buscar escaneos", "Quick actions" to "Acciones rápidas", "Saved OCR documents will appear here." to "Los documentos OCR guardados aparecerán aquí.", "No matching document." to "No hay documentos coincidentes.", "Open link" to "Abrir enlace", "Call" to "Llamar", "Table detected" to "Tabla detectada", "Receipt detected" to "Recibo detectado", "Move earlier" to "Mover antes", "Move later" to "Mover después", "Previous" to "Anterior", "Next" to "Siguiente", "Page" to "Página", "On-device" to "En el dispositivo", "Continue in Doc to PDF" to "Continuar en Documento a PDF", "Add page" to "Añadir página", "Delete page" to "Eliminar página", "New document" to "Documento nuevo", "Save to Money Studio" to "Guardar en Money Studio",
     "Doc to PDF" to "Documento a PDF", "Document Suite" to "Suite de documentos", "PDF toolbox" to "Herramientas PDF", "Add PDFs" to "Añadir PDF", "Merge PDFs" to "Unir PDF", "Clear PDFs" to "Limpiar PDF", "Import images" to "Importar imágenes", "Capture Page" to "Capturar página", "Quality preset" to "Ajuste de calidad", "Screen Recorder" to "Grabador de pantalla", "Start recording" to "Iniciar grabación", "Photo Privacy" to "Privacidad de fotos", "Choose photo" to "Elegir foto", "Create copy" to "Crear copia", "Creating..." to "Creando...", "Color Grabber" to "Selector de color", "Copy HEX" to "Copiar HEX", "Creative Suite flagship" to "Herramienta creativa", "Creator flagship" to "Herramienta de creación", "Private media utility" to "Utilidad multimedia privada", "Capture, crop, reorder, and export clean PDF pages. Pair it with OCR Studio for searchable text." to "Captura, recorta, ordena y exporta páginas PDF limpias. Combínalo con OCR Studio para texto buscable.", "Capture accurate HEX and RGB colors in real time while every camera frame stays on your device." to "Captura colores HEX y RGB precisos en tiempo real; cada imagen de cámara permanece en tu dispositivo.", "Remove location and camera metadata by re-encoding a new share-ready photo locally." to "Elimina la ubicación y los metadatos de cámara al recodificar localmente una foto lista para compartir.", "Capture local MP4 video with quality controls and Android's visible consent flow." to "Graba vídeo MP4 local con controles de calidad y el flujo de consentimiento visible de Android.", "Allow Camera for Color Grabber" to "Permitir cámara para el selector de color", "Color HEX copied locally." to "El color HEX se copió en el dispositivo.", "Choose a photo. PureHub creates a separate clean copy and never changes the original." to "Elige una foto. PureHub crea una copia limpia independiente y nunca cambia el original.", "Inspecting privacy metadata locally..." to "Inspeccionando los metadatos de privacidad en el dispositivo...", "Photo ready. Review the metadata summary, then create a clean JPEG." to "La foto está lista. Revisa el resumen de metadatos y crea un JPEG limpio.", "Creating privacy-clean copy on this device..." to "Creando una copia limpia para la privacidad en este dispositivo...", "Clean JPEG saved. GPS, camera, author, and original EXIF blocks were not copied." to "JPEG limpio guardado. No se copiaron GPS, cámara, autor ni los bloques EXIF originales.", "Could not create the clean copy. Try a standard JPEG, PNG, or WebP image." to "No se pudo crear la copia limpia. Prueba con una imagen JPEG, PNG o WebP estándar.", "Metadata removed" to "Metadatos eliminados", "Original protected" to "Original protegido", "The exported JPEG does not copy GPS, device model, capture time, author, or original EXIF fields." to "El JPEG exportado no copia GPS, modelo del dispositivo, hora de captura, autor ni campos EXIF originales.", "The source remains untouched. You choose the destination and decide when to share the clean copy." to "La fuente permanece intacta. Tú eliges el destino y cuándo compartir la copia limpia.", "Quick" to "Rápido", "Pro" to "Profesional", "Efficient" to "Eficiente", "Balanced" to "Equilibrado", "Smooth" to "Fluido", "Include microphone" to "Incluir micrófono", "Stop & save" to "Detener y guardar", "Visible, local recording" to "Grabación local visible", "Android always asks for screen and microphone consent and shows a foreground notification. Recordings stay local." to "Android siempre solicita consentimiento para pantalla y micrófono y muestra una notificación en primer plano. Las grabaciones permanecen locales.",
 )
 
 fun translateUiText(text: String, language: AppLanguage): String {
     if (language == AppLanguage.English || text.isBlank()) return text
+    criticalLocalizedCopy(text, language)?.let { return it }
     bubbleLevelTranslation(text, language)?.let { return it }
     val dictionary = when (language) {
         AppLanguage.Vietnamese -> viAll
@@ -509,6 +511,50 @@ fun translateUiText(text: String, language: AppLanguage): String {
     return dynamicTranslation(text, language)
 }
 
+private fun criticalLocalizedCopy(text: String, language: AppLanguage): String? {
+    val translations = mapOf(
+        "Back" to listOf("Quay lại", "返回", "Volver"),
+        "PDF ready locally." to listOf("PDF đã sẵn sàng trên máy.", "PDF 已在本机准备就绪。", "El PDF está listo en el dispositivo."),
+        "PDF exported locally." to listOf("Đã xuất PDF trên máy.", "PDF 已导出到本机。", "PDF exportado en el dispositivo."),
+        "Opening exported PDF." to listOf("Đang mở PDF đã xuất.", "正在打开导出的 PDF。", "Abriendo el PDF exportado."),
+        "PDF ready to share." to listOf("PDF đã sẵn sàng chia sẻ.", "PDF 已可分享。", "El PDF está listo para compartir."),
+        "Selected captured page" to listOf("Trang đã chụp đang chọn", "已选择的拍摄页面", "Página capturada seleccionada"),
+        "Captured page" to listOf("Trang đã chụp", "已拍摄页面", "Página capturada"),
+        "Color HEX copied locally." to listOf("Đã sao chép mã HEX trên máy.", "已在本机复制 HEX。", "El color HEX se copió en el dispositivo."),
+        "Complete document saved privately on this device." to listOf("Đã lưu riêng tư toàn bộ tài liệu trên thiết bị này.", "完整文档已私密保存在此设备上。", "El documento completo se guardó de forma privada en este dispositivo."),
+        "Receipt saved to Money Studio." to listOf("Đã lưu hóa đơn vào Sổ chi tiêu.", "收据已保存到记账本。", "Recibo guardado en Money Studio."),
+        "Scanned document preview" to listOf("Xem trước tài liệu đã quét", "扫描文档预览", "Vista previa del documento escaneado"),
+        "Bubble Level" to listOf("Thước thủy", "水平仪", "Nivel de burbuja"),
+        "A calm two-axis level and quick ruler powered by private on-device readings." to listOf("Thước cân bằng hai trục và thước đo nhanh dùng dữ liệu riêng tư trên thiết bị.", "双轴水平仪和快速尺子，读数仅在设备上处理。", "Nivel de dos ejes y regla rápida con lecturas privadas en el dispositivo."),
+        "Enable level sensor" to listOf("Bật cảm biến cân bằng", "启用水平传感器", "Activar sensor de nivel"),
+        "Pause level sensor" to listOf("Tạm dừng cảm biến", "暂停水平传感器", "Pausar sensor de nivel"),
+        "Calibrate zero" to listOf("Hiệu chỉnh về 0", "校准零点", "Calibrar a cero"),
+        "Surface" to listOf("Mặt phẳng", "平面", "Superficie"),
+        "Edge X" to listOf("Cạnh X", "X 边缘", "Borde X"),
+        "Edge Y" to listOf("Cạnh Y", "Y 边缘", "Borde Y"),
+        "Inside tolerance · keep the phone still." to listOf("Trong sai số · giữ điện thoại ổn định.", "已在容差内 · 请保持手机稳定。", "Dentro de la tolerancia · mantén el teléfono quieto."),
+        "Measurements remain local" to listOf("Số đo chỉ lưu trên máy", "测量数据仅保留在本机", "Las mediciones permanecen en el dispositivo"),
+        "Motion sensors stay on this device. Camera mode only opens after permission and frames are never saved." to listOf("Cảm biến chuyển động chỉ hoạt động trên thiết bị. Chế độ camera chỉ mở sau khi được cấp quyền và không lưu khung hình.", "运动传感器数据仅在本机处理。相机模式只会在获得权限后开启，且不会保存画面。", "Los sensores de movimiento permanecen en este dispositivo. El modo cámara solo se abre con permiso y nunca guarda imágenes."),
+        "PureHub reads motion sensors only while enabled and shares a held value only when you choose Share." to listOf("PureHub chỉ đọc cảm biến chuyển động khi bật và chỉ chia sẻ giá trị đã giữ khi bạn chọn Chia sẻ.", "PureHub 仅在启用时读取运动传感器，且只在您选择分享时发送保留的读数。", "PureHub solo lee los sensores de movimiento mientras están activos y comparte un valor guardado solo cuando eliges Compartir."),
+    )
+    val index = when (language) {
+        AppLanguage.Vietnamese -> 0
+        AppLanguage.Chinese -> 1
+        AppLanguage.Spanish -> 2
+        AppLanguage.English -> return null
+    }
+    translations[text]?.let { return it[index] }
+    Regex("Document Suite is ready with (\\d+) OCR page\\(s\\)\\.").matchEntire(text)?.let {
+        return when (language) {
+            AppLanguage.Vietnamese -> "Bộ tài liệu đã sẵn sàng với ${it.groupValues[1]} trang OCR."
+            AppLanguage.Chinese -> "文档套件已准备好 ${it.groupValues[1]} 个 OCR 页面。"
+            AppLanguage.Spanish -> "La suite de documentos está lista con ${it.groupValues[1]} página(s) OCR."
+            AppLanguage.English -> text
+        }
+    }
+    return null
+}
+
 private fun bubbleLevelTranslation(text: String, language: AppLanguage): String? {
     val translations = when (language) {
         AppLanguage.Vietnamese -> mapOf(
@@ -516,9 +562,9 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Live level" to "Thước thủy trực tiếp", "Private on-device sensor" to "Cảm biến riêng tư trên thiết bị",
             "Options" to "Tùy chọn", "Start" to "Bắt đầu", "Calibrate zero" to "Hiệu chỉnh về 0",
             "Calibrate level" to "Hiệu chỉnh thước", "Reset zero" to "Xóa mốc 0", "Save zero" to "Lưu mốc 0",
-            "1. Remove a thick phone case if it rocks." to "1. Tháo ốp dày nếu điện thoại bị cập kênh.",
-            "2. Place the phone on a known-flat reference." to "2. Đặt điện thoại trên một mặt phẳng chuẩn.",
-            "3. Keep it still, then save this position as zero." to "3. Giữ yên rồi lưu vị trí này làm mốc 0.",
+            "1. Remove a thick phone case if it rocks." to "1. Tháo ốp dày nếu máy bị kênh.",
+            "2. Place the phone on a known-flat reference." to "2. Đặt máy trên mặt phẳng.",
+            "3. Keep it still, then save this position as zero." to "3. Giữ yên và lưu mốc 0.",
             "Calibration stays only on this device." to "Dữ liệu hiệu chỉnh chỉ lưu trên thiết bị này.",
             "Hold" to "Giữ", "Resume" to "Đo tiếp", "Degrees" to "Độ", "Percent" to "Phần trăm",
             "Clear history" to "Xóa lịch sử", "No saved measurements yet." to "Chưa có số đo đã lưu.",
@@ -537,9 +583,9 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Live level" to "实时水平仪", "Private on-device sensor" to "设备端私密传感器",
             "Options" to "选项", "Start" to "开始", "Calibrate zero" to "校准零点",
             "Calibrate level" to "校准水平仪", "Reset zero" to "清除零点", "Save zero" to "保存零点",
-            "1. Remove a thick phone case if it rocks." to "1. 如果厚手机壳导致晃动，请将其取下。",
-            "2. Place the phone on a known-flat reference." to "2. 将手机放在已知水平面上。",
-            "3. Keep it still, then save this position as zero." to "3. 保持静止，然后将当前位置保存为零点。",
+            "1. Remove a thick phone case if it rocks." to "1. 如手机晃动，请取下厚手机壳。",
+            "2. Place the phone on a known-flat reference." to "2. 将手机放在水平面上。",
+            "3. Keep it still, then save this position as zero." to "3. 保持静止并保存零点。",
             "Calibration stays only on this device." to "校准数据仅保存在此设备上。",
             "Hold" to "保持", "Resume" to "继续", "Degrees" to "角度", "Percent" to "百分比",
             "Clear history" to "清除历史", "No saved measurements yet." to "暂无已保存测量。",
@@ -558,9 +604,9 @@ private fun bubbleLevelTranslation(text: String, language: AppLanguage): String?
             "Live level" to "Nivel en vivo", "Private on-device sensor" to "Sensor privado en el dispositivo",
             "Options" to "Opciones", "Start" to "Iniciar", "Calibrate zero" to "Calibrar a cero",
             "Calibrate level" to "Calibrar nivel", "Reset zero" to "Borrar cero", "Save zero" to "Guardar cero",
-            "1. Remove a thick phone case if it rocks." to "1. Quita una funda gruesa si el teléfono se balancea.",
-            "2. Place the phone on a known-flat reference." to "2. Coloca el teléfono sobre una superficie plana conocida.",
-            "3. Keep it still, then save this position as zero." to "3. Mantenlo quieto y guarda esta posición como cero.",
+            "1. Remove a thick phone case if it rocks." to "1. Quita la funda si el móvil se mueve.",
+            "2. Place the phone on a known-flat reference." to "2. Pon el móvil en una superficie plana.",
+            "3. Keep it still, then save this position as zero." to "3. Mantenlo quieto y guarda cero.",
             "Calibration stays only on this device." to "La calibración solo se guarda en este dispositivo.",
             "Hold" to "Fijar", "Resume" to "Reanudar", "Degrees" to "Grados", "Percent" to "Porcentaje",
             "Clear history" to "Borrar historial", "No saved measurements yet." to "Aún no hay mediciones guardadas.",
@@ -878,6 +924,7 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "Accuracy" -> return when { vi -> "Độ chính xác"; zh -> "精度"; es -> "Precisión"; else -> null }
         "Target" -> return when { vi -> "Mục tiêu"; zh -> "目标"; es -> "Objetivo"; else -> null }
         "Ruler" -> return when { vi -> "Thước"; zh -> "尺子"; es -> "Regla"; else -> null }
+        "Sound" -> return when { vi -> "Âm thanh"; zh -> "声音"; es -> "Sonido"; else -> null }
         "Sound on" -> return when { vi -> "Bật âm"; zh -> "开启提示音"; es -> "Sonido activo"; else -> null }
         "Sound off" -> return when { vi -> "Tắt âm"; zh -> "关闭提示音"; es -> "Sonido apagado"; else -> null }
         "No measurements" -> return when { vi -> "Chưa có số đo"; zh -> "暂无测量"; es -> "Sin mediciones"; else -> null }

@@ -75,7 +75,7 @@ fun ColorGrabberCard(
     fun copyHex() {
         val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(android.content.ClipData.newPlainText("PureHub Color", color.hex))
-        scope.launch { snackbarHostState.showSnackbar("Color HEX copied locally.") }
+        scope.launch { snackbarHostState.showSnackbar(translateUiText("Color HEX copied locally.", appLanguage)) }
     }
 
     LaunchedEffect(menuAction) {
