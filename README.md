@@ -13,13 +13,13 @@
   &middot; <a href="https://t.me/purehubaaa">Community updates</a>
 </p>
 
-> 🧪 **Google Play closed test:** We are recruiting real testers before launch. Join the [PureHub tester group](https://groups.google.com/g/purehub-testers) to receive the Play opt-in link when the closed track is ready.
+> 🎉 **50-tester milestone reached:** Thank you to the first 50 members of the [PureHub tester community](https://groups.google.com/g/purehub-testers). The Android launch on Google Play is planned for the end of October 2026. Please keep testing and reporting anything that can be improved.
 >
-> 🇻🇳 **Thử nghiệm CH Play:** PureHub đang tuyển tester thật trước khi phát hành. Vào [nhóm tester PureHub](https://groups.google.com/g/purehub-testers) để nhận link opt-in khi closed test sẵn sàng.
+> 🇻🇳 **Đã đủ 50 testers:** Cảm ơn 50 thành viên đầu tiên của [cộng đồng PureHub Testers](https://groups.google.com/g/purehub-testers). Bản Android dự kiến phát hành trên Google Play vào cuối tháng 10/2026. Mong các bạn tiếp tục trải nghiệm và góp ý.
 >
-> 🇨🇳 **Google Play 封闭测试：** PureHub 正在招募真实测试者。加入 [PureHub 测试群](https://groups.google.com/g/purehub-testers)，封闭测试准备好后即可收到加入链接。
+> 🇨🇳 **已达到 50 名测试者：** 感谢 [PureHub 测试社区](https://groups.google.com/g/purehub-testers) 最初的 50 位成员。Android 版本计划于 2026 年 10 月底在 Google Play 发布，欢迎继续测试并反馈问题。
 >
-> 🇪🇸 **Prueba cerrada de Google Play:** Estamos buscando personas reales para probar PureHub. Únete al [grupo de pruebas de PureHub](https://groups.google.com/g/purehub-testers) para recibir el enlace de acceso cuando esté listo.
+> 🇪🇸 **Ya somos 50 testers:** Gracias a los primeros 50 miembros de la [comunidad de pruebas de PureHub](https://groups.google.com/g/purehub-testers). El lanzamiento para Android en Google Play está previsto para finales de octubre de 2026. Los invitamos a seguir probando y enviando sugerencias.
 
 <p align="center">
   <a href="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml"><img alt="Web CI" src="https://github.com/shoyrulove-dev/PureHub/actions/workflows/web-ci.yml/badge.svg" /></a>
