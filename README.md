@@ -154,7 +154,7 @@ F-Droid publishing is discontinued. The active distribution path is the signed G
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.54. This update unifies the violet Pure Earn visual system across Android and the PWA, completes another four-language interface audit, fixes deterministic Home navigation, and simplifies distribution to a lightweight signed ARM64 APK plus a Play-ready AAB. WiFi Analyzer, OCR Studio, QR Studio, Vision tools, Bubble Level, Home, Settings, downloads, and release-facing screens retain English, Vietnamese, Simplified Chinese, and Spanish coverage. F-Droid publishing is discontinued. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is PureHub 1.0.0-beta.55. This update turns Lunar Calendar into a deeper daily tool with Vietnam UTC+7 and China UTC+8 modes, two-way conversion, personal lunar reminders, calendar event markers, widgets, encrypted backup/export, and richer offline moon data. Community now includes a clearly separated Pure Earn card that opens the external service without passing a PureHub account or device identifier. Android and the PWA share the updated violet presentation and four-language community copy. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

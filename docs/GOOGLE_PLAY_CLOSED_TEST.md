@@ -28,7 +28,7 @@ Do not point users to a Play opt-in page until the track contains the signed pro
 - Version code: `54`
 - Target SDK: Android 16 / API 36
 - Minimum SDK: API 26
-- Signed AAB: `PureHub-1.0.0-beta.54.aab`
+- Signed AAB: `PureHub-1.0.0-beta.55.aab`
 - Store listing copy: English, Vietnamese, Simplified Chinese, and Spanish
 - Current screenshots: Home, complete tool catalog, and Bubble Level
 - Privacy policy: `https://hub.blissbiovn.com/en/privacy`, linked from Android Settings

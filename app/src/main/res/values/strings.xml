@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PureHub</string>
+    <string name="lunar_widget_description">Lunar calendar today</string>
+    <string name="lunar_month_widget_description">Lunar month and upcoming dates</string>
+    <string name="lunar_upcoming_widget_title">Lunar · Coming up</string>
+    <string name="lunar_upcoming_widget_description">Three upcoming lunar dates</string>
 </resources>

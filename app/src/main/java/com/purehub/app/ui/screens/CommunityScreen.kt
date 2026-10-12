@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedButton
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
@@ -30,10 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.purehub.app.BuildConfig
+import com.purehub.app.R
 import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.LocalSnackbarHostState
 import com.purehub.app.ui.appText
@@ -45,10 +50,11 @@ import java.net.URLEncoder
 import java.net.URL
 import org.json.JSONObject
 
-private const val TELEGRAM_DEEP_LINK = "tg://resolve?domain=aaa_letan_vip_bot"
-private const val TELEGRAM_WEB_LINK = "https://t.me/aaa_letan_vip_bot"
+private const val TELEGRAM_DEEP_LINK = "tg://resolve?domain=PureHubCom"
+private const val TELEGRAM_WEB_LINK = "https://t.me/PureHubCom"
 private const val GITHUB_LINK = "https://github.com/shoyrulove-dev/PureHub"
 private const val GITHUB_FEEDBACK_LINK = "https://github.com/shoyrulove-dev/PureHub/issues/new/choose"
+private const val PURE_EARN_LINK = "https://earn.blissbiovn.com/?utm_source=purehub_android&utm_medium=community&utm_campaign=pureearn_launch"
 private const val MINIGAME_TICKET_URL = "https://hub.blissbiovn.com/public-api/minigame/ticket"
 private const val MINIGAME_PAGE_URL = "https://hub.blissbiovn.com/vi/minigame"
 
@@ -109,6 +115,30 @@ fun CommunityScreen(
                 LocalizedText(appText(language, "For users in Vietnam. Gmail only identifies a beta entry and is not used for marketing.", "Dành cho người dùng Việt Nam. Gmail chỉ dùng nhận diện lượt beta, không dùng marketing.", "仅面向越南用户。Gmail 仅用于识别测试资格，不用于营销。"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF17102B), contentColor = Color.White),
+        ) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Icon(painterResource(R.drawable.ic_pure_earn), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(58.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        LocalizedText(appText(language, "Pure Earn", "Pure Earn", "Pure Earn", "Pure Earn"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Color.White)
+                        LocalizedText(appText(language, "Connected rewards community", "Cộng đồng phần thưởng liên kết", "关联奖励社区", "Comunidad de recompensas conectada"), color = Color(0xFFDCCBFF), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                LocalizedText(appText(language,
+                    "Open Pure Earn as a separate service with its own account, terms and privacy policy. PureHub does not automatically share your app data.",
+                    "Mở Pure Earn như một dịch vụ riêng có tài khoản, điều khoản và chính sách riêng. PureHub không tự động chia sẻ dữ liệu ứng dụng của bạn.",
+                    "Pure Earn 是独立服务，使用自己的账户、条款和隐私政策。PureHub 不会自动共享您的应用数据。",
+                    "Abre Pure Earn como servicio independiente con su propia cuenta, términos y privacidad. PureHub no comparte automáticamente tus datos."),
+                    color = Color(0xFFBEB1D8), style = MaterialTheme.typography.bodySmall)
+                Button(modifier = Modifier.fillMaxWidth(), onClick = { openUri(PURE_EARN_LINK) }) {
+                    LocalizedText(appText(language, "Open Pure Earn", "Mở Pure Earn", "打开 Pure Earn", "Abrir Pure Earn"))
+                }
+            }
         }
 
         Card(modifier = Modifier.fillMaxWidth()) {

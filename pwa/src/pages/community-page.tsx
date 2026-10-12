@@ -8,10 +8,17 @@ import type { MiniAppId } from '../features/catalog/tabs'
 
 const TELEGRAM_URL = 'https://t.me/PureHubCom'
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
+const PURE_EARN_URL = 'https://earn.blissbiovn.com/?utm_source=purehub_pwa&utm_medium=community&utm_campaign=pureearn_launch'
 
 export function CommunityPage() {
   const locale = normalizeLocale(useParams().lang)
   const copy = getUiCopy(locale).community
+  const earnCopy = {
+    en: { label: 'Connected rewards community', body: 'A separate service with its own account, terms and privacy policy. PureHub does not automatically share your app data.', open: 'Open Pure Earn' },
+    vi: { label: 'Cộng đồng phần thưởng liên kết', body: 'Dịch vụ riêng có tài khoản, điều khoản và chính sách riêng. PureHub không tự động chia sẻ dữ liệu ứng dụng của bạn.', open: 'Mở Pure Earn' },
+    zh: { label: '关联奖励社区', body: '独立服务，使用自己的账户、条款和隐私政策。PureHub 不会自动共享您的应用数据。', open: '打开 Pure Earn' },
+    es: { label: 'Comunidad de recompensas conectada', body: 'Servicio independiente con su propia cuenta, términos y privacidad. PureHub no comparte automáticamente tus datos.', open: 'Abrir Pure Earn' },
+  }[locale]
   const actions = [
     { icon: MessageCircle, title: copy.telegram, description: copy.telegramHint, href: TELEGRAM_URL, label: copy.openTelegram },
     { icon: Code2, title: copy.discussions, description: copy.discussionsHint, href: `${GITHUB_URL}/discussions`, label: copy.joinDiscussions },
@@ -72,6 +79,14 @@ export function CommunityPage() {
           {copy.intro}
         </p>
       </div>
+
+      <a href={PURE_EARN_URL} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[22px] border border-violet-400/30 bg-gradient-to-r from-[#130d26] via-[#251247] to-[#111027] p-5 text-white shadow-lg shadow-violet-900/10">
+        <span className="flex items-center gap-4">
+          <img src="/pure-earn-icon.svg" alt="" className="size-16 rounded-[18px]" />
+          <span className="min-w-0 flex-1"><strong className="block text-xl">Pure Earn</strong><span className="mt-1 block text-sm font-semibold text-violet-200">{earnCopy.label}</span><span className="mt-2 block text-xs leading-5 text-violet-100/75">{earnCopy.body}</span></span>
+          <span className="hidden rounded-full bg-violet-500 px-4 py-2 text-sm font-bold sm:block">{earnCopy.open}</span>
+        </span>
+      </a>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {actions.map(({ icon: Icon, title, description, href, label }) => (

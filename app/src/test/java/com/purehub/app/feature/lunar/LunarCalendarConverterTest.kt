@@ -35,4 +35,40 @@ class LunarCalendarConverterTest {
         assert(details.auspiciousHours.isNotEmpty())
         assert(details.moonIlluminationPercent in 0..100)
     }
+
+    @Test
+    fun solarTermsAreDetectedFromLongitudeCrossing() {
+        val frostDescent = LunarCalendarConverter.details(LocalDate.of(2026, 10, 23))
+        assertEquals("Sương giáng", frostDescent.solarTerm)
+    }
+
+    @Test
+    fun auspiciousHoursUseTheDayBranchTable() {
+        val details = LunarCalendarConverter.details(LocalDate.of(2026, 10, 12))
+        assertEquals(6, details.auspiciousHours.size)
+        assertEquals(details.auspiciousHours.size, details.auspiciousHours.distinct().size)
+    }
+
+    @Test
+    fun supportedRangeRoundTripsForBothRegionalEngines() {
+        LunarRegion.entries.forEach { region ->
+            for (year in 1900..2100 step 10) {
+                listOf(1, 4, 7, 10).forEach { month ->
+                    val solar = LocalDate.of(year, month, 15)
+                    val lunar = LunarCalendarConverter.convertSolarToLunar(solar, region)
+                    assertEquals("$region $solar", solar, LunarCalendarConverter.convertLunarToSolar(lunar, region))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun regionalTimezoneCanProduceDifferentLunarDates() {
+        val hasDifference = (0L..3650L).any { offset ->
+            val date = LocalDate.of(2020, 1, 1).plusDays(offset)
+            LunarCalendarConverter.convertSolarToLunar(date, LunarRegion.Vietnam) !=
+                LunarCalendarConverter.convertSolarToLunar(date, LunarRegion.China)
+        }
+        assert(hasDifference)
+    }
 }
