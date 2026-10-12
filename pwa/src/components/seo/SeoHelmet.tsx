@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 import { getSeoContent } from '../../config/seoContent'
-import { SEO_LANGUAGES, SITE_ORIGIN, hreflangForLocale, seoMeta, type SeoLanguage, type SeoMiniAppId } from '../../config/seoMeta'
+import { SEO_LANGUAGES, SOCIAL_IMAGE_URL, SITE_ORIGIN, hreflangForLocale, seoMeta, type SeoLanguage, type SeoMiniAppId } from '../../config/seoMeta'
 
 type SeoHelmetProps = {
   title: string
@@ -32,14 +32,14 @@ export function SeoHelmet({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:image" content={`${SITE_ORIGIN}/og-image.png`} />
+      <meta property="og:image" content={SOCIAL_IMAGE_URL} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={`${title} – PureHub`} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={`${SITE_ORIGIN}/og-image.png`} />
+      <meta name="twitter:image" content={SOCIAL_IMAGE_URL} />
       <link rel="canonical" href={canonicalUrl} />
       {SEO_LANGUAGES.map((alternateLang) => (
         <link
