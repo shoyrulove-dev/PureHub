@@ -13,8 +13,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -25,11 +25,17 @@ jobs:
         run: |
           mkdir -p "${HOME}/.gradle"
           cat >> "${HOME}/.gradle/gradle.properties" <<'EOF'
-          org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8
-          org.gradle.workers.max=2
+          org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8
+          org.gradle.workers.max=1
           org.gradle.parallel=false
+          kotlin.compiler.execution.strategy=in-process
           EOF
-      - run: ./gradlew testStandardDebugUnitTest lintStandardDebug assembleStandardDebug --stacktrace
+      - name: Run Android unit tests
+        run: ./gradlew --no-daemon testStandardDebugUnitTest --stacktrace
+      - name: Run Android lint
+        run: ./gradlew --no-daemon lintStandardDebug --stacktrace
+      - name: Build debug APK
+        run: ./gradlew --no-daemon assembleStandardDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: purehub-debug-apk
