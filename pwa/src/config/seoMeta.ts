@@ -1,5 +1,7 @@
 export const SITE_ORIGIN = 'https://hub.blissbiovn.com'
-export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/og-image.png?v=20261012`
+// Use a versioned asset path rather than a query parameter: social crawlers can
+// retain a prior thumbnail when an existing image URL is overwritten.
+export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/purehub-social-card-20261012.png`
 
 // Keep every indexable page available in all supported product languages.
 // The fixed 500-URL inventory is enforced by the converter configuration.
