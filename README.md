@@ -10,7 +10,7 @@
   &middot; <a href="https://hub.blissbiovn.com/en/tools">Browse all tools</a>
   &middot; <a href="https://hub.blissbiovn.com/en/download">Download Android</a>
   &middot; <a href="https://github.com/shoyrulove-dev/PureHub/releases">Releases</a>
-  &middot; <a href="https://t.me/purehubaaa">Community updates</a>
+  &middot; <a href="https://t.me/PureHubCom">Community updates</a>
 </p>
 
 > 🎉 **50-tester milestone reached:** Thank you to the first 50 members of the [PureHub tester community](https://groups.google.com/g/purehub-testers). The Android launch on Google Play is planned for the end of October 2026. Please keep testing and reporting anything that can be improved.
@@ -172,7 +172,7 @@ You do not need to write code to help. Useful contributions include:
 - suggesting a focused improvement to an existing tool;
 - improving translations, accessibility, tests, documentation, or implementation.
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, or join the [Telegram update channel](https://t.me/purehubaaa). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues must follow [SECURITY.md](SECURITY.md), not a public issue.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, or join the [Telegram community](https://t.me/PureHubCom). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues must follow [SECURITY.md](SECURITY.md), not a public issue.
 
 ## Current direction
 

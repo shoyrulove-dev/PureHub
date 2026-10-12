@@ -988,7 +988,7 @@ export function CommunityUnlockSurface() {
     <Panel title="PureHub Community" subtitle="Every tool stays free. Join the people building and improving PureHub together.">
       <div className="grid gap-3 sm:grid-cols-2">
         <ActionButton
-          onClick={() => window.open('https://t.me/aaa_letan_vip_bot', '_blank', 'noopener,noreferrer')}
+          onClick={() => window.open('https://t.me/PureHubCom', '_blank', 'noopener,noreferrer')}
         >
           Join Telegram
         </ActionButton>

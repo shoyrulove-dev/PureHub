@@ -255,7 +255,7 @@ function DecisionWheel() {
 
 function Community() {
   const channels = [
-    { title: 'Telegram community', copy: 'Fast support, releases and community discussion.', href: 'https://t.me/purehubaaa', icon: <Users /> },
+    { title: 'Telegram community', copy: 'Fast support, releases and community discussion.', href: 'https://t.me/PureHubCom', icon: <Users /> },
     { title: 'GitHub project', copy: 'Source code, issues, roadmap and pull requests.', href: 'https://github.com/shoyrulove-dev/PureHub', icon: <Code2 /> },
     { title: 'Report a bug', copy: 'Share reproducible steps without exposing private data.', href: 'https://github.com/shoyrulove-dev/PureHub/issues/new', icon: <Droplets /> },
     { title: 'Try all tools', copy: 'Open the complete free, no-ads utility catalog.', href: '/en/tools', icon: <Sparkles /> },

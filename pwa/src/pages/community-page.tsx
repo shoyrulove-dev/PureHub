@@ -6,7 +6,7 @@ import { getUiCopy } from '../i18n/ui-copy'
 import { loadRoadmap, submitProductFeedback, submitRoadmapVote, trackJourneyEvent, type RoadmapOption } from '../lib/community-api'
 import type { MiniAppId } from '../features/catalog/tabs'
 
-const TELEGRAM_URL = 'https://t.me/aaa_letan_vip_bot'
+const TELEGRAM_URL = 'https://t.me/PureHubCom'
 const GITHUB_URL = 'https://github.com/shoyrulove-dev/PureHub'
 
 export function CommunityPage() {
