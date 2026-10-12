@@ -21,6 +21,18 @@ data class LunarDateDescription(
     val holidayLabel: String?,
 )
 
+data class LunarDayDetails(
+    val solarDate: LocalDate,
+    val lunarDate: LunarDate,
+    val canChiYear: String,
+    val canChiMonth: String,
+    val canChiDay: String,
+    val auspiciousHours: List<String>,
+    val solarTerm: String?,
+    val traditionalMarker: String?,
+    val moonIlluminationPercent: Int,
+)
+
 object LunarCalendarConverter {
     private const val TIME_ZONE = 7.0 // Vietnam timezone for traditional lunar conversion
     private val heavenlyStems = listOf("Giap", "At", "Binh", "Dinh", "Mau", "Ky", "Canh", "Tan", "Nham", "Quy")
@@ -35,6 +47,14 @@ object LunarCalendarConverter {
         "15-7" to "Vu Lan",
         "15-8" to "Tet Trung Thu",
         "23-12" to "Ong Cong Ong Tao",
+    )
+    private val solarTerms = mapOf(
+        "1-5" to "Tiá»ƒu hÃ n", "1-20" to "Äáº¡i hÃ n", "2-4" to "Láº­p xuÃ¢n", "2-19" to "VÅ© thá»§y",
+        "3-5" to "Kinh tráº­p", "3-20" to "XuÃ¢n phÃ¢n", "4-4" to "Thanh minh", "4-20" to "Cá»‘c vÅ©",
+        "5-5" to "Láº­p háº¡", "5-21" to "Tiá»ƒu mÃ£n", "6-5" to "Mang chá»§ng", "6-21" to "Háº¡ chÃ­",
+        "7-7" to "Tiá»ƒu thá»­", "7-22" to "Äáº¡i thá»­", "8-7" to "Láº­p thu", "8-23" to "Xá»­ thá»­",
+        "9-7" to "Báº¡ch lá»™", "9-23" to "Thu phÃ¢n", "10-8" to "HÃ n lá»™", "10-23" to "SÆ°Æ¡ng giÃ¡ng",
+        "11-7" to "Láº­p Ä‘Ã´ng", "11-22" to "Tiá»ƒu tuyáº¿t", "12-7" to "Äáº¡i tuyáº¿t", "12-21" to "ÄÃ´ng chÃ­",
     )
 
     fun convertSolarToLunar(date: LocalDate): LunarDate {
@@ -57,6 +77,39 @@ object LunarCalendarConverter {
             holidayLabel = holidayMap["${lunar.day}-${lunar.month}"],
         )
     }
+
+    /** Reverse conversion reuses the same UTC+7 lunar engine, avoiding two divergent calculations. */
+    fun convertLunarToSolar(lunar: LunarDate): LocalDate? {
+        var cursor = LocalDate.of(lunar.year - 1, 11, 1)
+        val end = LocalDate.of(lunar.year + 1, 3, 1)
+        while (!cursor.isAfter(end)) {
+            val candidate = convertSolarToLunar(cursor)
+            if (candidate.day == lunar.day && candidate.month == lunar.month && candidate.year == lunar.year && candidate.isLeapMonth == lunar.isLeapMonth) return cursor
+            cursor = cursor.plusDays(1)
+        }
+        return null
+    }
+
+    fun details(date: LocalDate): LunarDayDetails {
+        val lunar = convertSolarToLunar(date)
+        val julianDay = jdFromDate(date.dayOfMonth, date.monthValue, date.year)
+        val year = "${stemFor(lunar.year + 6)} ${branchFor(lunar.year + 8)}"
+        val month = "${stemFor(lunar.year * 12 + lunar.month + 3)} ${branchFor(lunar.month + 1)}"
+        val dayBranch = Math.floorMod(julianDay + 1, earthlyBranches.size)
+        val day = "${stemFor(julianDay + 9)} ${branchFor(dayBranch)}"
+        val hourNames = listOf("Ty", "Suu", "Dan", "Mao", "Thin", "Ty.", "Ngo", "Mui", "Than", "Dau", "Tuat", "Hoi")
+        val auspicious = intArrayOf(0, 1, 3, 6, 8, 9).map { hourNames[Math.floorMod(dayBranch + it, hourNames.size)] }
+        val illumination = (50 - 50 * kotlin.math.cos(((lunar.day - 1).coerceIn(0, 29) / 29.53) * PI * 2)).toInt().coerceIn(0, 100)
+        return LunarDayDetails(
+            solarDate = date, lunarDate = lunar, canChiYear = year, canChiMonth = month, canChiDay = day,
+            auspiciousHours = auspicious, solarTerm = solarTerms["${date.monthValue}-${date.dayOfMonth}"],
+            traditionalMarker = holidayMap["${lunar.day}-${lunar.month}"] ?: when (lunar.day) { 1 -> "New moon"; 15 -> "Full moon"; else -> null },
+            moonIlluminationPercent = illumination,
+        )
+    }
+
+    fun upcomingMarkers(from: LocalDate, days: Long = 45): List<LunarDayDetails> =
+        (0..days).map { details(from.plusDays(it)) }.filter { it.traditionalMarker != null || it.solarTerm != null }
 
     fun convertSolarToLunar(
         day: Int,

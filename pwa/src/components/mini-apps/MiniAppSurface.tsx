@@ -104,7 +104,9 @@ function LunarCalendarSurface() {
   const [cursor, setCursor] = useState(() => new Date())
   const [selected, setSelected] = useState(() => new Date())
   const [today] = useState(() => new Date())
+  const [note, setNote] = useState(() => localStorage.getItem('purehub.lunar.note') ?? '')
   const selectedLunar = buildMoonDay(selected)
+  const illumination = Math.round(Math.max(0, Math.min(100, 50 - 50 * Math.cos(((selectedLunar.day - 1) / 29.53) * Math.PI * 2))))
   const conversionText = `${selected.toLocaleDateString()} → ${selectedLunar.day}/${selectedLunar.month}/${selectedLunar.year}${selectedLunar.leap ? ' (leap month)' : ''}`
   const copyConversion = async () => {
     await navigator.clipboard.writeText(conversionText)
@@ -136,6 +138,13 @@ function LunarCalendarSurface() {
         <button className="min-h-16 rounded-[15px] border border-violet-200 bg-violet-50 px-4 text-sm font-black text-violet-900 dark:border-violet-900 dark:bg-violet-950/35 dark:text-violet-100" onClick={() => { const now = new Date(); setCursor(now); setSelected(now) }}>Jump to today</button>
       </div>
       <ActionButton className="w-full justify-center" onClick={() => void copyConversion()}>Copy selected conversion</ActionButton>
+      <section className="rounded-[20px] border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-900 dark:bg-violet-950/25">
+        <p className="text-xs font-black uppercase tracking-[.16em] text-violet-700 dark:text-violet-300">Vietnamese lunar day · UTC+7</p>
+        <p className="mt-2 text-lg font-black text-slate-950 dark:text-white">{selected.toLocaleDateString()} · {selectedLunar.day}/{selectedLunar.month}/{selectedLunar.year}</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{selectedLunar.day === 1 ? 'New moon' : selectedLunar.day === 15 ? 'Full moon' : 'Lunar day'} · {illumination}% illumination</p>
+        <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => window.print()} className="min-h-10 rounded-xl border border-violet-300 px-3 text-sm font-bold text-violet-900 dark:border-violet-700 dark:text-violet-100">Print / save PDF</button><button type="button" onClick={() => { const value = selected.toISOString().slice(0, 10).replaceAll('-', ''); const href = URL.createObjectURL(new Blob([`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTART;VALUE=DATE:${value}\r\nSUMMARY:Vietnamese lunar ${selectedLunar.day}/${selectedLunar.month}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n`], { type: 'text/calendar' })); const anchor = document.createElement('a'); anchor.href = href; anchor.download = 'purehub-lunar.ics'; anchor.click(); URL.revokeObjectURL(href) }} className="min-h-10 rounded-xl bg-violet-700 px-3 text-sm font-bold text-white">Export ICS</button></div>
+      </section>
+      <section className="rounded-[20px] border border-slate-200 p-4 dark:border-slate-700"><p className="font-black text-slate-950 dark:text-white">Private lunar reminder</p><div className="mt-3 flex gap-2"><input value={note} onChange={(event) => { setNote(event.target.value); localStorage.setItem('purehub.lunar.note', event.target.value) }} placeholder="Anniversary, birthday, ceremony…" className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900" /><button type="button" onClick={() => localStorage.removeItem('purehub.lunar.note')} className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm font-bold dark:border-slate-700">Clear</button></div></section>
       <Panel
         title={cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         subtitle="Vietnamese solar-to-lunar conversion calculated locally for UTC+7."
