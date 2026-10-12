@@ -241,7 +241,7 @@ export default defineConfig({
       // pages and must never be submitted for indexing.  Vercel's SPA fallback
       // serves the shell at the extensionless variant, which otherwise creates
       // an alternate-canonical entry in the generated sitemap.
-      exclude: ['/', '/google11321854edbe5f72', '/google11321854edbe5f72.html'],
+      exclude: ['/', '/google11321854edbe5f72', '/google11321854edbe5f72.html', '/share/purehub-wifi-v4', '/share/purehub-wifi-v4.html'],
       readable: true,
       generateRobotsTxt: true,
     }),
