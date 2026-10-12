@@ -1,7 +1,7 @@
 export const SITE_ORIGIN = 'https://hub.blissbiovn.com'
 // Use a versioned asset path rather than a query parameter: social crawlers can
 // retain a prior thumbnail when an existing image URL is overwritten.
-export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/purehub-social-card-20261012.png`
+export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/purehub-social-card-v4-20261012.png`
 
 // Keep every indexable page available in all supported product languages.
 // The fixed 500-URL inventory is enforced by the converter configuration.
@@ -458,9 +458,9 @@ const baseSeoMeta = {
   'wifi-analyzer': {
     en: {
       slug: 'wifi-analyzer',
-      title: 'Wi-Fi Connection Analyzer | Private Browser Test',
+      title: 'PureHub Wi-Fi Analyzer | Private Network Tools',
       description:
-        'Inspect browser-visible Wi-Fi connection quality, latency, and network status without ads or collecting your network data.',
+        'Check connection health, inspect your local network, and solve Wi-Fi issues with private tools that keep your data on your device.',
       keywords: ['wifi analyzer browser', 'network latency test', 'connection quality checker', 'private wifi tool'],
     },
     vi: {
