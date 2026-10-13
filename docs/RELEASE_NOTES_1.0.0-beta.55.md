@@ -19,6 +19,7 @@ PureHub beta.55 expands Lunar Calendar and connects Pure Earn to the Community a
 - Opens `earn.blissbiovn.com` as a separate external service with campaign attribution.
 - PureHub does not pass Android ID, email, account tokens, or stored app data to Pure Earn.
 - Community remains available in English, Vietnamese, Simplified Chinese, and Spanish.
+- Community discussion now opens `t.me/PureHubCom`; release announcements are published separately at `t.me/purehubaaa`.
 
 ## Verification
 

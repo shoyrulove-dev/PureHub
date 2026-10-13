@@ -109,13 +109,22 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then TAG="v${PUREHUB_VERSION_NAME}"; fi
+          NOTES_FILE="docs/RELEASE_NOTES_${PUREHUB_VERSION_NAME}.md"
           EXTRA=()
           if [[ "${PRERELEASE}" == "true" || "${PUREHUB_VERSION_NAME}" == *"-"* ]]; then EXTRA+=(--prerelease); fi
           if gh release view "${TAG}" >/dev/null 2>&1; then
             gh release upload "${TAG}" release-assets/* --clobber
-            gh release edit "${TAG}" --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+            if [[ -f "${NOTES_FILE}" ]]; then
+              gh release edit "${TAG}" --title "PureHub ${PUREHUB_VERSION_NAME}" --notes-file "${NOTES_FILE}" "${EXTRA[@]}"
+            else
+              gh release edit "${TAG}" --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+            fi
           else
-            gh release create "${TAG}" release-assets/* --generate-notes --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+            if [[ -f "${NOTES_FILE}" ]]; then
+              gh release create "${TAG}" release-assets/* --notes-file "${NOTES_FILE}" --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+            else
+              gh release create "${TAG}" release-assets/* --generate-notes --title "PureHub ${PUREHUB_VERSION_NAME}" "${EXTRA[@]}"
+            fi
           fi
       - name: Sync Release Hub drafts
         if: ${{ env.RELEASE_HOOK_SECRET != '' }}
@@ -131,12 +140,17 @@ jobs:
           AAB_NAME="PureHub-${PUREHUB_VERSION_NAME}.aab"
           APK_SHA256="$(sha256sum "release-assets/${APK_NAME}" | cut -d ' ' -f1)"
           CHANGELOG="$(gh release view "${TAG}" --json body --jq '.body')"
+          RELEASE_SUMMARY="A new signed PureHub Android build is ready for community testing."
+          NOTES_FILE="docs/RELEASE_NOTES_${PUREHUB_VERSION_NAME}.md"
+          if [[ -f "${NOTES_FILE}" ]]; then
+            RELEASE_SUMMARY="$(sed -n '3p' "${NOTES_FILE}")"
+          fi
           PRERELEASE_VALUE=false
           if [[ "${PRERELEASE}" == "true" || "${PUREHUB_VERSION_NAME}" == *"-"* ]]; then PRERELEASE_VALUE=true; fi
           jq -n \
             --arg version "${PUREHUB_VERSION_NAME}" \
             --arg title "PureHub ${PUREHUB_VERSION_NAME}" \
-            --arg summary "A new signed PureHub Android build is ready for community testing." \
+            --arg summary "${RELEASE_SUMMARY}" \
             --arg changelog "${CHANGELOG}" \
             --arg github_url "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}" \
             --arg apk_url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${APK_NAME}" \
