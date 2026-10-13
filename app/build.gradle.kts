@@ -107,6 +107,12 @@ android {
         buildConfig = true
     }
 
+    // Unit and instrumentation tests run in dedicated CI tasks. Production code
+    // remains fully linted; test-source diagnostics are intentionally non-blocking.
+    lint {
+        checkTestSources = false
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
