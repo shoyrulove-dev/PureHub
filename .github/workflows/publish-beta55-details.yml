@@ -1,0 +1,26 @@
+name: Publish beta 55 detail correction
+
+on:
+  push:
+    paths:
+      - .github/workflows/publish-beta55-details.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-detail-correction:
+    runs-on: ubuntu-24.04
+    environment: android-release
+    steps:
+      - name: Publish detailed beta.55 update to configured channels
+        env:
+          RELEASE_HOOK_SECRET: ${{ secrets.PUREHUB_RELEASE_HOOK_SECRET }}
+        run: |
+          test -n "${RELEASE_HOOK_SECRET}"
+          curl --fail-with-body --retry 3 \
+            -H "Content-Type: application/json" \
+            -H "X-PureHub-Release-Secret: ${RELEASE_HOOK_SECRET}" \
+            --data '{"version":"1.0.0-beta.55"}' \
+            https://purehub-command-center.vercel.app/public-api/release-detail-hook
