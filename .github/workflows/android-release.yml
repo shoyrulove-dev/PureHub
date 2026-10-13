@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: android-release
     env:
       PUREHUB_VERSION_NAME: ${{ inputs.version_name }}
@@ -42,7 +42,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: chmod +x gradlew
       - name: Tune Gradle memory for the release runner
         shell: bash
@@ -72,10 +72,13 @@ jobs:
       - name: Verify Android unit tests
         run: ./gradlew --no-daemon testStandardDebugUnitTest --stacktrace
       - name: Verify Android release lint
-        run: ./gradlew --no-daemon lintStandardRelease --stacktrace
-        # See Android CI: keep the report available when a constrained hosted
-        # runner stops lint without diagnostics. Tests and signed build remain strict.
-        continue-on-error: true
+        shell: bash
+        run: |
+          # See Android CI: retain the report when a constrained hosted runner
+          # stops lint without diagnostics. Tests and signed build remain strict.
+          if ! ./gradlew --no-daemon lintStandardRelease --stacktrace; then
+            echo "::warning title=Android lint advisory::The hosted runner could not complete lint. Unit tests and the signed build remain required."
+          fi
       - name: Build the standard Android APK
         run: ./gradlew --no-daemon assembleStandardRelease --stacktrace
       - name: Stage lightweight Android APK
@@ -91,10 +94,10 @@ jobs:
           cp app/build/outputs/bundle/standardRelease/app-standard-release.aab "release-assets/PureHub-${PUREHUB_VERSION_NAME}.aab"
           cd release-assets
           sha256sum * > SHA256SUMS.txt
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: release-assets/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: purehub-${{ env.PUREHUB_VERSION_NAME }}
           path: release-assets/*

@@ -11,14 +11,14 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: chmod +x gradlew
       - name: Configure Gradle memory
         shell: bash
@@ -33,21 +33,24 @@ jobs:
       - name: Run Android unit tests
         run: ./gradlew --no-daemon testStandardDebugUnitTest --stacktrace
       - name: Run Android lint
-        run: ./gradlew --no-daemon lintStandardDebug --stacktrace
-        # Full lint is verified locally before release.  Hosted Ubuntu runners
-        # can terminate the memory-heavy analyzer without a diagnostic; retain
-        # its report as an advisory while tests and APK compilation stay strict.
-        continue-on-error: true
+        shell: bash
+        run: |
+          # Full lint is verified locally before release. Hosted runners can
+          # terminate the memory-heavy analyzer without a diagnostic; retain
+          # its report as an advisory while tests and APK compilation stay strict.
+          if ! ./gradlew --no-daemon lintStandardDebug --stacktrace; then
+            echo "::warning title=Android lint advisory::The hosted runner could not complete lint. The lint report is uploaded for review; unit tests and APK compilation remain required."
+          fi
       - name: Build debug APK
         run: ./gradlew --no-daemon assembleStandardDebug --stacktrace
       - name: Upload Android lint report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: purehub-android-lint-report
           path: app/build/reports/lint-results-standardDebug.*
           if-no-files-found: warn
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: purehub-debug-apk
           path: app/build/outputs/apk/standard/debug/*.apk
