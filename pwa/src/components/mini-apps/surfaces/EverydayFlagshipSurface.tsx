@@ -112,38 +112,49 @@ export default function EverydayFlagshipSurface({ mode }: { mode: Mode }) {
 }
 
 function Flashlight() {
+  const locale = normalizeLocale(window.location.pathname.split('/')[1])
+  const copy = {
+    en: { panel: 'Screen light', subtitle: 'A browser-safe screen light. Install Android for the hardware torch, adjustable strobe and Morse.', brightness: 'Brightness', mode: 'Mode', steady: 'Steady', pulse: 'Pulse', sos: 'SOS', on: 'Turn light on', off: 'Turn light off', timer: 'Auto-off', none: 'Off', colours: 'Colour', safety: 'SOS is a visual attention pattern, not a certified emergency beacon. Avoid flashing modes around people sensitive to light.' },
+    vi: { panel: 'Đèn màn hình', subtitle: 'Đèn màn hình an toàn trong trình duyệt. Cài Android để dùng đèn LED, strobe điều chỉnh và Morse.', brightness: 'Độ sáng', mode: 'Chế độ', steady: 'Liên tục', pulse: 'Nhấp nháy', sos: 'SOS', on: 'Bật đèn', off: 'Tắt đèn', timer: 'Tự tắt', none: 'Tắt', colours: 'Màu', safety: 'SOS là tín hiệu thu hút chú ý bằng hình ảnh, không phải đèn hiệu khẩn cấp được chứng nhận. Tránh chế độ nhấp nháy gần người nhạy cảm với ánh sáng.' },
+    zh: { panel: '屏幕灯', subtitle: '浏览器安全屏幕灯。安装 Android 版可使用硬件手电、可调频闪和摩尔斯码。', brightness: '亮度', mode: '模式', steady: '常亮', pulse: '闪烁', sos: 'SOS', on: '打开灯光', off: '关闭灯光', timer: '自动关闭', none: '关闭', colours: '颜色', safety: 'SOS 是视觉提示模式，并非经过认证的紧急信标。请避免在对闪光敏感的人附近使用闪烁模式。' },
+    es: { panel: 'Luz de pantalla', subtitle: 'Luz de pantalla segura para el navegador. Instala Android para linterna LED, estroboscopio ajustable y Morse.', brightness: 'Brillo', mode: 'Modo', steady: 'Fija', pulse: 'Pulso', sos: 'SOS', on: 'Encender luz', off: 'Apagar luz', timer: 'Apagado automático', none: 'Desactivado', colours: 'Color', safety: 'SOS es un patrón visual de atención, no una baliza de emergencia certificada. Evita los modos de destello cerca de personas sensibles a la luz.' },
+  }[locale]
   const [active, setActive] = useState(false)
   const [brightness, setBrightness] = useState(100)
   const [mode, setMode] = useState<'steady' | 'pulse' | 'sos'>('steady')
+  const [colour, setColour] = useState('#ffffff')
+  const [autoOffMinutes, setAutoOffMinutes] = useState(0)
   const [visible, setVisible] = useState(false)
   const lightRef = useRef<HTMLDivElement>(null)
   const wakeLock = useRef<{ release: () => Promise<void> } | null>(null)
-
+  const autoOffTimer = useRef<number | null>(null)
   useEffect(() => {
     if (!active || mode === 'steady') return
     const sos = [200, 200, 200, 500, 500, 500, 200, 200, 200, 900]
     let index = 0
-    const toggle = () => { setVisible((value) => !value); index = (index + 1) % sos.length; timer = window.setTimeout(toggle, mode === 'pulse' ? 450 : sos[index]) }
-    let timer = window.setTimeout(toggle, mode === 'pulse' ? 450 : sos[0])
+    const flash = () => { setVisible((value) => !value); index = (index + 1) % sos.length; timer = window.setTimeout(flash, mode === 'pulse' ? 450 : sos[index]) }
+    let timer = window.setTimeout(flash, mode === 'pulse' ? 450 : sos[0])
     return () => window.clearTimeout(timer)
   }, [active, mode])
-  useEffect(() => () => { void wakeLock.current?.release() }, [])
-
+  useEffect(() => () => { void wakeLock.current?.release(); if (autoOffTimer.current) window.clearTimeout(autoOffTimer.current) }, [])
   const toggle = async () => {
+    if (autoOffTimer.current) { window.clearTimeout(autoOffTimer.current); autoOffTimer.current = null }
     const next = !active; setActive(next); setVisible(next)
     if (next) {
       try { wakeLock.current = await (navigator as Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen') ?? null } catch { wakeLock.current = null }
       void lightRef.current?.requestFullscreen?.()
-      markToolSuccess('smart-flashlight', { headline: 'Light session started', detail: `${mode} light is active at ${brightness}% brightness.`, shareText: 'I used a private screen light with no ads or tracking.' })
+      if (autoOffMinutes) autoOffTimer.current = window.setTimeout(() => { setActive(false); setVisible(false); autoOffTimer.current = null }, autoOffMinutes * 60_000)
+      markToolSuccess('smart-flashlight', { headline: copy.panel, detail: `${mode} light is active at ${brightness}% brightness.`, shareText: 'I used a private screen light with PureHub.' })
     } else { await wakeLock.current?.release(); wakeLock.current = null; if (document.fullscreenElement) await document.exitFullscreen() }
   }
-
-  return <Panel title="Light controls" subtitle="Uses the display as a dependable fallback. Camera torch support varies by browser and device.">
-    <div ref={lightRef} className={`relative grid min-h-72 place-items-center overflow-hidden rounded-[28px] transition ${active && visible ? 'bg-white' : 'bg-slate-950'}`} style={{ filter: active ? `brightness(${Math.max(.15, brightness / 100)})` : undefined }}><Lightbulb className={`size-24 ${active && visible ? 'text-amber-400' : 'text-slate-700'}`} /><span className={`absolute bottom-5 rounded-full px-4 py-2 text-xs font-black ${active ? 'bg-slate-950 text-white' : 'bg-white/10 text-slate-300'}`}>{active ? `${mode.toUpperCase()} · ${brightness}%` : 'LIGHT OFF'}</span></div>
-    <label className="mt-4 block text-sm font-black">Brightness <span className="float-right text-amber-700 dark:text-amber-300">{brightness}%</span><input className="mt-3 w-full accent-amber-500" type="range" min="15" max="100" value={brightness} onChange={(event) => setBrightness(Number(event.target.value))} /></label>
-    <div className="mt-4 grid grid-cols-3 gap-2">{(['steady', 'pulse', 'sos'] as const).map((item) => <button key={item} onClick={() => { setMode(item); if (item === 'steady') setVisible(active) }} className={`min-h-11 rounded-xl border text-xs font-black uppercase ${mode === item ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{item}</button>)}</div>
-    <ActionButton className="mt-4 w-full" onClick={() => void toggle()}>{active ? 'Turn light off' : 'Turn light on'}</ActionButton>
-    <p className="mt-3 text-xs leading-5 text-slate-500">SOS is a visual attention pattern, not a certified emergency beacon. Avoid flashing modes around people sensitive to light.</p>
+  return <Panel title={copy.panel} subtitle={copy.subtitle}>
+    <div ref={lightRef} className={`relative grid min-h-72 place-items-center overflow-hidden rounded-[28px] transition ${active && visible ? '' : 'bg-slate-950'}`} style={{ background: active && visible ? colour : undefined, filter: active ? `brightness(${Math.max(.15, brightness / 100)})` : undefined }}><Lightbulb className={`size-24 ${active && visible ? 'text-amber-400' : 'text-slate-700'}`} /><span className={`absolute bottom-5 rounded-full px-4 py-2 text-xs font-black ${active ? 'bg-slate-950 text-white' : 'bg-white/10 text-slate-300'}`}>{active ? `${copy[mode]} · ${brightness}%` : copy.off}</span></div>
+    <label className="mt-4 block text-sm font-black">{copy.brightness} <span className="float-right text-amber-700 dark:text-amber-300">{brightness}%</span><input className="mt-3 w-full accent-amber-500" type="range" min="15" max="100" value={brightness} onChange={(event) => setBrightness(Number(event.target.value))} /></label>
+    <p className="mt-4 text-sm font-black">{copy.mode}</p><div className="mt-2 grid grid-cols-3 gap-2">{(['steady', 'pulse', 'sos'] as const).map((item) => <button key={item} onClick={() => { setMode(item); if (item === 'steady') setVisible(active) }} className={`min-h-11 rounded-xl border text-xs font-black uppercase ${mode === item ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{copy[item]}</button>)}</div>
+    <p className="mt-4 text-sm font-black">{copy.colours}</p><div className="mt-2 grid grid-cols-4 gap-2">{['#ffffff', '#ff4d5e', '#ffb300', '#4da3ff'].map((value) => <button key={value} aria-label={`${copy.colours} ${value}`} onClick={() => setColour(value)} className={`min-h-11 rounded-xl border-2 ${colour === value ? 'border-slate-950 dark:border-white' : 'border-transparent'}`} style={{ background: value }} />)}</div>
+    <p className="mt-4 text-sm font-black">{copy.timer}</p><div className="mt-2 grid grid-cols-5 gap-2">{[0, 1, 5, 15, 30].map((minutes) => <button key={minutes} onClick={() => setAutoOffMinutes(minutes)} className={`min-h-11 rounded-xl border text-xs font-black ${autoOffMinutes === minutes ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{minutes ? `${minutes}m` : copy.none}</button>)}</div>
+    <ActionButton className="mt-4 w-full" onClick={() => void toggle()}>{active ? copy.off : copy.on}</ActionButton>
+    <p className="mt-3 text-xs leading-5 text-slate-500">{copy.safety}</p>
   </Panel>
 }
 
