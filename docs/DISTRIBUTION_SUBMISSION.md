@@ -6,11 +6,11 @@ This dossier tracks signed GitHub releases and Google Play readiness. F-Droid pu
 
 - App: PureHub
 - Application ID: `com.purehub.app`
-- Version: `1.0.0-beta.55`
-- Version code: `55`
+- Version: `1.0.0-beta.57`
+- Version code: `57`
 - License: MIT
 - Source: <https://github.com/shoyrulove-dev/PureHub>
-- Release candidate: `v1.0.0-beta.55`
+- Release candidate: `v1.0.0-beta.57`
 - Distribution assets: lightweight signed ARM64 APK, Play-ready AAB, checksums, and provenance
 - F-Droid artifacts: discontinued and intentionally excluded from current releases
 - Checksums: `SHA256SUMS.txt` on the same release

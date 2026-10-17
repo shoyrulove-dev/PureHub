@@ -36,7 +36,7 @@ Typical uses include scanning or creating a QR code, running a Pomodoro session,
 
 PureHub is currently beta software. The web app is available now, and signed Android preview builds are published through GitHub Releases.
 
-The flagship lineup now includes the Zen tools, QR Studio, the OCR + PDF Document Suite, Speaker Cleaner, the private Finance Suite, and the Compass + Level + Sound Sensor Suite.
+The flagship lineup now includes Lunar Calendar, Wi-Fi Analyzer, Bubble Level, Smart Flashlight, the Zen tools, QR Studio, the OCR + PDF Document Suite, Speaker Cleaner, the private Finance Suite, and the Compass + Sound Sensor Suite.
 
 Zen Habit, Zen Pomodoro, and Zen Breath now share a complete Zen Suite experience on web and Android. Pomodoro includes quick/custom focus sessions, private weekly rhythm tracking, and local soundscapes; Breath includes timed goals, accessible motion, optional cues, and private completion history.
 
@@ -70,17 +70,20 @@ Start with the highest-demand workflows:
 
 Some tools depend on device capabilities such as a camera, microphone, motion sensor, storage access, or location permission. Availability and precision can differ by browser and device.
 
-## Product preview
+## Current product experience
 
-Fresh screenshots below are captured from the signed Android `1.0.0-beta.50` build on a physical device. OCR Studio keeps the camera dominant, puts choices in a compact drawer, and supports offline Auto, English, Vietnamese, Spanish, and Simplified Chinese recognition.
+The signed Android `1.0.0-beta.57` build and current PWA share the refreshed adaptive violet interface, compact navigation, shorter tool names, clearer cards, and reviewed English, Vietnamese, Simplified Chinese, and Spanish labels.
 
-<table>
-  <tr>
-    <td align="center"><img src="marketing/product-preview/beta50-ocr-camera.png" width="245" alt="PureHub OCR Studio full-screen camera scanner" /><br /><strong>Full-screen OCR scanner</strong></td>
-    <td align="center"><img src="marketing/product-preview/beta50-ocr-options.png" width="245" alt="PureHub OCR Studio compact scan settings drawer" /><br /><strong>Compact scan controls</strong></td>
-    <td align="center"><img src="marketing/product-preview/beta50-ocr-languages.png" width="245" alt="PureHub OCR Studio offline language choices" /><br /><strong>Offline language choice</strong></td>
-  </tr>
-</table>
+| Area | Current experience |
+| --- | --- |
+| Home | Search, favorites, recent tools, local recommendations, and a compact daily card |
+| Lunar Calendar | Vietnam/China regional modes, two-way conversion, reminders, widgets, exports, encrypted backup, and offline moon details |
+| Wi-Fi Analyzer | Network health, signal and channel views, device discovery, survey projects, history, heatmaps, and professional reports where the platform supports them |
+| Smart Flashlight | One-tap light control, brightness, auto-off, screen light, pulse, SOS, and Morse tools |
+| Vision tools | Camera-first QR, OCR, document-to-PDF, color capture, photo privacy, and screen recording workflows |
+| Community | Official PureHub discussion link plus a clearly separated Pure Earn entry with no automatic account or device-data sharing |
+
+Download the verified build from the [beta.57 release page](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.57) or use the [latest PWA](https://hub.blissbiovn.com/en).
 
 ## Why this project exists
 
@@ -128,14 +131,12 @@ Requirements: JDK 17 and the Android SDK for API 36.
 
 ```bash
 ./gradlew testStandardDebugUnitTest lintStandardDebug assembleStandardDebug
-./gradlew testFdroidDebugUnitTest lintFdroidDebug assembleFdroidDebug
 ```
 
 On Windows PowerShell:
 
 ```powershell
 .\gradlew.bat testStandardDebugUnitTest lintStandardDebug assembleStandardDebug
-.\gradlew.bat testFdroidDebugUnitTest lintFdroidDebug assembleFdroidDebug
 ```
 
 The Standard build keeps ML Kit OCR for recognition quality. The legacy `fdroid` flavor remains in source only to reproduce older releases; PureHub has discontinued F-Droid publishing and now targets Google Play testing. APKs are written under `app/build/outputs/apk/standard/debug/`. Production signing credentials are intentionally not stored in the repository; see [ANDROID_RELEASE_CHECKLIST.md](ANDROID_RELEASE_CHECKLIST.md).
@@ -154,7 +155,7 @@ F-Droid publishing is discontinued. The active distribution path is the signed G
 
 ## Releases
 
-The current release candidate is PureHub 1.0.0-beta.55. This update turns Lunar Calendar into a deeper daily tool with Vietnam UTC+7 and China UTC+8 modes, two-way conversion, personal lunar reminders, calendar event markers, widgets, encrypted backup/export, and richer offline moon data. Community now includes a clearly separated Pure Earn card that opens the external service without passing a PureHub account or device identifier. Android and the PWA share the updated violet presentation and four-language community copy. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is [PureHub 1.0.0-beta.57](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.57). It brings the refreshed violet visual system to Home, Community, Settings, and all 26 mini apps; shortens labels for phone layouts; improves favorites, recent tools, recommendations, language controls, and card contrast; and aligns Smart Flashlight behavior across Android and the PWA. English, Vietnamese, Simplified Chinese, and Spanish are supported across the updated surfaces. The corrected PureHub Community link and separate Pure Earn entry are retained. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, lint, tests, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
