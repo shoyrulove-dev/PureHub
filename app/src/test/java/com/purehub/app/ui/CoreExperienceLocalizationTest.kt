@@ -7,6 +7,7 @@ class CoreExperienceLocalizationTest {
     private val criticalCopy = listOf(
         "Home",
         "Settings",
+        "Recent",
         "Help",
         "Back",
         "Ready. Capture a page or choose an image.",

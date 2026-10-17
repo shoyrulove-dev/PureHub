@@ -1,4 +1,4 @@
-import { ArrowRight, Heart, Search, ShieldCheck, Sparkles, WifiOff } from 'lucide-react'
+import { ArrowRight, Heart, Search, Sparkles } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -91,49 +91,25 @@ export function Dashboard() {
   const quickTools = quickIds
     .map((id) => MINI_APP_BY_ID.get(id))
     .filter((tool): tool is MiniAppDefinition => Boolean(tool))
-  const flagshipTools = quickIds
-    .map((id) => MINI_APP_BY_ID.get(id))
-    .filter((tool): tool is MiniAppDefinition => Boolean(tool))
+
 
   return (
     <section className="space-y-6">
       <div className="hero-panel">
         <div className="max-w-2xl">
-          <span className="eyebrow">
-            <Sparkles className="size-3.5" />
-            {t('app.phaseShell')}
-          </span>
-          <h1 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
-            PureHub
-          </h1>
-          <p className="mt-1.5 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-            {t('app.freePromise')}
-          </p>
           <label className="search-box mt-4">
             <Search className="size-5 text-slate-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t('app.searchPlaceholder')}
+              aria-label={t('app.searchPlaceholder')}
               autoComplete="off"
             />
           </label>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="promise-card">
-            <WifiOff className="size-5 text-emerald-600 dark:text-emerald-400" />
-            <div><strong>{copy.offline}</strong><span className="hidden sm:block">{t('dashboard.offline')}</span></div>
-          </div>
-          <div className="promise-card">
-            <ShieldCheck className="size-5 text-sky-600 dark:text-sky-400" />
-            <div><strong>{copy.private}</strong><span className="hidden sm:block">{t('dashboard.onDevice')}</span></div>
-          </div>
-          <div className="promise-card">
-            <Heart className="size-5 text-rose-500" />
-            <div><strong>{copy.open}</strong><span className="hidden sm:block">{copy.communityBuilt}</span></div>
-          </div>
-        </div>
+
       </div>
 
       {!query && favoriteTools.length > 0 ? (
@@ -143,20 +119,6 @@ export function Dashboard() {
           favorites={favorites}
           onFavorite={toggleFavorite}
         />
-      ) : null}
-
-      {!query ? <WorkspaceSection /> : null}
-
-      {!query ? (
-        <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-3.5 dark:border-violet-500/20 dark:bg-violet-500/5">
-          <p className="eyebrow text-violet-700 dark:text-violet-300">{copy.improve}</p>
-          <h2 className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{copy.flagshipTitle}</h2>
-          <p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-400">{copy.flagshipHint}</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {flagshipTools.map((tool) => <ToolCard key={tool.id} tool={tool} favorite={favorites.includes(tool.id)} onFavorite={() => toggleFavorite(tool.id)} />)}
-          </div>
-          <Link to={`/${locale}/community#early-testers`} className="text-link mt-3">{copy.joinTesters} <ArrowRight className="size-3.5" /></Link>
-        </div>
       ) : null}
 
       {!query && recentTools.length > 0 ? (
@@ -177,6 +139,7 @@ export function Dashboard() {
         />
       ) : null}
 
+      {!query ? <details><summary className="cursor-pointer py-3 font-semibold">{t('app.miniAppMap')}</summary><WorkspaceSection /></details> : null}
       <section>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

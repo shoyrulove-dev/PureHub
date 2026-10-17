@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
 import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -80,21 +83,28 @@ fun CommunityScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .pureHubCanvas()
             .padding(innerPadding)
-            .padding(horizontal = 20.dp, vertical = 20.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (!embedded) {
-            FlagshipSuiteHeader(
-                eyebrow = "Community flagship",
-                title = "PureHub belongs to everyone",
-                description = "Join the conversation, report issues and shape free, no-ad, open-source tools together.",
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth().background(PureHubHeroBrush, RoundedCornerShape(22.dp)).padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(Icons.Rounded.Groups, contentDescription = null, tint = Color(0xFFFFD166))
+                LocalizedText(appText(language, "Community", "Cộng đồng", "社区", "Comunidad"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = Color.White)
+                LocalizedText(appText(language, "Connect and get support.", "Kết nối và nhận hỗ trợ.", "交流并获得支持。", "Conecta y recibe ayuda."), color = Color(0xFFE9DDFF))
+            }
         }
 
         if (BuildConfig.MINIGAME_ENABLED) {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF172E52), contentColor = Color(0xFFF4F8FF)),
+        ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -126,14 +136,14 @@ fun CommunityScreen(
                     Icon(painterResource(R.drawable.ic_pure_earn), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(58.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         LocalizedText(appText(language, "Pure Earn", "Pure Earn", "Pure Earn", "Pure Earn"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Color.White)
-                        LocalizedText(appText(language, "Connected rewards community", "Cộng đồng phần thưởng liên kết", "关联奖励社区", "Comunidad de recompensas conectada"), color = Color(0xFFDCCBFF), style = MaterialTheme.typography.bodyMedium)
+                        LocalizedText(appText(language, "Rewards community", "Cộng đồng phần thưởng", "奖励社区", "Comunidad de recompensas"), color = Color(0xFFDCCBFF), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 LocalizedText(appText(language,
-                    "Open Pure Earn as a separate service with its own account, terms and privacy policy. PureHub does not automatically share your app data.",
-                    "Mở Pure Earn như một dịch vụ riêng có tài khoản, điều khoản và chính sách riêng. PureHub không tự động chia sẻ dữ liệu ứng dụng của bạn.",
-                    "Pure Earn 是独立服务，使用自己的账户、条款和隐私政策。PureHub 不会自动共享您的应用数据。",
-                    "Abre Pure Earn como servicio independiente con su propia cuenta, términos y privacidad. PureHub no comparte automáticamente tus datos."),
+                    "Pure Earn is separate. PureHub does not share your app data.",
+                    "Pure Earn là dịch vụ riêng. PureHub không chia sẻ dữ liệu ứng dụng.",
+                    "Pure Earn 是独立服务。PureHub 不会共享应用数据。",
+                    "Pure Earn es independiente. PureHub no comparte tus datos."),
                     color = Color(0xFFBEB1D8), style = MaterialTheme.typography.bodySmall)
                 Button(modifier = Modifier.fillMaxWidth(), onClick = { openUri(PURE_EARN_LINK) }) {
                     LocalizedText(appText(language, "Open Pure Earn", "Mở Pure Earn", "打开 Pure Earn", "Abrir Pure Earn"))
@@ -141,71 +151,82 @@ fun CommunityScreen(
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF172E52), contentColor = Color(0xFFF4F8FF)),
+        ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Icon(Icons.Rounded.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                LocalizedText("Telegram community", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                LocalizedText(appText(language, "Telegram community", "Cộng đồng Telegram", "Telegram 社区", "Comunidad de Telegram"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 LocalizedText(
-                    "Get updates, discuss useful tools and help other PureHub users.",
+                    appText(language, "Updates, discussion and support.", "Tin mới, trao đổi và hỗ trợ.", "更新、交流与支持。", "Novedades, debate y ayuda."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFC8D9F5),
                 )
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { openUri(TELEGRAM_DEEP_LINK, TELEGRAM_WEB_LINK) },
                 ) {
-                    LocalizedText("Open Telegram")
+                    LocalizedText(appText(language, "Open Telegram", "Mở Telegram", "打开 Telegram", "Abrir Telegram"))
                 }
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF3B1E5A), contentColor = Color(0xFFFFF7FF)),
+        ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Icon(Icons.Rounded.Code, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                LocalizedText("Open-source on GitHub", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Icon(Icons.Rounded.Code, contentDescription = null, tint = Color(0xFFF0ABFC))
+                LocalizedText(appText(language, "Open source", "Mã nguồn mở", "开源项目", "Código abierto"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 LocalizedText(
-                    "Read the code, report bugs, suggest a mini app, improve translations or submit a pull request.",
+                    appText(language, "Read the code, report bugs or suggest improvements.", "Xem mã nguồn, báo lỗi hoặc đề xuất cải tiến.", "查看代码、报告问题或提出改进建议。", "Consulta el código, informa errores o propone mejoras."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFD5CDE5),
                 )
-                OutlinedButton(
+                Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { openUri(GITHUB_LINK) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD8B4FE), contentColor = Color(0xFF25103B)),
                 ) {
-                    LocalizedText("Open GitHub")
+                    LocalizedText(appText(language, "Open GitHub", "Mở GitHub", "打开 GitHub", "Abrir GitHub"))
                 }
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { openUri(GITHUB_FEEDBACK_LINK) },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                 ) {
-                    LocalizedText("Send feedback or report a bug")
+                    LocalizedText(appText(language, "Send feedback", "Gửi góp ý", "发送反馈", "Enviar comentarios"))
                 }
                 LocalizedText(
-                    "For a bug, include the tool name, Android version and repeatable steps—never private files, passwords or API keys.",
+                    appText(language, "For bugs, include the tool, Android version and steps. Never send private data.", "Khi báo lỗi, ghi tên công cụ, bản Android và các bước. Không gửi dữ liệu riêng tư.", "报告问题时请注明工具、Android 版本和操作步骤。请勿发送隐私数据。", "Para informar un error, indica la herramienta, versión de Android y pasos. No envíes datos privados."),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFBFB5D3),
                 )
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF35205C), contentColor = Color(0xFFF8F2FF)),
+        ) {
             Row(
                 modifier = Modifier.padding(20.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Icon(Icons.Rounded.VolunteerActivism, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    LocalizedText("Free for everyone", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    LocalizedText(appText(language, "Contribute", "Đóng góp", "参与贡献", "Contribuye"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     LocalizedText(
-                        "Support is always voluntary. Community badges may celebrate contributors, but core tools remain available to every user.",
+                        appText(language, "Share ideas to improve PureHub.", "Chia sẻ ý tưởng cho PureHub.", "分享建议，改进 PureHub。", "Comparte ideas para mejorar PureHub."),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color(0xFFD8C7F2),
                     )
                 }
             }

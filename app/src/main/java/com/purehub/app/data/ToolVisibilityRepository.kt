@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -35,6 +36,23 @@ class ToolVisibilityRepository(
         .map { preferences ->
             preferences[Keys.favoriteToolIds].orEmpty()
         }
+
+    val recentToolIds: Flow<List<String>> = context.pureHubDataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[Keys.recentToolIds].orEmpty().split(',').filter(String::isNotBlank)
+        }
+
+    suspend fun recordToolOpened(toolId: String) {
+        context.pureHubDataStore.edit { preferences ->
+            val previous = preferences[Keys.recentToolIds].orEmpty()
+                .split(',').filter(String::isNotBlank)
+            preferences[Keys.recentToolIds] = (listOf(toolId) + previous.filterNot { it == toolId })
+                .take(8).joinToString(",")
+        }
+    }
 
     suspend fun setToolVisible(
         toolId: String,
@@ -70,11 +88,13 @@ class ToolVisibilityRepository(
         context.pureHubDataStore.edit { preferences ->
             preferences.remove(Keys.hiddenToolIds)
             preferences.remove(Keys.favoriteToolIds)
+            preferences.remove(Keys.recentToolIds)
         }
     }
 
     private object Keys {
         val hiddenToolIds = stringSetPreferencesKey("hidden_tool_ids")
         val favoriteToolIds = stringSetPreferencesKey("favorite_tool_ids")
+        val recentToolIds = stringPreferencesKey("recent_tool_ids")
     }
 }

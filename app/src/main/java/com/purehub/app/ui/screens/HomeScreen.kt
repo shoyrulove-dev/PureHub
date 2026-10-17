@@ -2,25 +2,29 @@ package com.purehub.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Security
-import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import com.purehub.app.ui.LocalizedText
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.purehub.app.feature.catalog.MiniAppId
@@ -29,12 +33,10 @@ import com.purehub.app.ui.LocalAppLanguage
 import com.purehub.app.ui.locale
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
-    onOpenSettings: () -> Unit,
     onOpenMiniApp: (MiniAppId) -> Unit,
 ) {
     val today = LocalDate.now()
@@ -43,132 +45,91 @@ fun HomeScreen(
     val formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", language.locale())
     val visibleTools = rememberVisibleTools()
     val favoriteTools = rememberFavoriteTools()
+    val recentTools = rememberRecentTools()
+    var query by rememberSaveable { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(innerPadding),
+            .padding(innerPadding)
+            .background(Brush.verticalGradient(listOf(
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f),
+                MaterialTheme.colorScheme.background,
+                MaterialTheme.colorScheme.background,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+            ))),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LocalizedText(
-                    text = "FREE · NO ADS · OPEN SOURCE",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                LocalizedText(
-                    text = "PureHub",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                LocalizedText(
-                    text = "Useful, private tools for everyday life—built openly with the community.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            OutlinedTextField(
+                value = query, onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                label = { LocalizedText("Search") },
+                leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                shape = MaterialTheme.shapes.large,
+            )
         }
-
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                PromiseTile(Modifier.weight(1f), Icons.Rounded.WifiOff, "Offline-first")
-                PromiseTile(Modifier.weight(1f), Icons.Rounded.Security, "Private")
-                PromiseTile(Modifier.weight(1f), Icons.Rounded.Favorite, "Community")
-            }
+            LocalizedText(if (query.isNotBlank()) "Search" else if (favoriteTools.isNotEmpty()) "Favorites" else if (recentTools.isNotEmpty()) "Recent" else "Quick access",
+                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            HomeQuickShortcuts(
+                visibleTools = visibleTools.filter { toolMatchesSearch(it, query) }.toSet(),
+                favoriteTools = favoriteTools, recentTools = recentTools, onOpenTool = onOpenMiniApp,
+                limit = if (query.isBlank()) 4 else Int.MAX_VALUE,
+            )
         }
-
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { onOpenMiniApp(MiniAppId.LUNAR_CALENDAR) },
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.linearGradient(listOf(Color(0xFF4C1D95), Color(0xFF7C3AED), Color(0xFF0E7490))))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
+                    Icon(Icons.Rounded.CalendarMonth, null, tint = Color(0xFFE9D5FF))
                     LocalizedText(
                         text = "TODAY",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = Color(0xFFE9D5FF),
                     )
                     LocalizedText(
                         text = today.format(formatter),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold, color = Color.White,
                     )
                     LocalizedText(
                         text = "Lunar ${lunarInfo.lunarDate.displayText}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = Color(0xFFD8B4FE),
                     )
-                    LocalizedText(
-                        text = lunarInfo.holidayLabel ?: lunarInfo.canchiLabel,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    lunarInfo.holidayLabel?.let { LocalizedText(it, style = MaterialTheme.typography.bodyMedium, color = Color(0xFFE9D5FF)) }
                 }
             }
         }
-
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                LocalizedText(
-                    text = if (favoriteTools.isEmpty()) "Quick access" else "Favorites",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                HomeQuickShortcuts(
-                    visibleTools = visibleTools,
-                    favoriteTools = favoriteTools,
-                    onOpenTool = onOpenMiniApp,
-                )
+            LocalizedText("Recommended locally", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(MiniAppId.WIFI_ANALYZER, MiniAppId.OCR_TEXT, MiniAppId.SMART_FLASHLIGHT)
+                    .filter { it in visibleTools }.forEach { tool ->
+                        Surface(
+                            modifier = Modifier.weight(1f).heightIn(min = 92.dp),
+                            onClick = { onOpenMiniApp(tool) },
+                            shape = MaterialTheme.shapes.large,
+                            color = tool.tab.uiAccentContainer(),
+                        ) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Icon(tool.icon, null, tint = tool.tab.uiAccent())
+                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 2)
+                            }
+                        }
+                    }
             }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onOpenSettings,
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                ) {
-                    LocalizedText("Privacy & preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    LocalizedText(
-                        "Review permissions, visible tools and local-only storage behavior.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PromiseTile(
-    modifier: Modifier,
-    icon: ImageVector,
-    label: String,
-) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            LocalizedText(label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

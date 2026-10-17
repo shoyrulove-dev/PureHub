@@ -1,7 +1,20 @@
 package com.purehub.app.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import android.Manifest
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.view.WindowManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -64,52 +77,103 @@ private fun flashlightCopy(): FlashCopy = when (LocalAppLanguage.current) {
 fun SmartFlashlightCard(viewModel: SmartFlashlightViewModel = viewModel()) {
     val context = LocalContext.current
     val copy = flashlightCopy()
+    val language = LocalAppLanguage.current
+    fun tr(en: String, vi: String, zh: String, es: String) = when (language) {
+        AppLanguage.English -> en; AppLanguage.Vietnamese -> vi
+        AppLanguage.Chinese -> zh; AppLanguage.Spanish -> es
+    }
     val scope = rememberCoroutineScope()
     val snackbar = LocalSnackbarHostState.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var panel by remember { mutableStateOf(FlashPanel.None) }
     var morse by remember { mutableStateOf("HELP") }
     var screenOn by remember { mutableStateOf(false) }
-    var screenBrightness by remember { mutableStateOf(100f) }
-    val cameraGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (!granted) scope.launch { snackbar.showSnackbar(copy.permission) } }
-    fun torch(action: () -> Unit) { if (cameraGranted) action() else permission.launch(Manifest.permission.CAMERA) }
-
-    DisposableEffect(screenOn, screenBrightness) {
-        val activity = context as? Activity; val previous = activity?.window?.attributes?.screenBrightness
-        if (screenOn && activity != null) { activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); activity.window.attributes = activity.window.attributes.apply { screenBrightness = (screenBrightness / 100f).coerceIn(.05f, 1f) } }
-        onDispose { if (activity != null && previous != null) { activity.window.attributes = activity.window.attributes.apply { screenBrightness = previous }; activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) } }
+    var screenLevel by remember { mutableStateOf(100f) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val action = pendingAction; pendingAction = null
+        if (granted) action?.invoke() else scope.launch { snackbar.showSnackbar(copy.permission) }
     }
+    fun torch(action: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) action()
+        else { pendingAction = action; permission.launch(Manifest.permission.CAMERA) }
+    }
+    LaunchedEffect(screenOn, state.autoOffMinutes) {
+        if (screenOn && state.autoOffMinutes > 0) { delay(state.autoOffMinutes * 60_000L); screenOn = false }
+    }
+    DisposableEffect(Unit) { onDispose { viewModel.stopPattern() } }
+    if (screenOn) Dialog(
+        onDismissRequest = { screenOn = false },
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        val lightWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        DisposableEffect(lightWindow, screenLevel) {
+            val previous = lightWindow?.attributes?.screenBrightness
+            lightWindow?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            lightWindow?.let { it.attributes = it.attributes.apply { screenBrightness = screenLevel / 100f } }
+            onDispose { lightWindow?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                if (previous != null) lightWindow?.let { it.attributes = it.attributes.apply { screenBrightness = previous } }
+            }
+        }
+        Box(Modifier.fillMaxSize().background(Color.White).padding(32.dp), contentAlignment = Alignment.BottomCenter) {
+            Button(onClick = { screenOn = false }) { Text(copy.screenOff) }
+        }
+    }
+
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) { Text(copy.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black); Text(if (state.isTorchOn) copy.on else copy.ready, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                IconButton(onClick = { panel = if (panel == FlashPanel.Menu) FlashPanel.None else FlashPanel.Menu }) { Icon(Icons.Rounded.Menu, copy.more) }
+                Box {
+                    IconButton(onClick = { panel = FlashPanel.Menu }) { Icon(Icons.Rounded.Menu, copy.more) }
+                    DropdownMenu(expanded = panel == FlashPanel.Menu, onDismissRequest = { panel = FlashPanel.None },
+                        modifier = Modifier.widthIn(max = 240.dp)) {
+                        listOf(FlashPanel.Strobe to copy.strobe, FlashPanel.Sos to copy.sos, FlashPanel.Screen to copy.screen, FlashPanel.Morse to copy.morse).forEach { (target, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { panel = target })
+                        }
+                    }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(copy.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    Text(when {
+                        state.isPatternRunning -> tr("Signal active", "Đang phát tín hiệu", "正在发送信号", "Señal activa")
+                        state.isTorchOn -> tr("Light on", "Đèn đang bật", "灯已打开", "Luz encendida")
+                        else -> copy.ready
+                    }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
             }
-            Button(onClick = { torch(viewModel::toggleTorch) }, modifier = Modifier.fillMaxWidth().heightIn(min = 172.dp)) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { Icon(if (state.isTorchOn) Icons.Rounded.Close else Icons.Rounded.Lightbulb, null, Modifier.size(52.dp)); Text(if (state.isTorchOn) copy.off else copy.on, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black) }
+            Button(onClick = { if (state.isPatternRunning) viewModel.stopPattern() else torch(viewModel::toggleTorch) }, modifier = Modifier.fillMaxWidth().heightIn(min = 172.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD580), contentColor = Color(0xFF241536))) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { Icon(if (state.isTorchOn) Icons.Rounded.Close else Icons.Rounded.Lightbulb, null, Modifier.size(52.dp)); Text(if (state.isPatternRunning) copy.stop else if (state.isTorchOn) copy.off else copy.on, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = { panel = FlashPanel.Brightness }, modifier = Modifier.weight(1f)) { Icon(Icons.Rounded.Bolt, null, Modifier.size(17.dp)); Text("  ${copy.brightness}") }
-                OutlinedButton(onClick = { panel = FlashPanel.Timer }, modifier = Modifier.weight(1f)) { Text("${copy.autoOff}: ${state.autoOffMinutes.takeIf { it > 0 } ?: "—"}") }
+                OutlinedButton(onClick = { panel = FlashPanel.Timer }, modifier = Modifier.weight(1f)) { Text("${tr("Timer", "Hẹn giờ", "定时", "Temporizador")}: ${state.autoOffMinutes.takeIf { it > 0 } ?: "—"}") }
             }
-            if (panel != FlashPanel.None) Card(colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            if (panel != FlashPanel.None && panel != FlashPanel.Menu) Card(colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (panel == FlashPanel.Strobe || panel == FlashPanel.Sos || panel == FlashPanel.Morse) {
+                        Text(tr("Flashing light: avoid use near people sensitive to flashes.", "Đèn nhấp nháy: tránh dùng gần người nhạy cảm với ánh sáng.", "闪烁灯光：请勿在对闪光敏感的人附近使用。", "Luz intermitente: evita usarla cerca de personas sensibles a los destellos."), style = MaterialTheme.typography.bodySmall)
+                    }
                     when (panel) {
                         FlashPanel.Menu -> listOf(FlashPanel.Strobe to copy.strobe, FlashPanel.Sos to copy.sos, FlashPanel.Screen to copy.screen, FlashPanel.Morse to copy.morse).forEach { (target, label) -> OutlinedButton(onClick = { panel = target }, modifier = Modifier.fillMaxWidth()) { Text(label, Modifier.fillMaxWidth(), textAlign = TextAlign.Start) } }
-                        FlashPanel.Brightness -> { Text(copy.brightness, fontWeight = FontWeight.Bold); if (state.maxTorchStrength > 1) Slider(state.torchStrength.toFloat(), { viewModel.setTorchStrength(it.toInt()) }, valueRange = 1f..state.maxTorchStrength.toFloat(), steps = (state.maxTorchStrength - 2).coerceAtLeast(0)) else Text("—", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                        FlashPanel.Timer -> listOf(0, 1, 5, 15, 30).forEach { minute -> OutlinedButton(onClick = { viewModel.setAutoOffMinutes(minute); panel = FlashPanel.None }, modifier = Modifier.fillMaxWidth()) { Text(if (minute == 0) "—" else "$minute ${copy.minutes}") } }
+                        FlashPanel.Brightness -> { Text(copy.brightness, fontWeight = FontWeight.Bold); if (state.maxTorchStrength > 1) Slider(state.torchStrength.toFloat(), { viewModel.setTorchStrength(it.toInt()) }, valueRange = 1f..state.maxTorchStrength.toFloat(), steps = (state.maxTorchStrength - 2).coerceAtLeast(0)) else Text(tr("Brightness adjustment is not supported on this device.", "Máy không hỗ trợ chỉnh độ sáng đèn LED.", "此设备不支持调节手电亮度。", "Este dispositivo no permite ajustar el brillo LED."), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        FlashPanel.Timer -> listOf(0, 1, 5, 15, 30).forEach { minute -> OutlinedButton(onClick = { viewModel.setAutoOffMinutes(minute); panel = FlashPanel.None }, modifier = Modifier.fillMaxWidth()) { Text(if (minute == 0) tr("Disabled", "Không hẹn giờ", "不定时", "Sin temporizador") else "$minute ${copy.minutes}") } }
                         FlashPanel.Strobe -> { Text("${copy.strobe}: ${state.strobeHz} Hz", fontWeight = FontWeight.Bold); Slider(state.strobeHz.toFloat(), { viewModel.setStrobeHz(it.toInt()) }, valueRange = 1f..30f, steps = 28); Button({ torch(viewModel::playStrobe) }, Modifier.fillMaxWidth()) { Text(copy.strobe) } }
                         FlashPanel.Sos -> Button({ torch(viewModel::playSosPattern) }, Modifier.fillMaxWidth()) { Text(copy.sos) }
-                        FlashPanel.Screen -> { Button({ screenOn = !screenOn }, Modifier.fillMaxWidth()) { Text(if (screenOn) copy.screenOff else copy.screenOn) }; Text("${copy.brightness}: ${screenBrightness.toInt()}%", fontWeight = FontWeight.Bold); Slider(screenBrightness, { screenBrightness = it }, valueRange = 15f..100f) }
-                        FlashPanel.Morse -> { androidx.compose.material3.OutlinedTextField(morse, { morse = it.uppercase() }, Modifier.fillMaxWidth(), label = { Text(copy.morse) }, singleLine = true); Button({ torch { viewModel.playMorsePattern(morse) } }, Modifier.fillMaxWidth(), enabled = morse.isNotBlank()) { Text(copy.play) } }
+                        FlashPanel.Screen -> { Button({ viewModel.stopPattern(); screenOn = !screenOn }, Modifier.fillMaxWidth()) { Text(if (screenOn) copy.screenOff else copy.screenOn) }; Text("${copy.brightness}: ${screenLevel.toInt()}%", fontWeight = FontWeight.Bold); Slider(screenLevel, { screenLevel = it }, valueRange = 15f..100f) }
+                        FlashPanel.Morse -> { androidx.compose.material3.OutlinedTextField(morse, { morse = it.uppercase() }, Modifier.fillMaxWidth(), label = { Text(copy.morse) }, singleLine = true); Button({ torch { viewModel.playMorsePattern(morse) } }, Modifier.fillMaxWidth(), enabled = morse.any { it.uppercaseChar() in 'A'..'Z' }) { Text(copy.play) } }
                         FlashPanel.None -> Unit
                     }
                     if (state.isPatternRunning && panel != FlashPanel.Menu) OutlinedButton(onClick = viewModel::stopPattern, modifier = Modifier.fillMaxWidth()) { Text(copy.stop) }
                 }
             }
-            state.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            state.errorMessage?.let { error ->
+                Text(if (error == "No flash unit is available on this device.")
+                    tr("No LED flash. Use screen light.", "Máy không có đèn LED. Hãy dùng đèn màn hình.", "没有 LED 闪光灯，请使用屏幕灯。", "Sin flash LED. Usa la luz de pantalla.")
+                else tr("Cannot switch the torch on. Check camera permission or close other camera apps.", "Không bật được đèn. Kiểm tra quyền camera hoặc đóng ứng dụng đang dùng camera.", "无法打开手电。请检查相机权限或关闭其他相机应用。", "No se puede encender. Revisa el permiso de cámara o cierra otras apps de cámara."),
+                color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ private val vi = mapOf(
     "Open" to "Mở", "Lock" to "Khóa", "Unlock" to "Mở khóa", "Add" to "Thêm", "Edit" to "Chỉnh sửa", "Apply" to "Áp dụng",
     "Title" to "Tiêu đề", "Category" to "Danh mục", "Note" to "Ghi chú", "Amount" to "Số tiền", "People" to "Số người",
     "Options" to "Tùy chọn", "Group" to "Nhóm", "Language" to "Ngôn ngữ", "Today" to "Hôm nay", "History" to "Lịch sử",
-    "All" to "Tất cả", "Favorites" to "Yêu thích", "Quick access" to "Truy cập nhanh", "No results" to "Không có kết quả",
+    "All" to "Tất cả", "Favorites" to "Yêu thích", "Recent" to "Gần đây", "Quick access" to "Truy cập nhanh", "No results" to "Không có kết quả",
     "Scan receipt" to "Quét hóa đơn", "Save expense" to "Lưu chi tiêu", "Export CSV" to "Xuất CSV", "No expenses logged yet." to "Chưa có khoản chi nào.",
     "Expense" to "Chi tiêu", "Income" to "Thu nhập", "Expenses" to "Chi tiêu", "Monthly balance" to "Số dư tháng", "Save income" to "Lưu thu nhập",
     "Wallet or account" to "Ví hoặc tài khoản", "Search title, category or wallet" to "Tìm tiêu đề, danh mục hoặc ví", "Include microphone" to "Thu âm microphone", "Clean all pages" to "Làm sạch tất cả trang",
@@ -66,7 +66,7 @@ private val zh = mapOf(
     "Open" to "打开", "Lock" to "锁定", "Unlock" to "解锁", "Add" to "添加", "Edit" to "编辑", "Apply" to "应用",
     "Title" to "标题", "Category" to "类别", "Note" to "备注", "Amount" to "金额", "People" to "人数",
     "Options" to "选项", "Group" to "分组", "Language" to "语言", "Today" to "今天", "History" to "历史",
-    "All" to "全部", "Favorites" to "收藏", "Quick access" to "快速访问", "No results" to "无结果",
+    "All" to "全部", "Favorites" to "收藏", "Recent" to "最近使用", "Quick access" to "快速访问", "No results" to "无结果",
     "Scan receipt" to "扫描收据", "Save expense" to "保存支出", "Export CSV" to "导出 CSV", "No expenses logged yet." to "尚无支出记录。",
     "Expense" to "支出", "Income" to "收入", "Expenses" to "支出", "Monthly balance" to "月度结余", "Save income" to "保存收入",
     "Wallet or account" to "钱包或账户", "Search title, category or wallet" to "搜索标题、类别或钱包", "Include microphone" to "包含麦克风", "Clean all pages" to "清理所有页面",
@@ -488,7 +488,7 @@ private val esBase = mapOf(
     "A fair local picker for quick choices." to "Un selector local justo para decisiones rápidas.",
     "Telegram, GitHub and the PureHub roadmap." to "Telegram, GitHub y la hoja de ruta de PureHub.",
     "Record a local MP4 with Android's consent flow." to "Graba un MP4 local con el flujo de consentimiento de Android.",
-    "FREE · NO ADS · OPEN SOURCE" to "GRATIS · SIN ANUNCIOS · CÓDIGO ABIERTO", "Useful, private tools for everyday life—built openly with the community." to "Herramientas útiles y privadas para cada día, creadas abiertamente con la comunidad.", "Offline-first" to "Primero sin conexión", "Private" to "Privado", "TODAY" to "HOY", "Lunar" to "Lunar", "Quick access" to "Acceso rápido", "Favorites" to "Favoritos", "Privacy & preferences" to "Privacidad y preferencias", "Review permissions, visible tools and local-only storage behavior." to "Revisa permisos, herramientas visibles y el comportamiento de almacenamiento solo local.",
+    "FREE · NO ADS · OPEN SOURCE" to "GRATIS · SIN ANUNCIOS · CÓDIGO ABIERTO", "Useful, private tools for everyday life—built openly with the community." to "Herramientas útiles y privadas para cada día, creadas abiertamente con la comunidad.", "Offline-first" to "Primero sin conexión", "Private" to "Privado", "TODAY" to "HOY", "Lunar" to "Lunar", "Quick access" to "Acceso rápido", "Favorites" to "Favoritos", "Recent" to "Recientes", "Privacy & preferences" to "Privacidad y preferencias", "Review permissions, visible tools and local-only storage behavior." to "Revisa permisos, herramientas visibles y el comportamiento de almacenamiento solo local.",
     "Free, private and ad-free utilities. Search by what you need to do." to "Utilidades gratuitas, privadas y sin anuncios. Busca según lo que necesites hacer.", "What do you want to do?" to "¿Qué quieres hacer?", "Manage Tools" to "Gestionar herramientas", "No tools enabled" to "No hay herramientas activadas", "No visible mini-apps." to "No hay mini-apps visibles.", "Search mini-app" to "Buscar mini-app", "Apply Now" to "Aplicar ahora", "Favorite" to "Favorito", "Unfavorite" to "Quitar favorito",
     "Community flagship" to "Comunidad destacada", "PureHub belongs to everyone" to "PureHub pertenece a todos", "Join the conversation, report issues and shape free, no-ad, open-source tools together." to "Únete a la conversación, informa problemas y crea con nosotros herramientas gratuitas, sin anuncios y de código abierto.",
     "Telegram community" to "Comunidad de Telegram", "Get updates, discuss useful tools and help other PureHub users." to "Recibe novedades, comenta herramientas útiles y ayuda a otros usuarios de PureHub.", "Open Telegram" to "Abrir Telegram",
@@ -971,6 +971,7 @@ private fun visionPatternTranslation(text: String, language: AppLanguage): Strin
         "Microphone" -> return when { vi -> "Micro"; zh -> "麦克风"; es -> "Micrófono"; else -> null }
         "Nearby Wi-Fi location" -> return when { vi -> "Vị trí Wi‑Fi lân cận"; zh -> "附近 Wi‑Fi 位置"; es -> "Ubicación de Wi‑Fi cercano"; else -> null }
         "Notifications" -> return when { vi -> "Thông báo"; zh -> "通知"; es -> "Notificaciones"; else -> null }
+        "Timer controls, recording status, Wi-Fi monitoring, and lunar reminders." -> return when { vi -> "Điều khiển hẹn giờ, trạng thái ghi hình, theo dõi Wi-Fi và nhắc lịch âm."; zh -> "计时器控制、录屏状态、Wi-Fi 监测和农历提醒。"; es -> "Controles del temporizador, estado de grabación, monitoreo Wi-Fi y recordatorios lunares."; else -> null }
         "QR Studio, document scans and Color Grabber." -> return when { vi -> "Quét QR, quét tài liệu và Lấy mã màu."; zh -> "二维码扫描、文档扫描和取色器。"; es -> "Escáner QR, escaneos de documentos y selector de color."; else -> null }
         "Decibel Meter and optional Screen Recorder narration. Speaker Cleaner plays tones and does not listen." -> return when { vi -> "Máy đo dB và phần thuyết minh tùy chọn khi quay màn hình. Loa dọn âm chỉ phát âm, không nghe."; zh -> "分贝仪和可选的屏幕录制旁白。扬声器清理器只播放音调，不会监听。"; es -> "Medidor de decibelios y narración opcional del grabador de pantalla. El limpiador de altavoz reproduce tonos y no escucha."; else -> null }
         "Wi-Fi Analyzer on Android versions that require it." -> return when { vi -> "Wi‑Fi Analyzer trên các phiên bản Android yêu cầu quyền này."; zh -> "适用于需要此权限的 Android 版本上的 Wi‑Fi 分析器。"; es -> "Analizador Wi‑Fi en versiones de Android que lo requieren."; else -> null }

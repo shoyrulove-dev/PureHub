@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.rounded.Collections
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -57,6 +60,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.purehub.app.feature.catalog.MiniAppId
+import com.purehub.app.data.ToolVisibilityRepository
+import kotlinx.coroutines.launch
 import com.purehub.app.navigation.PureHubDestination.FinanceFun
 import com.purehub.app.navigation.PureHubDestination.Help
 import com.purehub.app.navigation.PureHubDestination.Home
@@ -114,6 +119,8 @@ import com.purehub.app.ui.screens.ZenBreathCard
 import com.purehub.app.ui.screens.ZenHabitCard
 import com.purehub.app.ui.screens.ZenTimeScreen
 import com.purehub.app.ui.screens.VisionFullscreenShell
+import com.purehub.app.ui.screens.pureHubCanvas
+import com.purehub.app.ui.screens.compactToolTitle
 
 private const val MINI_APP_ROUTE_PREFIX = "mini_app"
 
@@ -175,6 +182,8 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
         ?.getString("miniAppId")
         ?.let { value -> MiniAppId.entries.firstOrNull { it.name == value } }
     val snackbarHostState = remember { SnackbarHostState() }
+    val appScope = rememberCoroutineScope()
+    val toolHistory = remember { ToolVisibilityRepository(context.applicationContext) }
     val currentMiniAppRoute = currentDestination?.route?.startsWith("$MINI_APP_ROUTE_PREFIX/") == true
     var showTesterInvite by rememberSaveable {
         mutableStateOf(initialMiniAppId == null && context.shouldShowPlayTesterInvite())
@@ -201,7 +210,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
             topBar = {
                 if (currentMiniAppRoute && currentMiniApp !in immersiveVisionTools) {
                     MiniAppTopBar(
-                        title = currentMiniApp?.title.orEmpty(),
+                        title = currentMiniApp?.let { compactToolTitle(it, language) }.orEmpty(),
                         onBack = { navController.popBackStack() },
                     )
                 }
@@ -232,7 +241,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                                         contentDescription = destination.labelFor(language),
                                     )
                                 },
-                                alwaysShowLabel = false,
+                                alwaysShowLabel = true,
                                 label = { Text(destination.labelFor(language)) },
                             )
                         }
@@ -243,7 +252,10 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
             PureHubNavHost(
                 innerPadding = innerPadding,
                 navController = navController,
-                onOpenMiniApp = { navController.navigate(miniAppRoute(it)) },
+                onOpenMiniApp = { tool ->
+                    appScope.launch { toolHistory.recordToolOpened(tool.name) }
+                    navController.navigate(miniAppRoute(tool))
+                },
                 onOpenHelp = { navController.navigate(Help.route) },
                 language = language,
                 onLanguageChange = { next -> context.saveAppLanguage(next); language = next },
@@ -286,7 +298,6 @@ private fun PureHubNavHost(
         composable(Home.route) {
             HomeScreen(
                 innerPadding = innerPadding,
-                onOpenSettings = { navController.navigate(Settings.route) },
                 onOpenMiniApp = onOpenMiniApp,
             )
         }
@@ -362,7 +373,13 @@ private fun MiniAppTopBar(
     onBack: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
-        title = { LocalizedText(if (title == "WiFi Analyzer") localizedWifiAnalyzerTitle() else title) },
+        title = {
+            LocalizedText(
+                if (title == "WiFi Analyzer") localizedWifiAnalyzerTitle() else title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+            )
+        },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
@@ -371,6 +388,12 @@ private fun MiniAppTopBar(
                 )
             }
         },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .72f),
+            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary,
+        ),
     )
 }
 
@@ -404,6 +427,7 @@ private fun MiniAppScreen(
         hasCameraPermission = granted
     }
 
+    Box(modifier = Modifier.fillMaxSize().pureHubCanvas()) {
     when (miniAppId) {
         MiniAppId.LUNAR_CALENDAR -> LunarCalendarScreen(innerPadding = innerPadding, embedded = false)
         MiniAppId.ZEN_HABIT -> ScrollHost(innerPadding) { ZenHabitCard() }
@@ -567,6 +591,7 @@ private fun MiniAppScreen(
             ) { visionPadding -> ScreenRecorderCard(innerPadding = visionPadding, menuAction = menuAction, onMenuActionHandled = { menuAction = null }) }
         }
     }
+    }
 }
 
 @Composable
@@ -577,6 +602,7 @@ private fun ScrollHost(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .pureHubCanvas()
             .padding(innerPadding)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp, vertical = 8.dp),

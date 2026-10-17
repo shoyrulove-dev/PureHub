@@ -128,30 +128,54 @@ function Flashlight() {
   const [visible, setVisible] = useState(false)
   const lightRef = useRef<HTMLDivElement>(null)
   const wakeLock = useRef<{ release: () => Promise<void> } | null>(null)
-  const autoOffTimer = useRef<number | null>(null)
+  useEffect(() => {
+    if (!active) return
+    let disposed = false
+    const api = (navigator as Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock
+    void api?.request('screen').then((lock) => {
+      if (disposed) void lock.release().catch(() => undefined)
+      else wakeLock.current = lock
+    }).catch(() => undefined)
+    const surface = lightRef.current
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) setActive(false)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => {
+      disposed = true
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
+      void wakeLock.current?.release().catch(() => undefined)
+      wakeLock.current = null
+      if (surface && document.fullscreenElement === surface) void document.exitFullscreen().catch(() => undefined)
+    }
+  }, [active])
+  useEffect(() => {
+    if (!active || !autoOffMinutes) return
+    const timer = window.setTimeout(() => setActive(false), autoOffMinutes * 60_000)
+    return () => window.clearTimeout(timer)
+  }, [active, autoOffMinutes])
   useEffect(() => {
     if (!active || mode === 'steady') return
-    const sos = [200, 200, 200, 500, 500, 500, 200, 200, 200, 900]
+    const sos = [160, 160, 160, 160, 160, 480, 480, 160, 480, 160, 480, 480, 160, 160, 160, 160, 160, 1120]
     let index = 0
     const flash = () => { setVisible((value) => !value); index = (index + 1) % sos.length; timer = window.setTimeout(flash, mode === 'pulse' ? 450 : sos[index]) }
     let timer = window.setTimeout(flash, mode === 'pulse' ? 450 : sos[0])
     return () => window.clearTimeout(timer)
   }, [active, mode])
-  useEffect(() => () => { void wakeLock.current?.release(); if (autoOffTimer.current) window.clearTimeout(autoOffTimer.current) }, [])
   const toggle = async () => {
-    if (autoOffTimer.current) { window.clearTimeout(autoOffTimer.current); autoOffTimer.current = null }
     const next = !active; setActive(next); setVisible(next)
     if (next) {
-      try { wakeLock.current = await (navigator as Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen') ?? null } catch { wakeLock.current = null }
-      void lightRef.current?.requestFullscreen?.()
-      if (autoOffMinutes) autoOffTimer.current = window.setTimeout(() => { setActive(false); setVisible(false); autoOffTimer.current = null }, autoOffMinutes * 60_000)
-      markToolSuccess('smart-flashlight', { headline: copy.panel, detail: `${mode} light is active at ${brightness}% brightness.`, shareText: 'I used a private screen light with PureHub.' })
-    } else { await wakeLock.current?.release(); wakeLock.current = null; if (document.fullscreenElement) await document.exitFullscreen() }
+      void lightRef.current?.requestFullscreen?.().catch(() => undefined)
+      markToolSuccess('smart-flashlight', { headline: copy.panel, detail: `${copy[mode]} · ${brightness}%`, shareText: `PureHub · ${copy.panel}` })
+    }
   }
   return <Panel title={copy.panel} subtitle={copy.subtitle}>
-    <div ref={lightRef} className={`relative grid min-h-72 place-items-center overflow-hidden rounded-[28px] transition ${active && visible ? 'bg-white' : 'bg-slate-950'}`} style={{ filter: active ? `brightness(${Math.max(.15, brightness / 100)})` : undefined }}><Lightbulb className={`size-24 ${active && visible ? 'text-violet-600' : 'text-slate-700'}`} /><span className={`absolute bottom-5 rounded-full px-4 py-2 text-xs font-black ${active ? 'bg-slate-950 text-white' : 'bg-white/10 text-slate-300'}`}>{active ? `${copy[mode]} · ${brightness}%` : copy.off}</span></div>
+    <div ref={lightRef} className={`relative grid min-h-72 place-items-center overflow-hidden rounded-[28px] ${active && visible ? 'bg-white' : 'bg-slate-950'}`} style={{ filter: active ? `brightness(${Math.max(.15, brightness / 100)})` : undefined }}>
+      <Lightbulb aria-hidden="true" className={`size-24 ${active && visible ? 'text-violet-600' : 'text-slate-700'}`} />
+      {active ? <button type="button" onClick={() => setActive(false)} className="absolute bottom-8 min-h-12 max-w-[90%] rounded-full bg-slate-950 px-6 py-3 text-sm font-black text-white">{copy.off}</button> : null}
+    </div>
     <label className="mt-4 block text-sm font-black">{copy.brightness} <span className="float-right text-violet-700 dark:text-violet-300">{brightness}%</span><input className="mt-3 w-full accent-violet-600" type="range" min="15" max="100" value={brightness} onChange={(event) => setBrightness(Number(event.target.value))} /></label>
-    <button type="button" onClick={() => setAdvanced((value) => !value)} className="mt-4 flex min-h-12 w-full items-center justify-between rounded-xl border border-slate-200 px-4 text-sm font-black dark:border-slate-700"><span>{moreLabel}</span><span>{advanced ? '−' : '+'}</span></button>
+    <button type="button" aria-expanded={advanced} onClick={() => setAdvanced((value) => !value)} className="mt-4 flex min-h-12 w-full items-center justify-between rounded-xl border border-slate-200 px-4 text-sm font-black dark:border-slate-700"><span>{moreLabel}</span><span>{advanced ? '−' : '+'}</span></button>
     {advanced ? <><p className="mt-4 text-sm font-black">{copy.mode}</p><div className="mt-2 grid grid-cols-3 gap-2">{(['steady', 'pulse', 'sos'] as const).map((item) => <button key={item} onClick={() => { setMode(item); if (item === 'steady') setVisible(active) }} className={`min-h-11 rounded-xl border text-xs font-black uppercase ${mode === item ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{copy[item]}</button>)}</div>
     </> : null}
     <p className="mt-4 text-sm font-black">{copy.timer}</p><div className="mt-2 grid grid-cols-5 gap-2">{[0, 1, 5, 15, 30].map((minutes) => <button key={minutes} onClick={() => setAutoOffMinutes(minutes)} className={`min-h-11 rounded-xl border text-xs font-black ${autoOffMinutes === minutes ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100' : 'border-slate-200 dark:border-slate-700'}`}>{minutes ? `${minutes}m` : copy.none}</button>)}</div>

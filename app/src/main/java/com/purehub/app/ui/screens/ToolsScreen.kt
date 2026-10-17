@@ -100,7 +100,7 @@ fun ToolsScreen(
                         text = tab.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = tab.accent,
+                        color = tab.uiAccent(),
                         modifier = Modifier.padding(top = 6.dp),
                     )
                 }
@@ -119,18 +119,18 @@ fun ToolsScreen(
                             ) {
                                 Surface(
                                     shape = MaterialTheme.shapes.medium,
-                                    color = tab.accentContainer,
+                                    color = tab.uiAccentContainer(),
                                 ) {
                                     Icon(
                                         imageVector = tool.icon,
                                         contentDescription = null,
-                                        tint = tab.accent,
+                                        tint = tab.uiAccent(),
                                         modifier = Modifier.padding(9.dp).size(21.dp),
                                     )
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
                                     LocalizedText(
-                                        text = tool.title,
+                                        text = compactToolTitle(tool, language),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -174,10 +174,11 @@ fun ToolsScreen(
     }
 }
 
-private fun toolMatchesSearch(tool: MiniAppId, query: String): Boolean {
+internal fun toolMatchesSearch(tool: MiniAppId, query: String): Boolean {
     val terms = query.trim().lowercase().split(Regex("\\s+")).filter(String::isNotBlank)
     if (terms.isEmpty()) return true
-    val searchable = "${tool.title} ${toolFriendlySummary(tool)} ${toolSearchIntents(tool)}".lowercase()
+    val localizedTitles = com.purehub.app.ui.AppLanguage.entries.joinToString(" ") { translateUiText(tool.title, it) }
+    val searchable = "$localizedTitles ${tool.title} ${toolFriendlySummary(tool)} ${toolSearchIntents(tool)}".lowercase()
     return terms.all(searchable::contains)
 }
 

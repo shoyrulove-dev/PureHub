@@ -32,14 +32,14 @@ export function SettingsPage() {
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           {themes.map(({ id, label, icon: Icon }) => (
-            <button key={id} type="button" className={`promise-card cursor-pointer text-left ${theme === id ? 'ring-2 ring-emerald-400/35' : ''}`} onClick={() => setTheme(id)}>
-              <Icon className="size-5" /><strong className="flex-1">{label}</strong>{theme === id ? <Check className="size-4 text-emerald-500" /> : null}
+            <button key={id} type="button" className={`promise-card cursor-pointer text-left ${theme === id ? 'border-violet-400 bg-violet-100/80 ring-2 ring-violet-400/25 dark:bg-violet-500/15' : ''}`} onClick={() => setTheme(id)}>
+              <Icon className="size-5 text-violet-600 dark:text-violet-300" /><strong className="flex-1">{label}</strong>{theme === id ? <Check className="size-4 text-violet-600 dark:text-violet-300" /> : null}
             </button>
           ))}
         </div>
       </section>
 
-      <Link to={`/${locale}/privacy-center`} className="flex min-h-16 items-center gap-3 rounded-[18px] border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/25 dark:text-emerald-100"><ShieldCheck className="size-6" /><span className="min-w-0 flex-1"><strong className="block">{copy.privacyCenter}</strong><small className="text-emerald-800 dark:text-emerald-300">{copy.privacyCenterHint}</small></span><ArrowRight className="size-5" /></Link>
+      <Link to={`/${locale}/privacy-center`} className="flex min-h-16 items-center gap-3 rounded-[18px] border border-violet-300/70 bg-gradient-to-r from-violet-100 to-fuchsia-50 p-4 text-violet-950 dark:border-violet-500/30 dark:from-violet-500/15 dark:to-fuchsia-500/10 dark:text-violet-100"><ShieldCheck className="size-6 text-violet-600 dark:text-violet-300" /><span className="min-w-0 flex-1"><strong className="block">{copy.privacyCenter}</strong><small className="text-violet-700 dark:text-violet-300">{copy.privacyCenterHint}</small></span><ArrowRight className="size-5" /></Link>
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start gap-3">
@@ -63,7 +63,7 @@ export function SettingsPage() {
               key={item}
               to={`/${item}/settings`}
               onClick={() => persistSelectedLocale(item)}
-              className={`filter-chip uppercase ${locale === item ? 'filter-chip--active' : ''}`}
+              className={`filter-chip uppercase ${locale === item ? ({ en: 'border-sky-400 bg-sky-500 text-white', vi: 'border-rose-400 bg-rose-500 text-white', zh: 'border-amber-400 bg-amber-400 text-slate-950', es: 'border-violet-400 bg-violet-500 text-white' }[item]) : ''}`}
             >
               {item}
             </Link>
@@ -83,7 +83,7 @@ export function SettingsPage() {
               {lockedByDnt ? <p className="mt-1 text-xs font-semibold text-emerald-600">{copy.dnt}</p> : null}
             </div>
           </div>
-          <button type="button" role="switch" aria-checked={anonymousMetrics} disabled={lockedByDnt} className={`relative h-7 w-12 shrink-0 rounded-full transition ${anonymousMetrics ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} onClick={() => setAnonymousMetrics(!anonymousMetrics)}>
+          <button type="button" role="switch" aria-checked={anonymousMetrics} disabled={lockedByDnt} className={`relative h-7 w-12 shrink-0 rounded-full transition ${anonymousMetrics ? 'bg-violet-500' : 'bg-slate-300 dark:bg-slate-700'}`} onClick={() => setAnonymousMetrics(!anonymousMetrics)}>
             <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${anonymousMetrics ? 'left-6' : 'left-1'}`} />
           </button>
         </div>

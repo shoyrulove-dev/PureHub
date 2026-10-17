@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.purehub.app.feature.backup.EncryptedBackupManager
 import java.text.DateFormat
 import java.util.Date
@@ -63,7 +65,10 @@ fun EncryptedBackupCard() {
                 .onFailure { snackbar.showSnackbar(it.message ?: "Backup import failed.") }
         }
     }
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF30204C), contentColor = Color(0xFFF7F2FF)),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary)
@@ -77,7 +82,7 @@ fun EncryptedBackupCard() {
                     "No verified export recorded on this device yet."
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFFD4C5EA),
             )
             OutlinedTextField(
                 value = passphrase, onValueChange = { passphrase = it }, modifier = Modifier.fillMaxWidth(),

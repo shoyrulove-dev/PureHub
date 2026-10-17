@@ -91,7 +91,7 @@ export function CommunityPage() {
       <div className="grid gap-3 sm:grid-cols-2">
         {actions.map(({ icon: Icon, title, description, href, label }) => (
           <article key={title} className="app-surface rounded-[18px] p-5">
-            <span className="tool-card__icon text-emerald-600 dark:text-emerald-300"><Icon className="size-5" /></span>
+            <span className="tool-card__icon text-violet-600 dark:text-violet-300"><Icon className="size-5" /></span>
             <h2 className="mt-4 font-bold text-slate-950 dark:text-white">{title}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
             <a className="text-link mt-4" href={href} target="_blank" rel="noreferrer">{label}</a>
@@ -99,12 +99,12 @@ export function CommunityPage() {
         ))}
       </div>
 
-      <section id="early-testers" className="rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+      <section id="early-testers" className="rounded-[20px] border border-sky-200 bg-sky-50/70 p-5 dark:border-sky-500/20 dark:bg-sky-500/5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="tool-card__icon text-emerald-600 dark:text-emerald-300"><TestTube2 className="size-5" /></span>
+            <span className="tool-card__icon text-sky-600 dark:text-sky-300"><TestTube2 className="size-5" /></span>
             <div>
-              <p className="eyebrow text-emerald-700 dark:text-emerald-300">{copy.earlyEyebrow}</p>
+              <p className="eyebrow text-sky-700 dark:text-sky-300">{copy.earlyEyebrow}</p>
               <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">{copy.earlyTitle}</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">{copy.earlyHint}</p>
             </div>

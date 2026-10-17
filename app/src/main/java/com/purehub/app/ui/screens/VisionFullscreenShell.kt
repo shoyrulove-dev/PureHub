@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
@@ -56,18 +59,17 @@ fun VisionFullscreenShell(
             // Match the compact OCR drawer: it deliberately occupies only half
             // of the handset, leaving the active camera/tool visible behind it.
             ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.5f)) {
-                Column(Modifier.padding(16.dp)) {
-                    LocalizedText(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-                    LocalizedText("Vision workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(Modifier.verticalScroll(rememberScrollState()).padding(12.dp)) {
+                    LocalizedText(title, style = MaterialTheme.typography.titleSmall)
                     NavigationDrawerItem(
-                        label = { LocalizedText("Home", maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) },
+                        label = { LocalizedText("Home") },
                         selected = false,
                         icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
                         onClick = {
                             scope.launch { drawerState.close() }
                             onHome()
                         },
-                        modifier = Modifier.padding(top = 14.dp).height(48.dp),
+                        modifier = Modifier.padding(top = 14.dp).heightIn(min = 48.dp),
                     )
                     drawerActions { scope.launch { drawerState.close() } }
                 }

@@ -7,6 +7,7 @@ import android.hardware.camera2.CameraManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,25 +30,27 @@ class SmartFlashlightViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
     private val cameraManager = application.getSystemService(CameraManager::class.java)
-    private val torchCameraId = cameraManager.cameraIdList.firstOrNull { id ->
+    private val torchCameraId = runCatching { cameraManager.cameraIdList.firstOrNull { id ->
         val characteristics = cameraManager.getCameraCharacteristics(id)
         characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true &&
             characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
-    }
-    private val maxTorchStrength = torchCameraId?.let { id ->
+    } }.getOrNull()
+    private val maxTorchStrength = runCatching { torchCameraId?.let { id ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             cameraManager.getCameraCharacteristics(id)
                 .get(CameraCharacteristics.FLASH_INFO_STRENGTH_MAXIMUM_LEVEL) ?: 1
         } else 1
-    } ?: 1
+    } ?: 1 }.getOrDefault(1).coerceAtLeast(1)
 
     private val _uiState = MutableStateFlow(SmartFlashlightUiState(maxTorchStrength = maxTorchStrength))
     val uiState: StateFlow<SmartFlashlightUiState> = _uiState.asStateFlow()
 
     private var patternJob: Job? = null
     private var autoOffJob: Job? = null
+    private var patternGeneration = 0L
 
     fun toggleTorch() {
+        if (_uiState.value.isPatternRunning) { stopPattern(); return }
         val next = !_uiState.value.isTorchOn
         setTorch(next, if (next) "Torch enabled." else "Torch disabled.", _uiState.value.torchStrength)
     }
@@ -68,7 +71,7 @@ class SmartFlashlightViewModel(
 
     fun playSosPattern() {
         playPattern(
-            sequence = listOf(200L, 200L, 200L, 200L, 200L, 500L, 500L, 200L, 500L, 200L, 500L, 500L, 200L, 200L, 200L, 200L, 200L),
+            sequence = buildMorsePattern("SOS"),
             label = "SOS pattern running locally.",
         )
     }
@@ -76,11 +79,12 @@ class SmartFlashlightViewModel(
     fun playMorsePattern(message: String) {
         val clean = message.uppercase().filter { it in 'A'..'Z' || it == ' ' }
         if (clean.isBlank()) return
-        val pattern = buildPattern(clean)
+        val pattern = buildMorsePattern(clean)
         playPattern(pattern, "Morse pattern: $clean")
     }
 
     fun stopPattern() {
+        patternGeneration++
         patternJob?.cancel()
         patternJob = null
         autoOffJob?.cancel()
@@ -93,10 +97,12 @@ class SmartFlashlightViewModel(
             _uiState.update { it.copy(errorMessage = "No flash unit is available on this device.") }
             return
         }
+        val generation = ++patternGeneration
         patternJob?.cancel()
         autoOffJob?.cancel()
         patternJob = viewModelScope.launch {
             _uiState.update { it.copy(isPatternRunning = true, statusMessage = label, errorMessage = null) }
+            scheduleAutoOff()
             try {
                 sequence.forEachIndexed { index, duration ->
                     val torchOn = index % 2 == 0
@@ -104,12 +110,17 @@ class SmartFlashlightViewModel(
                     _uiState.update { it.copy(isTorchOn = torchOn) }
                     delay(duration)
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (throwable: Throwable) {
                 _uiState.update { it.copy(errorMessage = throwable.message ?: "Unable to control torch.") }
             } finally {
-                runCatching { cameraManager.setTorchMode(cameraId, false) }
-                _uiState.update { it.copy(isTorchOn = false, isPatternRunning = false) }
-                patternJob = null
+                if (generation == patternGeneration) {
+                    runCatching { cameraManager.setTorchMode(cameraId, false) }
+                    _uiState.update { it.copy(isTorchOn = false, isPatternRunning = false) }
+                    autoOffJob?.cancel()
+                    patternJob = null
+                }
             }
         }
     }
@@ -151,14 +162,21 @@ class SmartFlashlightViewModel(
     private fun scheduleAutoOff() {
         autoOffJob?.cancel()
         val minutes = _uiState.value.autoOffMinutes
-        if (!_uiState.value.isTorchOn || minutes == 0) return
+        if ((!_uiState.value.isTorchOn && !_uiState.value.isPatternRunning) || minutes == 0) return
         autoOffJob = viewModelScope.launch {
             delay(minutes * 60_000L)
-            setTorch(false, "Torch turned off after $minutes minutes.")
+            stopPattern()
         }
     }
 
-    private fun buildPattern(message: String): List<Long> {
+    override fun onCleared() {
+        stopPattern()
+        autoOffJob?.cancel()
+        super.onCleared()
+    }
+}
+
+internal fun buildMorsePattern(message: String): List<Long> {
         val map = mapOf(
             'A' to ".-",
             'B' to "-...",
@@ -188,32 +206,24 @@ class SmartFlashlightViewModel(
             'Z' to "--..",
         )
         val dot = 160L
-        val dash = 420L
-        val gap = 120L
-        val letterGap = 320L
-        val wordGap = 700L
+        val dash = dot * 3
+        val gap = dot
+        val letterGap = dot * 3
+        val wordGap = dot * 7
         val pattern = mutableListOf<Long>()
 
-        message.forEachIndexed { index, char ->
+        val clean = message.uppercase(java.util.Locale.ROOT).filter { it in 'A'..'Z' || it == ' ' }.trim()
+        clean.forEach { char ->
             if (char == ' ') {
-                pattern += wordGap
-                return@forEachIndexed
+                if (pattern.isNotEmpty()) pattern[pattern.lastIndex] = wordGap
+                return@forEach
             }
             val symbols = map[char].orEmpty()
             symbols.forEachIndexed { symbolIndex, symbol ->
                 pattern += if (symbol == '.') dot else dash
                 pattern += if (symbolIndex == symbols.lastIndex) letterGap else gap
             }
-            if (index == message.lastIndex && pattern.isNotEmpty()) {
-                pattern.removeAt(pattern.lastIndex)
-            }
         }
+        if (pattern.isNotEmpty()) pattern.removeAt(pattern.lastIndex)
         return pattern
     }
-
-    override fun onCleared() {
-        stopPattern()
-        autoOffJob?.cancel()
-        super.onCleared()
-    }
-}
