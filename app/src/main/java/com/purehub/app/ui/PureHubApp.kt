@@ -50,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -217,6 +218,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
             },
             bottomBar = {
                 if (!currentMiniAppRoute) {
+                    val largeText = LocalDensity.current.fontScale >= 1.5f
                     NavigationBar {
                         bottomNavDestinations.forEach { destination ->
                             val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
@@ -241,8 +243,8 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                                         contentDescription = destination.labelFor(language),
                                     )
                                 },
-                                alwaysShowLabel = true,
-                                label = { Text(destination.labelFor(language)) },
+                                alwaysShowLabel = !largeText,
+                                label = if (largeText) null else ({ Text(destination.labelFor(language), maxLines = 1) }),
                             )
                         }
                     }

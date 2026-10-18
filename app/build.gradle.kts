@@ -194,3 +194,22 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.room:room-testing:$roomVersion")
 }
+
+tasks.register("verifyStandardDebugApkSize") {
+    group = "verification"
+    description = "Fails when debug APK growth exceeds the closed-beta size budget."
+    dependsOn("assembleStandardDebug")
+    doLast {
+        val apkDirectory = layout.buildDirectory.dir("outputs/apk/standard/debug").get().asFile
+        val apks = apkDirectory.listFiles { file -> file.extension == "apk" }.orEmpty()
+        check(apks.isNotEmpty()) { "No Standard debug APKs found in $apkDirectory" }
+        apks.forEach { apk ->
+            val limitMiB = if (apk.name.contains("universal")) 80 else 50
+            val actualMiB = apk.length().toDouble() / 1024 / 1024
+            check(actualMiB <= limitMiB) {
+                "${apk.name} is ${"%.2f".format(actualMiB)} MiB; closed-beta budget is $limitMiB MiB"
+            }
+        }
+        println("Verified ${apks.size} APK(s): ABI <= 50 MiB and universal <= 80 MiB.")
+    }
+}

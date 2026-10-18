@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.purehub.app.ui.PureHubApp
 import com.purehub.app.ui.theme.PureHubTheme
+import com.purehub.app.ui.appText
+import com.purehub.app.ui.loadAppLanguage
 import com.purehub.app.feature.catalog.MiniAppId
 
 class MainActivity : ComponentActivity() {
@@ -64,14 +66,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installMiniAppShortcuts() {
+        val language = loadAppLanguage()
         val shortcuts = listOf(
-            Triple("qr_studio", "QR Studio", MiniAppId.QR_STUDIO),
-            Triple("zen_pomodoro", "Zen Pomodoro", MiniAppId.ZEN_POMODORO),
-            Triple("zen_breath", "Zen Breath", MiniAppId.ZEN_BREATH),
+            Triple("qr_studio", appText(language, "QR Studio", "Quét QR", "二维码", "Escáner QR"), MiniAppId.QR_STUDIO),
+            Triple("zen_pomodoro", appText(language, "Focus timer", "Hẹn giờ tập trung", "专注计时", "Temporizador"), MiniAppId.ZEN_POMODORO),
+            Triple("zen_breath", appText(language, "Breathing", "Hít thở", "呼吸", "Respiración"), MiniAppId.ZEN_BREATH),
         ).map { (id, label, miniAppId) ->
             ShortcutInfoCompat.Builder(this, id)
                 .setShortLabel(label)
-                .setLongLabel("Open $label in PureHub")
+                .setLongLabel(appText(language, "Open $label in PureHub", "Mở $label trong PureHub", "在 PureHub 中打开$label", "Abrir $label en PureHub"))
                 .setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher))
                 .setIntent(Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).putExtra(EXTRA_MINI_APP_ID, miniAppId.name))
                 .build()

@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,7 @@ fun HomeScreen(
     val today = LocalDate.now()
     val lunarInfo = LunarCalendarConverter.describeDate(today)
     val language = LocalAppLanguage.current
+    val largeText = LocalDensity.current.fontScale >= 1.5f
     val formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", language.locale())
     val visibleTools = rememberVisibleTools()
     val favoriteTools = rememberFavoriteTools()
@@ -114,9 +116,27 @@ fun HomeScreen(
         }
         item {
             LocalizedText("Recommended locally", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(MiniAppId.WIFI_ANALYZER, MiniAppId.OCR_TEXT, MiniAppId.SMART_FLASHLIGHT)
-                    .filter { it in visibleTools }.forEach { tool ->
+            val recommended = listOf(MiniAppId.WIFI_ANALYZER, MiniAppId.OCR_TEXT, MiniAppId.SMART_FLASHLIGHT)
+                .filter { it in visibleTools }
+            if (largeText) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    recommended.forEach { tool ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
+                            onClick = { onOpenMiniApp(tool) },
+                            shape = MaterialTheme.shapes.large,
+                            color = tool.tab.uiAccentContainer(),
+                        ) {
+                            Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Icon(tool.icon, null, tint = tool.tab.uiAccent())
+                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    recommended.forEach { tool ->
                         Surface(
                             modifier = Modifier.weight(1f).heightIn(min = 92.dp),
                             onClick = { onOpenMiniApp(tool) },
@@ -129,6 +149,7 @@ fun HomeScreen(
                             }
                         }
                     }
+                }
             }
         }
     }

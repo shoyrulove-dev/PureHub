@@ -102,6 +102,22 @@ class PureHubNavigationTest {
     }
 
     @Test
+    fun primaryNavigationIsLocalizedInEverySupportedLanguage() {
+        AppLanguage.entries.forEach { language ->
+            scenario.close()
+            ApplicationProvider.getApplicationContext<android.content.Context>().saveAppLanguage(language)
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            composeRule.waitForIdle()
+            listOf("Home", "Tools", "Community", "Settings").forEach { label ->
+                composeRule.onNodeWithContentDescription(
+                    translateUiText(label, language),
+                    useUnmergedTree = true,
+                ).assertIsDisplayed()
+            }
+        }
+    }
+
+    @Test
     fun localDiagnosticsContainOnlyExpectedEnvironmentFields() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val report = buildLocalDiagnosticReport(context, AppLanguage.English)

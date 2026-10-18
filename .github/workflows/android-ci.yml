@@ -42,7 +42,7 @@ jobs:
             echo "::warning title=Android lint advisory::The hosted runner could not complete lint. The lint report is uploaded for review; unit tests and APK compilation remain required."
           fi
       - name: Build debug APK
-        run: ./gradlew --no-daemon assembleStandardDebug --stacktrace
+        run: ./gradlew --no-daemon assembleStandardDebug verifyStandardDebugApkSize --stacktrace
       - name: Upload Android lint report
         if: always()
         uses: actions/upload-artifact@v7
