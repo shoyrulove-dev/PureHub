@@ -16,6 +16,10 @@ import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.ui.AppLanguage
 import com.purehub.app.ui.saveAppLanguage
 import com.purehub.app.ui.screens.compactToolTitle
+import com.purehub.app.ui.screens.buildLocalDiagnosticReport
+import com.purehub.app.ui.translateUiText
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -67,5 +71,45 @@ class PureHubNavigationTest {
             ) { "Missing ${tool.title} in the catalog" }
             search.performTextClearance()
         }
+    }
+
+    @Test
+    fun fiveFlagshipsRenderInEverySupportedLanguage() {
+        val flagships = listOf(
+            MiniAppId.OCR_TEXT,
+            MiniAppId.QR_STUDIO,
+            MiniAppId.WIFI_ANALYZER,
+            MiniAppId.LUNAR_CALENDAR,
+            MiniAppId.SMART_FLASHLIGHT,
+        )
+        AppLanguage.entries.forEach { language ->
+            scenario.close()
+            ApplicationProvider.getApplicationContext<android.content.Context>().saveAppLanguage(language)
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            composeRule.waitForIdle()
+            composeRule.onNodeWithContentDescription(translateUiText("Tools", language), useUnmergedTree = true).performClick()
+            val search = composeRule.onNode(hasSetTextAction())
+            flagships.forEach { tool ->
+                search.performTextInput(tool.title)
+                assertTrue(
+                    "Missing ${tool.title} in ${language.code}",
+                    composeRule.onAllNodes(hasText(compactToolTitle(tool, language)) and hasClickAction() and !hasSetTextAction())
+                        .fetchSemanticsNodes().isNotEmpty(),
+                )
+                search.performTextClearance()
+            }
+        }
+    }
+
+    @Test
+    fun localDiagnosticsContainOnlyExpectedEnvironmentFields() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val report = buildLocalDiagnosticReport(context, AppLanguage.English)
+        assertTrue(report.contains("PureHub:"))
+        assertTrue(report.contains("Language: en"))
+        assertTrue(report.contains("Permissions:"))
+        assertFalse(report.contains("password", ignoreCase = true))
+        assertFalse(report.contains("token", ignoreCase = true))
+        assertFalse(report.contains("QR contents", ignoreCase = true))
     }
 }

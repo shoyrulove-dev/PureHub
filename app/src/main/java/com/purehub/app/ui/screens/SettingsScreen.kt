@@ -1,8 +1,14 @@
 package com.purehub.app.ui.screens
 
+import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import com.purehub.app.ui.AppLanguage
 import com.purehub.app.ui.appText
 import com.purehub.app.BuildConfig
+import androidx.core.content.ContextCompat
 
 @Composable
 fun SettingsScreen(
@@ -51,6 +59,7 @@ fun SettingsScreen(
     onJoinPlayTesters: () -> Unit,
 ) {
     val context = LocalContext.current
+    val diagnostics = buildLocalDiagnosticReport(context, language)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -120,8 +129,6 @@ fun SettingsScreen(
             }
             }
             PermissionCenterCard()
-            ToolVisibilityManagerCard()
-            EncryptedBackupCard()
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -160,22 +167,25 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = .76f),
                     )
+                    OutlinedButton(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("PureHub diagnostics", diagnostics))
+                            Toast.makeText(
+                                context,
+                                appText(language, "Diagnostics copied", "Đã sao chép chẩn đoán", "诊断信息已复制", "Diagnóstico copiado"),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) {
+                        Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(20.dp))
+                        LocalizedText(" " + appText(language, "Copy diagnostics", "Sao chép chẩn đoán", "复制诊断信息", "Copiar diagnóstico"))
+                    }
                     Button(
                         onClick = {
                             val title = "PureHub ${BuildConfig.VERSION_NAME} issue"
-                            val body = buildString {
-                                appendLine("## Environment")
-                                appendLine("- PureHub: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-                                appendLine("- Device: ${Build.MANUFACTURER} ${Build.MODEL}")
-                                appendLine("- Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-                                appendLine("- Language: ${language.code}")
-                                appendLine()
-                                appendLine("## What happened")
-                                appendLine()
-                                appendLine("## Steps to reproduce")
-                                appendLine()
-                                appendLine("Do not attach private files, passwords, QR contents, scans, or API keys.")
-                            }
+                            val body = "$diagnostics\n\n## What happened\n\n## Steps to reproduce\n\nDo not attach private files, passwords, QR contents, scans, or API keys."
                             val issueUrl = Uri.parse("https://github.com/shoyrulove-dev/PureHub/issues/new").buildUpon()
                                 .appendQueryParameter("title", title)
                                 .appendQueryParameter("body", body)
@@ -192,6 +202,8 @@ fun SettingsScreen(
                     }
                 }
             }
+            EncryptedBackupCard()
+            ToolVisibilityManagerCard()
             Button(
                 onClick = {
                     val privacyUrl = "https://hub.blissbiovn.com/${language.code}/privacy"
@@ -213,5 +225,25 @@ fun SettingsScreen(
                 LocalizedText("🧪 " + appText(language, "Join Google Play testers", "Tham gia Tester CH Play", "加入 Google Play 测试", "Unirse a probadores de Google Play"))
             }
         }
+    }
+}
+
+internal fun buildLocalDiagnosticReport(context: Context, language: AppLanguage): String {
+    val permissionStates = listOf(
+        "camera" to Manifest.permission.CAMERA,
+        "microphone" to Manifest.permission.RECORD_AUDIO,
+        "location" to Manifest.permission.ACCESS_FINE_LOCATION,
+        "notifications" to Manifest.permission.POST_NOTIFICATIONS,
+    ).joinToString(", ") { (label, permission) ->
+        val granted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        "$label=${if (granted) "on" else "off"}"
+    }
+    return buildString {
+        appendLine("## Environment")
+        appendLine("- PureHub: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        appendLine("- Device: ${Build.MANUFACTURER} ${Build.MODEL}")
+        appendLine("- Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        appendLine("- Language: ${language.code}")
+        append("- Permissions: $permissionStates")
     }
 }

@@ -1,5 +1,6 @@
 import { Activity, ArrowRight, Bug, Check, ExternalLink, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon, TestTube2 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
 import { type ThemePreference, useAnonymousMetricsPreference, useThemePreference } from '../lib/preferences'
@@ -12,15 +13,17 @@ export function SettingsPage() {
   const copy = getUiCopy(locale).settings
   const { theme, setTheme } = useThemePreference()
   const { enabled: anonymousMetrics, setEnabled: setAnonymousMetrics, lockedByDnt } = useAnonymousMetricsPreference()
+  const [diagnosticsCopied, setDiagnosticsCopied] = useState(false)
   const reportCopy = {
-    en: { title: 'App information', hint: 'The report includes only this PWA version and your selected language.', action: 'Report a problem' },
-    vi: { title: 'Thông tin ứng dụng', hint: 'Báo cáo chỉ gồm phiên bản PWA và ngôn ngữ bạn đã chọn.', action: 'Báo lỗi' },
-    zh: { title: '应用信息', hint: '报告仅包含此 PWA 版本和您选择的语言。', action: '报告问题' },
-    es: { title: 'Información de la app', hint: 'El informe solo incluye la versión de esta PWA y el idioma elegido.', action: 'Informar un problema' },
+    en: { title: 'App information', hint: 'The report includes only this PWA version and your selected language.', action: 'Report a problem', copy: 'Copy diagnostics', copied: 'Copied' },
+    vi: { title: 'Thông tin ứng dụng', hint: 'Báo cáo chỉ gồm phiên bản PWA và ngôn ngữ bạn đã chọn.', action: 'Báo lỗi', copy: 'Sao chép chẩn đoán', copied: 'Đã sao chép' },
+    zh: { title: '应用信息', hint: '报告仅包含此 PWA 版本和您选择的语言。', action: '报告问题', copy: '复制诊断信息', copied: '已复制' },
+    es: { title: 'Información de la app', hint: 'El informe solo incluye la versión de esta PWA y el idioma elegido.', action: 'Informar un problema', copy: 'Copiar diagnóstico', copied: 'Copiado' },
   }[locale]
+  const diagnostics = `## Environment\n- PureHub PWA: ${__APP_VERSION__}\n- Language: ${locale}\n- Offline cache: ${typeof navigator !== 'undefined' && 'serviceWorker' in navigator ? 'supported' : 'unavailable'}\n- Local storage: ${typeof localStorage === 'undefined' ? 'unavailable' : 'available'}`
   const issueParams = new URLSearchParams({
     title: `PureHub PWA ${__APP_VERSION__} issue`,
-    body: `## Environment\n- PureHub PWA: ${__APP_VERSION__}\n- Language: ${locale}\n\n## What happened\n\n## Steps to reproduce\n\nDo not attach private files, passwords, QR contents, scans, or API keys.`,
+    body: `${diagnostics}\n\n## What happened\n\n## Steps to reproduce\n\nDo not attach private files, passwords, QR contents, scans, or API keys.`,
   })
   const reportUrl = `https://github.com/shoyrulove-dev/PureHub/issues/new?${issueParams.toString()}`
   const themes: Array<{ id: ThemePreference; label: string; icon: typeof Sun }> = [
@@ -91,9 +94,14 @@ export function SettingsPage() {
             <h2 className="font-bold">{reportCopy.title}</h2>
             <p className="mt-1 font-semibold text-fuchsia-200">PureHub PWA {__APP_VERSION__}</p>
             <p className="mt-2 text-sm leading-6 text-violet-100/80">{reportCopy.hint}</p>
-            <a href={reportUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl bg-fuchsia-500 px-4 py-3 font-bold text-white hover:bg-fuchsia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" className="inline-flex min-h-12 items-center rounded-xl border border-violet-300/60 px-4 py-3 font-bold text-white hover:bg-white/10" onClick={async () => { await navigator.clipboard.writeText(diagnostics); setDiagnosticsCopied(true) }}>
+              {diagnosticsCopied ? reportCopy.copied : reportCopy.copy}
+            </button>
+            <a href={reportUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-fuchsia-500 px-4 py-3 font-bold text-white hover:bg-fuchsia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
               {reportCopy.action}<ExternalLink className="size-4" aria-hidden="true" />
             </a>
+            </div>
           </div>
         </div>
       </section>
