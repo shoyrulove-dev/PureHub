@@ -2,6 +2,7 @@ package com.purehub.app.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
@@ -18,6 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -29,11 +33,14 @@ import com.purehub.app.ui.LocalizedText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import com.purehub.app.ui.AppLanguage
 import com.purehub.app.ui.appText
+import com.purehub.app.BuildConfig
 
 @Composable
 fun SettingsScreen(
@@ -98,7 +105,10 @@ fun SettingsScreen(
                     AppLanguage.entries.forEachIndexed { index, item ->
                         Button(
                             onClick = { onLanguageChange(item) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .semantics { selected = item == language },
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = languageColors[index].copy(alpha = if (item == language) 1f else .62f),
@@ -112,6 +122,76 @@ fun SettingsScreen(
             PermissionCenterCard()
             ToolVisibilityManagerCard()
             EncryptedBackupCard()
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                color = Color(0xFF24143F),
+                contentColor = Color.White,
+                tonalElevation = 1.dp,
+            ) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = Color(0xFFD8B4FE),
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            LocalizedText(
+                                appText(language, "App information", "Thông tin ứng dụng", "应用信息", "Información de la app"),
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                            )
+                            LocalizedText(
+                                "PureHub ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                                color = Color(0xFFD8B4FE),
+                            )
+                        }
+                    }
+                    LocalizedText(
+                        appText(
+                            language,
+                            "A report includes only the app version, phone model, Android version and selected language.",
+                            "Báo cáo chỉ gồm phiên bản app, mẫu điện thoại, phiên bản Android và ngôn ngữ đã chọn.",
+                            "报告仅包含应用版本、手机型号、Android 版本和所选语言。",
+                            "El informe solo incluye la versión de la app, el modelo, Android y el idioma seleccionado.",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = .76f),
+                    )
+                    Button(
+                        onClick = {
+                            val title = "PureHub ${BuildConfig.VERSION_NAME} issue"
+                            val body = buildString {
+                                appendLine("## Environment")
+                                appendLine("- PureHub: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                                appendLine("- Device: ${Build.MANUFACTURER} ${Build.MODEL}")
+                                appendLine("- Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+                                appendLine("- Language: ${language.code}")
+                                appendLine()
+                                appendLine("## What happened")
+                                appendLine()
+                                appendLine("## Steps to reproduce")
+                                appendLine()
+                                appendLine("Do not attach private files, passwords, QR contents, scans, or API keys.")
+                            }
+                            val issueUrl = Uri.parse("https://github.com/shoyrulove-dev/PureHub/issues/new").buildUpon()
+                                .appendQueryParameter("title", title)
+                                .appendQueryParameter("body", body)
+                                .build()
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, issueUrl).addCategory(Intent.CATEGORY_BROWSABLE))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA855F7), contentColor = Color.White),
+                    ) {
+                        Icon(Icons.Rounded.BugReport, contentDescription = null, modifier = Modifier.size(20.dp))
+                        LocalizedText(" " + appText(language, "Report a problem", "Báo lỗi", "报告问题", "Informar un problema"))
+                    }
+                }
+            }
             Button(
                 onClick = {
                     val privacyUrl = "https://hub.blissbiovn.com/${language.code}/privacy"

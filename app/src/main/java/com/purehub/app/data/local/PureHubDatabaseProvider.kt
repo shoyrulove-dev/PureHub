@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 private const val DATABASE_NAME = "purehub.db"
 
-private val MIGRATION_1_2 = object : Migration(1, 2) {
+internal val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE expense_entries ADD COLUMN transactionType TEXT NOT NULL DEFAULT 'expense'")
         db.execSQL("ALTER TABLE expense_entries ADD COLUMN wallet TEXT NOT NULL DEFAULT 'Cash'")

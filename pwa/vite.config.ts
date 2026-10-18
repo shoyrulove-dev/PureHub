@@ -227,7 +227,12 @@ function staticSeoPages() {
   }
 }
 
+const packageVersion = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')).version as string
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(packageVersion),
+  },
   plugins: [
     react(),
     tailwindcss(),

@@ -62,4 +62,14 @@ class CoreExperienceLocalizationTest {
             }
         }
     }
+
+    @Test
+    fun `every supported language keeps compact navigation labels`() {
+        AppLanguage.entries.forEach { language ->
+            listOf("Home", "Tools", "Community", "Settings").forEach { source ->
+                val translated = translateUiText(source, language)
+                org.junit.Assert.assertTrue("$source is too long in ${language.code}", translated.length <= 18)
+            }
+        }
+    }
 }

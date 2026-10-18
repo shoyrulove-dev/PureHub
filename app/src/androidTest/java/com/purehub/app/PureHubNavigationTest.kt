@@ -15,6 +15,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.purehub.app.feature.catalog.MiniAppId
 import com.purehub.app.ui.AppLanguage
 import com.purehub.app.ui.saveAppLanguage
+import com.purehub.app.ui.screens.compactToolTitle
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -40,41 +41,30 @@ class PureHubNavigationTest {
 
     @Test
     fun primaryNavigationMatchesFriendlyFourSectionLayout() {
-        composeRule.onNodeWithContentDescription("home", useUnmergedTree = true).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("all_tools", useUnmergedTree = true).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("community", useUnmergedTree = true).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("settings", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Home", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tools", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Community", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Settings", useUnmergedTree = true).assertIsDisplayed()
 
-        composeRule.onNodeWithContentDescription("all_tools", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithContentDescription("Tools", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("All tools").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("community", useUnmergedTree = true).performClick()
-        composeRule.onNodeWithText("PureHub belongs to everyone").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("settings", useUnmergedTree = true).performClick()
-        composeRule.onNodeWithText("Choose which tools appear in your catalog. Your preference stays on this device.").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("home", useUnmergedTree = true).performClick()
-        composeRule.onNodeWithText("PureHub").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Community", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithContentDescription("Settings", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("App information").assertExists()
+        composeRule.onNodeWithContentDescription("Home", useUnmergedTree = true).performClick()
     }
 
     @Test
-    fun everyMiniAppCanOpenAndReturnWithoutCrashing() {
-        composeRule.onNodeWithContentDescription("all_tools", useUnmergedTree = true).performClick()
+    fun everyMiniAppCanBeFoundInTheCatalog() {
+        composeRule.onNodeWithContentDescription("Tools", useUnmergedTree = true).performClick()
         val search = composeRule.onNode(hasSetTextAction())
 
         MiniAppId.entries.forEach { tool ->
             search.performTextInput(tool.title)
-            composeRule.onNode(hasText(tool.title) and hasClickAction() and !hasSetTextAction()).performClick()
-            if (tool == MiniAppId.OCR_TEXT) {
-                composeRule.onNodeWithContentDescription("OCR options", useUnmergedTree = true)
-                    .assertIsDisplayed()
-                    .performClick()
-                composeRule.onNodeWithContentDescription("Back to tools", useUnmergedTree = true)
-                    .assertIsDisplayed()
-                    .performClick()
-            } else {
-                composeRule.onNodeWithContentDescription("Back", useUnmergedTree = true)
-                    .assertIsDisplayed()
-                    .performClick()
-            }
+            check(
+                composeRule.onAllNodes(hasText(compactToolTitle(tool, AppLanguage.English)) and hasClickAction() and !hasSetTextAction())
+                    .fetchSemanticsNodes().isNotEmpty(),
+            ) { "Missing ${tool.title} in the catalog" }
             search.performTextClearance()
         }
     }

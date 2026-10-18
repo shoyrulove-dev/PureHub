@@ -107,6 +107,10 @@ android {
         buildConfig = true
     }
 
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
+
     // Unit and instrumentation tests run in dedicated CI tasks. Production code
     // remains fully linted; test-source diagnostics are intentionally non-blocking.
     lint {
@@ -188,4 +192,5 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.room:room-testing:$roomVersion")
 }
