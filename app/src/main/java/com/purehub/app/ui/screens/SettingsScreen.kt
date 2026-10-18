@@ -110,8 +110,7 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(14.dp)) {
                 LocalizedText(appText(language, "Language", "Ngôn ngữ", "语言", "Idioma"), fontWeight = FontWeight.SemiBold)
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    val languageColors = listOf(Color(0xFF2563EB), Color(0xFFE11D48), Color(0xFFF59E0B), Color(0xFF7C3AED))
-                    AppLanguage.entries.forEachIndexed { index, item ->
+                    AppLanguage.entries.forEach { item ->
                         Button(
                             onClick = { onLanguageChange(item) },
                             modifier = Modifier
@@ -120,8 +119,8 @@ fun SettingsScreen(
                                 .semantics { selected = item == language },
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = languageColors[index].copy(alpha = if (item == language) 1f else .62f),
-                                contentColor = Color.White,
+                                containerColor = if (item == language) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = if (item == language) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
                         ) { LocalizedText("${if (item == language) "✓ " else ""}${item.compactLabel}", maxLines = 1) }
                     }
@@ -132,8 +131,8 @@ fun SettingsScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color(0xFF24143F),
-                contentColor = Color.White,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 tonalElevation = 1.dp,
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -141,18 +140,18 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.Rounded.Info,
                             contentDescription = null,
-                            tint = Color(0xFFD8B4FE),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp),
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             LocalizedText(
                                 appText(language, "App information", "Thông tin ứng dụng", "应用信息", "Información de la app"),
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             LocalizedText(
                                 "PureHub ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                                color = Color(0xFFD8B4FE),
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -165,7 +164,7 @@ fun SettingsScreen(
                             "El informe solo incluye la versión de la app, el modelo, Android y el idioma seleccionado.",
                         ),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = .76f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedButton(
                         onClick = {
@@ -195,7 +194,7 @@ fun SettingsScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA855F7), contentColor = Color.White),
+                        colors = ButtonDefaults.buttonColors(),
                     ) {
                         Icon(Icons.Rounded.BugReport, contentDescription = null, modifier = Modifier.size(20.dp))
                         LocalizedText(" " + appText(language, "Report a problem", "Báo lỗi", "报告问题", "Informar un problema"))
@@ -220,7 +219,7 @@ fun SettingsScreen(
             Button(
                 onClick = onJoinPlayTesters,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB), contentColor = Color.White),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
             ) {
                 LocalizedText("🧪 " + appText(language, "Join Google Play testers", "Tham gia Tester CH Play", "加入 Google Play 测试", "Unirse a probadores de Google Play"))
             }

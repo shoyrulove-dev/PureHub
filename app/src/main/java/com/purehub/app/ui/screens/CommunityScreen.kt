@@ -103,7 +103,7 @@ fun CommunityScreen(
         if (BuildConfig.MINIGAME_ENABLED) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF172E52), contentColor = Color(0xFFF4F8FF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -129,7 +129,7 @@ fun CommunityScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF17102B), contentColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF211A35), contentColor = Color(0xFFF7F2FF)),
         ) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -153,7 +153,7 @@ fun CommunityScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF172E52), contentColor = Color(0xFFF4F8FF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -164,7 +164,7 @@ fun CommunityScreen(
                 LocalizedText(
                     appText(language, "Updates, discussion and support.", "Tin mới, trao đổi và hỗ trợ.", "更新、交流与支持。", "Novedades, debate y ayuda."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFC8D9F5),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Button(
                     modifier = Modifier.fillMaxWidth(),
@@ -177,56 +177,56 @@ fun CommunityScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF3B1E5A), contentColor = Color(0xFFFFF7FF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Icon(Icons.Rounded.Code, contentDescription = null, tint = Color(0xFFF0ABFC))
+                Icon(Icons.Rounded.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 LocalizedText(appText(language, "Open source", "Mã nguồn mở", "开源项目", "Código abierto"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 LocalizedText(
                     appText(language, "Read the code, report bugs or suggest improvements.", "Xem mã nguồn, báo lỗi hoặc đề xuất cải tiến.", "查看代码、报告问题或提出改进建议。", "Consulta el código, informa errores o propone mejoras."),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFD5CDE5),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { openUri(GITHUB_LINK) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD8B4FE), contentColor = Color(0xFF25103B)),
+                    colors = ButtonDefaults.buttonColors(),
                 ) {
                     LocalizedText(appText(language, "Open GitHub", "Mở GitHub", "打开 GitHub", "Abrir GitHub"))
                 }
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { openUri(GITHUB_FEEDBACK_LINK) },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    colors = ButtonDefaults.outlinedButtonColors(),
                 ) {
                     LocalizedText(appText(language, "Send feedback", "Gửi góp ý", "发送反馈", "Enviar comentarios"))
                 }
                 LocalizedText(
                     appText(language, "For bugs, include the tool, Android version and steps. Never send private data.", "Khi báo lỗi, ghi tên công cụ, bản Android và các bước. Không gửi dữ liệu riêng tư.", "报告问题时请注明工具、Android 版本和操作步骤。请勿发送隐私数据。", "Para informar un error, indica la herramienta, versión de Android y pasos. No envíes datos privados."),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFBFB5D3),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF35205C), contentColor = Color(0xFFF8F2FF)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             Row(
                 modifier = Modifier.padding(20.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Icon(Icons.Rounded.VolunteerActivism, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                Icon(Icons.Rounded.VolunteerActivism, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     LocalizedText(appText(language, "Contribute", "Đóng góp", "参与贡献", "Contribuye"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     LocalizedText(
                         appText(language, "Share ideas to improve PureHub.", "Chia sẻ ý tưởng cho PureHub.", "分享建议，改进 PureHub。", "Comparte ideas para mejorar PureHub."),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFD8C7F2),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

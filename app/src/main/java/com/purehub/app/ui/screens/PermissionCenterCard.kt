@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 
 private data class PermissionExplanation(val permission: String, val label: String, val reason: String)
@@ -46,7 +45,10 @@ fun PermissionCenterCard() {
     )
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF17243E), contentColor = Color(0xFFF5F7FF)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -60,7 +62,7 @@ fun PermissionCenterCard() {
                     appText(language, "Permissions are requested when needed.", "Quyền chỉ được hỏi khi cần.", "仅在需要时请求权限。", "Los permisos se piden al usarlos.")
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFFC6D3EE),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             permissions.forEach { item ->
                 val granted = ContextCompat.checkSelfPermission(context, item.permission) == PackageManager.PERMISSION_GRANTED
@@ -69,7 +71,7 @@ fun PermissionCenterCard() {
                     Column(modifier = Modifier.weight(1f)) {
                         val state = if (granted) appText(language, "On", "Bật", "已开启", "Activo") else appText(language, "Off", "Tắt", "已关闭", "Inactivo")
                         LocalizedText("${item.label} · $state", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                        LocalizedText(item.reason, style = MaterialTheme.typography.bodySmall, color = Color(0xFFC6D3EE))
+                        LocalizedText(item.reason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

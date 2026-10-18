@@ -80,7 +80,7 @@ export function CommunityPage() {
         </p>
       </div>
 
-      <a href={PURE_EARN_URL} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[22px] border border-violet-400/30 bg-gradient-to-r from-[#130d26] via-[#251247] to-[#111027] p-5 text-white shadow-lg shadow-violet-900/10">
+      <a href={PURE_EARN_URL} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[22px] border border-violet-400/20 bg-[#211a35] p-5 text-white shadow-sm">
         <span className="flex items-center gap-4">
           <img src="/pure-earn-icon.svg" alt="" className="size-16 rounded-[18px]" />
           <span className="min-w-0 flex-1"><strong className="block text-xl">Pure Earn</strong><span className="mt-1 block text-sm font-semibold text-violet-200">{earnCopy.label}</span><span className="mt-2 block text-xs leading-5 text-violet-100/75">{earnCopy.body}</span></span>
@@ -99,12 +99,12 @@ export function CommunityPage() {
         ))}
       </div>
 
-      <section id="early-testers" className="rounded-[20px] border border-sky-200 bg-sky-50/70 p-5 dark:border-sky-500/20 dark:bg-sky-500/5">
+      <section id="early-testers" className="app-surface rounded-[20px] p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="tool-card__icon text-sky-600 dark:text-sky-300"><TestTube2 className="size-5" /></span>
+            <span className="tool-card__icon text-violet-600 dark:text-violet-300"><TestTube2 className="size-5" /></span>
             <div>
-              <p className="eyebrow text-sky-700 dark:text-sky-300">{copy.earlyEyebrow}</p>
+              <p className="eyebrow text-violet-700 dark:text-violet-300">{copy.earlyEyebrow}</p>
               <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">{copy.earlyTitle}</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">{copy.earlyHint}</p>
             </div>
@@ -156,15 +156,15 @@ export function CommunityPage() {
 
       <a href={`/${locale}/download`} className="app-surface flex items-center justify-between gap-4 rounded-[18px] p-5">
         <span><strong className="block text-slate-950 dark:text-white">{copy.getAndroid}</strong><small className="mt-1 block text-slate-500">{copy.releaseHint}</small></span>
-        <Download className="size-5 text-emerald-500" />
+        <Download className="size-5 text-violet-600 dark:text-violet-300" />
       </a>
 
       <div className="app-surface rounded-[18px] p-5">
         <h2 className="font-bold text-slate-950 dark:text-white">{copy.contribute}</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="promise-card"><Bot className="size-5 text-sky-500" /><span>{copy.testFlows}</span></div>
+          <div className="promise-card"><Bot className="size-5 text-violet-600 dark:text-violet-300" /><span>{copy.testFlows}</span></div>
           <div className="promise-card"><Languages className="size-5 text-violet-500" /><span>{copy.improveTranslations}</span></div>
-          <div className="promise-card"><HeartHandshake className="size-5 text-rose-500" /><span>{copy.share}</span></div>
+          <div className="promise-card"><HeartHandshake className="size-5 text-violet-600 dark:text-violet-300" /><span>{copy.share}</span></div>
         </div>
       </div>
     </section>

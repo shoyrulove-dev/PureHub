@@ -41,7 +41,7 @@ export function SettingsPage() {
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-center gap-3">
-          <span className="tool-card__icon text-amber-500"><SunMoon className="size-5" /></span>
+          <span className="tool-card__icon text-violet-600 dark:text-violet-300"><SunMoon className="size-5" /></span>
           <div><h2 className="font-bold text-slate-950 dark:text-white">{copy.appearance}</h2><p className="text-sm text-slate-500">{copy.appearanceHint}</p></div>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -53,11 +53,11 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <Link to={`/${locale}/privacy-center`} className="flex min-h-16 items-center gap-3 rounded-[18px] border border-violet-300/70 bg-gradient-to-r from-violet-100 to-fuchsia-50 p-4 text-violet-950 dark:border-violet-500/30 dark:from-violet-500/15 dark:to-fuchsia-500/10 dark:text-violet-100"><ShieldCheck className="size-6 text-violet-600 dark:text-violet-300" /><span className="min-w-0 flex-1"><strong className="block">{copy.privacyCenter}</strong><small className="text-violet-700 dark:text-violet-300">{copy.privacyCenterHint}</small></span><ArrowRight className="size-5" /></Link>
+      <Link to={`/${locale}/privacy-center`} className="app-surface flex min-h-16 items-center gap-3 rounded-[18px] p-4"><ShieldCheck className="size-6 text-violet-600 dark:text-violet-300" /><span className="min-w-0 flex-1"><strong className="block text-slate-950 dark:text-white">{copy.privacyCenter}</strong><small className="text-slate-500 dark:text-slate-400">{copy.privacyCenterHint}</small></span><ArrowRight className="size-5 text-violet-600 dark:text-violet-300" /></Link>
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start gap-3">
-          <Smartphone className="mt-0.5 size-5 text-emerald-500" />
+          <Smartphone className="mt-0.5 size-5 text-violet-600 dark:text-violet-300" />
           <div>
             <h2 className="font-bold text-slate-950 dark:text-white">{copy.platform}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{copy.platformHint}</p>
@@ -68,7 +68,7 @@ export function SettingsPage() {
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-center gap-3">
-          <span className="tool-card__icon text-sky-500"><Languages className="size-5" /></span>
+          <span className="tool-card__icon text-violet-600 dark:text-violet-300"><Languages className="size-5" /></span>
           <div><h2 className="font-bold text-slate-950 dark:text-white">{copy.language}</h2><p className="text-sm text-slate-500">{copy.languageHint}</p></div>
         </div>
         <div className="mt-4 flex gap-2">
@@ -77,7 +77,7 @@ export function SettingsPage() {
               key={item}
               to={`/${item}/settings`}
               onClick={() => persistSelectedLocale(item)}
-              className={`filter-chip uppercase ${locale === item ? ({ en: 'border-sky-400 bg-sky-500 text-white', vi: 'border-rose-400 bg-rose-500 text-white', zh: 'border-amber-400 bg-amber-400 text-slate-950', es: 'border-violet-400 bg-violet-500 text-white' }[item]) : ''}`}
+              className={`filter-chip uppercase ${locale === item ? 'border-violet-500 bg-violet-600 text-white shadow-sm' : ''}`}
             >
               {item}
             </Link>
@@ -85,20 +85,20 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <a href={PLAY_TESTER_GROUP_URL} target="_blank" rel="noreferrer" className="flex min-h-16 items-center gap-3 rounded-[18px] border border-violet-200 bg-violet-50 p-4 text-violet-950 dark:border-violet-900 dark:bg-violet-950/25 dark:text-violet-100"><TestTube2 className="size-6" /><span className="min-w-0 flex-1"><strong className="block">{copy.tester}</strong><small className="text-violet-800 dark:text-violet-300">{copy.testerHint}</small></span><ExternalLink className="size-5" /></a>
+      <a href={PLAY_TESTER_GROUP_URL} target="_blank" rel="noreferrer" className="app-surface flex min-h-16 items-center gap-3 rounded-[18px] p-4"><TestTube2 className="size-6 text-violet-600 dark:text-violet-300" /><span className="min-w-0 flex-1"><strong className="block text-slate-950 dark:text-white">{copy.tester}</strong><small className="text-slate-500 dark:text-slate-400">{copy.testerHint}</small></span><ExternalLink className="size-5 text-violet-600 dark:text-violet-300" /></a>
 
-      <section className="rounded-[18px] border border-violet-400/40 bg-gradient-to-br from-violet-950 to-fuchsia-950 p-5 text-white">
+      <section className="rounded-[18px] border border-violet-400/25 bg-[#211a35] p-5 text-white shadow-sm">
         <div className="flex items-start gap-3">
-          <Bug className="mt-0.5 size-6 shrink-0 text-fuchsia-300" aria-hidden="true" />
+          <Bug className="mt-0.5 size-6 shrink-0 text-violet-300" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <h2 className="font-bold">{reportCopy.title}</h2>
-            <p className="mt-1 font-semibold text-fuchsia-200">PureHub PWA {__APP_VERSION__}</p>
+            <p className="mt-1 font-semibold text-violet-200">PureHub PWA {__APP_VERSION__}</p>
             <p className="mt-2 text-sm leading-6 text-violet-100/80">{reportCopy.hint}</p>
             <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className="inline-flex min-h-12 items-center rounded-xl border border-violet-300/60 px-4 py-3 font-bold text-white hover:bg-white/10" onClick={async () => { await navigator.clipboard.writeText(diagnostics); setDiagnosticsCopied(true) }}>
               {diagnosticsCopied ? reportCopy.copied : reportCopy.copy}
             </button>
-            <a href={reportUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-fuchsia-500 px-4 py-3 font-bold text-white hover:bg-fuchsia-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            <a href={reportUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-violet-600 px-4 py-3 font-bold text-white hover:bg-violet-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
               {reportCopy.action}<ExternalLink className="size-4" aria-hidden="true" />
             </a>
             </div>
@@ -109,7 +109,7 @@ export function SettingsPage() {
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <Activity className="mt-0.5 size-5 text-sky-500" />
+            <Activity className="mt-0.5 size-5 text-violet-600 dark:text-violet-300" />
             <div>
               <h2 className="font-bold text-slate-950 dark:text-white">{copy.counters}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{copy.countersHint}</p>
@@ -124,7 +124,7 @@ export function SettingsPage() {
 
       <section className="app-surface rounded-[18px] p-5">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="mt-0.5 size-5 text-emerald-500" />
+          <ShieldCheck className="mt-0.5 size-5 text-violet-600 dark:text-violet-300" />
           <div>
             <h2 className="font-bold text-slate-950 dark:text-white">{copy.privacyPromise}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
