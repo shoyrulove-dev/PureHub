@@ -47,3 +47,21 @@ Before rollout, complete the Play Console Data safety, App content, content rati
 - Use only beta.57 screenshots in the Play listing. Capture Home, Tools, Wi-Fi Analyzer, Lunar Calendar, Smart Flashlight, and the permission explanation on a physical phone.
 - Confirm Settings shows `1.0.0-beta.57 (57)` and that Report a problem opens a prefilled GitHub issue containing only version, model, Android API, and selected language.
 - Review Android vitals, tester reports, permission failures, and the three most common failed workflows after days 1, 3, 7, and 14. Do not promote to production while a reproducible crash, ANR, data-loss migration, or blocked primary flow remains open.
+
+## Nine-point acceptance gate
+
+PureHub is considered ready for closed beta only when every row below has evidence and no release-blocking defect remains open.
+
+| Area | Required evidence |
+| --- | --- |
+| Stability | Five flagship flows, back/home navigation, permission denial and a 60-minute device soak complete without crash or ANR. |
+| Data upgrades | A signed update over beta.55 or beta.56 preserves favorites, reminders, histories and Room records. Never clear tester data for this check. |
+| Accessibility | TalkBack order and labels, 48dp controls, 200% font, 360dp width and portrait/landscape checks pass. |
+| Localization | Home, Settings and five flagships have no leaked English in Vietnamese, Simplified Chinese or Spanish, including dialogs and exports. |
+| Security/privacy | Only the launcher activity is exported; backup exclusions, FileProvider scope, external links and diagnostic redaction are verified. |
+| PWA | Install, old-cache cleanup, offline reload, protected backend routes, four locales and Android fallback links pass. |
+| Performance | Cold start, memory pressure, APK/AAB size and a 60-minute soak are recorded on the release candidate. |
+| Play listing | Four localized listings, current screenshots, Data safety, App content, content rating and foreground-service declarations are reviewed against the uploaded AAB. |
+| Feedback | A tester can copy a redacted diagnostic report and open a categorized issue without automatic upload. |
+
+Automated checks support this gate but do not replace the signed upgrade, TalkBack, Play Console pre-launch report, Android Vitals or 7–14 days of real tester observation.

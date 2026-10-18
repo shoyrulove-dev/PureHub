@@ -6,8 +6,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4f7fb",
-  "theme_color": "#0f172a",
+  "background_color": "#f5f0ff",
+  "theme_color": "#6d28d9",
   "lang": "en",
   "categories": ["productivity", "utilities", "lifestyle"],
   "shortcuts": [

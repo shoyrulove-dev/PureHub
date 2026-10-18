@@ -18,6 +18,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.purehub.app.ui.LocalizedText
+import com.purehub.app.ui.LocalAppLanguage
+import com.purehub.app.ui.translateUiText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ fun FlagshipSuiteHeader(
     description: String,
     accent: Color = MaterialTheme.colorScheme.primary,
 ) {
+    val language = LocalAppLanguage.current
     Surface(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -73,9 +76,9 @@ fun FlagshipSuiteHeader(
                     LocalizedText(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Icon(Icons.Rounded.WifiOff, contentDescription = "Offline", tint = accent, modifier = Modifier.size(16.dp))
-                    Icon(Icons.Rounded.Block, contentDescription = "No ads", tint = accent, modifier = Modifier.size(16.dp))
-                    Icon(Icons.Rounded.Lock, contentDescription = "Private", tint = accent, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.WifiOff, contentDescription = translateUiText("Offline", language), tint = accent, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.Block, contentDescription = translateUiText("No ads", language), tint = accent, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.Lock, contentDescription = translateUiText("Private", language), tint = accent, modifier = Modifier.size(16.dp))
                 }
             }
             LocalizedText(

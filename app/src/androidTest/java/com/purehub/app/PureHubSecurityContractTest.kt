@@ -44,4 +44,26 @@ class PureHubSecurityContractTest {
         assertFalse((features[PackageManager.FEATURE_CAMERA] ?: 0) and requiredFlag != 0)
         assertFalse((features[PackageManager.FEATURE_MICROPHONE] ?: 0) and requiredFlag != 0)
     }
+
+    @Test
+    fun onlyLauncherActivityIsPubliclyExported() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val packageInfo = context.packageManager.getPackageInfo(
+            context.packageName,
+            PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
+                PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS,
+        )
+
+        // Compose's debug/test manifests add exported tooling activities. They
+        // are not packaged in release, so enforce the contract on PureHub-owned
+        // components while still checking every provider below.
+        val appNamespace = MainActivity::class.java.packageName + "."
+        val exportedActivities = packageInfo.activities.orEmpty()
+            .filter { it.exported && it.name.startsWith(appNamespace) }
+            .map { it.name }
+        assertTrue("Only MainActivity may be exported: $exportedActivities", exportedActivities == listOf(MainActivity::class.java.name))
+        assertTrue("Services must remain app-private", packageInfo.services.orEmpty().none { it.exported && it.name.startsWith(appNamespace) })
+        assertTrue("Widget and internal receivers must remain app-private", packageInfo.receivers.orEmpty().none { it.exported && it.name.startsWith(appNamespace) })
+        assertTrue("File and database providers must remain app-private", packageInfo.providers.orEmpty().none { it.exported })
+    }
 }
