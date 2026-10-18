@@ -100,9 +100,9 @@ class WifiMonitorService : Service() {
 
     @SuppressLint("MissingPermission")
     private suspend fun collectSample(): WifiMonitorSample = withContext(Dispatchers.IO) {
-        @Suppress("DEPRECATION") val info = runCatching { wifiManager.connectionInfo }.getOrNull()
-        @Suppress("DEPRECATION") val gateway = runCatching { WifiDiagnostics.gatewayHost(wifiManager.dhcpInfo) }.getOrNull()
-        val health = WifiDiagnostics.quickHealth(gateway)
+        val connection = WifiDiagnostics.connection(applicationContext)
+        val info = connection.info
+        val health = WifiDiagnostics.quickHealth(connection.gateway)
         WifiMonitorSample(
             timestamp = System.currentTimeMillis(),
             rssi = info?.rssi ?: -100,

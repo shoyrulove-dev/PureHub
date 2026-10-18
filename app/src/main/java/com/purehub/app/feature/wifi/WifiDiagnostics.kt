@@ -1,6 +1,11 @@
 package com.purehub.app.feature.wifi
 
-import android.net.DhcpInfo
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
+import java.net.Inet4Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.HttpURLConnection
@@ -38,7 +43,26 @@ internal object WifiDiagnostics {
         return listOf(value and 0xff, value shr 8 and 0xff, value shr 16 and 0xff, value shr 24 and 0xff).joinToString(".")
     }
 
-    fun gatewayHost(info: DhcpInfo?): String? = info?.gateway?.let(::ipv4)
+    data class Connection(val info: WifiInfo?, val localAddress: String?, val gateway: String?)
+
+    @Suppress("DEPRECATION")
+    fun connection(context: Context): Connection {
+        val connectivity = context.getSystemService(ConnectivityManager::class.java)
+        val network = connectivity.activeNetwork
+        val capabilities = network?.let(connectivity::getNetworkCapabilities)
+        val linkProperties = network?.let(connectivity::getLinkProperties)
+        val modernInfo = capabilities?.transportInfo as? WifiInfo
+        val modernLocal = linkProperties?.linkAddresses?.asSequence()
+            ?.map { it.address }?.filterIsInstance<Inet4Address>()?.firstOrNull()?.hostAddress
+        val modernGateway = linkProperties?.routes?.asSequence()
+            ?.mapNotNull { it.gateway as? Inet4Address }?.firstOrNull()?.hostAddress
+        if (modernInfo != null || modernLocal != null || modernGateway != null) {
+            return Connection(modernInfo, modernLocal, modernGateway)
+        }
+        val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
+        val dhcp = wifi.dhcpInfo
+        return Connection(wifi.connectionInfo, ipv4(dhcp?.ipAddress ?: 0), ipv4(dhcp?.gateway ?: 0))
+    }
 
     fun run(
         gateway: String?,

@@ -1,8 +1,8 @@
 package com.purehub.app.feature.lunar
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.purehub.app.security.KeystoreStringStore
+import com.purehub.app.security.legacyEncryptedStrings
 import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
@@ -28,13 +28,9 @@ data class LunarEvent(
 )
 
 class LunarEventRepository(context: Context) {
-    private val preferences = EncryptedSharedPreferences.create(
-        context,
-        "purehub_lunar_events",
-        MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-    )
+    private val preferences = KeystoreStringStore(context, "purehub_lunar_events") {
+        legacyEncryptedStrings(context, "purehub_lunar_events", setOf(KEY))
+    }
 
     fun load(): List<LunarEvent> = runCatching {
         val array = JSONArray(preferences.getString(KEY, "[]"))
@@ -75,14 +71,14 @@ class LunarEventRepository(context: Context) {
                 event.deletedAtEpochMs?.let { put("deletedAtEpochMs", it) }
             })
         }
-        preferences.edit().putString(KEY, array.toString()).apply()
+        preferences.putStrings(mapOf(KEY to array.toString()))
     }
 
     fun exportJson(): String = JSONObject().put("version", 2).put("events", JSONArray(preferences.getString(KEY, "[]"))).toString(2)
 
     fun importJson(raw: String): List<LunarEvent> {
         val source = JSONObject(raw).getJSONArray("events")
-        preferences.edit().putString(KEY, source.toString()).apply()
+        preferences.putStrings(mapOf(KEY to source.toString()))
         return load()
     }
 

@@ -2,8 +2,8 @@ package com.purehub.app
 
 import android.os.Bundle
 import android.content.Intent
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -22,7 +22,7 @@ import com.purehub.app.ui.appText
 import com.purehub.app.ui.loadAppLanguage
 import com.purehub.app.feature.catalog.MiniAppId
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private var requestedMiniAppId by mutableStateOf<MiniAppId?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {

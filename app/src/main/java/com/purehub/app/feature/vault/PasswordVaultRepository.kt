@@ -1,8 +1,8 @@
 package com.purehub.app.feature.vault
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.purehub.app.security.KeystoreStringStore
+import com.purehub.app.security.legacyEncryptedStrings
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -16,16 +16,9 @@ data class VaultEntry(
 class PasswordVaultRepository(
     context: Context,
 ) {
-    @Suppress("DEPRECATION")
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "purehub_vault",
-        MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-    )
+    private val sharedPreferences = KeystoreStringStore(context, "purehub_vault") {
+        legacyEncryptedStrings(context, "purehub_vault", setOf(KEY_ENTRIES))
+    }
 
     fun loadEntries(): List<VaultEntry> {
         val raw = sharedPreferences.getString(KEY_ENTRIES, "[]").orEmpty()
@@ -33,9 +26,7 @@ class PasswordVaultRepository(
     }
 
     fun saveEntries(entries: List<VaultEntry>) {
-        check(sharedPreferences.edit().putString(KEY_ENTRIES, VaultEntryCodec.encode(entries)).commit()) {
-            "Encrypted vault storage could not be committed."
-        }
+        sharedPreferences.putStrings(mapOf(KEY_ENTRIES to VaultEntryCodec.encode(entries)))
     }
 
     companion object {

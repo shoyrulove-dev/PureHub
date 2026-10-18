@@ -1,9 +1,8 @@
 package com.purehub.app.feature.wifi
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.purehub.app.security.KeystoreStringStore
+import com.purehub.app.security.legacyEncryptedStrings
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -84,16 +83,10 @@ private fun collectControllerNumbers(value: Any?, keys: Set<String>, output: Mut
 
 internal object RouterControllerStore {
     private const val FILE = "purehub.router-controller.secure.v1"
+    private val KEYS = setOf("platform", "base_url", "username", "secret")
 
-    private fun preferences(context: Context): SharedPreferences {
-        val key = MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-        return EncryptedSharedPreferences.create(
-            context,
-            FILE,
-            key,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
+    private fun preferences(context: Context) = KeystoreStringStore(context, FILE) {
+        legacyEncryptedStrings(context, FILE, KEYS)
     }
 
     fun load(context: Context): RouterControllerConfig? = runCatching {
@@ -108,13 +101,14 @@ internal object RouterControllerStore {
     }.getOrNull()
 
     fun save(context: Context, config: RouterControllerConfig?) {
-        val editor = preferences(context).edit().clear()
-        if (config != null) editor
-            .putString("platform", config.platform.name)
-            .putString("base_url", config.baseUrl.trim().trimEnd('/'))
-            .putString("username", config.username)
-            .putString("secret", config.secret)
-        editor.apply()
+        preferences(context).replace(
+            if (config == null) emptyMap() else mapOf(
+                "platform" to config.platform.name,
+                "base_url" to config.baseUrl.trim().trimEnd('/'),
+                "username" to config.username,
+                "secret" to config.secret,
+            ),
+        )
     }
 }
 

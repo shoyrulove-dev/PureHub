@@ -156,6 +156,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.security:security-crypto:1.1.0")
+    implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.exifinterface:exifinterface:1.4.1")
     implementation("androidx.work:work-runtime-ktx:$workVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")

@@ -261,7 +261,7 @@ class WifiAnalyzerViewModel(
                 val profile = _uiState.value.speedProfile
                 val endpoints = configuredSpeedEndpoints(_uiState.value)
                 withContext(Dispatchers.IO) {
-                    WifiDiagnostics.run(WifiDiagnostics.gatewayHost(wifiManager.dhcpInfo), profile, endpoints) { progress ->
+                    WifiDiagnostics.run(WifiDiagnostics.connection(appContext).gateway, profile, endpoints) { progress ->
                         _uiState.value = _uiState.value.copy(speedProgress = progress)
                     }
                 }
@@ -524,7 +524,8 @@ class WifiAnalyzerViewModel(
     private fun pollWifiState() {
         val hasScanPermission = hasWifiScanPermission()
         @Suppress("DEPRECATION")
-        val info: WifiInfo? = runCatching { wifiManager.connectionInfo }.getOrNull()
+        val connection = WifiDiagnostics.connection(appContext)
+        val info: WifiInfo? = connection.info
         val rssi = info?.rssi ?: -100
         val frequency = info?.frequency ?: 0
         @Suppress("DEPRECATION")
@@ -622,8 +623,8 @@ class WifiAnalyzerViewModel(
             openPortsByHost = previous.openPortsByHost,
             lanActionMessage = previous.lanActionMessage,
             trustedLanIps = previous.trustedLanIps,
-            localIpAddress = WifiDiagnostics.ipv4(wifiManager.dhcpInfo?.ipAddress ?: 0),
-            gatewayAddress = WifiDiagnostics.gatewayHost(wifiManager.dhcpInfo),
+            localIpAddress = connection.localAddress,
+            gatewayAddress = connection.gateway,
             accessPointVendor = OuiDatabase.lookup(appContext, info?.bssid.orEmpty()),
             isWalkTestActive = previous.isWalkTestActive,
             walkSamples = walkSamples,
@@ -733,7 +734,7 @@ class WifiAnalyzerViewModel(
         @Suppress("DEPRECATION")
         val level = WifiManager.calculateSignalLevel(this.level, 5)
         return NearbyWifiNetwork(
-            ssid = SSID.ifBlank { "Hidden network" },
+            ssid = scanSsid(),
             bssid = BSSID.orEmpty().ifBlank { "--" },
             rssi = this.level,
             level = level,
@@ -762,6 +763,16 @@ class WifiAnalyzerViewModel(
         ScanResult.WIFI_STANDARD_11AX -> "Wi-Fi 6/6E"
         7 -> "Wi-Fi 7"
         else -> "Legacy"
+    }
+
+    private fun ScanResult.scanSsid(): String {
+        val value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            wifiSsid?.toString().orEmpty()
+        } else {
+            @Suppress("DEPRECATION")
+            SSID
+        }
+        return value.ifBlank { "Hidden network" }
     }
 
     private fun estimateDistance(rssi: Int, frequencyMhz: Int): Double? {

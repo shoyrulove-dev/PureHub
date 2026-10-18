@@ -1,11 +1,10 @@
 package com.purehub.app.ui.screens
 
-import android.app.Activity
-import android.app.KeyguardManager
-import android.content.Context
 import android.view.WindowManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -86,17 +85,32 @@ fun AuthenticatorVaultCard() {
     var selectedGroup by rememberSaveable { mutableStateOf("All") }
     var mode by rememberSaveable { mutableStateOf(SuiteMode.QUICK) }
     var tick by remember { mutableIntStateOf(0) }
-    val activity = context as? Activity
+    val activity = context as? FragmentActivity
     DisposableEffect(activity) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
     }
     LaunchedEffect(unlocked) { while (unlocked) { tick += 1; delay(1_000) } }
-    val unlockLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result -> unlocked = result.resultCode == Activity.RESULT_OK }
+    val biometricPrompt = remember(activity) {
+        activity?.let {
+            BiometricPrompt(
+                it,
+                ContextCompat.getMainExecutor(it),
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { unlocked = true }
+                },
+            )
+        }
+    }
     val unlock = {
-        val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        val intent = keyguard.createConfirmDeviceCredentialIntent("Unlock Authenticator Vault", "Confirm your device lock to view 2FA codes")
-        if (intent == null) unlocked = true else unlockLauncher.launch(intent)
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        val prompt = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Unlock Authenticator Vault")
+            .setSubtitle("Confirm your identity to view 2FA codes")
+            .setAllowedAuthenticators(authenticators)
+            .build()
+        biometricPrompt?.authenticate(prompt)
+        Unit
     }
     val groups = remember(accounts) { listOf("All") + accounts.map { it.group }.distinct().sorted() }
     val visibleAccounts = remember(accounts, query, selectedGroup, mode) {

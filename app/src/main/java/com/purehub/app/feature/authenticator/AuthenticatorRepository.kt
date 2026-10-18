@@ -1,8 +1,8 @@
 package com.purehub.app.feature.authenticator
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.purehub.app.security.KeystoreStringStore
+import com.purehub.app.security.legacyEncryptedStrings
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,22 +14,13 @@ data class TotpAccount(
 )
 
 class AuthenticatorRepository(context: Context) {
-    @Suppress("DEPRECATION")
-    private val preferences = EncryptedSharedPreferences.create(
-        context,
-        "authenticator_vault",
-        MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-    )
+    private val preferences = KeystoreStringStore(context, "authenticator_vault") {
+        legacyEncryptedStrings(context, "authenticator_vault", setOf("accounts"))
+    }
 
     fun load(): List<TotpAccount> = AuthenticatorCodec.decode(preferences.getString("accounts", "[]").orEmpty())
 
-    fun save(accounts: List<TotpAccount>) {
-        check(preferences.edit().putString("accounts", AuthenticatorCodec.encode(accounts)).commit()) {
-            "Authenticator vault could not be committed."
-        }
-    }
+    fun save(accounts: List<TotpAccount>) = preferences.putStrings(mapOf("accounts" to AuthenticatorCodec.encode(accounts)))
 }
 
 internal object AuthenticatorCodec {
