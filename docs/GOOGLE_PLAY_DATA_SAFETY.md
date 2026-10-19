@@ -1,6 +1,6 @@
 # Google Play Data safety worksheet
 
-This worksheet applies to the Standard Android bundle for PureHub beta.59. It is an implementation checklist, not a substitute for reviewing the final Play Console form and the exact uploaded AAB.
+This worksheet applies to the Standard Android bundle for PureHub beta.60. It is an implementation checklist, not a substitute for reviewing the final Play Console form and the exact uploaded AAB.
 
 ## Product declarations
 

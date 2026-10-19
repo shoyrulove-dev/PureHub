@@ -1,7 +1,6 @@
 package com.purehub.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -15,11 +14,7 @@ import com.purehub.app.ui.appText
 @Composable
 fun Modifier.pureHubCanvas(): Modifier = background(
     Brush.verticalGradient(
-        if (isSystemInDarkTheme()) {
-            listOf(Color(0xFF231240), Color(0xFF130D22), Color(0xFF10182B), Color(0xFF21143A))
-        } else {
-            listOf(Color(0xFFE7D9FF), Color(0xFFF0E9FF), Color(0xFFE5ECFF), Color(0xFFDDD0FF))
-        },
+        listOf(Color(0xFF231240), Color(0xFF130D22), Color(0xFF10182B), Color(0xFF21143A)),
     ),
 )
 
@@ -29,7 +24,7 @@ val PureHubHeroBrush: Brush
     )
 
 @Composable
-fun MiniAppTab.uiAccent(): Color = if (!isSystemInDarkTheme()) accent else when (this) {
+fun MiniAppTab.uiAccent(): Color = when (this) {
     MiniAppTab.ZEN_TIME -> Color(0xFF2DD4BF)
     MiniAppTab.MEASURE_TOOLS -> Color(0xFF60A5FA)
     MiniAppTab.VISION -> Color(0xFFC084FC)
@@ -38,7 +33,7 @@ fun MiniAppTab.uiAccent(): Color = if (!isSystemInDarkTheme()) accent else when 
 }
 
 @Composable
-fun MiniAppTab.uiAccentContainer(): Color = if (!isSystemInDarkTheme()) accentContainer else when (this) {
+fun MiniAppTab.uiAccentContainer(): Color = when (this) {
     MiniAppTab.ZEN_TIME -> Color(0xFF143D3A)
     MiniAppTab.MEASURE_TOOLS -> Color(0xFF172E52)
     MiniAppTab.VISION -> Color(0xFF35205C)

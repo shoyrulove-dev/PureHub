@@ -3,7 +3,6 @@ package com.purehub.app.ui.theme
 import android.app.Activity
 import android.annotation.SuppressLint
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
@@ -63,7 +62,10 @@ private val PureHubShapes = Shapes(
 @Suppress("DEPRECATION")
 @SuppressLint("NewApi")
 fun PureHubTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Keep the product palette consistent across devices. Following the system
+    // theme made the same build violet/black on one phone and nearly white on
+    // another, which also changed the contrast of every mini-app surface.
+    darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -83,7 +85,9 @@ fun PureHubTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
+            window.navigationBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

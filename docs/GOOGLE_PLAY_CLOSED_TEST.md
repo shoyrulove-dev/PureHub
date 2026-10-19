@@ -22,13 +22,13 @@ PureHub needs a closed test before a production Google Play launch. The product 
 
 Do not point users to a Play opt-in page until the track contains the signed production-candidate bundle and the group/tester policy is configured in Play Console.
 
-## Beta.54 readiness snapshot
+## Beta.60 readiness snapshot
 
 - Application ID: `com.purehub.app`
-- Version code: `57`
+- Version code: `60`
 - Target SDK: Android 16 / API 36
 - Minimum SDK: API 26
-- Signed AAB: `PureHub-1.0.0-beta.59.aab`
+- Signed AAB: `PureHub-1.0.0-beta.60.aab`
 - Store listing copy: English, Vietnamese, Simplified Chinese, and Spanish
 - Current screenshots: Home, complete tool catalog, and Bubble Level
 - Privacy policy: `https://hub.blissbiovn.com/en/privacy`, linked from Android Settings
@@ -38,14 +38,14 @@ Do not point users to a Play opt-in page until the track contains the signed pro
 
 Before rollout, complete the Play Console Data safety, App content, content rating, target audience, ads, and foreground-service declarations. Keep the privacy answers aligned with the exact Standard bundle and its connected Wi-Fi diagnostics; do not reuse the retired offline F-Droid description.
 
-## Beta 57 release gate
+## Beta 60 release gate
 
 - Install the signed APK as an update over beta.55 or beta.56 and confirm local preferences, favorites, reminders, Wi-Fi history, and Room data remain available.
 - Smoke-test Home, Tools, Community, Settings, Wi-Fi Analyzer, Lunar Calendar, Bubble Level, Smart Flashlight, OCR, and QR in English, Vietnamese, Simplified Chinese, and Spanish.
 - Repeat the core flow with camera, microphone, nearby Wi-Fi, location, notification, and screen-recording permissions denied; every denial must keep navigation usable and explain the recovery action.
 - Test system font scales at 100%, 125%, and 150%, TalkBack focus order, descriptive controls, 48dp touch targets, and light/dark contrast.
-- Use only beta.59 screenshots in the Play listing. Capture Home, Tools, Wi-Fi Analyzer, Lunar Calendar, Smart Flashlight, and the permission explanation on a physical phone.
-- Confirm Settings shows `1.0.0-beta.59 (59)` and that Report a problem opens a prefilled GitHub issue containing only version, model, Android API, and selected language.
+- Use only beta.60 screenshots in the Play listing. Capture Home, Tools, Wi-Fi Analyzer, Lunar Calendar, Smart Flashlight, and the permission explanation on a physical phone.
+- Confirm Settings shows `1.0.0-beta.60 (60)` and that Report a problem opens a prefilled GitHub issue containing only version, model, Android API, and selected language.
 - Review Android vitals, tester reports, permission failures, and the three most common failed workflows after days 1, 3, 7, and 14. Do not promote to production while a reproducible crash, ANR, data-loss migration, or blocked primary flow remains open.
 
 ## Nine-point acceptance gate

@@ -72,7 +72,7 @@ Some tools depend on device capabilities such as a camera, microphone, motion se
 
 ## Current product experience
 
-The signed Android `1.0.0-beta.59` build and current PWA share the refreshed adaptive violet interface, compact navigation, shorter tool names, clearer cards, and reviewed English, Vietnamese, Simplified Chinese, and Spanish labels.
+The signed Android `1.0.0-beta.60` build and current PWA share the refreshed violet interface, compact navigation, shorter tool names, clearer cards, and reviewed English, Vietnamese, Simplified Chinese, and Spanish labels. Android now keeps the calm dark-violet palette consistent across devices instead of changing card contrast with the phone's system theme.
 
 | Area | Current experience |
 | --- | --- |
@@ -83,7 +83,7 @@ The signed Android `1.0.0-beta.59` build and current PWA share the refreshed ada
 | Vision tools | Camera-first QR, OCR, document-to-PDF, color capture, photo privacy, and screen recording workflows |
 | Community | Official PureHub discussion link plus a clearly separated Pure Earn entry with no automatic account or device-data sharing |
 
-Download the verified build from the [beta.59 release page](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.59) or use the [latest PWA](https://hub.blissbiovn.com/en).
+Download the verified build from the [beta.60 release page](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.60) or use the [latest PWA](https://hub.blissbiovn.com/en).
 
 ## Why this project exists
 
@@ -155,7 +155,7 @@ F-Droid publishing is discontinued. The active distribution path is the signed G
 
 ## Releases
 
-The current release candidate is [PureHub 1.0.0-beta.59](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.59). It modernizes encrypted local storage, device authentication, and Android Wi-Fi connection APIs while preserving a non-destructive migration path from beta.58. The refreshed violet visual system and four-language Android/PWA experience remain unchanged. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, lint, tests, scanner checks, and physical-device verification. Each Android release provides:
+The current release candidate is [PureHub 1.0.0-beta.60](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.60). It makes the dark-violet Android presentation consistent on phones using either light or dark system settings, fixes Home recommendation-card contrast, and improves section spacing. It retains beta.59's Android Keystore, device-authentication, and modern Wi-Fi API upgrades. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, lint, tests, scanner checks, and physical-device verification. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;

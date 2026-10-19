@@ -3,11 +3,13 @@ package com.purehub.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -75,6 +77,7 @@ fun HomeScreen(
         item {
             LocalizedText(if (query.isNotBlank()) "Search" else if (favoriteTools.isNotEmpty()) "Favorites" else if (recentTools.isNotEmpty()) "Recent" else "Quick access",
                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
             HomeQuickShortcuts(
                 visibleTools = visibleTools.filter { toolMatchesSearch(it, query) }.toSet(),
                 favoriteTools = favoriteTools, recentTools = recentTools, onOpenTool = onOpenMiniApp,
@@ -116,6 +119,7 @@ fun HomeScreen(
         }
         item {
             LocalizedText("Recommended locally", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
             val recommended = listOf(MiniAppId.WIFI_ANALYZER, MiniAppId.OCR_TEXT, MiniAppId.SMART_FLASHLIGHT)
                 .filter { it in visibleTools }
             if (largeText) {
@@ -129,7 +133,7 @@ fun HomeScreen(
                         ) {
                             Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Icon(tool.icon, null, tint = tool.tab.uiAccent())
-                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Color(0xFFF8F4FF))
                             }
                         }
                     }
@@ -145,7 +149,7 @@ fun HomeScreen(
                         ) {
                             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Icon(tool.icon, null, tint = tool.tab.uiAccent())
-                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 2)
+                                LocalizedText(compactToolTitle(tool, language), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFFF8F4FF), maxLines = 2)
                             }
                         }
                     }
