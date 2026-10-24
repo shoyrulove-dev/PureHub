@@ -28,6 +28,8 @@ jobs:
           cache-dependency-path: pwa/package-lock.json
       - run: npm ci
         working-directory: pwa
+      - run: npm run audit:security
+        working-directory: pwa
       - run: npm run lint
         working-directory: pwa
       - run: npm run build
