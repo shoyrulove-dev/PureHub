@@ -15,16 +15,16 @@ export function CommunityPage() {
   const locale = normalizeLocale(useParams().lang)
   const copy = getUiCopy(locale).community
   const earnCopy = {
-    en: { label: 'Connected rewards community', body: 'A separate service with its own account, terms and privacy policy. PureHub does not automatically share your app data.', open: 'Open Pure Earn' },
-    vi: { label: 'Cộng đồng phần thưởng liên kết', body: 'Dịch vụ riêng có tài khoản, điều khoản và chính sách riêng. PureHub không tự động chia sẻ dữ liệu ứng dụng của bạn.', open: 'Mở Pure Earn' },
-    zh: { label: '关联奖励社区', body: '独立服务，使用自己的账户、条款和隐私政策。PureHub 不会自动共享您的应用数据。', open: '打开 Pure Earn' },
-    es: { label: 'Comunidad de recompensas conectada', body: 'Servicio independiente con su propia cuenta, términos y privacidad. PureHub no comparte automáticamente tus datos.', open: 'Abrir Pure Earn' },
+    en: { label: 'Rewards, offers & paid tasks', body: 'Separate service. No PureHub data is shared.', open: 'Open Pure Earn' },
+    vi: { label: 'Thưởng, ưu đãi & việc nhỏ kiếm tiền', body: 'Dịch vụ riêng. Không chia sẻ dữ liệu PureHub.', open: 'Mở Pure Earn' },
+    zh: { label: '奖励、优惠与付费任务', body: '独立服务，不共享 PureHub 数据。', open: '打开 Pure Earn' },
+    es: { label: 'Recompensas, ofertas y minitareas', body: 'Servicio independiente. No comparte datos de PureHub.', open: 'Abrir Pure Earn' },
   }[locale]
   const storeCopy = {
-    en: { label: 'Offers and services', body: 'A separate website with its own terms and privacy policy. PureHub does not automatically share your app data.', open: 'Open Pure Store' },
-    vi: { label: 'Ưu đãi và dịch vụ', body: 'Website riêng với điều khoản và chính sách riêng. PureHub không tự động chia sẻ dữ liệu ứng dụng của bạn.', open: 'Mở Pure Store' },
-    zh: { label: '优惠与服务', body: '独立网站，使用自己的条款和隐私政策。PureHub 不会自动共享您的应用数据。', open: '打开 Pure Store' },
-    es: { label: 'Ofertas y servicios', body: 'Sitio web independiente con sus propios términos y privacidad. PureHub no comparte automáticamente tus datos.', open: 'Abrir Pure Store' },
+    en: { label: 'Digital accounts, software & services', body: 'Separate store. No PureHub data is shared.', open: 'Open Pure Store' },
+    vi: { label: 'Tài khoản số, phần mềm & dịch vụ', body: 'Cửa hàng riêng. Không chia sẻ dữ liệu PureHub.', open: 'Mở Pure Store' },
+    zh: { label: '数字账号、软件与在线服务', body: '独立商店，不共享 PureHub 数据。', open: '打开 Pure Store' },
+    es: { label: 'Cuentas digitales, software y servicios', body: 'Tienda independiente. No comparte datos de PureHub.', open: 'Abrir Pure Store' },
   }[locale]
   const actions = [
     { icon: MessageCircle, title: copy.telegram, description: copy.telegramHint, href: TELEGRAM_URL, label: copy.openTelegram },

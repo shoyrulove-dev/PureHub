@@ -138,14 +138,14 @@ fun CommunityScreen(
                     Icon(painterResource(R.drawable.ic_pure_earn), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(58.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         LocalizedText(appText(language, "Pure Earn", "Pure Earn", "Pure Earn", "Pure Earn"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Color.White)
-                        LocalizedText(appText(language, "Rewards community", "Cộng đồng phần thưởng", "奖励社区", "Comunidad de recompensas"), color = Color(0xFFDCCBFF), style = MaterialTheme.typography.bodyMedium)
+                        LocalizedText(appText(language, "Rewards, offers & paid tasks", "Thưởng, ưu đãi & việc nhỏ kiếm tiền", "奖励、优惠与付费任务", "Recompensas, ofertas y minitareas"), color = Color(0xFFDCCBFF), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 LocalizedText(appText(language,
-                    "Pure Earn is separate. PureHub does not share your app data.",
-                    "Pure Earn là dịch vụ riêng. PureHub không chia sẻ dữ liệu ứng dụng.",
-                    "Pure Earn 是独立服务。PureHub 不会共享应用数据。",
-                    "Pure Earn es independiente. PureHub no comparte tus datos."),
+                    "Separate service. No PureHub data is shared.",
+                    "Dịch vụ riêng. Không chia sẻ dữ liệu PureHub.",
+                    "独立服务，不共享 PureHub 数据。",
+                    "Servicio independiente. No comparte datos de PureHub."),
                     color = Color(0xFFBEB1D8), style = MaterialTheme.typography.bodySmall)
                 Button(modifier = Modifier.fillMaxWidth(), onClick = { openUri(PURE_EARN_LINK) }) {
                     LocalizedText(appText(language, "Open Pure Earn", "Mở Pure Earn", "打开 Pure Earn", "Abrir Pure Earn"))
@@ -168,7 +168,7 @@ fun CommunityScreen(
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         LocalizedText("Pure Store", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Color.White)
                         LocalizedText(
-                            appText(language, "Offers and services", "Ưu đãi và dịch vụ", "优惠与服务", "Ofertas y servicios"),
+                            appText(language, "Digital accounts, software & services", "Tài khoản số, phần mềm & dịch vụ", "数字账号、软件与在线服务", "Cuentas digitales, software y servicios"),
                             color = Color(0xFFE5D7FF),
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -177,10 +177,10 @@ fun CommunityScreen(
                 LocalizedText(
                     appText(
                         language,
-                        "A separate website with its own terms and privacy policy. PureHub does not share your app data.",
-                        "Website riêng với điều khoản và chính sách riêng. PureHub không chia sẻ dữ liệu ứng dụng của bạn.",
-                        "独立网站，使用自己的条款和隐私政策。PureHub 不会共享您的应用数据。",
-                        "Sitio web independiente con sus propios términos y privacidad. PureHub no comparte tus datos.",
+                        "Separate store. No PureHub data is shared.",
+                        "Cửa hàng riêng. Không chia sẻ dữ liệu PureHub.",
+                        "独立商店，不共享 PureHub 数据。",
+                        "Tienda independiente. No comparte datos de PureHub.",
                     ),
                     color = Color(0xFFC9BCDF),
                     style = MaterialTheme.typography.bodySmall,
