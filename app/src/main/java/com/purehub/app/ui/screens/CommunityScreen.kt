@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Storefront
 import androidx.compose.material.icons.rounded.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -58,6 +59,7 @@ private const val TELEGRAM_WEB_LINK = "https://t.me/PureHubCom"
 private const val GITHUB_LINK = "https://github.com/shoyrulove-dev/PureHub"
 private const val GITHUB_FEEDBACK_LINK = "https://github.com/shoyrulove-dev/PureHub/issues/new/choose"
 private const val PURE_EARN_LINK = "https://earn.blissbiovn.com/?utm_source=purehub_android&utm_medium=community&utm_campaign=pureearn_launch"
+private const val PURE_STORE_LINK = "https://shop.blissbiovn.com/?utm_source=purehub_android&utm_medium=community&utm_campaign=purestore_link"
 private const val MINIGAME_TICKET_URL = "https://hub.blissbiovn.com/public-api/minigame/ticket"
 private const val MINIGAME_PAGE_URL = "https://hub.blissbiovn.com/vi/minigame"
 
@@ -147,6 +149,44 @@ fun CommunityScreen(
                     color = Color(0xFFBEB1D8), style = MaterialTheme.typography.bodySmall)
                 Button(modifier = Modifier.fillMaxWidth(), onClick = { openUri(PURE_EARN_LINK) }) {
                     LocalizedText(appText(language, "Open Pure Earn", "Mở Pure Earn", "打开 Pure Earn", "Abrir Pure Earn"))
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF271C3D), contentColor = Color(0xFFF7F2FF)),
+        ) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Icon(
+                        Icons.Rounded.Storefront,
+                        contentDescription = null,
+                        tint = Color(0xFFFFD166),
+                        modifier = Modifier.size(44.dp),
+                    )
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        LocalizedText("Pure Store", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Color.White)
+                        LocalizedText(
+                            appText(language, "Offers and services", "Ưu đãi và dịch vụ", "优惠与服务", "Ofertas y servicios"),
+                            color = Color(0xFFE5D7FF),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+                LocalizedText(
+                    appText(
+                        language,
+                        "A separate website with its own terms and privacy policy. PureHub does not share your app data.",
+                        "Website riêng với điều khoản và chính sách riêng. PureHub không chia sẻ dữ liệu ứng dụng của bạn.",
+                        "独立网站，使用自己的条款和隐私政策。PureHub 不会共享您的应用数据。",
+                        "Sitio web independiente con sus propios términos y privacidad. PureHub no comparte tus datos.",
+                    ),
+                    color = Color(0xFFC9BCDF),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Button(modifier = Modifier.fillMaxWidth(), onClick = { openUri(PURE_STORE_LINK) }) {
+                    LocalizedText(appText(language, "Open Pure Store", "Mở Pure Store", "打开 Pure Store", "Abrir Pure Store"))
                 }
             }
         }
