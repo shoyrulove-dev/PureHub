@@ -366,7 +366,7 @@ export default function QrStudioSurface() {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
-      const capabilities = stream.getVideoTracks()[0]?.getCapabilities() as MediaTrackCapabilities & { torch?: boolean; zoom?: { min: number; max: number; step?: number } }
+      const capabilities = stream.getVideoTracks()[0]?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean; zoom?: { min: number; max: number; step?: number } }) | undefined
       setTorchAvailable(Boolean(capabilities?.torch))
       const zoomCapabilities = capabilities?.zoom
       if (zoomCapabilities && typeof zoomCapabilities.min === 'number' && typeof zoomCapabilities.max === 'number' && zoomCapabilities.max > zoomCapabilities.min) {
@@ -377,6 +377,7 @@ export default function QrStudioSurface() {
       setScanStatus(statusCopy.hold)
       frameRef.current = requestAnimationFrame(scanFrame)
     } catch {
+      stopCamera()
       setScanStatus(statusCopy.unavailable)
     }
   }

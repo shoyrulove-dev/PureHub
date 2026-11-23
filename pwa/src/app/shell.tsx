@@ -4,7 +4,6 @@ import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
-import { PlayTesterPrompt } from '../components/play/PlayTesterPrompt'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { getUiCopy } from '../i18n/ui-copy'
 import {
@@ -150,7 +149,6 @@ export function AppShell() {
           <BottomNav />
         </div>
       </div>
-      <PlayTesterPrompt locale={locale} />
     </div>
   )
 }

@@ -879,6 +879,7 @@ private fun OcrScanContent(
                     Icon(Icons.Rounded.Security, null, Modifier.size(48.dp), tint = Color(0xFFC4A7FF))
                     LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
+                    OutlinedButton(onClick = onChooseImage, enabled = !processing) { LocalizedText("Choose photo", color = Color.White) }
                 }
             }
 

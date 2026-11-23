@@ -56,7 +56,6 @@ fun SettingsScreen(
     onOpenHelp: () -> Unit,
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
-    onJoinPlayTesters: () -> Unit,
 ) {
     val context = LocalContext.current
     val diagnostics = buildLocalDiagnosticReport(context, language)
@@ -215,13 +214,6 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 LocalizedText(appText(language, "Privacy Policy", "Chính sách quyền riêng tư", "隐私政策", "Política de privacidad"))
-            }
-            Button(
-                onClick = onJoinPlayTesters,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
-            ) {
-                LocalizedText("🧪 " + appText(language, "Join Google Play testers", "Tham gia Tester CH Play", "加入 Google Play 测试", "Unirse a probadores de Google Play"))
             }
         }
     }

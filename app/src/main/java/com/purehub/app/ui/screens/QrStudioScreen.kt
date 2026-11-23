@@ -396,6 +396,7 @@ private fun QrScannerContent(
                     Icon(Icons.Rounded.QrCodeScanner, null, tint = Color(0xFFC4A7FF), modifier = Modifier.size(48.dp))
                     LocalizedText("Camera stays off until you allow it", color = Color.White, style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onRequestCameraPermission) { LocalizedText("Allow camera") }
+                    OutlinedButton(onClick = onChooseImage) { LocalizedText("Choose photo", color = Color.White) }
                 }
             }
         }

@@ -106,10 +106,6 @@ import com.purehub.app.ui.screens.ScanScreen
 import com.purehub.app.ui.screens.ScreenRecorderCard
 import com.purehub.app.ui.screens.ScreenRecorderMenuAction
 import com.purehub.app.ui.screens.SettingsScreen
-import com.purehub.app.ui.screens.PlayTesterInviteSheet
-import com.purehub.app.ui.screens.dismissPlayTesterInvite
-import com.purehub.app.ui.screens.openPlayTesterGroup
-import com.purehub.app.ui.screens.shouldShowPlayTesterInvite
 import com.purehub.app.ui.screens.SmartFlashlightCard
 import com.purehub.app.ui.screens.SpeakerCleanerCard
 import com.purehub.app.ui.screens.ToolsScreen
@@ -186,9 +182,6 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
     val appScope = rememberCoroutineScope()
     val toolHistory = remember { ToolVisibilityRepository(context.applicationContext) }
     val currentMiniAppRoute = currentDestination?.route?.startsWith("$MINI_APP_ROUTE_PREFIX/") == true
-    var showTesterInvite by rememberSaveable {
-        mutableStateOf(initialMiniAppId == null && context.shouldShowPlayTesterInvite())
-    }
 
     // An app shortcut can arrive while MainActivity is already visible. Navigate from
     // the retained NavController rather than relying only on NavHost's initial route.
@@ -261,22 +254,7 @@ fun PureHubApp(initialMiniAppId: MiniAppId? = null) {
                 onOpenHelp = { navController.navigate(Help.route) },
                 language = language,
                 onLanguageChange = { next -> context.saveAppLanguage(next); language = next },
-                onJoinPlayTesters = { context.openPlayTesterGroup() },
                 initialMiniAppId = initialMiniAppId,
-            )
-        }
-        if (showTesterInvite && !currentMiniAppRoute) {
-            PlayTesterInviteSheet(
-                language = language,
-                onJoin = {
-                    context.dismissPlayTesterInvite()
-                    showTesterInvite = false
-                    context.openPlayTesterGroup()
-                },
-                onLater = {
-                    context.dismissPlayTesterInvite()
-                    showTesterInvite = false
-                },
             )
         }
     }
@@ -290,7 +268,6 @@ private fun PureHubNavHost(
     onOpenHelp: () -> Unit,
     language: AppLanguage,
     onLanguageChange: (AppLanguage) -> Unit,
-    onJoinPlayTesters: () -> Unit,
     initialMiniAppId: MiniAppId? = null,
 ) {
     NavHost(
@@ -350,7 +327,6 @@ private fun PureHubNavHost(
                 onOpenHelp = onOpenHelp,
                 language = language,
                 onLanguageChange = onLanguageChange,
-                onJoinPlayTesters = onJoinPlayTesters,
             )
         }
         composable(Help.route) {

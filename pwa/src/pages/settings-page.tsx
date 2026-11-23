@@ -1,10 +1,9 @@
-import { Activity, ArrowRight, Bug, Check, ExternalLink, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon, TestTube2 } from 'lucide-react'
+import { Activity, ArrowRight, Bug, Check, ExternalLink, Globe2, Languages, Moon, ShieldCheck, Smartphone, Sun, SunMoon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { SUPPORTED_LOCALES, normalizeLocale } from '../i18n/locales'
 import { persistSelectedLocale } from '../i18n/routing'
 import { type ThemePreference, useAnonymousMetricsPreference, useThemePreference } from '../lib/preferences'
-import { PLAY_TESTER_GROUP_URL } from '../lib/play-testers'
 import { getUiCopy } from '../i18n/ui-copy'
 
 export function SettingsPage() {
@@ -85,7 +84,6 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <a href={PLAY_TESTER_GROUP_URL} target="_blank" rel="noreferrer" className="app-surface flex min-h-16 items-center gap-3 rounded-[18px] p-4"><TestTube2 className="size-6 text-violet-600 dark:text-violet-300" /><span className="min-w-0 flex-1"><strong className="block text-slate-950 dark:text-white">{copy.tester}</strong><small className="text-slate-500 dark:text-slate-400">{copy.testerHint}</small></span><ExternalLink className="size-5 text-violet-600 dark:text-violet-300" /></a>
 
       <section className="rounded-[18px] border border-violet-400/25 bg-[#211a35] p-5 text-white shadow-sm">
         <div className="flex items-start gap-3">

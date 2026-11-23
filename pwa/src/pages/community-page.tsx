@@ -1,9 +1,9 @@
-import { Bot, Bug, Check, Code2, Download, HeartHandshake, Languages, Lightbulb, MessageCircle, Send, ShoppingBag, Smartphone, TestTube2, Vote } from 'lucide-react'
+import { Bot, Bug, Check, Code2, Download, HeartHandshake, Languages, Lightbulb, MessageCircle, Send, ShoppingBag, TestTube2, Vote } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { normalizeLocale } from '../i18n/locales'
 import { getUiCopy } from '../i18n/ui-copy'
-import { loadRoadmap, submitProductFeedback, submitRoadmapVote, trackJourneyEvent, type RoadmapOption } from '../lib/community-api'
+import { loadRoadmap, submitProductFeedback, submitRoadmapVote, type RoadmapOption } from '../lib/community-api'
 import type { MiniAppId } from '../features/catalog/tabs'
 
 const TELEGRAM_URL = 'https://t.me/PureHubCom'
@@ -14,6 +14,7 @@ const PURE_STORE_URL = 'https://shop.blissbiovn.com/?utm_source=purehub_pwa&utm_
 export function CommunityPage() {
   const locale = normalizeLocale(useParams().lang)
   const copy = getUiCopy(locale).community
+  const feedbackTitle = { en: 'Device feedback', vi: 'Phản hồi về thiết bị', zh: '设备反馈', es: 'Comentarios sobre el dispositivo' }[locale]
   const earnCopy = {
     en: { label: 'Rewards, offers & paid tasks', body: 'Separate service. No PureHub data is shared.', open: 'Open Pure Earn' },
     vi: { label: 'Thưởng, ưu đãi & việc nhỏ kiếm tiền', body: 'Dịch vụ riêng. Không chia sẻ dữ liệu PureHub.', open: 'Mở Pure Earn' },
@@ -68,7 +69,6 @@ export function CommunityPage() {
     setTesterStatus('sending')
     try {
       await submitProductFeedback(testerTool, 'device_report', report)
-      void trackJourneyEvent('tester_join')
       setDeviceReport('')
       setTesterStatus('sent')
     } catch {
@@ -118,13 +118,8 @@ export function CommunityPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <span className="tool-card__icon text-violet-600 dark:text-violet-300"><TestTube2 className="size-5" /></span>
-            <div>
-              <p className="eyebrow text-violet-700 dark:text-violet-300">{copy.earlyEyebrow}</p>
-              <h2 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">{copy.earlyTitle}</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">{copy.earlyHint}</p>
-            </div>
+            <h2 className="text-xl font-bold text-slate-950 dark:text-white">{feedbackTitle}</h2>
           </div>
-          <span className="filter-chip"><Smartphone className="size-3.5" /> {copy.goal}</span>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.8fr)_auto] sm:items-end">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{copy.toolTested}
