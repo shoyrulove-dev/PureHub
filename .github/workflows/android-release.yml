@@ -122,6 +122,7 @@ jobs:
           fi
       - name: Sync Release Hub drafts
         if: ${{ env.RELEASE_HOOK_SECRET != '' }}
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_HOOK_URL: https://hub.blissbiovn.com/public-api/release-hook
