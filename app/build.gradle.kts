@@ -17,7 +17,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.purehub.app"
+        applicationId = "net.nikifx.purehub"
         minSdk = 26
         targetSdk = 36
         versionCode = providers.environmentVariable("PUREHUB_VERSION_CODE").orNull?.toIntOrNull() ?: 62
