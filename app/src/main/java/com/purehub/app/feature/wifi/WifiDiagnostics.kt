@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import java.net.Inet4Address
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -51,15 +52,22 @@ internal object WifiDiagnostics {
         val network = connectivity.activeNetwork
         val capabilities = network?.let(connectivity::getNetworkCapabilities)
         val linkProperties = network?.let(connectivity::getLinkProperties)
-        val modernInfo = capabilities?.transportInfo as? WifiInfo
+        val modernInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            capabilities?.transportInfo as? WifiInfo
+        } else {
+            null
+        }
+        val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
+        val wifiInfo = modernInfo ?: wifi.connectionInfo.takeIf {
+            capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        }
         val modernLocal = linkProperties?.linkAddresses?.asSequence()
             ?.map { it.address }?.filterIsInstance<Inet4Address>()?.firstOrNull()?.hostAddress
         val modernGateway = linkProperties?.routes?.asSequence()
             ?.mapNotNull { it.gateway as? Inet4Address }?.firstOrNull()?.hostAddress
         if (modernInfo != null || modernLocal != null || modernGateway != null) {
-            return Connection(modernInfo, modernLocal, modernGateway)
+            return Connection(wifiInfo, modernLocal, modernGateway)
         }
-        val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
         val dhcp = wifi.dhcpInfo
         return Connection(wifi.connectionInfo, ipv4(dhcp?.ipAddress ?: 0), ipv4(dhcp?.gateway ?: 0))
     }

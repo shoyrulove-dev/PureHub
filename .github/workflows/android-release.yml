@@ -72,13 +72,7 @@ jobs:
       - name: Verify Android unit tests
         run: ./gradlew --no-daemon testStandardDebugUnitTest --stacktrace
       - name: Verify Android release lint
-        shell: bash
-        run: |
-          # See Android CI: retain the report when a constrained hosted runner
-          # stops lint without diagnostics. Tests and signed build remain strict.
-          if ! ./gradlew --no-daemon lintStandardRelease --stacktrace; then
-            echo "::warning title=Android lint advisory::The hosted runner could not complete lint. Unit tests and the signed build remain required."
-          fi
+        run: ./gradlew --no-daemon lintStandardRelease --stacktrace
       - name: Build the standard Android APK
         run: ./gradlew --no-daemon assembleStandardRelease --stacktrace
       - name: Stage lightweight Android APK
