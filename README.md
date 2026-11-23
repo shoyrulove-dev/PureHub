@@ -2,15 +2,20 @@
 
 <p align="center">
   <strong>Small, practical utilities for focus, measurement, scanning, documents, privacy, audio, and personal finance.</strong><br />
-  <strong>26 private-first mini apps.</strong> Free to use. Core mini-apps remain ad-free. No mandatory account. Open source.
-</p>
+  <strong>26 private-first mini apps.</strong## Google Play | Closed Beta Now Live
+
+PureHub 1.0.0-beta.62 is available on Google Play through the closed Alpha track. Members of [PureHub Testers](https://groups.google.com/g/purehub-testers) can [opt in and install from Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) with the Google account used to join the group. Please stay opted in for 14 consecutive days, try the tools, and share honest feedback in the group.
+
+- **VI** · PureHub beta 62 đã mở thử nghiệm khép kín. [Tham gia trên Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) và gửi góp ý trong nhóm.
+- **中文** · PureHub beta 62 已开启封闭测试。[在 Google Play 加入测试](https://play.google.com/apps/testing/net.nikifx.purehub)，欢迎在群组反馈。
+- **ES** · PureHub beta 62 ya está disponible en pruebas cerradas. [Participa en Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) y comparte tus comentarios en el grupo.
 
 <p align="center">
   <a href="https://hub.blissbiovn.com/en"><strong>Open the web app</strong></a>
   &middot; <a href="https://hub.blissbiovn.com/en/tools">Browse all tools</a>
   &middot; <a href="https://hub.blissbiovn.com/en/download">Download Android</a>
   &middot; <a href="https://github.com/shoyrulove-dev/PureHub/releases">Releases</a>
-  &middot; <a href="https://t.me/PureHubCom">Community updates</a>
+  &middot; <a href="https://t.me/PureHubCom">Telegram community</a>
 </p>
 
 > 🎉 **50-tester milestone reached:** Thank you to the first 50 members of the [PureHub tester community](https://groups.google.com/g/purehub-testers). The Android launch on Google Play is planned for the end of October 2026. Please keep testing and reporting anything that can be improved.
@@ -72,7 +77,7 @@ Some tools depend on device capabilities such as a camera, microphone, motion se
 
 ## Current product experience
 
-The signed Android `1.0.0-beta.60` build and current PWA share the refreshed violet interface, compact navigation, shorter tool names, clearer cards, and reviewed English, Vietnamese, Simplified Chinese, and Spanish labels. Android now keeps the calm dark-violet palette consistent across devices instead of changing card contrast with the phone's system theme.
+The Android app and PWA share the refreshed violet interface, compact navigation, shorter tool names, clearer cards, and reviewed English, Vietnamese, Simplified Chinese, and Spanish labels. Android now keeps the calm dark-violet palette consistent across devices instead of changing card contrast with the phone's system theme.
 
 | Area | Current experience |
 | --- | --- |
@@ -83,7 +88,7 @@ The signed Android `1.0.0-beta.60` build and current PWA share the refreshed vio
 | Vision tools | Camera-first QR, OCR, document-to-PDF, color capture, photo privacy, and screen recording workflows |
 | Community | Official PureHub discussion link plus a clearly separated Pure Earn entry with no automatic account or device-data sharing |
 
-Download the verified build from the [beta.60 release page](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.60) or use the [latest PWA](https://hub.blissbiovn.com/en).
+[Join the Google Play closed beta](https://play.google.com/apps/testing/net.nikifx.purehub) or use the [latest PWA](https://hub.blissbiovn.com/en).
 
 ## Why this project exists
 
@@ -155,7 +160,7 @@ F-Droid publishing is discontinued. The active distribution path is the signed G
 
 ## Releases
 
-The current release candidate is [PureHub 1.0.0-beta.60](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.60). It makes the dark-violet Android presentation consistent on phones using either light or dark system settings, fixes Home recommendation-card contrast, and improves section spacing. It retains beta.59's Android Keystore, device-authentication, and modern Wi-Fi API upgrades. F-Droid publishing remains discontinued. Signed Android artifacts are published through GitHub Releases after CI, lint, tests, scanner checks, and physical-device verification. Each Android release provides:
+The current Google Play closed test is **PureHub 1.0.0-beta.62** (version code 62, package `net.nikifx.purehub`). [Join the closed test](https://play.google.com/apps/testing/net.nikifx.purehub) or browse [GitHub Releases](https://github.com/shoyrulove-dev/PureHub/releases) for Android artifacts. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
