@@ -65,7 +65,25 @@ private val WifiMint = Color(0xFFA970FF)
 private val WifiBlue = Color(0xFF71B8FF)
 
 @Composable
-fun WifiAnalyzerCard(modifier: Modifier = Modifier, viewModel: WifiAnalyzerViewModel = viewModel()) {
+fun WifiAnalyzerCard(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI)) {
+        val message = when (LocalAppLanguage.current.code) {
+            "vi" -> "Thiết bị này không hỗ trợ Wi-Fi."
+            "zh" -> "此设备不支持 Wi-Fi。"
+            "es" -> "Este dispositivo no admite Wi-Fi."
+            else -> "This device does not support Wi-Fi."
+        }
+        Surface(modifier = modifier, color = WifiInk, shape = RoundedCornerShape(28.dp)) {
+            Text(message, modifier = Modifier.padding(24.dp), color = Color.White)
+        }
+        return
+    }
+    WifiAnalyzerContent(modifier)
+}
+
+@Composable
+private fun WifiAnalyzerContent(modifier: Modifier, viewModel: WifiAnalyzerViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbar = LocalSnackbarHostState.current
@@ -86,8 +104,8 @@ fun WifiAnalyzerCard(modifier: Modifier = Modifier, viewModel: WifiAnalyzerViewM
     val bands = state.nearbyNetworks.map { WifiInsights.bandForFrequency(it.frequencyMhz) }.filterNot { it == "Unknown" }.distinct()
     val activeBand = selectedBand.takeIf { it in bands } ?: bands.firstOrNull().orEmpty()
     val ratings = WifiInsights.rateChannels(state.nearbyNetworks, activeBand.takeIf(String::isNotBlank))
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        hasPermission = result.values.all { it }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        hasPermission = checkWifiScanPermission(context)
         scope.launch { snackbar.showSnackbar(translateUiText(if (hasPermission) "Nearby Wi-Fi scan is ready on this device." else "Without permission, PureHub only shows your current connection.", language)) }
     }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -1128,4 +1146,12 @@ private fun surveyMetricAsSignal(value: Double, metric: WifiSurveyMetric): Int =
 }
 private fun signalColor(rssi: Int): Color = when { rssi >= -67 -> WifiMint; rssi >= -75 -> WifiBlue; else -> Color(0xFFFFB86B) }
 private fun checkWifiScanPermission(context: android.content.Context): Boolean { val location = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED; val nearby = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ContextCompat.checkSelfPermission(context, Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED else true; return location && nearby }
-private fun wifiScanPermissions(): Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.NEARBY_WIFI_DEVICES) else arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+private fun wifiScanPermissions(): Array<String> = buildList {
+    add(Manifest.permission.ACCESS_FINE_LOCATION)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        add(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.NEARBY_WIFI_DEVICES)
+    }
+}.toTypedArray()

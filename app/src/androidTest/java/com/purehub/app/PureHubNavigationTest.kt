@@ -74,14 +74,7 @@ class PureHubNavigationTest {
     }
 
     @Test
-    fun fiveFlagshipsRenderInEverySupportedLanguage() {
-        val flagships = listOf(
-            MiniAppId.OCR_TEXT,
-            MiniAppId.QR_STUDIO,
-            MiniAppId.WIFI_ANALYZER,
-            MiniAppId.LUNAR_CALENDAR,
-            MiniAppId.SMART_FLASHLIGHT,
-        )
+    fun everyMiniAppCanBeFoundInEverySupportedLanguage() {
         AppLanguage.entries.forEach { language ->
             scenario.close()
             ApplicationProvider.getApplicationContext<android.content.Context>().saveAppLanguage(language)
@@ -89,7 +82,7 @@ class PureHubNavigationTest {
             composeRule.waitForIdle()
             composeRule.onNodeWithContentDescription(translateUiText("Tools", language), useUnmergedTree = true).performClick()
             val search = composeRule.onNode(hasSetTextAction())
-            flagships.forEach { tool ->
+            MiniAppId.entries.forEach { tool ->
                 search.performTextInput(tool.title)
                 assertTrue(
                     "Missing ${tool.title} in ${language.code}",
