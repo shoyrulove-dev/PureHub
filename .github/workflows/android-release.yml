@@ -82,6 +82,15 @@ jobs:
           cp app/build/outputs/apk/standard/release/app-standard-arm64-v8a-release.apk "release-assets/PureHub-${PUREHUB_VERSION_NAME}.apk"
       - name: Build app bundle without APK splits
         run: ./gradlew --no-daemon bundleStandardRelease --stacktrace
+      - name: Record native library Build IDs
+        run: |
+          set -o pipefail
+          python3 scripts/report-android-native-symbols.py app/build/outputs/bundle/standardRelease/app-standard-release.aab | tee native-symbol-report.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: purehub-native-symbol-report
+          path: native-symbol-report.txt
+          if-no-files-found: error
       - name: Complete release assets
         shell: bash
         run: |

@@ -49,6 +49,8 @@ Follow-up on Redmi Android 13: the lunar reminder worker posted a real Android n
 - The local beta 64 AAB contained no native debug metadata. All 20 native library files across the four packaged ABIs had neither a native symbol table nor debug information before bundle packaging. Matching symbols need to come from the library providers or from reproducible builds of those libraries.
 - [ ] After uploading the beta 64 AAB, confirm that Play Console recognizes its native debug symbols. Check whether any third-party native libraries were already stripped if the warning persists.
 
+Use the `purehub-native-symbol-report` Android Release artifact to match provider symbols by library, ABI, and ELF Build ID. Google Maven provided no matching symbol package in the checked releases of CameraX Core 1.5.0, DataStore Core Android 1.1.7, Graphics Path 1.0.1, and ML Kit OCR Bundled Common 17.0.0.
+
 Do not point users to a Play opt-in page until the track contains the signed production-candidate bundle and the group/tester policy is configured in Play Console.
 
 ## Beta.60 readiness snapshot
