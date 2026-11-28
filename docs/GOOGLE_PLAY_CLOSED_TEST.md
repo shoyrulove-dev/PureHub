@@ -30,6 +30,8 @@ PureHub needs a closed test before a production Google Play launch. The product 
 
 Redmi Android 13 verification: 17 instrumentation tests passed. The Wi-Fi sample PDF opened through its share URI in Android PDF Renderer. An OCR sample exported through Doc to PDF and independent text extraction from the resulting PDF returned `PUREHUB 67890`. Device-camera and physical reference checks remain open.
 
+Follow-up on Redmi Android 13: the lunar reminder worker posted a real Android notification for the current lunar date and skipped a future event and an event with the wrong leap-month rule. The test invokes the worker directly. Background timing under WorkManager and delivery during an actual leap month are separate checks. QR Studio's Android file picker decoded the saved PNG as `PUREHUB-BETA64-QR`.
+
 ### Beta 65 daily workflows
 
 - Verify OCR to Doc to PDF, Color Grabber to saved palettes, and Bill Splitter to Expense Tracker with sample data.
