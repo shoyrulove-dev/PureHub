@@ -22,7 +22,8 @@ PureHub needs a closed test before a production Google Play launch. The product 
 
 ### Beta 64 native debug symbols
 
-- [ ] Generate native debug symbols from the same release build as the beta 64 AAB. Include them in the bundle or retain the matching symbols ZIP in the Android Release artifacts for upload in Play Console.
+- Beta 63 displayed a Play Console warning about missing native debug symbols. Beta 64 sets the Android release build to `SYMBOL_TABLE` so Gradle can include available native symbols in the matching AAB.
+- [ ] Verify the beta 64 AAB contains native debug metadata under `BUNDLE-METADATA/com.android.tools.build.debugsymbols/`.
 - [ ] After uploading the beta 64 AAB, confirm that Play Console recognizes its native debug symbols. Check whether any third-party native libraries were already stripped if the warning persists.
 
 Do not point users to a Play opt-in page until the track contains the signed production-candidate bundle and the group/tester policy is configured in Play Console.
