@@ -28,6 +28,8 @@ PureHub needs a closed test before a production Google Play launch. The product 
 - [ ] OCR: scan a sample containing a known phrase, export a searchable PDF, then find the phrase in an external PDF viewer.
 - [ ] QR Studio: generate a code with a known payload, then scan it with the camera and from a saved image. Confirm both decode to the original payload.
 
+Redmi Android 13 verification: 17 instrumentation tests passed. The Wi-Fi sample PDF opened through its share URI in Android PDF Renderer. An OCR sample exported through Doc to PDF and independent text extraction from the resulting PDF returned `PUREHUB 67890`. Device-camera and physical reference checks remain open.
+
 ### Beta 65 daily workflows
 
 - Verify OCR to Doc to PDF, Color Grabber to saved palettes, and Bill Splitter to Expense Tracker with sample data.

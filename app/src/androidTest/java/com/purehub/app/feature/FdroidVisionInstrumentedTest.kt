@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.purehub.app.feature.docpdf.DocPdfRepository
 import com.purehub.app.feature.ocr.OcrEngineFactory
 import com.purehub.app.feature.ocr.OcrScript
 import com.purehub.app.feature.qr.QrBitmapGenerator
@@ -33,11 +34,16 @@ class FdroidVisionInstrumentedTest {
     }
 
     @Test
+    fun recognizedTextExportsWithItsDocumentImage() {
+        assertPrintedSampleRecognized(OcrScript.LATIN, "PUREHUB 67890", "67890", exportPdf = true)
+    }
+
+    @Test
     fun bundledTesseractLoadsChinesePackAndRecognizesPrintedSampleOffline() {
         assertPrintedSampleRecognized(OcrScript.CHINESE, "PUREHUB 中文 OCR 24680", "24680")
     }
 
-    private fun assertPrintedSampleRecognized(script: OcrScript, sample: String, expected: String) {
+    private fun assertPrintedSampleRecognized(script: OcrScript, sample: String, expected: String, exportPdf: Boolean = false) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val bitmap = Bitmap.createBitmap(1800, 420, Bitmap.Config.ARGB_8888)
         Canvas(bitmap).apply {
@@ -62,5 +68,16 @@ class FdroidVisionInstrumentedTest {
         engine.close()
         failure?.let { throw AssertionError("OCR failed", it) }
         assertTrue("Unexpected OCR output: $recognized", recognized.contains(expected))
+        if (exportPdf) {
+            val repository = DocPdfRepository(context)
+            val pages = repository.stageOcrPages(listOf(bitmap to recognized))
+            val pdf = repository.exportPdf(pages, "PureHub-beta64-OCR")
+            context.contentResolver.openFileDescriptor(pdf.uri, "r")!!.use { descriptor ->
+                android.graphics.pdf.PdfRenderer(descriptor).use { renderer ->
+                    assertEquals(1, renderer.pageCount)
+                }
+            }
+        }
+        bitmap.recycle()
     }
 }
