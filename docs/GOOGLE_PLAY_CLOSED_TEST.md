@@ -20,10 +20,29 @@ PureHub needs a closed test before a production Google Play launch. The product 
 
 ## Release gate
 
+### Beta 64 flagship acceptance
+
+- [ ] Lunar Calendar: create a recurring lunar reminder with a known Gregorian equivalent, including a leap-month case. Confirm the scheduled date and actual notification on Android.
+- [ ] Wi-Fi Analyzer: export a report with sample scan data. Open it in an external viewer and check that the measurements, labels, and timestamp are readable.
+- [ ] Bubble Level: calibrate on a reference surface, then compare horizontal and vertical readings with a physical level. Record the readings, orientation, and phone model.
+- [ ] OCR: scan a sample containing a known phrase, export a searchable PDF, then find the phrase in an external PDF viewer.
+- [ ] QR Studio: generate a code with a known payload, then scan it with the camera and from a saved image. Confirm both decode to the original payload.
+
+### Beta 65 daily workflows
+
+- Verify OCR to Doc to PDF, Color Grabber to saved palettes, and Bill Splitter to Expense Tracker with sample data.
+- Check quick actions, local history, and background behavior for Habits, Pomodoro, and Breath. Record short acceptance tasks for measurement and system tools.
+
+### Public release candidate
+
+- Verify both vaults, large files, screen recording, backup and restore, and in-place upgrades on low-spec and recent Android devices.
+- Check the supported web flows in two target browsers. Confirm the platform scope and production hosting before updating the README deployment description.
+
 ### Beta 64 native debug symbols
 
 - Beta 63 displayed a Play Console warning about missing native debug symbols. Beta 64 sets the Android release build to `SYMBOL_TABLE` so Gradle can include available native symbols in the matching AAB.
 - [ ] Verify the beta 64 AAB contains native debug metadata under `BUNDLE-METADATA/com.android.tools.build.debugsymbols/`.
+- The local beta 64 AAB contained no native debug metadata. All 20 native library files across the four packaged ABIs had neither a native symbol table nor debug information before bundle packaging. Matching symbols need to come from the library providers or from reproducible builds of those libraries.
 - [ ] After uploading the beta 64 AAB, confirm that Play Console recognizes its native debug symbols. Check whether any third-party native libraries were already stripped if the warning persists.
 
 Do not point users to a Play opt-in page until the track contains the signed production-candidate bundle and the group/tester policy is configured in Play Console.
