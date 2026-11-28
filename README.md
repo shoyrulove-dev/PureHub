@@ -101,7 +101,7 @@ Privacy-first does not mean every feature has completed an independent security 
 | --- | --- | --- |
 | Web/PWA | React 19, TypeScript, Vite, Tailwind CSS | Installable multilingual web experience with offline support |
 | Android | Kotlin, Jetpack Compose, CameraX, Room, ZXing, ML Kit/Tesseract flavors | Native offline-first app for Android 8.0+ |
-| Hosting/automation | Vercel, GitHub Actions | Web deployment, CI, signed Android releases, checksums, and privacy gates |
+| Hosting/automation | Cloudflare, GitHub Actions | Web deployment, CI, signed Android releases, checksums, and privacy gates |
 
 The public app supports English, Vietnamese, Chinese, and Spanish routes. Spanish uses reviewed English SEO canonicals until dedicated Spanish SEO content is complete, avoiding thin duplicate pages. User content is stored locally for tools designed around private on-device workflows. The operator backend is deployed separately from a private repository and is not required to use the mini apps.
 
