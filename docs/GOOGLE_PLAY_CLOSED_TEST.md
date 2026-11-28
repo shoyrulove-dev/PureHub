@@ -20,6 +20,11 @@ PureHub needs a closed test before a production Google Play launch. The product 
 
 ## Release gate
 
+### Beta 64 native debug symbols
+
+- [ ] Generate native debug symbols from the same release build as the beta 64 AAB. Include them in the bundle or retain the matching symbols ZIP in the Android Release artifacts for upload in Play Console.
+- [ ] After uploading the beta 64 AAB, confirm that Play Console recognizes its native debug symbols. Check whether any third-party native libraries were already stripped if the warning persists.
+
 Do not point users to a Play opt-in page until the track contains the signed production-candidate bundle and the group/tester policy is configured in Play Console.
 
 ## Beta.60 readiness snapshot

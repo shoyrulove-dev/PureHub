@@ -7,11 +7,11 @@
 
 ## Google Play | Closed Beta Now Live
 
-PureHub 1.0.0-beta.62 is available on Google Play through the closed Alpha track. Members of [PureHub Testers](https://groups.google.com/g/purehub-testers) can [opt in and install from Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) with the Google account used to join the group. Please stay opted in for 14 consecutive days, try the tools, and share honest feedback in the group.
+PureHub is available on Google Play through the closed Alpha track. The [beta 63 update](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.63) improves Wi-Fi compatibility. Check Google Play for availability on your tester account. Members of [PureHub Testers](https://groups.google.com/g/purehub-testers) can [opt in and install from Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) with the Google account used to join the group. Please stay opted in for 14 consecutive days, try the tools, and share honest feedback in the group.
 
-- **VI** · PureHub beta 62 đã mở thử nghiệm khép kín. [Tham gia trên Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) và gửi góp ý trong nhóm.
-- **中文** · PureHub beta 62 已开启封闭测试。[在 Google Play 加入测试](https://play.google.com/apps/testing/net.nikifx.purehub)，欢迎在群组反馈。
-- **ES** · PureHub beta 62 ya está disponible en pruebas cerradas. [Participa en Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) y comparte tus comentarios en el grupo.
+- **VI** · PureHub đã mở thử nghiệm khép kín. [Tham gia trên Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) và gửi góp ý trong nhóm.
+- **中文** · PureHub 已开启封闭测试。[在 Google Play 加入测试](https://play.google.com/apps/testing/net.nikifx.purehub)，欢迎在群组反馈。
+- **ES** · PureHub ya está disponible en pruebas cerradas. [Participa en Google Play](https://play.google.com/apps/testing/net.nikifx.purehub) y comparte tus comentarios en el grupo.
 
 <p align="center">
   <a href="https://hub.blissbiovn.com/en"><strong>Open the web app</strong></a>
@@ -155,7 +155,7 @@ F-Droid publishing is discontinued. The active distribution path is the signed G
 
 ## Releases
 
-The current Google Play closed test is **PureHub 1.0.0-beta.62** (version code 62, package `net.nikifx.purehub`). [Join the closed test](https://play.google.com/apps/testing/net.nikifx.purehub) or browse [GitHub Releases](https://github.com/shoyrulove-dev/PureHub/releases) for Android artifacts. Each Android release provides:
+The latest signed Android release is [PureHub 1.0.0-beta.63](https://github.com/shoyrulove-dev/PureHub/releases/tag/v1.0.0-beta.63) (version code 63, package `net.nikifx.purehub`). [Join the closed test](https://play.google.com/apps/testing/net.nikifx.purehub) or browse [GitHub Releases](https://github.com/shoyrulove-dev/PureHub/releases) for Android artifacts. Each Android release provides:
 
 - a signed APK for testers;
 - an AAB for future store distribution;
